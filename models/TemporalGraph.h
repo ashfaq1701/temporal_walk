@@ -6,10 +6,10 @@
 #include "TemporalEdge.h"
 
 class TemporalGraph {
+public:
     std::unordered_map<int, std::shared_ptr<Node>> nodes;
     std::vector<std::shared_ptr<TemporalEdge>> edges;
 
-public:
     void addNode(int id);
     Node* getNode(int id);
     void addEdge(int id1, int id2, int64_t timestamp);
