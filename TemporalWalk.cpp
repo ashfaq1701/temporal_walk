@@ -1,4 +1,4 @@
-#include "temporal_walk.h"
+#include "TemporalWalk.h"
 #include "random/UniformRandomPicker.h"
 #include "random/LinearRandomPicker.h"
 #include "random/ExponentialRandomPicker.h"
