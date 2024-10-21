@@ -9,6 +9,4 @@ public:
     virtual ~RandomPicker() = default;
 };
 
-
-
 #endif //RANDOMPICKER_H

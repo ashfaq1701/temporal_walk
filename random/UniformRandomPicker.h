@@ -8,6 +8,4 @@ public:
     int pick_random(int start, int end) override;
 };
 
-
-
 #endif //UNIFORMRANDOMPICKER_H

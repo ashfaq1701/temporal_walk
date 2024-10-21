@@ -15,12 +15,11 @@ public:
 
     void add_node(int id);
     Node* get_node(int id);
+    Node* get_or_create_node(int id);
     Node* get_random_node(RandomPicker* random_picker);
     void add_edge(int id1, int id2, int64_t timestamp);
     [[nodiscard]] size_t get_node_count() const;
     [[nodiscard]] size_t get_edge_count() const;
 };
-
-
 
 #endif //TEMPORALGRAPH_H

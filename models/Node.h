@@ -3,7 +3,7 @@
 
 #include <map>
 #include "TemporalEdge.h"
-#include "../random/RandomPicker.h";
+#include "../random/RandomPicker.h"
 
 class TemporalEdge;
 
@@ -20,7 +20,5 @@ public:
 
     TemporalEdge* pick_temporal_edge(RandomPicker* random_picker, int64_t given_timestamp=-1);
 };
-
-
 
 #endif //NODE_H

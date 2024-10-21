@@ -14,5 +14,4 @@ public:
     TemporalEdge(Node* u, Node* v, int64_t ts);
 };
 
-
 #endif //TEMPORALEDGE_H

@@ -8,28 +8,41 @@ void TemporalGraph::add_node(const int id) {
     }
 }
 
-Node* TemporalGraph::get_node(const int id) {
+Node* TemporalGraph::get_or_create_node(const int id) {
     if (nodes.find(id) == nodes.end()) {
         add_node(id);
     }
     return nodes[id].get();
 }
 
+Node* TemporalGraph::get_node(const int id) {
+    if (nodes.find(id) == nodes.end()) {
+        return nullptr;
+    }
+
+    return nodes[id].get();
+}
+
 Node* TemporalGraph::get_random_node(RandomPicker* random_picker) {
-    if (nodes.empty()) {
+    if (edges.empty()) {
         return nullptr;
     }
 
     const int picked_idx = random_picker->pick_random(0, static_cast<int>(edges.size()));
     auto it = edges.begin();
     std::advance(it, picked_idx);
+
+    if (it == edges.end() || it->second.empty()) {
+        return nullptr;
+    }
+
     const int random_edge_idx = get_random_number(static_cast<int>(it->second.size()));
     return it->second[random_edge_idx]->v;
 }
 
 void TemporalGraph::add_edge(const int id1, const int id2, int64_t timestamp) {
-    Node* node1 = get_node(id1);
-    Node* node2 = get_node(id2);
+    Node* node1 = get_or_create_node(id1);
+    Node* node2 = get_or_create_node(id2);
 
     const auto edge = std::make_shared<TemporalEdge>(node1, node2, timestamp);
     node2->add_edges_as_dm(edge);
