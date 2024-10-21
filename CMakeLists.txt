@@ -11,5 +11,6 @@ add_executable(
         random/ExponentialRandomPicker.cpp
         random/LinearRandomPicker.cpp
         random/UniformRandomPicker.cpp
-        main.cpp
+        temporal_walk.cpp
+        test_temporal_walk.cpp
 )

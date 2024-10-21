@@ -15,7 +15,7 @@ public:
 
     void add_edges_as_dm(TemporalEdge* edge);
 
-    [[nodiscard]] std::vector<int64_t> get_timestamps_less_than_given(int64_t given_timestamp) const;
+    [[nodiscard]] size_t count_timestamps_less_than_given(int64_t given_timestamp) const;
 };
 
 

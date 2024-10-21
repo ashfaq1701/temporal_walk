@@ -2,17 +2,9 @@
 #define UTILS_H
 
 template <typename T>
-std::vector<int64_t> getKeysLessThan(const std::map<int64_t, T>& inputMap, int64_t key) {
-    std::vector<int64_t> keysLessThan;
+size_t countKeysLessThan(const std::map<int64_t, T>& inputMap, int64_t key) {
     auto it = inputMap.lower_bound(key);
-
-    keysLessThan.reserve(std::distance(inputMap.begin(), it));
-
-    for (auto iter = inputMap.begin(); iter != it; ++iter) {
-        keysLessThan.push_back(iter->first);
-    }
-
-    return keysLessThan;
+    return std::distance(inputMap.begin(), it);
 }
 
 #endif //UTILS_H

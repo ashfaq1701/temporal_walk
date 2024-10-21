@@ -10,6 +10,6 @@ void Node::add_edges_as_dm(TemporalEdge* edge) {
     edges_as_dm[edge->timestamp].push_back(edge);
 }
 
-std::vector<int64_t> Node::get_timestamps_less_than_given(int64_t given_timestamp) const {
-    return getKeysLessThan(edges_as_dm, given_timestamp);
+size_t Node::count_timestamps_less_than_given(int64_t given_timestamp) const {
+    return countKeysLessThan(edges_as_dm, given_timestamp);
 }
