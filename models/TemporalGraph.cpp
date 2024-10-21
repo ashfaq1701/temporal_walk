@@ -1,21 +1,33 @@
 #include "TemporalGraph.h"
+#include "../utils.h"
 
-void TemporalGraph::addNode(const int id) {
+void TemporalGraph::add_node(const int id) {
     if (nodes.find(id) == nodes.end()) {
         nodes[id] = std::make_shared<Node>(id);
     }
 }
 
-Node* TemporalGraph::getNode(const int id) {
+Node* TemporalGraph::get_node(const int id) {
     if (nodes.find(id) == nodes.end()) {
-        addNode(id);
+        add_node(id);
     }
     return nodes[id].get();
 }
 
-void TemporalGraph::addEdge(const int id1, const int id2, int64_t timestamp) {
-    Node* node1 = getNode(id1);
-    Node* node2 = getNode(id2);
+Node* TemporalGraph::get_random_node() {
+    if (nodes.empty()) {
+        return nullptr;
+    }
+
+    const int random_idx = get_random_number(static_cast<int>(nodes.size()));
+    auto it = nodes.begin();
+    std::advance(it, random_idx);
+    return it->second.get();
+}
+
+void TemporalGraph::add_edge(const int id1, const int id2, int64_t timestamp) {
+    Node* node1 = get_node(id1);
+    Node* node2 = get_node(id2);
 
     auto edge = std::make_shared<TemporalEdge>(node1, node2, timestamp);
     node2->add_edges_as_dm(edge.get());

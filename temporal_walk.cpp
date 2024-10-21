@@ -33,5 +33,11 @@ std::vector<std::vector<int>> TemporalWalk::get_random_walks(const int start_nod
 }
 
 void TemporalWalk::generate_random_walk(std::vector<int>* walk, const int start_node) {
+    Node* start_graph_node = nullptr;
 
+    if (start_node != -1) {
+        start_graph_node = temporal_graph->get_node(start_node);
+    } else {
+        start_graph_node = temporal_graph->get_random_node();
+    }
 }
