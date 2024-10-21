@@ -11,8 +11,6 @@ int main() {
     temporal_graph.add_edge(2, 3, 5);
     temporal_graph.add_edge(4, 2, 7);
 
-    std::cout << temporal_graph.edges[0]->v->count_timestamps_less_than_given(8) << std::endl;
-
     std::cout << "Hello, World! " << temporal_graph.get_node_count() << " " << temporal_graph.get_edge_count() << std::endl;
 
     auto random_picker = new LinearRandomPicker();

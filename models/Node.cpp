@@ -1,15 +1,35 @@
 #include "Node.h"
 #include "../utils.h"
+#include "../random/RandomPicker.h"
 
 Node::Node(const int nodeId) : id(nodeId) {}
 
-void Node::add_edges_as_dm(TemporalEdge* edge) {
+void Node::add_edges_as_dm(const std::shared_ptr<TemporalEdge>& edge) {
     if (edges_as_dm.find(edge->timestamp) == edges_as_dm.end()) {
-        edges_as_dm[edge->timestamp] = std::vector<TemporalEdge*>();
+        edges_as_dm[edge->timestamp] = std::vector<std::shared_ptr<TemporalEdge>>();
     }
     edges_as_dm[edge->timestamp].push_back(edge);
 }
 
-size_t Node::count_timestamps_less_than_given(int64_t given_timestamp) const {
+size_t Node::count_timestamps_less_than_given(const int64_t given_timestamp) const {
     return countKeysLessThan(edges_as_dm, given_timestamp);
+}
+
+TemporalEdge* Node::pick_temporal_edge(RandomPicker* random_picker, const int64_t given_timestamp) {
+    size_t count_edge_times = edges_as_dm.size();
+    if (given_timestamp != -1) {
+        count_edge_times = count_timestamps_less_than_given(given_timestamp);
+    }
+
+    if (count_edge_times == 0) {
+        return nullptr;
+    }
+
+    const int random_timestamp_idx = random_picker->pick_random(0, static_cast<int>(count_edge_times));
+    auto it = edges_as_dm.begin();
+    std::advance(it, random_timestamp_idx);
+    const auto edges_at_chosen_timestamp = it->second;
+
+    const int random_edge_idx = get_random_number(static_cast<int>(edges_at_chosen_timestamp.size()));
+    return edges_at_chosen_timestamp[random_edge_idx].get();
 }

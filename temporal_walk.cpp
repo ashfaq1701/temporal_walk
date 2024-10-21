@@ -38,6 +38,6 @@ void TemporalWalk::generate_random_walk(std::vector<int>* walk, const int start_
     if (start_node != -1) {
         start_graph_node = temporal_graph->get_node(start_node);
     } else {
-        start_graph_node = temporal_graph->get_random_node();
+        start_graph_node = temporal_graph->get_random_node(random_picker.get());
     }
 }
