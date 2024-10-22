@@ -7,7 +7,7 @@
 
 constexpr int NUM_WALKS = 20;
 constexpr int LEN_WALK = 500;
-RandomPickerType RANDOM_PICKER_TYPE = RandomPickerType::Linear;
+constexpr RandomPickerType RANDOM_PICKER_TYPE = RandomPickerType::Linear;
 
 std::vector<EdgeInfo> read_edges_from_csv(const std::string& filename) {
     std::ifstream file(filename);
