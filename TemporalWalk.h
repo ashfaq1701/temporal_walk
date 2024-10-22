@@ -39,6 +39,12 @@ public:
     void add_edge(int u, int i, int64_t t) const;
 
     void add_multiple_edges(const std::vector<EdgeInfo>& edge_infos) const;
+
+    [[nodiscard]] int get_len_walk() const;
+
+    [[nodiscard]] size_t get_node_count() const;
+
+    [[nodiscard]] size_t get_edge_count() const;
 };
 
 #endif //TEMPORAL_WALK_H

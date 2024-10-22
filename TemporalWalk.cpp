@@ -105,3 +105,15 @@ void TemporalWalk::add_multiple_edges(const std::vector<EdgeInfo>& edge_infos) c
         add_edge(u, i, t);
     }
 }
+
+int TemporalWalk::get_len_walk() const {
+    return len_walk;
+}
+
+size_t TemporalWalk::get_node_count() const {
+    return temporal_graph->get_node_count();
+}
+
+size_t TemporalWalk::get_edge_count() const {
+    return temporal_graph->get_edge_count();
+}
