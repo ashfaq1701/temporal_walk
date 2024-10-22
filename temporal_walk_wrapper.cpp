@@ -6,6 +6,8 @@
 
 namespace py = pybind11;
 
+constexpr int DEFAULT_WALK_FILL_VALUE = -1;
+
 RandomPickerType picker_type_from_string(const std::string& picker_type_str) {
     if (picker_type_str == "Uniform") {
         return RandomPickerType::Uniform;
@@ -28,7 +30,7 @@ PYBIND11_MODULE(random_walk, m) {
         .def("add_edge", &TemporalWalk::add_edge)
         .def("add_multiple_edges", &TemporalWalk::add_multiple_edges)
 
-        .def("get_random_walks", [](TemporalWalk& tw, int start_node) {
+        .def("get_random_walks", [](TemporalWalk& tw, int start_node, const int fill_value=DEFAULT_WALK_FILL_VALUE) {
             const auto walks = tw.get_random_walks(start_node);
             const int num_walks = static_cast<int>(walks.size());
             const int len_walk = tw.get_len_walk();
@@ -42,13 +44,13 @@ PYBIND11_MODULE(random_walk, m) {
                 const int walk_size = static_cast<int>(walk.size());
 
                 std::copy(walk.begin(), walk.end(), py_walks_mutable.mutable_data(i, 0));
-                std::fill(py_walks_mutable.mutable_data(i, walk_size), py_walks_mutable.mutable_data(i, len_walk), -1);
+                std::fill(py_walks_mutable.mutable_data(i, walk_size), py_walks_mutable.mutable_data(i, len_walk), fill_value);
             }
 
             return py_walks;
         })
 
-        .def("get_random_walks_for_nodes", [](TemporalWalk& tw, const std::vector<int>& start_nodes) {
+        .def("get_random_walks_for_nodes", [](TemporalWalk& tw, const std::vector<int>& start_nodes, const int fill_value=DEFAULT_WALK_FILL_VALUE) {
             auto walks_for_nodes = tw.get_random_walks_for_nodes(start_nodes);
             const int len_walk = tw.get_len_walk();  // Assuming len_walk is retrievable
 
@@ -67,7 +69,7 @@ PYBIND11_MODULE(random_walk, m) {
                     const int walk_size = static_cast<int>(walk.size());
 
                     std::copy(walk.begin(), walk.end(), py_walks_mutable.mutable_data(i, 0));
-                    std::fill(py_walks_mutable.mutable_data(i, walk_size), py_walks_mutable.mutable_data(i, len_walk), -1);
+                    std::fill(py_walks_mutable.mutable_data(i, walk_size), py_walks_mutable.mutable_data(i, len_walk), fill_value);
                 }
 
                 py_walks_list.append(py_walks);
