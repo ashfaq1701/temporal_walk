@@ -7,6 +7,7 @@
 
 constexpr int NUM_WALKS = 20;
 constexpr int LEN_WALK = 500;
+RandomPickerType RANDOM_PICKER_TYPE = RandomPickerType::Linear;
 
 std::vector<EdgeInfo> read_edges_from_csv(const std::string& filename) {
     std::ifstream file(filename);
@@ -62,7 +63,7 @@ int main() {
     const auto edge_infos = read_edges_from_csv("../../data/sample_data.csv");
     std::cout << edge_infos.size() << std::endl;
 
-    TemporalWalk temporal_walk(NUM_WALKS, LEN_WALK, RandomPickerType::Linear);
+    TemporalWalk temporal_walk(NUM_WALKS, LEN_WALK, RANDOM_PICKER_TYPE);
     temporal_walk.add_multiple_edges(edge_infos);
 
     std::vector<int> end_nodes;
