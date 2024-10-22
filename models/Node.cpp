@@ -1,4 +1,7 @@
 #include "Node.h"
+
+#include <iostream>
+
 #include "../utils.h"
 #include "../random/RandomPicker.h"
 
@@ -49,7 +52,7 @@ TemporalEdge* Node::pick_temporal_edge(RandomPicker* random_picker, const bool p
     if (prioritize_end) {
         std::advance(it, random_timestamp_idx);
     } else {
-        std::advance(it, -random_timestamp_idx - 1);
+        std::advance(it, -(count_edge_times - random_timestamp_idx));
     }
     const auto edges_at_chosen_timestamp = it->second;
 

@@ -13,15 +13,15 @@ int LinearRandomPicker::pick_random(const int start, const int end, const bool p
 
     const int len_seq = end - start;
 
-    const double totalWeight = len_seq * (len_seq + 1) / 2.0;
+    const double total_weight = len_seq * (len_seq + 1) / 2.0;
 
-    std::uniform_real_distribution<double> dist(0.0, totalWeight);
+    std::uniform_real_distribution<double> dist(0.0, total_weight);
     const double randomValue = dist(gen);
 
     int index = static_cast<int>(floor((-1 + sqrt(1 + 8 * randomValue)) / 2));
     if (!prioritize_end) {
-        index = len_seq - index;
+        index = len_seq - 1 - index;
     }
 
-    return std::min(start + index, end - 1);
+    return std::max(start, std::min(start + index, end - 1));
 }

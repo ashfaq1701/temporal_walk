@@ -24,4 +24,11 @@ inline int get_random_number(int max_bound) {
     return dist(gen);
 }
 
+inline bool get_random_boolean() {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> dist(0, 1);
+    return dist(gen) == 1;
+}
+
 #endif //UTILS_H

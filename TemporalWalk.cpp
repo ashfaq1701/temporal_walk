@@ -2,6 +2,7 @@
 
 #include <iostream>
 
+#include "utils.h"
 #include "random/UniformRandomPicker.h"
 #include "random/LinearRandomPicker.h"
 #include "random/ExponentialRandomPicker.h"
@@ -25,7 +26,7 @@ TemporalWalk::TemporalWalk(const int num_walks, const int len_walk, RandomPicker
     }
 }
 
-std::vector<std::vector<int>> TemporalWalk::get_random_walks(const bool begin_from_end, const int end_node) {
+std::vector<std::vector<int>> TemporalWalk::get_random_walks(const WalkStartAt walk_start_at, const int end_node) {
     std::vector walks(num_walks, std::vector<int>());
     for (auto & walk : walks) {
         walk.reserve(len_walk);
@@ -33,8 +34,32 @@ std::vector<std::vector<int>> TemporalWalk::get_random_walks(const bool begin_fr
 
     std::vector<std::future<int>> results;
 
+    auto get_if_begin_from_end = [&]() {
+        bool begin_from_end = true;
+        switch (walk_start_at) {
+            case WalkStartAt::End:
+                begin_from_end = true;
+            break;
+            case WalkStartAt::Begin:
+                begin_from_end = false;
+            break;
+            case WalkStartAt::Random:
+                begin_from_end = get_random_boolean();
+            break;
+        }
+
+        return begin_from_end;
+    };
+
     auto prepare_walk = [&](std::vector<int>* walk) {
+        const bool begin_from_end = get_if_begin_from_end();
+
         generate_random_walk(walk, begin_from_end, end_node);
+
+        if (begin_from_end) {
+            std::reverse(walk->begin(), walk->end());
+        }
+
         return 1;
     };
 
@@ -46,39 +71,35 @@ std::vector<std::vector<int>> TemporalWalk::get_random_walks(const bool begin_fr
         future.wait();
     }
 
-    for (auto & walk : walks) {
-        std::reverse(walk.begin(), walk.end());
-    }
-
     return walks;
 }
 
-std::unordered_map<int, std::vector<std::vector<int>>> TemporalWalk::get_random_walks_for_nodes(const bool begin_from_end, const std::vector<int>& end_nodes) {
+std::unordered_map<int, std::vector<std::vector<int>>> TemporalWalk::get_random_walks_for_nodes(const WalkStartAt walk_start_at, const std::vector<int>& end_nodes) {
     std::unordered_map<int, std::vector<std::vector<int>>> walk_for_nodes;
     std::vector<std::future<std::vector<std::vector<int>>>> results;
 
     for (int end_node : end_nodes) {
-        walk_for_nodes[end_node] = get_random_walks(begin_from_end, end_node);
+        walk_for_nodes[end_node] = get_random_walks(walk_start_at, end_node);
     }
 
     return walk_for_nodes;
 }
 
 void TemporalWalk::generate_random_walk(std::vector<int>* walk, const bool begin_from_end, const int end_node) const {
-    Node* end_graph_node;
+    Node* graph_node;
 
     if (end_node != -1) {
-        end_graph_node = temporal_graph->get_node(end_node);
+        graph_node = temporal_graph->get_node(end_node);
     } else {
-        end_graph_node = temporal_graph->get_random_node(random_picker.get(), begin_from_end);
+        graph_node = temporal_graph->get_random_node(random_picker.get(), begin_from_end);
     }
 
-    if (end_graph_node == nullptr) {
+    if (graph_node == nullptr) {
         return;
     }
 
-    auto current_node = end_graph_node;
-    auto current_timestamp = INT64_MAX;
+    auto current_node = graph_node;
+    auto current_timestamp = begin_from_end ? INT64_MAX : INT64_MIN;
 
     while (walk->size() < len_walk && current_node != nullptr) {
         walk->push_back(current_node->id);

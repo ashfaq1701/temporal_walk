@@ -13,6 +13,12 @@ enum RandomPickerType {
     Exponential
 };
 
+enum WalkStartAt {
+    Begin,
+    End,
+    Random
+};
+
 struct EdgeInfo {
     int u;
     int i;
@@ -33,8 +39,8 @@ class TemporalWalk {
 public:
     TemporalWalk(int num_walks, int len_walk, RandomPickerType picker_type);
 
-    [[nodiscard]] std::vector<std::vector<int>> get_random_walks(bool begin_from_end, int end_node=-1);
-    [[nodiscard]] std::unordered_map<int, std::vector<std::vector<int>>> get_random_walks_for_nodes(bool begin_from_end, const std::vector<int>& end_nodes);
+    [[nodiscard]] std::vector<std::vector<int>> get_random_walks(WalkStartAt walk_start_at, int end_node=-1);
+    [[nodiscard]] std::unordered_map<int, std::vector<std::vector<int>>> get_random_walks_for_nodes(WalkStartAt walk_start_at, const std::vector<int>& end_nodes);
 
     void add_edge(int u, int i, int64_t t) const;
 

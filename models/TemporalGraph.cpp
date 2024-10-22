@@ -1,4 +1,7 @@
 #include "TemporalGraph.h"
+
+#include <iostream>
+
 #include "../utils.h"
 #include "../random/RandomPicker.h"
 

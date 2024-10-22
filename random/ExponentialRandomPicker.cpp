@@ -14,15 +14,16 @@ int ExponentialRandomPicker::pick_random(const int start, const int end, const b
 
     const int len_seq = end - start;
 
-    const double totalWeight = std::exp(len_seq) - 1;
+    const double total_weight = std::expm1(len_seq);
 
-    std::uniform_real_distribution<double> dist(0.0, totalWeight);
-    const double randomValue = dist(gen);
+    std::uniform_real_distribution<double> dist(0.0, total_weight);
+    const double random_value = dist(gen);
 
-    int index = static_cast<int>(std::log(randomValue + 1));
+    int index = static_cast<int>(std::log1p(random_value));
+
     if (!prioritize_end) {
-        index = len_seq - index;
+        index = len_seq - 1 - index;
     }
 
-    return std::min(start + index, end - 1);
+    return std::max(start, std::min(start + index, end - 1));
 }
