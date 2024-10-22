@@ -1,12 +1,11 @@
 #include <iostream>
 #include <fstream>
-#include <numeric>
 #include <sstream>
 #include <string>
 #include <vector>
 #include "TemporalWalk.h"
 
-constexpr int NUM_WALKS = 100;
+constexpr int NUM_WALKS = 5000;
 constexpr int LEN_WALK = 500;
 
 std::vector<EdgeInfo> read_edges_from_csv(const std::string& filename) {
@@ -66,8 +65,8 @@ int main() {
     temporal_walk.add_multiple_edges(edge_infos);
 
     std::vector<int> start_nodes;
-    for (int i = 1000; i < 1100; i++) {
-        start_nodes.push_back(i);
+    for (int i = 0; i < 20000; i++) {
+        start_nodes.push_back(i); // NOLINT(*-inefficient-vector-operation)
     }
     auto walks_for_nodes = temporal_walk.get_random_walks_for_nodes(start_nodes);
     print_temporal_walks_for_nodes(walks_for_nodes);

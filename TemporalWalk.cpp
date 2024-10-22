@@ -54,19 +54,11 @@ std::vector<std::vector<int>> TemporalWalk::get_random_walks(const int start_nod
 }
 
 std::unordered_map<int, std::vector<std::vector<int>>> TemporalWalk::get_random_walks_for_nodes(std::vector<int> start_nodes) {
-    auto generate_walks_starting_at_node = [&](int starting_node) {
-        return get_random_walks(starting_node);
-    };
-
     std::unordered_map<int, std::vector<std::vector<int>>> walk_for_nodes;
     std::vector<std::future<std::vector<std::vector<int>>>> results;
 
-    for (int node : start_nodes) {
-        results.emplace_back(thread_pool.enqueue(generate_walks_starting_at_node, node)); // NOLINT(*-inefficient-vector-operation)
-    }
-
-    for (size_t i = 0; i < start_nodes.size(); ++i) {
-        walk_for_nodes[start_nodes[i]] = results[i].get();
+    for (int start_node : start_nodes) {
+        walk_for_nodes[start_node] = get_random_walks(start_node);
     }
 
     return walk_for_nodes;
