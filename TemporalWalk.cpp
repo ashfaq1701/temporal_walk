@@ -117,3 +117,7 @@ size_t TemporalWalk::get_node_count() const {
 size_t TemporalWalk::get_edge_count() const {
     return temporal_graph->get_edge_count();
 }
+
+std::vector<int> TemporalWalk::get_node_ids() const {
+    return temporal_graph->get_node_ids();
+}

@@ -62,3 +62,14 @@ size_t TemporalGraph::get_node_count() const {
 size_t TemporalGraph::get_edge_count() const {
     return edge_count;
 }
+
+std::vector<int> TemporalGraph::get_node_ids() {
+    std::vector<int> ids;
+    ids.reserve(nodes.size());
+
+    for (const auto& [node_id, node_ptr] : nodes) {
+        ids.push_back(node_id);
+    }
+
+    return ids;
+}

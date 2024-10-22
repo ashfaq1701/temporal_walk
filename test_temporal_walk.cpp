@@ -66,11 +66,11 @@ int main() {
     TemporalWalk temporal_walk(NUM_WALKS, LEN_WALK, RANDOM_PICKER_TYPE);
     temporal_walk.add_multiple_edges(edge_infos);
 
-    std::vector<int> end_nodes;
-    for (int i = 0; i < 20000; i++) {
-        end_nodes.push_back(i); // NOLINT(*-inefficient-vector-operation)
-    }
-    auto walks_for_nodes = temporal_walk.get_random_walks_for_nodes(end_nodes);
+    const std::vector<int> end_nodes = temporal_walk.get_node_ids();
+
+    std::cout << "Total node count: " << end_nodes.size() << std::endl;
+
+    const auto walks_for_nodes = temporal_walk.get_random_walks_for_nodes(end_nodes);
     print_temporal_walks_for_nodes(walks_for_nodes);
 
     const auto end = std::chrono::high_resolution_clock::now();

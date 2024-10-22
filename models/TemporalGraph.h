@@ -20,6 +20,7 @@ public:
     void add_edge(int id1, int id2, int64_t timestamp);
     [[nodiscard]] size_t get_node_count() const;
     [[nodiscard]] size_t get_edge_count() const;
+    std::vector<int> get_node_ids();
 };
 
 #endif //TEMPORALGRAPH_H
