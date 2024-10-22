@@ -30,8 +30,8 @@ PYBIND11_MODULE(random_walk, m) {
         .def("add_edge", &TemporalWalk::add_edge)
         .def("add_multiple_edges", &TemporalWalk::add_multiple_edges)
 
-        .def("get_random_walks", [](TemporalWalk& tw, int start_node, const int fill_value=DEFAULT_WALK_FILL_VALUE) {
-            const auto walks = tw.get_random_walks(start_node);
+        .def("get_random_walks", [](TemporalWalk& tw, int end_node, const int fill_value=DEFAULT_WALK_FILL_VALUE) {
+            const auto walks = tw.get_random_walks(end_node);
             const int num_walks = static_cast<int>(walks.size());
             const int len_walk = tw.get_len_walk();
 
@@ -50,13 +50,13 @@ PYBIND11_MODULE(random_walk, m) {
             return py_walks;
         })
 
-        .def("get_random_walks_for_nodes", [](TemporalWalk& tw, const std::vector<int>& start_nodes, const int fill_value=DEFAULT_WALK_FILL_VALUE) {
-            auto walks_for_nodes = tw.get_random_walks_for_nodes(start_nodes);
+        .def("get_random_walks_for_nodes", [](TemporalWalk& tw, const std::vector<int>& end_nodes, const int fill_value=DEFAULT_WALK_FILL_VALUE) {
+            auto walks_for_nodes = tw.get_random_walks_for_nodes(end_nodes);
             const int len_walk = tw.get_len_walk();  // Assuming len_walk is retrievable
 
             py::list py_walks_list;
 
-            for (int node : start_nodes) {
+            for (int node : end_nodes) {
                 const auto& walks = walks_for_nodes[node];
                 const int num_walks = static_cast<int>(walks.size());
 

@@ -5,7 +5,7 @@
 #include <vector>
 #include "TemporalWalk.h"
 
-constexpr int NUM_WALKS = 500;
+constexpr int NUM_WALKS = 20;
 constexpr int LEN_WALK = 500;
 
 std::vector<EdgeInfo> read_edges_from_csv(const std::string& filename) {
@@ -65,11 +65,11 @@ int main() {
     TemporalWalk temporal_walk(NUM_WALKS, LEN_WALK, RandomPickerType::Linear);
     temporal_walk.add_multiple_edges(edge_infos);
 
-    std::vector<int> start_nodes;
-    for (int i = 0; i < 1000; i++) {
-        start_nodes.push_back(i); // NOLINT(*-inefficient-vector-operation)
+    std::vector<int> end_nodes;
+    for (int i = 0; i < 20000; i++) {
+        end_nodes.push_back(i); // NOLINT(*-inefficient-vector-operation)
     }
-    auto walks_for_nodes = temporal_walk.get_random_walks_for_nodes(start_nodes);
+    auto walks_for_nodes = temporal_walk.get_random_walks_for_nodes(end_nodes);
     print_temporal_walks_for_nodes(walks_for_nodes);
 
     const auto end = std::chrono::high_resolution_clock::now();
