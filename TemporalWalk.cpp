@@ -39,8 +39,7 @@ std::vector<std::vector<int>> TemporalWalk::get_random_walks(const int start_nod
     };
 
     for (auto & walk : walks) {
-        results.emplace_back(thread_pool.enqueue(prepare_walk, &walk));
-        generate_random_walk(&walk, start_node);
+        results.emplace_back(thread_pool.enqueue(prepare_walk, &walk)); // NOLINT(*-inefficient-vector-operation)
     }
 
     for (auto& future : results) {
@@ -52,6 +51,25 @@ std::vector<std::vector<int>> TemporalWalk::get_random_walks(const int start_nod
     }
 
     return walks;
+}
+
+std::unordered_map<int, std::vector<std::vector<int>>> TemporalWalk::get_random_walks_for_nodes(std::vector<int> start_nodes) {
+    auto generate_walks_starting_at_node = [&](int starting_node) {
+        return get_random_walks(starting_node);
+    };
+
+    std::unordered_map<int, std::vector<std::vector<int>>> walk_for_nodes;
+    std::vector<std::future<std::vector<std::vector<int>>>> results;
+
+    for (int node : start_nodes) {
+        results.emplace_back(thread_pool.enqueue(generate_walks_starting_at_node, node)); // NOLINT(*-inefficient-vector-operation)
+    }
+
+    for (size_t i = 0; i < start_nodes.size(); ++i) {
+        walk_for_nodes[start_nodes[i]] = results[i].get();
+    }
+
+    return walk_for_nodes;
 }
 
 void TemporalWalk::generate_random_walk(std::vector<int>* walk, const int start_node) const {
