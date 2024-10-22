@@ -26,12 +26,12 @@ Node* TemporalGraph::get_node(const int id) {
     return nodes[id].get();
 }
 
-Node* TemporalGraph::get_random_node(RandomPicker* random_picker, const bool prioritize_end) {
+Node* TemporalGraph::get_random_node(RandomPicker* random_picker, const bool begin_from_end) {
     if (edges.empty()) {
         return nullptr;
     }
 
-    const int picked_idx = random_picker->pick_random(0, static_cast<int>(edges.size()), prioritize_end);
+    const int picked_idx = random_picker->pick_random(0, static_cast<int>(edges.size()), begin_from_end);
     auto it = edges.begin();
     std::advance(it, picked_idx);
 
@@ -40,7 +40,7 @@ Node* TemporalGraph::get_random_node(RandomPicker* random_picker, const bool pri
     }
 
     const int random_edge_idx = get_random_number(static_cast<int>(it->second.size()));
-    return it->second[random_edge_idx]->i;
+    return begin_from_end ? it->second[random_edge_idx]->i : it->second[random_edge_idx]->u;
 }
 
 void TemporalGraph::add_edge(const int id1, const int id2, int64_t timestamp) {
