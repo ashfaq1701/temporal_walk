@@ -9,6 +9,12 @@ size_t countKeysLessThan(const std::map<int64_t, T>& inputMap, int64_t key) {
     return std::distance(inputMap.begin(), it);
 }
 
+template <typename T>
+size_t countKeysGreaterThan(const std::map<int64_t, T>& inputMap, int64_t key) {
+    auto it = inputMap.upper_bound(key);
+    return std::distance(it, inputMap.end());
+}
+
 
 inline int get_random_number(int max_bound) {
     std::random_device rd;

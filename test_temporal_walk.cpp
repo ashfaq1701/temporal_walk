@@ -70,7 +70,7 @@ int main() {
 
     std::cout << "Total node count: " << end_nodes.size() << std::endl;
 
-    const auto walks_for_nodes = temporal_walk.get_random_walks_for_nodes(end_nodes);
+    const auto walks_for_nodes = temporal_walk.get_random_walks_for_nodes(true, end_nodes);
     print_temporal_walks_for_nodes(walks_for_nodes);
 
     const auto end = std::chrono::high_resolution_clock::now();

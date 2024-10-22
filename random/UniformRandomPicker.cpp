@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include "UniformRandomPicker.h"
 
-int UniformRandomPicker::pick_random(const int start, const int end) {
+int UniformRandomPicker::pick_random(const int start, const int end, const bool prioritize_end) {
     if (start >= end) {
         throw std::invalid_argument("Start must be less than end.");
     }

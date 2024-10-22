@@ -11,14 +11,19 @@ class Node {
 public:
     int id;
     std::map<int64_t, std::vector<std::shared_ptr<TemporalEdge>>> edges_as_dm;
+    std::map<int64_t, std::vector<std::shared_ptr<TemporalEdge>>> edges_as_um;
 
     explicit Node(int nodeId);
 
     void add_edges_as_dm(const std::shared_ptr<TemporalEdge>& edge);
 
+    void add_edges_as_um(const std::shared_ptr<TemporalEdge>& edge);
+
     [[nodiscard]] size_t count_timestamps_less_than_given(int64_t given_timestamp) const;
 
-    TemporalEdge* pick_temporal_edge(RandomPicker* random_picker, int64_t given_timestamp=-1);
+    [[nodiscard]] size_t count_timestamps_greater_than_given(int64_t given_timestamp) const;
+
+    TemporalEdge* pick_temporal_edge(RandomPicker* random_picker, bool prioritize_end, int64_t given_timestamp=-1) const;
 };
 
 #endif //NODE_H

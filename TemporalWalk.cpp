@@ -25,7 +25,7 @@ TemporalWalk::TemporalWalk(const int num_walks, const int len_walk, RandomPicker
     }
 }
 
-std::vector<std::vector<int>> TemporalWalk::get_random_walks(const int end_node) {
+std::vector<std::vector<int>> TemporalWalk::get_random_walks(const bool begin_from_end, const int end_node) {
     std::vector walks(num_walks, std::vector<int>());
     for (auto & walk : walks) {
         walk.reserve(len_walk);
@@ -34,7 +34,7 @@ std::vector<std::vector<int>> TemporalWalk::get_random_walks(const int end_node)
     std::vector<std::future<int>> results;
 
     auto prepare_walk = [&](std::vector<int>* walk) {
-        generate_random_walk(walk, end_node);
+        generate_random_walk(walk, begin_from_end, end_node);
         return 1;
     };
 
@@ -53,24 +53,24 @@ std::vector<std::vector<int>> TemporalWalk::get_random_walks(const int end_node)
     return walks;
 }
 
-std::unordered_map<int, std::vector<std::vector<int>>> TemporalWalk::get_random_walks_for_nodes(std::vector<int> end_nodes) {
+std::unordered_map<int, std::vector<std::vector<int>>> TemporalWalk::get_random_walks_for_nodes(const bool begin_from_end, const std::vector<int>& end_nodes) {
     std::unordered_map<int, std::vector<std::vector<int>>> walk_for_nodes;
     std::vector<std::future<std::vector<std::vector<int>>>> results;
 
     for (int end_node : end_nodes) {
-        walk_for_nodes[end_node] = get_random_walks(end_node);
+        walk_for_nodes[end_node] = get_random_walks(begin_from_end, end_node);
     }
 
     return walk_for_nodes;
 }
 
-void TemporalWalk::generate_random_walk(std::vector<int>* walk, const int end_node) const {
+void TemporalWalk::generate_random_walk(std::vector<int>* walk, const bool begin_from_end, const int end_node) const {
     Node* end_graph_node;
 
     if (end_node != -1) {
         end_graph_node = temporal_graph->get_node(end_node);
     } else {
-        end_graph_node = temporal_graph->get_random_node(random_picker.get());
+        end_graph_node = temporal_graph->get_random_node(random_picker.get(), begin_from_end);
     }
 
     if (end_graph_node == nullptr) {
@@ -84,6 +84,7 @@ void TemporalWalk::generate_random_walk(std::vector<int>* walk, const int end_no
         walk->push_back(current_node->id);
         const auto picked_edge = current_node->pick_temporal_edge(
             random_picker.get(),
+            begin_from_end,
             current_timestamp);
 
         if (picked_edge == nullptr) {
@@ -91,7 +92,7 @@ void TemporalWalk::generate_random_walk(std::vector<int>* walk, const int end_no
             continue;
         }
 
-        current_node = picked_edge->u;
+        current_node = begin_from_end ? picked_edge->u : picked_edge->i;
         current_timestamp = picked_edge->timestamp;
     }
 }

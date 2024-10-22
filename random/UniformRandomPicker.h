@@ -5,7 +5,7 @@
 
 class UniformRandomPicker : public RandomPicker {
 public:
-    int pick_random(int start, int end) override;
+    int pick_random(int start, int end, bool prioritize_end) override;
 };
 
 #endif //UNIFORMRANDOMPICKER_H
