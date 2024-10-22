@@ -1,4 +1,7 @@
 #include "TemporalWalk.h"
+
+#include <iostream>
+
 #include "random/UniformRandomPicker.h"
 #include "random/LinearRandomPicker.h"
 #include "random/ExponentialRandomPicker.h"
@@ -44,6 +47,10 @@ std::vector<std::vector<int>> TemporalWalk::get_random_walks(const int start_nod
         future.wait();
     }
 
+    for (auto & walk : walks) {
+        std::reverse(walk.begin(), walk.end());
+    }
+
     return walks;
 }
 
@@ -68,17 +75,23 @@ void TemporalWalk::generate_random_walk(std::vector<int>* walk, const int start_
         const auto picked_edge = current_node->pick_temporal_edge(
             random_picker.get(),
             current_timestamp);
+
+        if (picked_edge == nullptr) {
+            current_node = nullptr;
+            continue;
+        }
+
         current_node = picked_edge->u;
         current_timestamp = picked_edge->timestamp;
     }
 }
 
-void TemporalWalk::add_edge(const int u, const int v, const int64_t t) const {
-    temporal_graph->add_edge(u, v, t);
+void TemporalWalk::add_edge(const int u, const int i, const int64_t t) const {
+    temporal_graph->add_edge(u, i, t);
 }
 
 void TemporalWalk::add_multiple_edges(const std::vector<EdgeInfo>& edge_infos) const {
-    for (const auto& [u, v, t] : edge_infos) {
-        add_edge(u, v, t);
+    for (const auto& [u, i, t] : edge_infos) {
+        add_edge(u, i, t);
     }
 }

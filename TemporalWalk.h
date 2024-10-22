@@ -15,7 +15,7 @@ enum RandomPickerType {
 
 struct EdgeInfo {
     int u;
-    int v;
+    int i;
     int64_t t;
 };
 
@@ -35,7 +35,7 @@ public:
 
     void generate_random_walk(std::vector<int>* walk, int start_node=-1) const;
 
-    void add_edge(int u, int v, int64_t t) const;
+    void add_edge(int u, int i, int64_t t) const;
 
     void add_multiple_edges(const std::vector<EdgeInfo>& edge_infos) const;
 };

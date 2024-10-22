@@ -37,7 +37,7 @@ Node* TemporalGraph::get_random_node(RandomPicker* random_picker) {
     }
 
     const int random_edge_idx = get_random_number(static_cast<int>(it->second.size()));
-    return it->second[random_edge_idx]->v;
+    return it->second[random_edge_idx]->i;
 }
 
 void TemporalGraph::add_edge(const int id1, const int id2, int64_t timestamp) {
