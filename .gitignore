@@ -4,3 +4,4 @@ __pycache__/
 
 cmake-build-debug/
 build/
+dist/
