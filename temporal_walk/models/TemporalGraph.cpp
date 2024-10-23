@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "../utils.h"
+#include "../utils/utils.h"
 #include "../random/RandomPicker.h"
 
 void TemporalGraph::add_node(const int id) {

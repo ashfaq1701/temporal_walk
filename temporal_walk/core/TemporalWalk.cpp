@@ -2,10 +2,10 @@
 
 #include <iostream>
 
-#include "utils.h"
-#include "random/UniformRandomPicker.h"
-#include "random/LinearRandomPicker.h"
-#include "random/ExponentialRandomPicker.h"
+#include "../utils/utils.h"
+#include "../random/UniformRandomPicker.h"
+#include "../random/LinearRandomPicker.h"
+#include "../random/ExponentialRandomPicker.h"
 
 TemporalWalk::TemporalWalk(const int num_walks, const int len_walk, RandomPickerType picker_type)
     : num_walks(num_walks), len_walk(len_walk), thread_pool(ThreadPool(std::thread::hardware_concurrency())) {

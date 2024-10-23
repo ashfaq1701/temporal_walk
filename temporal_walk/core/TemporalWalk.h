@@ -3,9 +3,9 @@
 
 #include<vector>
 
-#include "random/RandomPicker.h"
-#include "models/TemporalGraph.h"
-#include "libs/thread_pool.h"
+#include "../random/RandomPicker.h"
+#include "../models/TemporalGraph.h"
+#include "../utils/thread_pool.h"
 
 enum RandomPickerType {
     Uniform,

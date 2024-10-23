@@ -1,7 +1,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
-#include "TemporalWalk.h"
+#include "core/TemporalWalk.h"
 #include <stdexcept>
 
 namespace py = pybind11;

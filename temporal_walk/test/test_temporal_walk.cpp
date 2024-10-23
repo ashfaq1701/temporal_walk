@@ -3,7 +3,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include "TemporalWalk.h"
+#include "../core/TemporalWalk.h"
 
 constexpr int NUM_WALKS = 20;
 constexpr int LEN_WALK = 500;

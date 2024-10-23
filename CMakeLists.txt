@@ -11,7 +11,6 @@ execute_process(
 )
 message(STATUS "Python include directory: ${PYTHON_INCLUDE_DIR}")
 
-# Get Python library directory
 execute_process(
         COMMAND python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))"
         OUTPUT_VARIABLE PYTHON_LIBRARY
@@ -28,45 +27,40 @@ message(STATUS "PyBind11 include directory: ${pybind11_DIR}")
 
 include_directories(${PYTHON_INCLUDE_DIR} ${pybind11_DIR} ${PYTHON_LIBRARY} ${PYTHON_NUMPY_INCLUDE_DIRS})
 
-# Grab Python, 3.8 or newer
 find_package(pybind11 REQUIRED)
 
 find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
 
 pybind11_add_module(
-        temporal_walk SHARED
-        models/Node.cpp
-        models/TemporalEdge.cpp
-        models/TemporalGraph.cpp
-        random/ExponentialRandomPicker.cpp
-        random/LinearRandomPicker.cpp
-        random/UniformRandomPicker.cpp
-        TemporalWalk.cpp
-        temporal_walk_wrapper.cpp
+        _temporal_walk
+        temporal_walk/_temporal_walk.cpp
+        temporal_walk/core/TemporalWalk.cpp
+        temporal_walk/models/TemporalEdge.cpp
+        temporal_walk/models/TemporalGraph.cpp
+        temporal_walk/models/Node.cpp
+        temporal_walk/random/ExponentialRandomPicker.cpp
+        temporal_walk/random/LinearRandomPicker.cpp
+        temporal_walk/random/UniformRandomPicker.cpp
 )
 
-# Link the libraries
-target_link_libraries(temporal_walk PRIVATE pybind11::module ${Python3_LIBRARIES})
+set_target_properties(_temporal_walk PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/temporal_walk
+)
 
-target_compile_definitions(temporal_walk PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
+target_link_libraries(_temporal_walk PRIVATE pybind11::module ${Python3_LIBRARIES})
 
-# Create an executable for testing (optional)
 add_executable(
         test_temporal_walk
-        models/Node.cpp
-        models/TemporalEdge.cpp
-        models/TemporalGraph.cpp
-        random/ExponentialRandomPicker.cpp
-        random/LinearRandomPicker.cpp
-        random/UniformRandomPicker.cpp
-        TemporalWalk.cpp
-        test_temporal_walk.cpp
+        temporal_walk/models/Node.cpp
+        temporal_walk/models/TemporalEdge.cpp
+        temporal_walk/models/TemporalGraph.cpp
+        temporal_walk/random/ExponentialRandomPicker.cpp
+        temporal_walk/random/LinearRandomPicker.cpp
+        temporal_walk/random/UniformRandomPicker.cpp
+        temporal_walk/core/TemporalWalk.cpp
+        temporal_walk/test/test_temporal_walk.cpp
 )
 
-# Link the executable with the temporal_walk library
-target_link_libraries(test_temporal_walk PRIVATE temporal_walk)
-
-# Set the output directory for the executable
 set_target_properties(test_temporal_walk PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
