@@ -150,6 +150,13 @@ get_edge_count() -> int:
 
 Returns the total number of directed edges in the temporal graph.
 
+### get_node_ids
+
+```python
+get_node_ids() -> np.ndarray:
+```
+Returns a numpy array containing the IDs of all nodes in the temporal graph.
+
 ---
 
 Nguyen, Giang Hoang et al. “Continuous-Time Dynamic Network Embeddings.” Companion Proceedings of the The Web Conference 2018 (2018).

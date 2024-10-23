@@ -105,5 +105,16 @@ PYBIND11_MODULE(random_walk, m) {
             return py_walks_list;
         })
     .def("get_node_count", &TemporalWalk::get_node_count)
-    .def("get_edge_count", &TemporalWalk::get_edge_count);
+    .def("get_edge_count", &TemporalWalk::get_edge_count)
+    .def("get_node_ids", [](const TemporalWalk& tw) {
+        const auto& node_ids = tw.get_node_ids();
+        py::array_t<int> py_node_ids(static_cast<long>(node_ids.size()));
+
+        auto py_node_ids_mutable = py_node_ids.mutable_unchecked<1>();
+        for (size_t i = 0; i < node_ids.size(); ++i) {
+            py_node_ids_mutable(i) = node_ids[i];
+        }
+
+        return py_node_ids;
+    });
 }
