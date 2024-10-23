@@ -6,7 +6,6 @@ import sys
 import pybind11
 
 
-# Ensure CMake is available
 def find_cmake():
     try:
         subprocess.check_output(['cmake', '--version'])
@@ -16,7 +15,6 @@ def find_cmake():
 
 class CMakeExtension(Extension):
     def __init__(self, name):
-        # Don't invoke the original build_ext for this special extension
         super().__init__(name, sources=[])
 
 
@@ -29,14 +27,16 @@ class CMakeBuild(build_ext):
     def build_extension(self, ext):
         extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
         cmake_args = [
-            f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}',
+            f'-DCMAKE_LIBRARY_OUTPUT_DIRECTORY={extdir}/temporal_walk',
             f'-DPYTHON_EXECUTABLE={sys.executable}',
             f'-DPYBIND11_INCLUDE_DIR={pybind11.get_include()}'
         ]
 
+        # Optional build flags (use Release configuration)
         build_args = ['--config', 'Release']
         os.makedirs(self.build_temp, exist_ok=True)
 
+        # Run CMake configuration and build
         subprocess.check_call(['cmake', os.path.abspath('.')] + cmake_args, cwd=self.build_temp)
         subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
@@ -55,7 +55,5 @@ setup(
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
     python_requires=">=3.7",
-    install_requires=[
-        "pybind11>=2.6.0",
-    ],
+    install_requires=["pybind11>=2.6.0"],
 )

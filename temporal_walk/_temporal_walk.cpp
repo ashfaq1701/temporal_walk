@@ -32,7 +32,7 @@ WalkStartAt walk_start_at_from_string(const std::string& walk_start_at_str) {
     }
 }
 
-PYBIND11_MODULE(random_walk, m) {
+PYBIND11_MODULE(_temporal_walk, m) {
     py::class_<TemporalWalk>(m, "TemporalWalk")
         .def(py::init([](int num_walks, int len_walk, const std::string& picker_type_str) {
             RandomPickerType picker_type = picker_type_from_string(picker_type_str);

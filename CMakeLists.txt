@@ -3,33 +3,21 @@ project(temporal_walk)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# Get Python include directory
-execute_process(
-        COMMAND python3 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())"
-        OUTPUT_VARIABLE PYTHON_INCLUDE_DIR
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-message(STATUS "Python include directory: ${PYTHON_INCLUDE_DIR}")
+find_package(Python3 3.10 COMPONENTS Interpreter Development REQUIRED
+        PATHS ${Python3_EXECUTABLE})
 
 execute_process(
-        COMMAND python3 -c "import sysconfig; print(sysconfig.get_config_var('LIBDIR'))"
-        OUTPUT_VARIABLE PYTHON_LIBRARY
+        COMMAND ${Python3_EXECUTABLE} -c "import pybind11; print(f'{pybind11.get_include()}/../share/cmake/pybind11')"
+        OUTPUT_VARIABLE PYBIND11_DIR
         OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-message(STATUS "Python library directory: ${PYTHON_LIBRARY}")
-
-execute_process(
-        COMMAND python3 -c "import pybind11; print(f'{pybind11.get_include()}/../share/cmake/pybind11')"
-        OUTPUT_VARIABLE pybind11_DIR
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-message(STATUS "PyBind11 include directory: ${pybind11_DIR}")
-
-include_directories(${PYTHON_INCLUDE_DIR} ${pybind11_DIR} ${PYTHON_LIBRARY} ${PYTHON_NUMPY_INCLUDE_DIRS})
+set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};${PYBIND11_DIR}")
 
 find_package(pybind11 REQUIRED)
 
-find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+message(STATUS "Python include directory: ${Python3_INCLUDE_DIRS}")
+message(STATUS "Python library directory: ${Python3_LIBRARIES}")
+message(STATUS "PyBind11 include directory: ${pybind11_INCLUDE_DIR}")
 
 pybind11_add_module(
         _temporal_walk
