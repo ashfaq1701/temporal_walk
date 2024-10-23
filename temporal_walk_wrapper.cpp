@@ -40,7 +40,18 @@ PYBIND11_MODULE(random_walk, m) {
         }), py::arg("num_walks"), py::arg("len_walk"), py::arg("picker_type"))
 
         .def("add_edge", &TemporalWalk::add_edge)
-        .def("add_multiple_edges", &TemporalWalk::add_multiple_edges)
+        .def("add_multiple_edges", [](TemporalWalk& tw, const std::vector<std::tuple<int, int, int64_t>>& edge_infos) {
+            std::vector<EdgeInfo> edges;
+
+            for (const auto& edge_info : edge_infos) {
+                int u = std::get<0>(edge_info);
+                int i = std::get<1>(edge_info);
+                int64_t t = std::get<2>(edge_info);
+                edges.emplace_back(EdgeInfo {u, i, t});
+            }
+
+            tw.add_multiple_edges(edges);
+        })
 
         .def("get_random_walks", [](TemporalWalk& tw, const std::string& walk_start_at_str, const int end_node=-1, const int fill_value=DEFAULT_WALK_FILL_VALUE) {
             const WalkStartAt walk_start_at = walk_start_at_from_string(walk_start_at_str);
