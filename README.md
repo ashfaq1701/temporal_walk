@@ -12,6 +12,14 @@ This library facilitates the creation of temporal graphs and the incremental sam
 
 ---
 
+## Installation
+
+This project can be installed using pip.
+
+```bash
+pip install temporal-walk
+```
+
 ## Functions
 
 `TemporalWalk` class contains the public facing functions.
