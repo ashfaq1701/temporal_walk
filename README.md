@@ -1,5 +1,8 @@
 # Temporal Walk
 
+[![PyPI Latest Release](https://img.shields.io/pypi/v/temporal-walk.svg)](https://pypi.org/project/temporal-walk/)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/temporal-walk.svg)](https://pypi.org/project/temporal-walk/)
+
 A modified implementation of temporal walk algorithm from "Continuous-Time Dynamic Network Embeddings" paper.
 
 ---
