@@ -129,10 +129,10 @@ Generates random walks from the temporal graph. The walks can be sampled from de
 ### get_random_walks_for_nodes
 
 ```python
-get_random_walks_for_nodes(walk_start_at: str, end_nodes: List[int], fill_value: int = -1) -> List[np.ndarray]:
+get_random_walks_for_nodes(walk_start_at: str, end_nodes: List[int], fill_value: int = -1) -> Dict[int, np.ndarray]:
 ```
 
-Generates random walks for multiple specified nodes in the temporal graph. Similar to get_random_walks, the walks can be sampled from destination to source or source to destination, controlled by the `walk_start_at` parameter. The end_nodes parameter is a list of integers representing the IDs of the nodes for which the walks will be generated. Returns a list of 2D NumPy arrays, each corresponding to the walks for a specific node, padded with `fill_value` where necessary.
+Generates random walks for multiple specified nodes in the temporal graph. Similar to get_random_walks, the walks can be sampled from destination to source or source to destination, controlled by the `walk_start_at` parameter. The end_nodes parameter is a list of integers representing the IDs of the nodes for which the walks will be generated. Returns a dictionary of 2D NumPy arrays, each corresponding to the walks for a specific node, padded with `fill_value` where necessary.
 
 ### get_node_count
 

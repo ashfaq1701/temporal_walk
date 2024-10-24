@@ -75,35 +75,36 @@ PYBIND11_MODULE(_temporal_walk, m) {
             return py_walks;
         })
 
-        .def("get_random_walks_for_nodes", [](TemporalWalk& tw, const std::string& walk_start_at_str, const std::vector<int>& end_nodes, const int fill_value=DEFAULT_WALK_FILL_VALUE) {
-            const WalkStartAt walk_start_at = walk_start_at_from_string(walk_start_at_str);
+    .def("get_random_walks_for_nodes", [](TemporalWalk& tw, const std::string& walk_start_at_str, const std::vector<int>& end_nodes, const int fill_value=DEFAULT_WALK_FILL_VALUE) {
+        const WalkStartAt walk_start_at = walk_start_at_from_string(walk_start_at_str);
 
-            auto walks_for_nodes = tw.get_random_walks_for_nodes(walk_start_at, end_nodes);
-            const int len_walk = tw.get_len_walk();  // Assuming len_walk is retrievable
+        auto walks_for_nodes = tw.get_random_walks_for_nodes(walk_start_at, end_nodes);
+        const int len_walk = tw.get_len_walk();
 
-            py::list py_walks_list;
+        py::dict py_walks_dict;  // Create a Python dictionary
 
-            for (int node : end_nodes) {
-                const auto& walks = walks_for_nodes[node];
-                const int num_walks = static_cast<int>(walks.size());
+        for (int node : end_nodes) {
+            const auto& walks = walks_for_nodes[node];
+            const int num_walks = static_cast<int>(walks.size());
 
-                py::array_t<int> py_walks({num_walks, len_walk});
-                auto py_walks_mutable = py_walks.mutable_unchecked<2>();
+            py::array_t<int> py_walks({num_walks, len_walk});
+            auto py_walks_mutable = py_walks.mutable_unchecked<2>();
 
-                // Pad walks with -1 for uneven walks
-                for (int i = 0; i < num_walks; ++i) {
-                    const auto& walk = walks[i];
-                    const int walk_size = static_cast<int>(walk.size());
+            // Pad walks with -1 for uneven walks
+            for (int i = 0; i < num_walks; ++i) {
+                const auto& walk = walks[i];
+                const int walk_size = static_cast<int>(walk.size());
 
-                    std::copy(walk.begin(), walk.end(), py_walks_mutable.mutable_data(i, 0));
-                    std::fill(py_walks_mutable.mutable_data(i, walk_size), py_walks_mutable.mutable_data(i, len_walk), fill_value);
-                }
-
-                py_walks_list.append(py_walks);
+                std::copy(walk.begin(), walk.end(), py_walks_mutable.mutable_data(i, 0));
+                std::fill(py_walks_mutable.mutable_data(i, walk_size), py_walks_mutable.mutable_data(i, len_walk), fill_value);
             }
 
-            return py_walks_list;
-        })
+            py_walks_dict[py::cast(node)] = py_walks;  // Add the walks array to the dictionary
+        }
+
+        return py_walks_dict;  // Return the dictionary
+    })
+
     .def("get_node_count", &TemporalWalk::get_node_count)
     .def("get_edge_count", &TemporalWalk::get_edge_count)
     .def("get_node_ids", [](const TemporalWalk& tw) {

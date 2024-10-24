@@ -1,1 +1,1 @@
-from ._temporal_walk import *
+from _temporal_walk import *
