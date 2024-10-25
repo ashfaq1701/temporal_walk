@@ -4,6 +4,7 @@ project(temporal_walk)
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(Python3 3.10 EXACT REQUIRED COMPONENTS Interpreter Development)
+set(Python3_EXECUTABLE "${CMAKE_SOURCE_DIR}/venv/bin/python")
 
 execute_process(
         COMMAND ${Python3_EXECUTABLE} -c "import pybind11; print(f'{pybind11.get_include()}/../share/cmake/pybind11')"
