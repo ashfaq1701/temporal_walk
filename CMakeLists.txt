@@ -28,7 +28,7 @@ pybind11_add_module(
 target_link_libraries(_temporal_walk PRIVATE pybind11::module ${Python3_LIBRARIES})
 
 add_executable(
-        test_temporal_walk
+        run_temporal_walk
         temporal_walk/models/Node.cpp
         temporal_walk/models/TemporalEdge.cpp
         temporal_walk/models/TemporalGraph.cpp
@@ -36,9 +36,9 @@ add_executable(
         temporal_walk/random/LinearRandomPicker.cpp
         temporal_walk/random/UniformRandomPicker.cpp
         temporal_walk/core/TemporalWalk.cpp
-        temporal_walk/test/test_temporal_walk.cpp
+        temporal_walk/test/run_temporal_walk.cpp
 )
 
-set_target_properties(test_temporal_walk PROPERTIES
+set_target_properties(run_temporal_walk PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )

@@ -47,10 +47,32 @@ void print_temporal_walks(const std::vector<std::vector<int>>& walks) {
     }
 }
 
+void print_temporal_walks_with_times(const std::vector<std::vector<NodeWithTime>>& walks_with_times) {
+    for (auto & walk : walks_with_times) {
+        std::cout << "Length: " << walk.size() << ", Walk: ";
+
+        for (const auto node : walk) {
+            std::cout << "(" << node.node << ", " << node.timestamp << "), ";
+        }
+
+        std::cout << std::endl;
+    }
+}
+
 void print_temporal_walks_for_nodes(const std::unordered_map<int, std::vector<std::vector<int>>>& walks_for_nodes) {
     for (const auto& [node, walks] : walks_for_nodes) {
         std::cout << "Walk for node " << node << std::endl;
         print_temporal_walks(walks);
+        std::cout << std::endl;
+        std::cout << "------------------------------";
+        std::cout << std::endl;
+    }
+}
+
+void print_temporal_walks_for_nodes_with_times(const std::unordered_map<int, std::vector<std::vector<NodeWithTime>>>& walks_for_nodes_with_times) {
+    for (const auto& [node, walks_with_times] : walks_for_nodes_with_times) {
+        std::cout << "Walk with times for node " << node << std::endl;
+        print_temporal_walks_with_times(walks_with_times);
         std::cout << std::endl;
         std::cout << "------------------------------";
         std::cout << std::endl;
@@ -67,11 +89,15 @@ int main() {
     temporal_walk.add_multiple_edges(edge_infos);
 
     const std::vector<int> nodes = temporal_walk.get_node_ids();
-
     std::cout << "Total node count: " << nodes.size() << std::endl;
 
-    const auto walks_for_nodes = temporal_walk.get_random_walks_for_nodes(WalkStartAt::Random, nodes);
+    const auto selected_nodes = std::vector<int>(nodes.begin(), nodes.begin() + 100);
+
+    const auto walks_for_nodes = temporal_walk.get_random_walks_for_nodes(WalkStartAt::Random, selected_nodes);
     print_temporal_walks_for_nodes(walks_for_nodes);
+
+    const auto walks_for_nodes_with_times = temporal_walk.get_random_walks_for_nodes_with_times(WalkStartAt::Random, selected_nodes);
+    print_temporal_walks_for_nodes_with_times(walks_for_nodes_with_times);
 
     const auto end = std::chrono::high_resolution_clock::now();
     const std::chrono::duration<double> duration = end - start;

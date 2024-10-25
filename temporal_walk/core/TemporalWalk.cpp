@@ -26,8 +26,8 @@ TemporalWalk::TemporalWalk(const int num_walks, const int len_walk, RandomPicker
     }
 }
 
-std::vector<std::vector<int>> TemporalWalk::get_random_walks(const WalkStartAt walk_start_at, const int end_node) {
-    std::vector walks(num_walks, std::vector<int>());
+std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_with_times(const WalkStartAt walk_start_at, const int end_node) {
+    std::vector walks(num_walks, std::vector<NodeWithTime>());
     for (auto & walk : walks) {
         walk.reserve(len_walk);
     }
@@ -51,10 +51,10 @@ std::vector<std::vector<int>> TemporalWalk::get_random_walks(const WalkStartAt w
         return begin_from_end;
     };
 
-    auto prepare_walk = [&](std::vector<int>* walk) {
+    auto prepare_walk = [&](std::vector<NodeWithTime>* walk) {
         const bool begin_from_end = get_if_begin_from_end();
 
-        generate_random_walk(walk, begin_from_end, end_node);
+        generate_random_walk_with_time(walk, begin_from_end, end_node);
 
         if (begin_from_end) {
             std::reverse(walk->begin(), walk->end());
@@ -74,18 +74,17 @@ std::vector<std::vector<int>> TemporalWalk::get_random_walks(const WalkStartAt w
     return walks;
 }
 
-std::unordered_map<int, std::vector<std::vector<int>>> TemporalWalk::get_random_walks_for_nodes(const WalkStartAt walk_start_at, const std::vector<int>& end_nodes) {
-    std::unordered_map<int, std::vector<std::vector<int>>> walk_for_nodes;
-    std::vector<std::future<std::vector<std::vector<int>>>> results;
+std::unordered_map<int, std::vector<std::vector<NodeWithTime>>> TemporalWalk::get_random_walks_for_nodes_with_times(const WalkStartAt walk_start_at, const std::vector<int>& end_nodes) {
+    std::unordered_map<int, std::vector<std::vector<NodeWithTime>>> walk_for_nodes_with_times;
 
     for (int end_node : end_nodes) {
-        walk_for_nodes[end_node] = get_random_walks(walk_start_at, end_node);
+        walk_for_nodes_with_times[end_node] = get_random_walks_with_times(walk_start_at, end_node);
     }
 
-    return walk_for_nodes;
+    return walk_for_nodes_with_times;
 }
 
-void TemporalWalk::generate_random_walk(std::vector<int>* walk, const bool begin_from_end, const int end_node) const {
+void TemporalWalk::generate_random_walk_with_time(std::vector<NodeWithTime>* walk, const bool begin_from_end, const int end_node) const {
     Node* graph_node;
 
     if (end_node != -1) {
@@ -102,7 +101,7 @@ void TemporalWalk::generate_random_walk(std::vector<int>* walk, const bool begin
     auto current_timestamp = begin_from_end ? INT64_MAX : INT64_MIN;
 
     while (walk->size() < len_walk && current_node != nullptr) {
-        walk->push_back(current_node->id);
+        walk->emplace_back(NodeWithTime {current_node->id, current_timestamp});
         const auto picked_edge = current_node->pick_temporal_edge(
             random_picker.get(),
             begin_from_end,
@@ -117,6 +116,36 @@ void TemporalWalk::generate_random_walk(std::vector<int>* walk, const bool begin
         current_timestamp = picked_edge->timestamp;
     }
 }
+
+std::vector<std::vector<int>> TemporalWalk::get_random_walks(const WalkStartAt walk_start_at, const int end_node) {
+    std::vector<std::vector<int>> walks;
+
+    const auto walks_with_times = get_random_walks_with_times(walk_start_at, end_node);
+    for (auto & walk_with_time : walks_with_times)
+    {
+        std::vector<int> walk;
+
+        for (const auto & [node, time] : walk_with_time)
+        {
+            walk.push_back(node); // NOLINT(*-inefficient-vector-operation)
+        }
+
+        walks.push_back(walk);
+    }
+
+    return walks;
+}
+
+std::unordered_map<int, std::vector<std::vector<int>>> TemporalWalk::get_random_walks_for_nodes(const WalkStartAt walk_start_at, const std::vector<int>& end_nodes) {
+    std::unordered_map<int, std::vector<std::vector<int>>> walk_for_nodes;
+
+    for (int end_node : end_nodes) {
+        walk_for_nodes[end_node] = get_random_walks(walk_start_at, end_node);
+    }
+
+    return walk_for_nodes;
+}
+
 
 void TemporalWalk::add_edge(const int u, const int i, const int64_t t) const {
     temporal_graph->add_edge(u, i, t);

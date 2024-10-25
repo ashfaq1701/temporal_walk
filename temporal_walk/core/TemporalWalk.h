@@ -25,6 +25,11 @@ struct EdgeInfo {
     int64_t t;
 };
 
+struct NodeWithTime {
+    int node;
+    int64_t timestamp;
+};
+
 class TemporalWalk {
     int num_walks;
     int len_walk;
@@ -34,10 +39,13 @@ class TemporalWalk {
 
     ThreadPool thread_pool;
 
-    void generate_random_walk(std::vector<int>* walk, bool begin_from_end, int end_node=-1) const;
+    void generate_random_walk_with_time(std::vector<NodeWithTime>* walk, bool begin_from_end, int end_node=-1) const;
 
 public:
     TemporalWalk(int num_walks, int len_walk, RandomPickerType picker_type);
+
+    [[nodiscard]] std::vector<std::vector<NodeWithTime>> get_random_walks_with_times(WalkStartAt walk_start_at, int end_node=-1);
+    [[nodiscard]] std::unordered_map<int, std::vector<std::vector<NodeWithTime>>> get_random_walks_for_nodes_with_times(WalkStartAt walk_start_at, const std::vector<int>& end_nodes);
 
     [[nodiscard]] std::vector<std::vector<int>> get_random_walks(WalkStartAt walk_start_at, int end_node=-1);
     [[nodiscard]] std::unordered_map<int, std::vector<std::vector<int>>> get_random_walks_for_nodes(WalkStartAt walk_start_at, const std::vector<int>& end_nodes);

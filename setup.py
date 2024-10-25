@@ -45,7 +45,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name="temporal_walk",
-    version="0.1.0",
+    version="0.1.1",
     author="Ashfaq Salehin",
     author_email="ashfaq.salehin1701@gmail.com",
     description="A library to sample temporal walks from an in-memory temporal graph",
