@@ -75,6 +75,21 @@ int main() {
 
     const auto end = std::chrono::high_resolution_clock::now();
     const std::chrono::duration<double> duration = end - start;
+
+
+    const auto random_walks_from_begin = temporal_walk.get_random_walks(WalkStartAt::Begin);
+    const auto random_walks_from_end = temporal_walk.get_random_walks(WalkStartAt::End);
+
+    std::cout << "------------------------------------------------------" << std::endl;
+    std::cout << "Random Walks from beginning to end" << std::endl;
+    print_temporal_walks(random_walks_from_begin);
+    std::cout << "------------------------------------------------------" << std::endl;
+
+    std::cout << "------------------------------------------------------" << std::endl;
+    std::cout << "Random Walks from end to beginning" << std::endl;
+    print_temporal_walks(random_walks_from_end);
+    std::cout << "------------------------------------------------------" << std::endl;
+
     std::cout << "Runtime: " << duration.count() << " seconds" << std::endl;
 
     return 0;
