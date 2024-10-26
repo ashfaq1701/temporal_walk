@@ -3,7 +3,7 @@ project(temporal_walk)
 
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(Python3 3.10 EXACT REQUIRED COMPONENTS Interpreter Development)
+find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 set(Python3_EXECUTABLE "${CMAKE_SOURCE_DIR}/venv/bin/python")
 
 execute_process(

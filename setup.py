@@ -45,7 +45,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name="temporal_walk",
-    version="0.1.2",
+    version="0.1.3",
     author="Ashfaq Salehin",
     author_email="ashfaq.salehin1701@gmail.com",
     description="A library to sample temporal walks from an in-memory temporal graph",
@@ -60,6 +60,6 @@ setup(
     ext_modules=[CMakeExtension('_temporal_walk')],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
-    python_requires=">=3.7",
+    python_requires=">=3.10",
     install_requires=["pybind11>=2.6.0", "numpy"],
 )
