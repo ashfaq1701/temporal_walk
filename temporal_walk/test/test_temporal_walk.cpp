@@ -107,6 +107,7 @@ TEST_F(FilledTemporalWalkTest, CheckWalksForNodes) {
         EXPECT_EQ(it->second.size(), NUM_WALKS) << "Node " << node << " does not have the expected number of walks.";
     }
 
+    // Test that each walk for each node is strictly increasing in time.
     for (const auto& node : selected_nodes) {
         auto walks = walks_for_nodes.at(node);
 
