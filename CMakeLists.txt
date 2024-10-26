@@ -43,3 +43,24 @@ add_executable(
 set_target_properties(run_temporal_walk PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
+
+find_package(GTest CONFIG REQUIRED)
+
+add_executable(
+        test_temporal_walk
+        temporal_walk/models/Node.cpp
+        temporal_walk/models/TemporalEdge.cpp
+        temporal_walk/models/TemporalGraph.cpp
+        temporal_walk/random/ExponentialRandomPicker.cpp
+        temporal_walk/random/LinearRandomPicker.cpp
+        temporal_walk/random/UniformRandomPicker.cpp
+        temporal_walk/core/TemporalWalk.cpp
+        temporal_walk/test/test_temporal_walk.cpp
+)
+
+target_link_libraries(test_temporal_walk PRIVATE
+        GTest::gtest
+        GTest::gtest_main
+        GTest::gmock
+        GTest::gmock_main
+)
