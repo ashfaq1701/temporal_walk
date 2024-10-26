@@ -5,7 +5,7 @@
 
 constexpr int TEST_NODE_ID = 45965;
 constexpr int LEN_WALK = 20;
-constexpr int NUM_WALKS = 50;
+constexpr int NUM_WALKS = 100;
 
 class EmptyTemporalWalkTest : public ::testing::Test {
 protected:
@@ -28,6 +28,7 @@ protected:
     std::unique_ptr<TemporalWalk> temporal_walk;
 };
 
+// Test the constructor of TemporalWalk to ensure it initializes correctly.
 TEST_F(EmptyTemporalWalkTest, ConstructorTest) {
     EXPECT_NO_THROW(temporal_walk = std::make_unique<TemporalWalk>(NUM_WALKS, LEN_WALK, RandomPickerType::Uniform));
     EXPECT_EQ(temporal_walk->get_len_walk(), LEN_WALK);
@@ -35,18 +36,21 @@ TEST_F(EmptyTemporalWalkTest, ConstructorTest) {
 }
 
 
+// Test adding an edge to the TemporalWalk when it's empty.
 TEST_F(EmptyTemporalWalkTest, AddEdgeTest) {
     temporal_walk->add_edge(1, 2, 100);
     EXPECT_EQ(temporal_walk->get_edge_count(), 1);
     EXPECT_EQ(temporal_walk->get_node_count(), 2);
 }
 
+// Test to check if a specific node ID is present in the filled TemporalWalk.
 TEST_F(FilledTemporalWalkTest, TestNodeFoundTest) {
     const auto nodes = temporal_walk->get_node_ids();
     const auto it = std::find(nodes.begin(), nodes.end(), TEST_NODE_ID);
     EXPECT_NE(it, nodes.end());
 }
 
+// Test that the number of random walks generated matches the expected count and checks that no walk exceeds its length.
 TEST_F(FilledTemporalWalkTest, WalkCountAndLensTest) {
     const auto walks = temporal_walk->get_random_walks_with_times(WalkStartAt::Random, TEST_NODE_ID);
     EXPECT_EQ(walks.size(), NUM_WALKS);
@@ -57,6 +61,7 @@ TEST_F(FilledTemporalWalkTest, WalkCountAndLensTest) {
     }
 }
 
+// Test that all walks starting from a specific node begin with that node.
 TEST_F(FilledTemporalWalkTest, WalkStartTest) {
     const auto walks = temporal_walk->get_random_walks_with_times(WalkStartAt::Begin, TEST_NODE_ID);
     for (const auto& walk : walks) {
@@ -64,6 +69,7 @@ TEST_F(FilledTemporalWalkTest, WalkStartTest) {
     }
 }
 
+// Test that all walks ending at a specific node conclude with that node.
 TEST_F(FilledTemporalWalkTest, WalkEndTest) {
     const auto walks = temporal_walk->get_random_walks_with_times(WalkStartAt::End, TEST_NODE_ID);
     for (const auto& walk : walks) {
@@ -71,6 +77,7 @@ TEST_F(FilledTemporalWalkTest, WalkEndTest) {
     }
 }
 
+// Test to verify that the timestamps in each walk are strictly increasing.
 TEST_F(FilledTemporalWalkTest, WalkIncreasingTimestampTest) {
     const auto walks = temporal_walk->get_random_walks_with_times(WalkStartAt::Random, TEST_NODE_ID);
 
@@ -84,6 +91,7 @@ TEST_F(FilledTemporalWalkTest, WalkIncreasingTimestampTest) {
     }
 }
 
+// Test to verify random walks for selected nodes and their properties.
 TEST_F(FilledTemporalWalkTest, CheckWalksForNodes) {
     constexpr int num_selected_walks = 100;
 
