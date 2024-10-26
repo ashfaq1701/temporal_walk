@@ -54,14 +54,22 @@ TEST_F(FilledTemporalWalkTest, TestNodeFoundTest) {
 }
 
 // Test that the number of random walks generated matches the expected count and checks that no walk exceeds its length.
+// Also test that the system can sample walks of length more than 1.
 TEST_F(FilledTemporalWalkTest, WalkCountAndLensTest) {
     const auto walks = temporal_walk->get_random_walks_with_times(WalkStartAt::Random, TEST_NODE_ID);
     EXPECT_EQ(walks.size(), NUM_WALKS);
 
+    int total_walk_lens = 0;
+
     for (const auto& walk : walks) {
         EXPECT_LE(walk.size(), LEN_WALK) << "A walk exceeds the maximum length of " << LEN_WALK;
         EXPECT_GT(walk.size(), 0);
+
+        total_walk_lens += static_cast<int>(walk.size());
     }
+
+    auto average_walk_len = static_cast<float>(total_walk_lens) / static_cast<float>(walks.size());
+    EXPECT_GT(average_walk_len, 1) << "System could not sample any walk of length more than 1";
 }
 
 // Test that all walks starting from a specific node begin with that node.
