@@ -3,9 +3,11 @@ project(temporal_walk)
 
 set(CMAKE_CXX_STANDARD 17)
 
+# Set Python executable path
 find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
 set(Python3_EXECUTABLE "${CMAKE_SOURCE_DIR}/venv/bin/python")
 
+# Get pybind11 directory
 execute_process(
         COMMAND ${Python3_EXECUTABLE} -c "import pybind11; print(f'{pybind11.get_include()}/../share/cmake/pybind11')"
         OUTPUT_VARIABLE PYBIND11_DIR
@@ -14,53 +16,10 @@ execute_process(
 set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};${PYBIND11_DIR}")
 find_package(pybind11 REQUIRED)
 
-pybind11_add_module(
-        _temporal_walk
-        temporal_walk/_temporal_walk.cpp
-        temporal_walk/core/TemporalWalk.cpp
-        temporal_walk/models/TemporalEdge.cpp
-        temporal_walk/models/TemporalGraph.cpp
-        temporal_walk/models/Node.cpp
-        temporal_walk/random/ExponentialRandomPicker.cpp
-        temporal_walk/random/LinearRandomPicker.cpp
-        temporal_walk/random/UniformRandomPicker.cpp
-)
+# Automatically find all source files in src directory
+file(GLOB_RECURSE SRC_FILES temporal_walk/src/*.cpp)
 
-target_link_libraries(_temporal_walk PRIVATE pybind11::module ${Python3_LIBRARIES})
-
-add_executable(
-        run_temporal_walk
-        temporal_walk/models/Node.cpp
-        temporal_walk/models/TemporalEdge.cpp
-        temporal_walk/models/TemporalGraph.cpp
-        temporal_walk/random/ExponentialRandomPicker.cpp
-        temporal_walk/random/LinearRandomPicker.cpp
-        temporal_walk/random/UniformRandomPicker.cpp
-        temporal_walk/core/TemporalWalk.cpp
-        temporal_walk/test/run_temporal_walk.cpp
-)
-
-set_target_properties(run_temporal_walk PROPERTIES
-        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-)
-
-find_package(GTest CONFIG REQUIRED)
-
-add_executable(
-        test_temporal_walk
-        temporal_walk/models/Node.cpp
-        temporal_walk/models/TemporalEdge.cpp
-        temporal_walk/models/TemporalGraph.cpp
-        temporal_walk/random/ExponentialRandomPicker.cpp
-        temporal_walk/random/LinearRandomPicker.cpp
-        temporal_walk/random/UniformRandomPicker.cpp
-        temporal_walk/core/TemporalWalk.cpp
-        temporal_walk/test/test_temporal_walk.cpp
-)
-
-target_link_libraries(test_temporal_walk PRIVATE
-        GTest::gtest
-        GTest::gtest_main
-        GTest::gmock
-        GTest::gmock_main
-)
+# Include subdirectories for Python bindings, testing, and execution targets
+add_subdirectory(temporal_walk/py_interface)
+add_subdirectory(temporal_walk/test)
+add_subdirectory(temporal_walk/test_run)

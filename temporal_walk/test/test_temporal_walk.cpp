@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "test_utils.h"
-#include "../core/TemporalWalk.h"
+#include "../src/core/TemporalWalk.h"
 
 constexpr int TEST_NODE_ID = 45965;
 constexpr int LEN_WALK = 20;
@@ -18,13 +18,16 @@ protected:
 
 class FilledTemporalWalkTest : public ::testing::Test {
 protected:
+    FilledTemporalWalkTest() {
+        sample_edges = read_edges_from_csv("../../../data/sample_data.csv");
+    }
+
     void SetUp() override {
         temporal_walk = std::make_unique<TemporalWalk>(NUM_WALKS, LEN_WALK, RandomPickerType::Linear);
-
-        const auto sample_edges = read_edges_from_csv("../data/sample_data.csv");
         temporal_walk->add_multiple_edges(sample_edges);
     }
 
+    std::vector<EdgeInfo> sample_edges;
     std::unique_ptr<TemporalWalk> temporal_walk;
 };
 

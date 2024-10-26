@@ -1,7 +1,7 @@
 #include <sstream>
 #include <string>
 #include <fstream>
-#include "../core/TemporalWalk.h"
+#include "../src/core/TemporalWalk.h"
 
 inline std::vector<EdgeInfo> read_edges_from_csv(const std::string& filename) {
     std::ifstream file(filename);

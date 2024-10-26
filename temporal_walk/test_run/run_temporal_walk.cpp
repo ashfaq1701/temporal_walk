@@ -1,8 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include "test_utils.h"
-#include "../core/TemporalWalk.h"
+#include "../test/test_utils.h"
+#include "../src//core/TemporalWalk.h"
 
 constexpr int NUM_WALKS = 20;
 constexpr int LEN_WALK = 500;
