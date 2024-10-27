@@ -42,10 +42,15 @@ class CMakeBuild(build_ext):
             print(f"Error during CMake configuration or build: {e}")
             sys.exit(1)
 
+def read_version_number():
+    with open('version_number.txt', 'r') as file:
+        version_number = file.readline()
+    return version_number.strip()
+
 
 setup(
     name="temporal_walk",
-    version="0.1.4",
+    version=read_version_number(),
     author="Ashfaq Salehin",
     author_email="ashfaq.salehin1701@gmail.com",
     description="A library to sample temporal walks from an in-memory temporal graph",
