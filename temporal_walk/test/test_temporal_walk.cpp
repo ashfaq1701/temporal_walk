@@ -2,10 +2,34 @@
 
 #include "test_utils.h"
 #include "../src/core/TemporalWalk.h"
+#include "../src/random/ExponentialRandomPicker.h"
+#include "../src/random/LinearRandomPicker.h"
 
 constexpr int TEST_NODE_ID = 45965;
 constexpr int LEN_WALK = 20;
 constexpr int NUM_WALKS = 100;
+
+constexpr int RANDOM_START = 0;
+constexpr int RANDOM_END = 10000;
+constexpr int RANDOM_NUM_SAMPLES = 100000;
+
+class RandomPickerTest : public ::testing::Test {
+protected:
+
+    LinearRandomPicker linear_picker;
+    ExponentialRandomPicker exp_picker;
+
+    double compute_average_picks(const bool use_exponential, const bool prioritize_end) {
+        double sum = 0;
+        for (int i = 0; i < RANDOM_NUM_SAMPLES; i++) {
+            const int pick = use_exponential ?
+                                 exp_picker.pick_random(RANDOM_START, RANDOM_END, prioritize_end) :
+                                 linear_picker.pick_random(RANDOM_START, RANDOM_END, prioritize_end);
+            sum += pick;
+        }
+        return sum / RANDOM_NUM_SAMPLES;
+    }
+};
 
 class EmptyTemporalWalkTest : public ::testing::Test {
 protected:
@@ -30,6 +54,47 @@ protected:
     std::vector<EdgeInfo> sample_edges;
     std::unique_ptr<TemporalWalk> temporal_walk;
 };
+
+// Test that prioritize_end=true gives higher average than prioritize_end=false for both pickers
+TEST_F(RandomPickerTest, PrioritizeEndGivesHigherAverage) {
+    // For Linear Picker
+    const double linear_end_prioritized = compute_average_picks(false, true);
+    const double linear_start_prioritized = compute_average_picks(false, false);
+    EXPECT_GT(linear_end_prioritized, linear_start_prioritized)
+        << "Linear picker with prioritize_end=true should give higher average ("
+        << linear_end_prioritized << ") than prioritize_end=false ("
+        << linear_start_prioritized << ")";
+
+    // For Exponential Picker
+    const double exp_end_prioritized = compute_average_picks(true, true);
+    const double exp_start_prioritized = compute_average_picks(true, false);
+    EXPECT_GT(exp_end_prioritized, exp_start_prioritized)
+        << "Exponential picker with prioritize_end=true should give higher average ("
+        << exp_end_prioritized << ") than prioritize_end=false ("
+        << exp_start_prioritized << ")";
+}
+
+// Test that exponential picker is more extreme than linear picker when prioritizing end
+TEST_F(RandomPickerTest, ExponentialMoreExtremeForEnd) {
+    const double linear_end_prioritized = compute_average_picks(false, true);
+    const double exp_end_prioritized = compute_average_picks(true, true);
+
+    EXPECT_GT(exp_end_prioritized, linear_end_prioritized)
+        << "Exponential picker with prioritize_end=true should give higher average ("
+        << exp_end_prioritized << ") than Linear picker ("
+        << linear_end_prioritized << ")";
+}
+
+// Test that exponential picker is more extreme than linear picker when prioritizing start
+TEST_F(RandomPickerTest, ExponentialMoreExtremeForStart) {
+    const double linear_start_prioritized = compute_average_picks(false, false);
+    const double exp_start_prioritized = compute_average_picks(true, false);
+
+    EXPECT_LT(exp_start_prioritized, linear_start_prioritized)
+        << "Exponential picker with prioritize_end=false should give lower average ("
+        << exp_start_prioritized << ") than Linear picker ("
+        << linear_start_prioritized << ")";
+}
 
 // Test the constructor of TemporalWalk to ensure it initializes correctly.
 TEST_F(EmptyTemporalWalkTest, ConstructorTest) {

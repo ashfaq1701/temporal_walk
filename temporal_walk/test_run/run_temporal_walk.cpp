@@ -6,7 +6,7 @@
 
 constexpr int NUM_WALKS = 20;
 constexpr int LEN_WALK = 500;
-constexpr RandomPickerType RANDOM_PICKER_TYPE = RandomPickerType::Linear;
+constexpr RandomPickerType RANDOM_PICKER_TYPE = RandomPickerType::Exponential;
 
 void print_temporal_walks(const std::vector<std::vector<int>>& walks) {
     for (auto & walk : walks) {
