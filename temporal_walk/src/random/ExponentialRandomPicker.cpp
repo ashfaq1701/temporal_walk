@@ -26,7 +26,7 @@ int ExponentialRandomPicker::pick_random(const int start, const int end, const b
     } else {
         // For prioritizing start: P(i) ∝ exp(-i)
         // First, compute total weight for normalization (sum of exp(-i) from 0 to len_seq-1)
-        const double total_weight = (1 - std::exp(-len_seq)) / (1 - std::exp(-1));
+        const double total_weight = (1 - std::exp(-len_seq)) / (1 - std::exp(-1.0));
 
         std::uniform_real_distribution<double> dist(0.0, total_weight);
         const double random_value = dist(gen);
@@ -34,9 +34,7 @@ int ExponentialRandomPicker::pick_random(const int start, const int end, const b
         // Using inverse CDF to directly compute the index
         // If F(x) = (1-e^(-x))/(1-e^(-1)) is our CDF
         // Then F^(-1)(y) = -ln(1 - y*(1-e^(-1)))
-        const double inverse_cdf = -std::log(1 - random_value * (1 - std::exp(-1)));
-
-        const int index = static_cast<int>(inverse_cdf);
+        const int index = static_cast<int>(-std::log1p(-random_value * (1.0 - std::exp(-1.0))));
         return start + std::min(index, len_seq - 1);
     }
 }
