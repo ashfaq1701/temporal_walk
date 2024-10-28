@@ -7,7 +7,7 @@
 
 constexpr int TEST_NODE_ID = 45965;
 constexpr int LEN_WALK = 20;
-constexpr int NUM_WALKS = 100;
+constexpr int NUM_WALKS = 1000;
 
 constexpr int RANDOM_START = 0;
 constexpr int RANDOM_END = 10000;
@@ -246,8 +246,13 @@ TEST_F(EmptyTemporalWalkTest, ConstructorTest) {
 // Test adding an edge to the TemporalWalk when it's empty.
 TEST_F(EmptyTemporalWalkTest, AddEdgeTest) {
     temporal_walk->add_edge(1, 2, 100);
-    EXPECT_EQ(temporal_walk->get_edge_count(), 1);
-    EXPECT_EQ(temporal_walk->get_node_count(), 2);
+    temporal_walk->add_edge(2, 3, 101);
+    temporal_walk->add_edge(7, 8, 102);
+    temporal_walk->add_edge(1, 7, 103);
+    temporal_walk->add_edge(3, 2, 103);
+    temporal_walk->add_edge(10, 11, 104);
+    EXPECT_EQ(temporal_walk->get_edge_count(), 6);
+    EXPECT_EQ(temporal_walk->get_node_count(), 7);
 }
 
 // Test to check if a specific node ID is present in the filled TemporalWalk.
