@@ -18,11 +18,7 @@ inline std::vector<EdgeInfo> read_edges_from_csv(const std::string& filename) {
         std::getline(ss, i_str, ',');
         std::getline(ss, t_str, ',');
 
-        EdgeInfo edge{};
-        edge.u = std::stoi(u_str);
-        edge.i = std::stoi(i_str);
-        edge.t = std::stoll(t_str);
-
+        EdgeInfo edge{std::stoi(u_str), std::stoi(i_str), std::stoll(t_str)};
         edges.push_back(edge);
     }
 

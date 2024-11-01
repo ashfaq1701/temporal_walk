@@ -1,13 +1,14 @@
 #include "TemporalWalk.h"
 
 #include <iostream>
-
 #include "../utils/utils.h"
 #include "../random/UniformRandomPicker.h"
 #include "../random/LinearRandomPicker.h"
 #include "../random/ExponentialRandomPicker.h"
 
-TemporalWalk::TemporalWalk(const int num_walks, const int len_walk, RandomPickerType picker_type)
+EdgeInfo::EdgeInfo(const int u, const int i, const int64_t t): u(u), i(i), t(t) {}
+
+TemporalWalk::TemporalWalk(const int num_walks, const int len_walk, const RandomPickerType picker_type)
     : num_walks(num_walks), len_walk(len_walk), thread_pool(ThreadPool(std::thread::hardware_concurrency())) {
     temporal_graph = std::make_unique<TemporalGraph>();
 

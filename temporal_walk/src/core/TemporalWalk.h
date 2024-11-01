@@ -23,6 +23,8 @@ struct EdgeInfo {
     int u;
     int i;
     int64_t t;
+
+    EdgeInfo(int u, int i, int64_t t);
 };
 
 struct NodeWithTime {

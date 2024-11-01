@@ -15,6 +15,100 @@ This library facilitates the creation of temporal graphs and the incremental sam
 
 ---
 
+## Definitions
+
+A temporal network represents a dynamic system where edges or interactions between nodes vary over time. In contrast to static networks, temporal networks capture changes and sequences in connectivity, which is essential in understanding real-world phenomena like social interactions, information spread, and transportation flows over time.
+
+A temporal walk is a path through a temporal network that respects the order of timestamps on edges, ensuring causality. Temporal walks are particularly useful for applications in graph neural networks (GNNs), where learning temporal dependencies enhances the model's ability to predict or understand evolving network structures.
+
+---
+
+### Example
+
+For a given temporal network with following edges (upstream node, downstream node, timestamp),
+
+```pytchon
+[
+    (4, 5, 71),
+    (3, 5, 82),
+    (1, 3, 19),
+    (4, 2, 34),
+    (4, 3, 79),
+    (2, 5, 19),
+    (2, 3, 70),
+    (5, 4, 97),
+    (4, 6, 57),
+    (6, 4, 27),
+    (2, 6, 80),
+    (6, 1, 42),
+    (4, 6, 98),
+    (1, 4, 17),
+    (5, 4, 32)
+]
+```
+
+<img src="images/network.png" alt="Sample Temporal Graph" style="width: 600px; margin: auto"/>
+
+Five walks staring at node `2` with linear probability along with their timestamps,
+
+```
+(2, -9223372036854775808), (3, 70), (5, 82), (4, 97), (6, 98)
+(2, -9223372036854775808), (5, 19), (4, 32), (5, 71), (4, 97), (6, 98)
+(2, -9223372036854775808), (5, 19), (4, 32), (2, 34), (3, 70), (5, 82), (4, 97), (6, 98)
+(2, -9223372036854775808), (5, 19), (4, 97), (6, 98)
+(2, -9223372036854775808), (3, 70), (5, 82), (4, 97), (6, 98)
+```
+
+Five walks ending at node `2` with linear probability,
+
+```
+(6, 27), (4, 34), (2, 9223372036854775807)
+(2, 19), (5, 32), (4, 34), (2, 9223372036854775807)
+(6, 27), (4, 34), (2, 9223372036854775807)
+(6, 27), (4, 34), (2, 9223372036854775807)
+(1, 17), (4, 34), (2, 9223372036854775807)
+```
+
+Five walks staring at node `2` with exponential probability,
+
+```
+(2, -9223372036854775808), (6, 80)
+(2, -9223372036854775808), (5, 19), (4, 32), (2, 34), (3, 70), (5, 82), (4, 97), (6, 98)
+(2, -9223372036854775808), (5, 19), (4, 32), (2, 34), (6, 80)
+(2, -9223372036854775808), (5, 19), (4, 32), (5, 71), (4, 97), (6, 98)
+(2, -9223372036854775808), (5, 19), (4, 32), (2, 34), (6, 80)
+```
+
+Five walks ending at node `2` with exponential probability,
+
+```
+(2, 19), (5, 32), (4, 34), (2, 9223372036854775807)
+(2, 19), (5, 32), (4, 34), (2, 9223372036854775807)
+(6, 27), (4, 34), (2, 9223372036854775807)
+(2, 19), (5, 32), (4, 34), (2, 9223372036854775807)
+(2, 19), (5, 32), (4, 34), (2, 9223372036854775807)
+```
+
+Five walks staring at node `2` with uniform probability,
+
+```
+(2, -9223372036854775808), (3, 70), (5, 82), (4, 97), (6, 98)
+(2, -9223372036854775808), (5, 19), (4, 97), (6, 98)
+(2, -9223372036854775808), (5, 19), (4, 97), (6, 98)
+(2, -9223372036854775808), (6, 80)
+(2, -9223372036854775808), (5, 19), (4, 32), (2, 34), (6, 80)
+```
+
+Five walks ending at node `2` with uniform probability,
+
+```
+(6, 27), (4, 34), (2, 9223372036854775807)
+(6, 27), (4, 34), (2, 9223372036854775807)
+(2, 19), (5, 32), (4, 34), (2, 9223372036854775807)
+(1, 17), (4, 34), (2, 9223372036854775807)
+(6, 27), (4, 34), (2, 9223372036854775807)
+```
+
 ## Installation
 
 This project can be installed using pip.
