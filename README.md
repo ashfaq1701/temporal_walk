@@ -13,7 +13,7 @@ This project enables the construction of large temporal networks in memory, from
 
 This library facilitates the creation of temporal graphs and the incremental sampling of temporal walks based on the current graph state, making it especially useful for training GNNs. PyBind is interfaced which let's the functions to be called from Python. For convenience the walks are returned as numpy arrays.
 
-To allow creation of continuous graphs with a maximum time capacity, when edges with older timestamps are automatically deleted.
+The library also supports the creation of continuous graphs with a maximum time capacity, where edges with timestamps older than the current time minus the maximum capacity are automatically deleted.
 
 ---
 
