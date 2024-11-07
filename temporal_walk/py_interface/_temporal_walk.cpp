@@ -1,6 +1,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
+#include <optional>
 #include "../src/core/TemporalWalk.h"
 #include <stdexcept>
 
@@ -34,13 +35,14 @@ WalkStartAt walk_start_at_from_string(const std::string& walk_start_at_str) {
 
 PYBIND11_MODULE(_temporal_walk, m) {
     py::class_<TemporalWalk>(m, "TemporalWalk")
-        .def(py::init([](int num_walks, int len_walk, const std::string& picker_type_str, int64_t max_time_capacity=-1) {
+        .def(py::init([](int num_walks, int len_walk, const std::string& picker_type_str, const std::optional<int64_t> max_time_capacity) {
             RandomPickerType picker_type = picker_type_from_string(picker_type_str);
-            return std::make_unique<TemporalWalk>(num_walks, len_walk, picker_type, max_time_capacity);
+            return std::make_unique<TemporalWalk>(num_walks, len_walk, picker_type, max_time_capacity.value_or(-1));
         }),
         py::arg("num_walks"),
         py::arg("len_walk"),
-        py::arg("picker_type"))
+        py::arg("picker_type"),
+        py::arg("max_time_capacity") = py::none())
         .def("add_multiple_edges", [](TemporalWalk& tw, const std::vector<std::tuple<int, int, int64_t>>& edge_infos) {
             std::vector<EdgeInfo> edges;
 
