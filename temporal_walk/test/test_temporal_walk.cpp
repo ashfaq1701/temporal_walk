@@ -8,6 +8,7 @@
 constexpr int TEST_NODE_ID = 45965;
 constexpr int LEN_WALK = 20;
 constexpr int NUM_WALKS = 1000;
+constexpr int64_t MAX_TIME_CAPACITY = 5;
 
 constexpr int RANDOM_START = 0;
 constexpr int RANDOM_END = 10000;
@@ -35,6 +36,15 @@ class EmptyTemporalWalkTest : public ::testing::Test {
 protected:
     void SetUp() override {
         temporal_walk = std::make_unique<TemporalWalk>(NUM_WALKS, LEN_WALK, RandomPickerType::Linear);
+    }
+
+    std::unique_ptr<TemporalWalk> temporal_walk;
+};
+
+class EmptyTemporalWalkTestWithMaxCapacity : public ::testing::Test {
+protected:
+    void SetUp() override {
+        temporal_walk = std::make_unique<TemporalWalk>(NUM_WALKS, LEN_WALK, RandomPickerType::Linear, MAX_TIME_CAPACITY);
     }
 
     std::unique_ptr<TemporalWalk> temporal_walk;
@@ -245,14 +255,56 @@ TEST_F(EmptyTemporalWalkTest, ConstructorTest) {
 
 // Test adding an edge to the TemporalWalk when it's empty.
 TEST_F(EmptyTemporalWalkTest, AddEdgeTest) {
-    temporal_walk->add_edge(1, 2, 100);
-    temporal_walk->add_edge(2, 3, 101);
-    temporal_walk->add_edge(7, 8, 102);
-    temporal_walk->add_edge(1, 7, 103);
-    temporal_walk->add_edge(3, 2, 103);
-    temporal_walk->add_edge(10, 11, 104);
+    temporal_walk->add_multiple_edges({
+        EdgeInfo {1, 2, 100},
+        EdgeInfo {2, 3, 101},
+        EdgeInfo{7, 8, 102},
+        EdgeInfo{1, 7, 103},
+        EdgeInfo{3, 2, 103},
+        EdgeInfo{10, 11, 104}
+    });
+
     EXPECT_EQ(temporal_walk->get_edge_count(), 6);
     EXPECT_EQ(temporal_walk->get_node_count(), 7);
+}
+
+// When later edges are added than the allowed max time capacity, older edges are automatically deleted.
+TEST_F(EmptyTemporalWalkTestWithMaxCapacity, WhenMaxTimeCapacityExceedsEdgesAreDeletedAutomatically) {
+    temporal_walk->add_multiple_edges({
+        EdgeInfo{ 0, 2, 1 },
+        EdgeInfo{ 2, 3, 3 },
+        EdgeInfo{ 1, 9, 2 },
+        EdgeInfo{ 2, 4, 3 },
+        EdgeInfo{ 2, 4, 1 },
+        EdgeInfo{ 1, 5, 4 }
+    });
+
+    EXPECT_EQ(temporal_walk->get_node_count(), 7);
+    EXPECT_EQ(temporal_walk->get_edge_count(), 6);
+
+    temporal_walk->add_multiple_edges({
+        EdgeInfo{ 5, 6, 4 },
+        EdgeInfo{ 2, 5, 4 },
+        EdgeInfo{ 4, 3, 5 },
+    });
+
+    EXPECT_EQ(temporal_walk->get_node_count(), 8);
+    EXPECT_EQ(temporal_walk->get_edge_count(), 9);
+
+    temporal_walk->add_multiple_edges({
+        EdgeInfo{ 1, 7, 6 }
+    });
+
+    EXPECT_EQ(temporal_walk->get_node_count(), 8);
+    EXPECT_EQ(temporal_walk->get_edge_count(), 8);
+
+    temporal_walk->add_multiple_edges({
+        EdgeInfo{ 1, 5, 7 },
+        EdgeInfo{ 4, 7, 8 }
+    });
+
+    EXPECT_EQ(temporal_walk->get_node_count(), 7);
+    EXPECT_EQ(temporal_walk->get_edge_count(), 7);
 }
 
 // Test to check if a specific node ID is present in the filled TemporalWalk.

@@ -16,7 +16,7 @@ size_t countKeysGreaterThan(const std::map<int64_t, T>& inputMap, int64_t key) {
 }
 
 
-inline int get_random_number(int max_bound) {
+inline int get_random_number(const int max_bound) {
     std::random_device rd;
     std::mt19937 gen(rd());
 
@@ -29,6 +29,12 @@ inline bool get_random_boolean() {
     std::mt19937 gen(rd());
     std::uniform_int_distribution<int> dist(0, 1);
     return dist(gen) == 1;
+}
+
+template <typename K, typename V>
+void delete_items_less_than_key(std::map<K, V>& map_obj, const K& key) {
+    const auto it = map_obj.lower_bound(key);
+    map_obj.erase(map_obj.begin(), it);
 }
 
 #endif //UTILS_H

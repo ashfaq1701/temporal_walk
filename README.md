@@ -13,6 +13,8 @@ This project enables the construction of large temporal networks in memory, from
 
 This library facilitates the creation of temporal graphs and the incremental sampling of temporal walks based on the current graph state, making it especially useful for training GNNs. PyBind is interfaced which let's the functions to be called from Python. For convenience the walks are returned as numpy arrays.
 
+To allow creation of continuous graphs with a maximum time capacity, when edges with older timestamps are automatically deleted.
+
 ---
 
 ## Definitions
@@ -47,7 +49,7 @@ For a given temporal network with following edges (upstream node, downstream nod
 ]
 ```
 
-<img src="images/network.png" alt="Sample Temporal Graph" style="width: 600px; margin: auto"/>
+<img src="https://raw.githubusercontent.com/ashfaq1701/temporal_walk/refs/heads/master/images/network.png" alt="Sample Temporal Graph" style="width: 600px; margin: auto"/>
 
 Five walks staring at node `2` with linear probability along with their timestamps,
 
@@ -124,18 +126,10 @@ pip install temporal-walk
 ### Constructor
 
 ```cpp
-TemporalWalk(int num_walks, int len_walk, RandomPickerType picker_type);
+TemporalWalk(int num_walks, int len_walk, RandomPickerType picker_type, int64_t max_time_capacity=-1);
 ```
 
-Initializes a TemporalWalk object with the specified number of walks, length of each walk, and the type of random picker to be used. Three random pickers are available `Exponential`, `Linear` and `Uniform`.
-
-### add_edge
-
-```cpp
-void add_edge(int u, int i, int64_t t);
-```
-
-Adds a directed edge from node u to node i at the specified timestamp t in the temporal graph.
+Initializes a TemporalWalk object with the specified number of walks, length of each walk, the type of random picker to be used and the maximum time capacity of the graph. Three random pickers are available `Exponential`, `Linear` and `Uniform`. The default value of `max_time_capacity` is -1, which means unlimited capacity. If set then edges older than `max_time_capacity` from the latest timestamp are deleted automatically.
 
 ### add_multiple_edges
 
@@ -218,18 +212,10 @@ The Python bindings for the `TemporalWalk` class provide a seamless way to inter
 ### Constructor
 
 ```python
-TemporalWalk(num_walks: int, len_walk: int, picker_type: str):
+TemporalWalk(num_walks: int, len_walk: int, picker_type: str,  max_time_capacity: int=-1):
 ```
 
-Initializes a TemporalWalk object with the specified number of walks, length of each walk, and the type of random picker to be used. The picker_type should be one of the following strings: `"Uniform"`, `"Linear"`, or `"Exponential"`.
-
-### add_edge
-
-```python
-add_edge(u: int, i: int, t: int):
-```
-
-Adds a directed edge from node u to node i at the specified timestamp t in the temporal graph.
+Initializes a TemporalWalk object with the specified number of walks, length of each walk, the type of random picker to be used and the maximum time capacity of the graph. The picker_type should be one of the following strings: `"Uniform"`, `"Linear"`, or `"Exponential"`. The default value of `max_time_capacity` is -1, which means unlimited capacity. If set then edges older than `max_time_capacity` from the latest timestamp are deleted automatically.
 
 ### add_multiple_edges
 

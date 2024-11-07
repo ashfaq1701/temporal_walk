@@ -34,22 +34,13 @@ WalkStartAt walk_start_at_from_string(const std::string& walk_start_at_str) {
 
 PYBIND11_MODULE(_temporal_walk, m) {
     py::class_<TemporalWalk>(m, "TemporalWalk")
-        .def(py::init([](int num_walks, int len_walk, const std::string& picker_type_str) {
+        .def(py::init([](int num_walks, int len_walk, const std::string& picker_type_str, int64_t max_time_capacity=-1) {
             RandomPickerType picker_type = picker_type_from_string(picker_type_str);
-            return std::make_unique<TemporalWalk>(num_walks, len_walk, picker_type);
+            return std::make_unique<TemporalWalk>(num_walks, len_walk, picker_type, max_time_capacity);
         }),
         py::arg("num_walks"),
         py::arg("len_walk"),
         py::arg("picker_type"))
-        .def("add_edge", &TemporalWalk::add_edge,
-             R"(
-             Adds a directed edge from node `u` to node `i` at the specified timestamp `t` in the temporal graph.
-
-             Parameters:
-             - u (int): Source node ID.
-             - i (int): Destination node ID.
-             - t (int64_t): Timestamp at which the edge is added.
-             )")
         .def("add_multiple_edges", [](TemporalWalk& tw, const std::vector<std::tuple<int, int, int64_t>>& edge_infos) {
             std::vector<EdgeInfo> edges;
 

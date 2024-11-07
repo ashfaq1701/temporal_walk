@@ -21,6 +21,11 @@ void Node::add_edges_as_um(const std::shared_ptr<TemporalEdge>& edge) {
     edges_as_um[edge->timestamp].push_back(edge);
 }
 
+void Node::delete_edges_less_than_time(const int64_t timestamp) {
+    delete_items_less_than_key(edges_as_dm, timestamp);
+    delete_items_less_than_key(edges_as_um, timestamp);
+}
+
 size_t Node::count_timestamps_less_than_given(const int64_t given_timestamp) const {
     return countKeysLessThan(edges_as_dm, given_timestamp);
 }
@@ -58,4 +63,8 @@ TemporalEdge* Node::pick_temporal_edge(RandomPicker* random_picker, const bool p
 
     const int random_edge_idx = get_random_number(static_cast<int>(edges_at_chosen_timestamp.size()));
     return edges_at_chosen_timestamp[random_edge_idx].get();
+}
+
+bool Node::is_empty() const {
+    return edges_as_dm.empty() && edges_as_um.empty();
 }

@@ -56,7 +56,24 @@ void TemporalGraph::add_edge(const int id1, const int id2, int64_t timestamp) {
     }
 
     edges[edge->timestamp].push_back(edge);
-    edge_count++;
+}
+
+void TemporalGraph::delete_edges_less_than_time(const int64_t timestamp) {
+    delete_items_less_than_key(edges, timestamp);
+
+    for (auto it = nodes.begin(); it != nodes.end(); ) {
+        if (const auto& node_ptr = it->second) {
+            node_ptr->delete_edges_less_than_time(timestamp);
+
+            if (node_ptr->is_empty()) {
+                it = nodes.erase(it);
+                continue;
+            }
+        }
+
+        ++it;
+    }
+
 }
 
 size_t TemporalGraph::get_node_count() const {
@@ -64,7 +81,13 @@ size_t TemporalGraph::get_node_count() const {
 }
 
 size_t TemporalGraph::get_edge_count() const {
-    return edge_count;
+    size_t total_edges = 0;
+
+    for (const auto& [key, edge_vector] : edges) {
+        total_edges += edge_vector.size();
+    }
+
+    return total_edges;
 }
 
 std::vector<int> TemporalGraph::get_node_ids() {

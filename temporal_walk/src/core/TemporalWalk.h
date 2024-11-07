@@ -35,6 +35,9 @@ struct NodeWithTime {
 class TemporalWalk {
     int num_walks;
     int len_walk;
+    int64_t max_time_capacity;
+
+    int64_t max_edge_time = 0;
 
     std::unique_ptr<TemporalGraph> temporal_graph;
     std::unique_ptr<RandomPicker> random_picker;
@@ -43,8 +46,10 @@ class TemporalWalk {
 
     void generate_random_walk_with_time(std::vector<NodeWithTime>* walk, bool begin_from_end, int end_node=-1) const;
 
+    void add_edge(int u, int i, int64_t t);
+
 public:
-    TemporalWalk(int num_walks, int len_walk, RandomPickerType picker_type);
+    TemporalWalk(int num_walks, int len_walk, RandomPickerType picker_type, int64_t max_time_capacity=-1);
 
     [[nodiscard]] std::vector<std::vector<NodeWithTime>> get_random_walks_with_times(WalkStartAt walk_start_at, int end_node=-1);
     [[nodiscard]] std::unordered_map<int, std::vector<std::vector<NodeWithTime>>> get_random_walks_for_nodes_with_times(WalkStartAt walk_start_at, const std::vector<int>& end_nodes);
@@ -52,9 +57,7 @@ public:
     [[nodiscard]] std::vector<std::vector<int>> get_random_walks(WalkStartAt walk_start_at, int end_node=-1);
     [[nodiscard]] std::unordered_map<int, std::vector<std::vector<int>>> get_random_walks_for_nodes(WalkStartAt walk_start_at, const std::vector<int>& end_nodes);
 
-    void add_edge(int u, int i, int64_t t) const;
-
-    void add_multiple_edges(const std::vector<EdgeInfo>& edge_infos) const;
+    void add_multiple_edges(const std::vector<EdgeInfo>& edge_infos);
 
     [[nodiscard]] int get_len_walk() const;
 

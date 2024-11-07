@@ -8,8 +8,8 @@
 
 EdgeInfo::EdgeInfo(const int u, const int i, const int64_t t): u(u), i(i), t(t) {}
 
-TemporalWalk::TemporalWalk(const int num_walks, const int len_walk, const RandomPickerType picker_type)
-    : num_walks(num_walks), len_walk(len_walk), thread_pool(ThreadPool(std::thread::hardware_concurrency())) {
+TemporalWalk::TemporalWalk(const int num_walks, const int len_walk, const RandomPickerType picker_type, int64_t max_time_capacity)
+    : num_walks(num_walks), len_walk(len_walk), max_time_capacity(max_time_capacity), thread_pool(ThreadPool(std::thread::hardware_concurrency())) {
     temporal_graph = std::make_unique<TemporalGraph>();
 
     switch (picker_type) {
@@ -148,13 +148,19 @@ std::unordered_map<int, std::vector<std::vector<int>>> TemporalWalk::get_random_
 }
 
 
-void TemporalWalk::add_edge(const int u, const int i, const int64_t t) const {
+void TemporalWalk::add_edge(const int u, const int i, const int64_t t) {
     temporal_graph->add_edge(u, i, t);
+    max_edge_time = std::max(max_edge_time, t);
 }
 
-void TemporalWalk::add_multiple_edges(const std::vector<EdgeInfo>& edge_infos) const {
+void TemporalWalk::add_multiple_edges(const std::vector<EdgeInfo>& edge_infos) {
     for (const auto& [u, i, t] : edge_infos) {
         add_edge(u, i, t);
+    }
+
+    if (max_time_capacity != -1) {
+        const int64_t min_edge_time = std::max(max_edge_time - max_time_capacity + 1, static_cast<int64_t>(0));
+        temporal_graph->delete_edges_less_than_time(min_edge_time);
     }
 }
 
