@@ -2,5 +2,6 @@ cmake
 setuptools
 wheel
 twine
+auditwheel
 pybind11
 numpy
