@@ -1,6 +1,7 @@
 #ifndef TEMPORALEDGE_H
 #define TEMPORALEDGE_H
 
+#include <cstdint>
 #include "Node.h"
 
 class Node;

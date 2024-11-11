@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <cmath>
 
 #include "test_utils.h"
 #include "../src/core/TemporalWalk.h"

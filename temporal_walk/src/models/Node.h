@@ -2,6 +2,9 @@
 #define NODE_H
 
 #include <map>
+#include <vector>
+#include <cstdint>
+#include <memory>
 #include "TemporalEdge.h"
 #include "../random/RandomPicker.h"
 

@@ -1,6 +1,8 @@
 #ifndef TEMPORALGRAPH_H
 #define TEMPORALGRAPH_H
 
+#include <memory>
+#include <cstddef>
 #include<unordered_map>
 #include "Node.h"
 #include "TemporalEdge.h"
