@@ -63,8 +63,8 @@ void TemporalGraph::add_edge(const int id1, const int id2, int64_t timestamp) {
 void TemporalGraph::sort_edges() {
     std::sort(edges.begin(), edges.end(), TimestampGroupedEdgesComparator());
 
-    for (const auto it = nodes.begin(); it != nodes.end(); ) {
-        it->second->sort_edges();
+    for (auto & [node_id, node] : nodes) {
+        node->sort_edges();
     }
 }
 
