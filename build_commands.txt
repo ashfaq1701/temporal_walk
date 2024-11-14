@@ -1,0 +1,12 @@
+pip install -r requirements.txt
+python setup.py bdist_wheel
+
+# On Linux
+autowheel repair dist/WHEEL_FILE_NAME --plat manylinux_2_35_x86_64
+
+
+# On Mac
+twine upload dist/*
+
+# On Windows after autowheel repair
+twine upload wheelhouse/*
