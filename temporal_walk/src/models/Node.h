@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <memory>
 #include "TemporalEdge.h"
+#include "TimestampGroupedEdges.h"
 #include "../random/RandomPicker.h"
 
 class TemporalEdge;
@@ -13,14 +14,20 @@ class TemporalEdge;
 class Node {
 public:
     int id;
-    std::map<int64_t, std::vector<std::shared_ptr<TemporalEdge>>> edges_as_dm;
-    std::map<int64_t, std::vector<std::shared_ptr<TemporalEdge>>> edges_as_um;
+
+    std::vector<std::shared_ptr<TimestampGroupedEdges>> edges_as_dm;
+    std::map<int64_t, std::shared_ptr<TimestampGroupedEdges>> edges_as_dm_index;
+
+    std::vector<std::shared_ptr<TimestampGroupedEdges>> edges_as_um;
+    std::map<int64_t, std::shared_ptr<TimestampGroupedEdges>> edges_as_um_index;
 
     explicit Node(int nodeId);
 
     void add_edges_as_dm(const std::shared_ptr<TemporalEdge>& edge);
 
     void add_edges_as_um(const std::shared_ptr<TemporalEdge>& edge);
+
+    void sort_edges();
 
     void delete_edges_less_than_time(int64_t timestamp);
 

@@ -1,5 +1,7 @@
 add_executable(test_run_temporal_walk test_run_temporal_walk.cpp ${SRC_FILES}
-        print_walks.h)
+        print_walks.h
+        ../src/models/TimestampGroupedEdges.cpp
+        ../src/models/TimestampGroupedEdges.h)
 
 set_target_properties(test_run_temporal_walk PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin

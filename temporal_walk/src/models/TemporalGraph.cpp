@@ -35,12 +35,12 @@ Node* TemporalGraph::get_random_node(RandomPicker* random_picker, const bool beg
     auto it = edges.begin();
     std::advance(it, picked_idx);
 
-    if (it == edges.end() || it->second.empty()) {
+    if (it == edges.end() || it->get()->empty()) {
         return nullptr;
     }
 
-    const int random_edge_idx = get_random_number(static_cast<int>(it->second.size()));
-    return begin_from_end ? it->second[random_edge_idx]->i : it->second[random_edge_idx]->u;
+    const auto random_edge = it->get()->select_random_edge();
+    return begin_from_end ? random_edge->i : random_edge->u;
 }
 
 void TemporalGraph::add_edge(const int id1, const int id2, int64_t timestamp) {
@@ -51,15 +51,26 @@ void TemporalGraph::add_edge(const int id1, const int id2, int64_t timestamp) {
     node1->add_edges_as_um(edge);
     node2->add_edges_as_dm(edge);
 
-    if (edges.find(edge->timestamp) == edges.end()) {
-        edges[edge->timestamp] = std::vector<std::shared_ptr<TemporalEdge>>();;
+    if (edge_index.find(timestamp) == edge_index.end()) {
+        const auto group = std::make_shared<TimestampGroupedEdges>(timestamp);
+        edge_index[timestamp] = group;
+        edges.push_back(group);
     }
 
-    edges[edge->timestamp].push_back(edge);
+    edge_index[edge->timestamp]->add_edge(edge);
+}
+
+void TemporalGraph::sort_edges() {
+    std::sort(edges.begin(), edges.end());
+
+    for (const auto it = nodes.begin(); it != nodes.end(); ) {
+        it->second->sort_edges();
+    }
 }
 
 void TemporalGraph::delete_edges_less_than_time(const int64_t timestamp) {
-    delete_items_less_than_key(edges, timestamp);
+    delete_items_less_than_key(edge_index, timestamp);
+    delete_items_less_than(edges, timestamp);
 
     for (auto it = nodes.begin(); it != nodes.end(); ) {
         if (const auto& node_ptr = it->second) {
@@ -83,8 +94,8 @@ size_t TemporalGraph::get_node_count() const {
 size_t TemporalGraph::get_edge_count() const {
     size_t total_edges = 0;
 
-    for (const auto& [key, edge_vector] : edges) {
-        total_edges += edge_vector.size();
+    for (const auto& [key, edge_group] : edge_index) {
+        total_edges += edge_group->size();
     }
 
     return total_edges;

@@ -158,6 +158,8 @@ void TemporalWalk::add_multiple_edges(const std::vector<EdgeInfo>& edge_infos) {
         add_edge(u, i, t);
     }
 
+    temporal_graph->sort_edges();
+
     if (max_time_capacity != -1) {
         const int64_t min_edge_time = std::max(max_edge_time - max_time_capacity + 1, static_cast<int64_t>(0));
         temporal_graph->delete_edges_less_than_time(min_edge_time);
