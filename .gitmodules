@@ -1,0 +1,3 @@
+[submodule "temporal_walk/src/libs/thread-pool"]
+	path = temporal_walk/src/libs/thread-pool
+	url = git@github.com:bshoshany/thread-pool.git

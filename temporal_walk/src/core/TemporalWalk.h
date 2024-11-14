@@ -2,10 +2,9 @@
 #define TEMPORAL_WALK_H
 
 #include<vector>
-
+#include "../libs/thread-pool/include/BS_thread_pool.hpp"
 #include "../random/RandomPicker.h"
 #include "../models/TemporalGraph.h"
-#include "../libs/thread_pool.h"
 
 enum RandomPickerType {
     Uniform,
@@ -42,7 +41,7 @@ class TemporalWalk {
     std::unique_ptr<TemporalGraph> temporal_graph;
     std::unique_ptr<RandomPicker> random_picker;
 
-    ThreadPool thread_pool;
+    BS::thread_pool thread_pool;
 
     void generate_random_walk_with_time(std::vector<NodeWithTime>* walk, bool begin_from_end, int end_node=-1) const;
 

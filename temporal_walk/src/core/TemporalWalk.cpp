@@ -9,7 +9,7 @@
 EdgeInfo::EdgeInfo(const int u, const int i, const int64_t t): u(u), i(i), t(t) {}
 
 TemporalWalk::TemporalWalk(const int num_walks, const int len_walk, const RandomPickerType picker_type, int64_t max_time_capacity)
-    : num_walks(num_walks), len_walk(len_walk), max_time_capacity(max_time_capacity), thread_pool(ThreadPool(std::thread::hardware_concurrency())) {
+    : num_walks(num_walks), len_walk(len_walk), max_time_capacity(max_time_capacity) {
     temporal_graph = std::make_unique<TemporalGraph>();
 
     switch (picker_type) {
@@ -33,9 +33,7 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_with_times
         walk.reserve(len_walk);
     }
 
-    std::vector<std::future<int>> results;
-
-    auto get_if_begin_from_end = [&]() {
+    auto get_if_begin_from_end = [walk_start_at]() {
         bool begin_from_end = true;
         switch (walk_start_at) {
             case WalkStartAt::End:
@@ -52,20 +50,30 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_with_times
         return begin_from_end;
     };
 
-    auto prepare_walk = [&](std::vector<NodeWithTime>* walk) {
-        const bool begin_from_end = get_if_begin_from_end();
+    const size_t batch_size = std::max<size_t>(
+        1,
+        num_walks / (4 * thread_pool.get_thread_count())
+    );
 
-        generate_random_walk_with_time(walk, begin_from_end, end_node);
+    std::vector<std::future<void>> results;
 
-        if (begin_from_end) {
-            std::reverse(walk->begin(), walk->end());
-        }
+    for (size_t i = 0; i < walks.size(); i += batch_size) {
+        const size_t end = std::min(i + batch_size, walks.size());
 
-        return 1;
-    };
+        results.emplace_back(
+            thread_pool.submit_task([&walks, i, end, &get_if_begin_from_end, this, end_node] {
+                for (size_t j = i; j < end; ++j) {
+                    auto& walk = walks[j];
+                    const bool begin_from_end = get_if_begin_from_end();
 
-    for (auto & walk : walks) {
-        results.emplace_back(thread_pool.enqueue(prepare_walk, &walk)); // NOLINT(*-inefficient-vector-operation)
+                    generate_random_walk_with_time(&walk, begin_from_end, end_node);
+
+                    if (begin_from_end) {
+                        std::reverse(walk.begin(), walk.end());
+                    }
+                }
+            })
+        );
     }
 
     for (auto& future : results) {
