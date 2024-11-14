@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstdint>
 #include <memory>
+#include <algorithm>
 #include "TemporalEdge.h"
 #include "TimestampGroupedEdges.h"
 #include "../random/RandomPicker.h"

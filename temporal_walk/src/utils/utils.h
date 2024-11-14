@@ -1,6 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 #include <random>
+#include <algorithm>
 
 template <typename T>
 size_t count_keys_less_than(const std::map<int64_t, T>& inputMap, int64_t key) {
