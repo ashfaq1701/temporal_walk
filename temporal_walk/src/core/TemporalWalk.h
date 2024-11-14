@@ -2,7 +2,7 @@
 #define TEMPORAL_WALK_H
 
 #include<vector>
-#include "../libs/thread-pool/include/BS_thread_pool.hpp"
+#include "../../libs/thread-pool/include/BS_thread_pool.hpp"
 #include "../random/RandomPicker.h"
 #include "../models/TemporalGraph.h"
 
