@@ -61,7 +61,7 @@ void TemporalGraph::add_edge(const int id1, const int id2, int64_t timestamp) {
 }
 
 void TemporalGraph::sort_edges() {
-    std::sort(edges.begin(), edges.end());
+    std::sort(edges.begin(), edges.end(), TimestampGroupedEdgesComparator());
 
     for (const auto it = nodes.begin(); it != nodes.end(); ) {
         it->second->sort_edges();
@@ -70,7 +70,7 @@ void TemporalGraph::sort_edges() {
 
 void TemporalGraph::delete_edges_less_than_time(const int64_t timestamp) {
     delete_items_less_than_key(edge_index, timestamp);
-    delete_items_less_than(edges, timestamp);
+    delete_items_less_than(edges, timestamp, TimestampGroupedEdgesComparator());
 
     for (auto it = nodes.begin(); it != nodes.end(); ) {
         if (const auto& node_ptr = it->second) {

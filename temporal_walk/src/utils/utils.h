@@ -14,15 +14,15 @@ size_t count_keys_greater_than(const std::map<int64_t, T>& inputMap, int64_t key
     return std::distance(it, inputMap.end());
 }
 
-template <typename T, typename V>
-size_t count_elements_less_than(const std::vector<T>& vec, const V& value) {
-    auto it = std::lower_bound(vec.begin(), vec.end(), value);
+template <typename T, typename V, typename Comp>
+size_t count_elements_less_than(const std::vector<T>& vec, const V& value, Comp comp) {
+    auto it = std::lower_bound(vec.begin(), vec.end(), value, comp);
     return std::distance(vec.begin(), it);
 }
 
-template <typename T, typename V>
-size_t count_elements_greater_than(const std::vector<T>& vec, const V& value) {
-    auto it = std::upper_bound(vec.begin(), vec.end(), value);
+template <typename T, typename V, typename Comp>
+size_t count_elements_greater_than(const std::vector<T>& vec, const V& value, Comp comp) {
+    auto it = std::upper_bound(vec.begin(), vec.end(), value, comp);
     return std::distance(it, vec.end());
 }
 
@@ -47,9 +47,9 @@ void delete_items_less_than_key(std::map<K, V>& map_obj, const K& key) {
     map_obj.erase(map_obj.begin(), it);
 }
 
-template<typename T, typename V>
-void delete_items_less_than(std::vector<T>& vec, const V& value) {
-    auto it = std::lower_bound(vec.begin(), vec.end(), value);
+template<typename T, typename V, typename Comp>
+void delete_items_less_than(std::vector<T>& vec, const V& value, Comp comp) {
+    auto it = std::lower_bound(vec.begin(), vec.end(), value, comp);
     vec.erase(vec.begin(), it);
 }
 

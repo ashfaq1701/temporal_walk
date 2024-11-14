@@ -22,29 +22,29 @@ void Node::add_edges_as_um(const std::shared_ptr<TemporalEdge>& edge) {
         edges_as_um_index[edge->timestamp] = group;
         edges_as_um.push_back(group);
     }
-    edges_as_um[edge->timestamp]->add_edge(edge);
+    edges_as_um_index[edge->timestamp]->add_edge(edge);
 }
 
 void Node::sort_edges() {
-    std::sort(edges_as_dm.begin(), edges_as_dm.end());
-    std::sort(edges_as_um.begin(), edges_as_um.end());
+    std::sort(edges_as_dm.begin(), edges_as_dm.end(), TimestampGroupedEdgesComparator());
+    std::sort(edges_as_um.begin(), edges_as_um.end(), TimestampGroupedEdgesComparator());
 }
 
 
 void Node::delete_edges_less_than_time(const int64_t timestamp) {
     delete_items_less_than_key(edges_as_dm_index, timestamp);
-    delete_items_less_than(edges_as_dm, timestamp);
+    delete_items_less_than(edges_as_dm, timestamp, TimestampGroupedEdgesComparator());
 
     delete_items_less_than_key(edges_as_um_index, timestamp);
-    delete_items_less_than(edges_as_um, timestamp);
+    delete_items_less_than(edges_as_um, timestamp, TimestampGroupedEdgesComparator());
 }
 
 size_t Node::count_timestamps_less_than_given(const int64_t given_timestamp) const {
-    return count_elements_less_than(edges_as_dm, given_timestamp);
+    return count_elements_less_than(edges_as_dm, given_timestamp, TimestampGroupedEdgesComparator());
 }
 
 size_t Node::count_timestamps_greater_than_given(const int64_t given_timestamp) const {
-    return count_elements_greater_than(edges_as_um, given_timestamp);
+    return count_elements_greater_than(edges_as_um, given_timestamp, TimestampGroupedEdgesComparator());
 }
 
 TemporalEdge* Node::pick_temporal_edge(RandomPicker* random_picker, const bool prioritize_end, const int64_t given_timestamp) const {

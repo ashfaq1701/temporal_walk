@@ -1,25 +1,8 @@
 #include "TimestampGroupedEdges.h"
+#include "TemporalEdge.h"
 #include "../utils/utils.h"
 
 TimestampGroupedEdges::TimestampGroupedEdges(const int64_t ts) : timestamp(ts) {}
-
-// Comparison operators with TimestampGroupedEdges
-bool TimestampGroupedEdges::operator<(const TimestampGroupedEdges& other) const {
-    return timestamp < other.timestamp;
-}
-
-bool TimestampGroupedEdges::operator==(const TimestampGroupedEdges& other) const {
-    return timestamp == other.timestamp;
-}
-
-// Comparison operators with raw timestamp
-bool TimestampGroupedEdges::operator<(int64_t ts) const {
-    return timestamp < ts;
-}
-
-bool TimestampGroupedEdges::operator==(int64_t ts) const {
-    return timestamp == ts;
-}
 
 int64_t TimestampGroupedEdges::get_timestamp() const {
     return timestamp;
@@ -41,4 +24,16 @@ bool TimestampGroupedEdges::empty() const {
 
 size_t TimestampGroupedEdges::size() const {
     return edges.size();
+}
+
+bool TimestampGroupedEdgesComparator::operator()(const std::shared_ptr<TimestampGroupedEdges>& tge, int64_t timestamp) const {
+    return tge->get_timestamp() < timestamp;
+}
+
+bool TimestampGroupedEdgesComparator::operator()(const std::shared_ptr<TimestampGroupedEdges>& lhs, const std::shared_ptr<TimestampGroupedEdges>& rhs) const {
+    return lhs->get_timestamp() < rhs->get_timestamp();
+}
+
+bool TimestampGroupedEdgesComparator::operator()(int64_t timestamp, const std::shared_ptr<TimestampGroupedEdges>& tge) const {
+    return timestamp < tge->get_timestamp();
 }
