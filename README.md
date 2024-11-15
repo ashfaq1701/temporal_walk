@@ -203,6 +203,14 @@ std::vector<int> get_node_ids();
 
 Returns a vector containing the IDs of all nodes in the temporal graph.
 
+### clear
+
+```cpp
+void clear();
+```
+
+Clears and reinitiates the underlying temporal graph, removing all edges and nodes.
+
 ---
 
 ## Python Interfaces
@@ -279,6 +287,30 @@ Returns the total number of directed edges in the temporal graph.
 get_node_ids() -> np.ndarray:
 ```
 Returns a numpy array containing the IDs of all nodes in the temporal graph.
+
+### clear
+
+```python
+clear():
+```
+
+Clears and reinitiates the underlying temporal graph, removing all edges and nodes.
+
+### add_edges_from_networkx
+
+```python
+add_edges_from_networkx(nx_graph: nx.DiGraph):
+```
+
+Adds edges from a NetworkX directed graph to the current TemporalWalk object. The NetworkX graph must have a 'timestamp' attribute for each edge.
+
+### to_networkx
+
+```python
+to_networkx() -> nx.DiGraph:
+```
+
+Exports the current temporal graph to a NetworkX DiGraph object. Each edge in the resulting graph will have a 'timestamp' attribute containing the temporal information.
 
 ---
 
