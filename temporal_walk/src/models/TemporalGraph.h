@@ -20,6 +20,7 @@ public:
     Node* get_or_create_node(int id);
     Node* get_random_node(RandomPicker* random_picker, bool begin_from_end);
     void add_edge(int id1, int id2, int64_t timestamp);
+    std::vector<TemporalEdge*> get_edges() const;
     void sort_edges();
     void delete_edges_less_than_time(int64_t timestamp);
     [[nodiscard]] size_t get_node_count() const;

@@ -8,10 +8,9 @@
 class TemporalEdge;
 
 class TimestampGroupedEdges {
+public:
     int64_t timestamp;
     std::vector<std::shared_ptr<TemporalEdge>> edges;
-
-public:
 
     explicit TimestampGroupedEdges(int64_t ts);
 

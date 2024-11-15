@@ -60,6 +60,18 @@ void TemporalGraph::add_edge(const int id1, const int id2, int64_t timestamp) {
     edge_index[edge->timestamp]->add_edge(edge);
 }
 
+std::vector<TemporalEdge*> TemporalGraph::get_edges() const {
+    std::vector<TemporalEdge*> edge_ptrs;
+
+    for (const auto& edge_group : edges) {
+        for (const auto& edge : edge_group->edges) {
+            edge_ptrs.push_back(edge.get());
+        }
+    }
+
+    return edge_ptrs;
+}
+
 void TemporalGraph::sort_edges() {
     std::sort(edges.begin(), edges.end(), TimestampGroupedEdgesComparator());
 

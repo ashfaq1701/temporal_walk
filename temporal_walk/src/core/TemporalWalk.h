@@ -65,6 +65,10 @@ public:
     [[nodiscard]] size_t get_edge_count() const;
 
     [[nodiscard]] std::vector<int> get_node_ids() const;
+
+    [[nodiscard]] std::vector<EdgeInfo> get_edges() const;
+
+    void clear();
 };
 
 #endif //TEMPORAL_WALK_H

@@ -55,12 +55,13 @@ PYBIND11_MODULE(_temporal_walk, m) {
 
             tw.add_multiple_edges(edges);
         },
-        R"(
-        Adds multiple directed edges to the temporal graph based on the provided vector of tuples.
+            R"(
+            Adds multiple directed edges to the temporal graph based on the provided vector of tuples.
 
-        Parameters:
-        - edge_infos (List[Tuple[int, int, int64_t]]): A list of tuples, each containing (source node, destination node, timestamp).
-        )")
+            Parameters:
+            - edge_infos (List[Tuple[int, int, int64_t]]): A list of tuples, each containing (source node, destination node, timestamp).
+            )"
+        )
         .def("get_random_walks", [](TemporalWalk& tw, const std::string& walk_start_at_str, const int end_node = -1, const int fill_value = DEFAULT_WALK_FILL_VALUE) {
             const WalkStartAt walk_start_at = walk_start_at_from_string(walk_start_at_str);
             const auto walks = tw.get_random_walks(walk_start_at, end_node);
@@ -81,17 +82,19 @@ PYBIND11_MODULE(_temporal_walk, m) {
 
             return py_walks;
         },
-        R"(
-        Generates random walks from the temporal graph.
+            R"(
+            Generates random walks from the temporal graph.
 
-        Parameters:
-        - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random").
-        - end_node (int, optional): An optional end node ID to start or end the walks. Default is -1 (random).
-        - fill_value (int, optional): The value used to pad the walks. Default is 0.
+            Parameters:
+            - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random").
+            - end_node (int, optional): An optional end node ID to start or end the walks. Default is -1 (random).
+            - fill_value (int, optional): The value used to pad the walks. Default is 0.
 
-        Returns:
-        np.ndarray: A 2D NumPy array containing the generated random walks, padded where necessary.
-        )", py::return_value_policy::move)
+            Returns:
+            np.ndarray: A 2D NumPy array containing the generated random walks, padded where necessary.
+            )"
+            , py::return_value_policy::move
+        )
         .def("get_random_walks_for_nodes", [](TemporalWalk& tw, const std::string& walk_start_at_str, const std::vector<int>& end_nodes, const int fill_value = DEFAULT_WALK_FILL_VALUE) {
             const WalkStartAt walk_start_at = walk_start_at_from_string(walk_start_at_str);
             auto walks_for_nodes = tw.get_random_walks_for_nodes(walk_start_at, end_nodes);
@@ -120,18 +123,20 @@ PYBIND11_MODULE(_temporal_walk, m) {
 
             return py_walks_dict;
         },
-        R"(
-        Generates random walks for multiple specified nodes in the temporal graph.
+            R"(
+            Generates random walks for multiple specified nodes in the temporal graph.
 
-        Parameters:
-        - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random").
-        - end_nodes (List[int]): A list of node IDs for which the walks will be generated.
-        - fill_value (int, optional): The value used to pad the walks. Default is 0.
+            Parameters:
+            - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random").
+            - end_nodes (List[int]): A list of node IDs for which the walks will be generated.
+            - fill_value (int, optional): The value used to pad the walks. Default is 0.
 
-        Returns:
-        Dict[int, np.ndarray]: A dictionary mapping node IDs to their corresponding random walks.
-        )", py::return_value_policy::move)
-            .def("get_random_walks_with_times", [](TemporalWalk& tw, const std::string& walk_start_at_str, const int end_node = -1) {
+            Returns:
+            Dict[int, np.ndarray]: A dictionary mapping node IDs to their corresponding random walks.
+            )",
+            py::return_value_policy::move
+        )
+        .def("get_random_walks_with_times", [](TemporalWalk& tw, const std::string& walk_start_at_str, const int end_node = -1) {
             const WalkStartAt walk_start_at = walk_start_at_from_string(walk_start_at_str);
             const auto walks_with_times = tw.get_random_walks_with_times(walk_start_at, end_node);
 
@@ -147,17 +152,18 @@ PYBIND11_MODULE(_temporal_walk, m) {
 
             return py_walks;
         },
-        R"(
-        Generates random walks with timestamps from the temporal graph.
+            R"(
+            Generates random walks with timestamps from the temporal graph.
 
-        Parameters:
-        - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random").
-        - end_node (int, optional): An optional end node ID to start or end the walks. Default is -1 (random).
+            Parameters:
+            - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random").
+            - end_node (int, optional): An optional end node ID to start or end the walks. Default is -1 (random).
 
-        Returns:
-        List[List[Tuple[int, int64_t]]]: A list of random walks, each walk is a list of tuples containing (node_id, timestamp).
-        )", py::return_value_policy::move)
-
+            Returns:
+            List[List[Tuple[int, int64_t]]]: A list of random walks, each walk is a list of tuples containing (node_id, timestamp).
+            )",
+            py::return_value_policy::move
+        )
         .def("get_random_walks_for_nodes_with_times", [](TemporalWalk& tw, const std::string& walk_start_at_str, const std::vector<int>& end_nodes) {
             const WalkStartAt walk_start_at = walk_start_at_from_string(walk_start_at_str);
             auto walks_for_nodes_with_times = tw.get_random_walks_for_nodes_with_times(walk_start_at, end_nodes);
@@ -178,16 +184,18 @@ PYBIND11_MODULE(_temporal_walk, m) {
 
             return py_walks_dict;
         },
-        R"(
-        Generates random walks with timestamps for multiple specified nodes in the temporal graph.
+            R"(
+            Generates random walks with timestamps for multiple specified nodes in the temporal graph.
 
-        Parameters:
-        - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random").
-        - end_nodes (List[int]): A list of node IDs for which the walks will be generated.
+            Parameters:
+            - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random").
+            - end_nodes (List[int]): A list of node IDs for which the walks will be generated.
 
-        Returns:
-        Dict[int, List[List[Tuple[int, int64_t]]]]: A dictionary mapping node IDs to their corresponding random walks, each walk is a list of tuples containing (node_id, timestamp).
-        )", py::return_value_policy::move)
+            Returns:
+            Dict[int, List[List[Tuple[int, int64_t]]]]: A dictionary mapping node IDs to their corresponding random walks, each walk is a list of tuples containing (node_id, timestamp).
+            )",
+            py::return_value_policy::move
+        )
         .def("get_node_count", &TemporalWalk::get_node_count,
              R"(
              Returns the total number of nodes present in the temporal graph.
@@ -213,10 +221,62 @@ PYBIND11_MODULE(_temporal_walk, m) {
 
             return py_node_ids;
         },
-        R"(
-        Returns a NumPy array containing the IDs of all nodes in the temporal graph.
+            R"(
+            Returns a NumPy array containing the IDs of all nodes in the temporal graph.
 
-        Returns:
-        np.ndarray: A NumPy array with all node IDs.
-        )");
+            Returns:
+            np.ndarray: A NumPy array with all node IDs.
+            )"
+        )
+        .def("clear", &TemporalWalk::clear,
+            R"(
+            Clears and reinitiates the underlying graph.
+            )"
+        )
+        .def("add_edges_from_networkx", [](TemporalWalk& tw, const py::object& nx_graph) {
+            const py::object edges = nx_graph.attr("edges")(py::arg("data")=true);
+
+            std::vector<EdgeInfo> edge_infos;
+            for (const auto& edge : edges) {
+                auto edge_tuple = edge.cast<py::tuple>();
+                const int source = py::cast<int>(edge_tuple[0]);
+                const int target = py::cast<int>(edge_tuple[1]);
+                const auto attrs = edge_tuple[2].cast<py::dict>();
+                const int64_t timestamp = py::cast<int64_t>(attrs["timestamp"]);
+
+                edge_infos.emplace_back(EdgeInfo { source, target, timestamp });
+            }
+
+            tw.add_multiple_edges(edge_infos);
+        },
+            R"(
+            Adds edges from a networkx graph to the current TemporalWalk object.
+
+            Parameters:
+            - nx_graph (networkx.DiGraph): The networkx graph to load edges from.
+            )"
+        )
+        .def("to_networkx", [](const TemporalWalk& tw) {
+            const auto edges = tw.get_edges();
+
+            const py::module nx = py::module::import("networkx");
+            const py::object DiGraph = nx.attr("DiGraph");
+            py::object nx_graph = DiGraph();
+
+            for (const auto& edge : edges) {
+                py::dict kwargs;
+                kwargs["timestamp"] = edge.t;
+
+                nx_graph.attr("add_edge")(edge.u, edge.i, **kwargs);
+            }
+
+            return nx_graph;
+        },
+            R"(
+            Exports the TemporalWalk object to a networkX graph.
+
+            Returns:
+            networkx.Graph: The exported networkx graph.
+            )"
+        );
 }

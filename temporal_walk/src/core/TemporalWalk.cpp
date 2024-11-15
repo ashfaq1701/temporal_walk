@@ -189,3 +189,17 @@ size_t TemporalWalk::get_edge_count() const {
 std::vector<int> TemporalWalk::get_node_ids() const {
     return temporal_graph->get_node_ids();
 }
+
+std::vector<EdgeInfo> TemporalWalk::get_edges() const {
+    std::vector<EdgeInfo> edges;
+
+    for (const auto& edge : temporal_graph->get_edges()) {
+        edges.emplace_back( edge->u->id, edge->i->id, edge->timestamp );
+    }
+
+    return edges;
+}
+
+void TemporalWalk::clear() {
+    temporal_graph = std::make_unique<TemporalGraph>();
+}
