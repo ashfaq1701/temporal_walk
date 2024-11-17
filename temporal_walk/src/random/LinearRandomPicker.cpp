@@ -7,14 +7,11 @@ int LinearRandomPicker::pick_random(const int start, const int end, const bool p
         throw std::invalid_argument("Start must be less than end.");
     }
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-
     const int len_seq = end - start;
     const double total_weight = len_seq * (len_seq + 1) / 2.0;
 
     std::uniform_real_distribution<double> dist(0.0, total_weight);
-    const double randomValue = dist(gen);
+    const double randomValue = dist(thread_local_gen);
 
     if (prioritize_end) {
         // weight(i) = i + 1

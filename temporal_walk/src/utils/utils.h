@@ -2,6 +2,9 @@
 #define UTILS_H
 #include <random>
 #include <algorithm>
+#include <map>
+
+thread_local static std::mt19937 thread_local_gen{std::random_device{}()};
 
 template <typename T>
 size_t count_keys_less_than(const std::map<int64_t, T>& inputMap, int64_t key) {
@@ -28,11 +31,8 @@ size_t count_elements_greater_than(const std::vector<T>& vec, const V& value, Co
 }
 
 inline int get_random_number(const int max_bound) {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-
     std::uniform_int_distribution<> dist(0, max_bound - 1);
-    return dist(gen);
+    return dist(thread_local_gen);
 }
 
 inline bool get_random_boolean() {

@@ -9,9 +9,6 @@ int ExponentialRandomPicker::pick_random(const int start, const int end, const b
         throw std::invalid_argument("Start must be less than end.");
     }
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-
     const int len_seq = end - start;
 
     if (prioritize_end) {
@@ -19,7 +16,7 @@ int ExponentialRandomPicker::pick_random(const int start, const int end, const b
         const double total_weight = std::expm1(len_seq);
 
         std::uniform_real_distribution<double> dist(0.0, total_weight);
-        const double random_value = dist(gen);
+        const double random_value = dist(thread_local_gen);
 
         const int index = static_cast<int>(std::log1p(random_value));
         return start + std::min(index, len_seq - 1);
@@ -29,7 +26,7 @@ int ExponentialRandomPicker::pick_random(const int start, const int end, const b
         const double total_weight = (1 - std::exp(-len_seq)) / (1 - std::exp(-1.0));
 
         std::uniform_real_distribution<double> dist(0.0, total_weight);
-        const double random_value = dist(gen);
+        const double random_value = dist(thread_local_gen);
 
         // Using inverse CDF to directly compute the index
         // If F(x) = (1-e^(-x))/(1-e^(-1)) is our CDF

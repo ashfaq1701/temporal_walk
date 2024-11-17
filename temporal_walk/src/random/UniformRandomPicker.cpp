@@ -7,10 +7,7 @@ int UniformRandomPicker::pick_random(const int start, const int end, const bool 
         throw std::invalid_argument("Start must be less than end.");
     }
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-
     std::uniform_int_distribution<> dist(start, end - 1);
 
-    return dist(gen);
+    return dist(thread_local_gen);
 }
