@@ -7,7 +7,7 @@
 
 namespace py = pybind11;
 
-constexpr int DEFAULT_WALK_FILL_VALUE = -1;
+constexpr int DEFAULT_WALK_FILL_VALUE = 0;
 
 RandomPickerType picker_type_from_string(const std::string& picker_type_str)
 {
