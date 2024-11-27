@@ -84,7 +84,7 @@ PYBIND11_MODULE(_temporal_walk, m)
             - edge_infos (List[Tuple[int, int, int64_t]]): A list of tuples, each containing (source node, destination node, timestamp).
             )"
         )
-        .def("get_random_walks", [](TemporalWalk& tw, const std::string& walk_start_at_str, const int end_node = -1,
+        .def("get_random_walks", [](TemporalWalk& tw, const std::string& walk_start_at_str="Random", const int end_node=-1,
                                     const int fill_value = DEFAULT_WALK_FILL_VALUE)
              {
                  const WalkStartAt walk_start_at = walk_start_at_from_string(walk_start_at_str);
@@ -112,14 +112,17 @@ PYBIND11_MODULE(_temporal_walk, m)
             Generates random walks from the temporal graph.
 
             Parameters:
-            - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random").
+            - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random"), .
             - end_node (int, optional): An optional end node ID to start or end the walks. Default is -1 (random).
             - fill_value (int, optional): The value used to pad the walks. Default is 0.
 
             Returns:
             np.ndarray: A 2D NumPy array containing the generated random walks, padded where necessary.
             )"
-             , py::return_value_policy::move
+             , py::return_value_policy::move,
+             py::arg("walk_start_at") = py::str("Random"),
+             py::arg("end_node") = -1,
+             py::arg("fill_value") = DEFAULT_WALK_FILL_VALUE
         )
         .def("get_random_walks_for_nodes", [](TemporalWalk& tw, const std::string& walk_start_at_str,
                                               const std::vector<int>& end_nodes,
@@ -166,10 +169,13 @@ PYBIND11_MODULE(_temporal_walk, m)
             Returns:
             Dict[int, np.ndarray]: A dictionary mapping node IDs to their corresponding random walks.
             )",
-             py::return_value_policy::move
+             py::return_value_policy::move,
+             py::arg("walk_start_at_str"),
+             py::arg("end_nodes"),
+             py::arg("fill_value") = DEFAULT_WALK_FILL_VALUE
         )
         .def("get_random_walks_with_times",
-             [](TemporalWalk& tw, const std::string& walk_start_at_str, const int end_node = -1)
+             [](TemporalWalk& tw, const std::string& walk_start_at_str="Random", const int end_node = -1)
              {
                  const WalkStartAt walk_start_at = walk_start_at_from_string(walk_start_at_str);
                  const auto walks_with_times = tw.get_random_walks_with_times(walk_start_at, end_node);
@@ -192,13 +198,15 @@ PYBIND11_MODULE(_temporal_walk, m)
             Generates random walks with timestamps from the temporal graph.
 
             Parameters:
-            - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random").
+            - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random"), default is "Random".
             - end_node (int, optional): An optional end node ID to start or end the walks. Default is -1 (random).
 
             Returns:
             List[List[Tuple[int, int64_t]]]: A list of random walks, each walk is a list of tuples containing (node_id, timestamp).
             )",
-             py::return_value_policy::move
+             py::return_value_policy::move,
+             py::arg("walk_start_at") = py::str("Random"),
+             py::arg("end_node") = -1
         )
         .def("get_random_walks_for_nodes_with_times",
              [](TemporalWalk& tw, const std::string& walk_start_at_str, const std::vector<int>& end_nodes)
