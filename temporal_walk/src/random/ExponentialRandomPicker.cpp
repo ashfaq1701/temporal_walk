@@ -1,7 +1,6 @@
 #include "ExponentialRandomPicker.h"
 #include <random>
 #include <cmath>
-#include <iostream>
 #include <stdexcept>
 
 int ExponentialRandomPicker::pick_random(const int start, const int end, const bool prioritize_end) {
@@ -11,21 +10,24 @@ int ExponentialRandomPicker::pick_random(const int start, const int end, const b
 
     const int len_seq = end - start;
 
-    const double total_weight = std::expm1(len_seq);
-    std::uniform_real_distribution<double> dist(0.0, total_weight);
-    const double random_value = dist(thread_local_gen);
-
-    const int index = static_cast<int>(std::log1p(random_value));
-
+    // Instead of generating U ~ Uniform(0, e^n - 1) and taking log(U + 1),
+    // we can generate u ~ Uniform(0, 1) and transform it to get the same distribution
+    std::uniform_real_distribution<double> dist(0.0, 1.0);
+    const double u = dist(thread_local_gen);
 
     if (prioritize_end) {
-        // For prioritizing end: P(i) ∝ exp(i)
+        // For prioritize_end=true, we want P(i) ∝ exp(i)
+        // The total weight is W = exp(len_seq) - 1.
+        // We generate a random value u in [0, 1) and scale it to the range [0, W).
+        // Using inverse transform sampling, we solve for index:
+        //   F(i) = (exp(i) - 1) / W  =>  F^(-1)(u) = log(1 + u * W)
+        // Here, W is computed using expm1(len_seq) to avoid overflow for large len_seq.
+        const int index = static_cast<int>(std::log1p(u * std::expm1(len_seq)));
         return start + std::min(index, len_seq - 1);
     } else {
-        // For prioritizing start: P(i) ∝ exp(len_seq - 1 - i)
-        // So index i gets weight e^(len_seq - 1 - i)
-        // This gives highest weight e^(len_seq-1) to index 0
-        const int revered_index = len_seq - 1 - index;
-        return start + std::max(0, revered_index);
+        // For prioritize_end=false, we want P(i) ∝ exp(n-1-i)
+        // This is equivalent to len_seq - 1 - index from above
+        const int index = len_seq - 1 - static_cast<int>(std::log1p(u * std::expm1(len_seq)));
+        return start + std::max(0, index);
     }
 }

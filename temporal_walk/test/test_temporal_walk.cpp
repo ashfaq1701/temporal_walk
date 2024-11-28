@@ -6,7 +6,7 @@
 #include "../src/random/ExponentialRandomPicker.h"
 #include "../src/random/LinearRandomPicker.h"
 
-constexpr int TEST_NODE_ID = 45965;
+constexpr int TEST_NODE_ID = 647;
 constexpr int LEN_WALK = 20;
 constexpr int NUM_WALKS = 1000;
 constexpr int64_t MAX_TIME_CAPACITY = 5;
