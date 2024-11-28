@@ -1,4 +1,5 @@
 #include <random>
+#include <cmath>
 #include <stdexcept>
 #include "LinearRandomPicker.h"
 
@@ -8,18 +9,31 @@ int LinearRandomPicker::pick_random(const int start, const int end, const bool p
     }
 
     const int len_seq = end - start;
-    const double total_weight = len_seq * (len_seq + 1) / 2.0;
 
-    std::uniform_real_distribution<double> dist(0.0, total_weight);
-    const double randomValue = dist(thread_local_gen);
+    // For a sequence of length n, weights form an arithmetic sequence
+    // When prioritizing end: weights are 1, 2, 3, ..., n
+    // When prioritizing start: weights are n, n-1, n-2, ..., 1
+    // Sum of arithmetic sequence = n(a1 + an)/2 = n(n+1)/2
+    const long double total_weight = static_cast<long double>(len_seq) *
+                                   (static_cast<long double>(len_seq) + 1.0L) / 2.0L;
+
+    // Generate random value in [0, total_weight)
+    std::uniform_real_distribution<long double> dist(0.0L, total_weight);
+    const long double random_value = dist(thread_local_gen);
+
+    // For both cases, we solve quadratic equation i² + i - 2r = 0
+    // where r is our random value (or transformed random value)
+    // Using quadratic formula: (-1 ± √(1 + 8r))/2
+    const long double discriminant = 1.0L + 8.0L * random_value;
+    const long double root = (-1.0L + std::sqrt(discriminant)) / 2.0L;
+    const int index = static_cast<int>(std::floor(root));
 
     if (prioritize_end) {
-        // weight(i) = i + 1
-        const int index = static_cast<int>(floor((-1 + sqrt(1 + 8 * randomValue)) / 2));
+        // For prioritize_end=true, larger indices should have higher probability
         return start + std::min(index, len_seq - 1);
     } else {
-        const double shifted_random = total_weight - randomValue;
-        const int index = len_seq - 1 - static_cast<int>(floor((-1 + sqrt(1 + 8 * shifted_random)) / 2));
-        return start + std::max(0, std::min(index, len_seq - 1));
+        // For prioritize_end=false, we reverse the index to give
+        // higher probability to smaller indices
+        return start + (len_seq - 1 - std::min(index, len_seq - 1));
     }
 }

@@ -31,7 +31,7 @@ int ExponentialRandomPicker::pick_random(const int start, const int end, const b
         // Using inverse CDF to directly compute the index
         // If F(x) = (1-e^(-x))/(1-e^(-1)) is our CDF
         // Then F^(-1)(y) = -ln(1 - y*(1-e^(-1)))
-        const int index = static_cast<int>(-std::log1p(-random_value * (1.0 - std::exp(-1.0))));
+        const int index = static_cast<int>(-std::log(1 - random_value * (1.0 - std::exp(-1.0))));
         return start + std::min(index, len_seq - 1);
     }
 }
