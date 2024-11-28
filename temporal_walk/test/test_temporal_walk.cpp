@@ -220,16 +220,15 @@ TEST_F(RandomPickerTest, TwoElementRangeDistributionTestForExponentialRandomPick
     // When prioritize_end=true:
     //   weight(0) = e^0 = 1, weight(1) = e^1 = e
     //   total_weight = 1 + e
-    //   prob(0) = 1/(1+e), prob(1) = e/(1+e)
+    //   prob(0) = 1/(1 + e), prob(1) = e/(1 + e)
     const double e = std::exp(1.0);
     const double expected_prob_end = e / (1.0 + e);    // probability of getting 1 when prioritizing end
 
     // When prioritize_end=false:
-    //   weight(0) = e^0 = 1, weight(1) = e^(-1)
-    //   total_weight = 1 + e^(-1)
-    //   prob(0) = 1/(1+e^(-1)), prob(1) = e^(-1)/(1+e^(-1))
-    const double exp_neg_one = std::exp(-1.0);
-    const double expected_prob_start = exp_neg_one / (1.0 + exp_neg_one);  // probability of getting 1 when prioritizing start
+    //   weight(0) = e^1 = e, weight(1) = e^0 = 1
+    //   total_weight = e + 1
+    //   prob(0) = e/(e + 1), prob(1) = 1/(e + 1)
+    const double expected_prob_start = 1 / (1.0 + e);  // probability of getting 1 when prioritizing start
 
     const double actual_prob_end = static_cast<double>(count_ones_end_prioritized) / num_trials;
     const double actual_prob_start = static_cast<double>(count_ones_start_prioritized) / num_trials;
