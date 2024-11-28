@@ -11,27 +11,21 @@ int ExponentialRandomPicker::pick_random(const int start, const int end, const b
 
     const int len_seq = end - start;
 
+    const double total_weight = std::expm1(len_seq);
+    std::uniform_real_distribution<double> dist(0.0, total_weight);
+    const double random_value = dist(thread_local_gen);
+
+    const int index = static_cast<int>(std::log1p(random_value));
+
+
     if (prioritize_end) {
         // For prioritizing end: P(i) ∝ exp(i)
-        const double total_weight = std::expm1(len_seq);
-
-        std::uniform_real_distribution<double> dist(0.0, total_weight);
-        const double random_value = dist(thread_local_gen);
-
-        const int index = static_cast<int>(std::log1p(random_value));
         return start + std::min(index, len_seq - 1);
     } else {
-        // For prioritizing start: P(i) ∝ exp(-i)
-        // First, compute total weight for normalization (sum of exp(-i) from 0 to len_seq-1)
-        const double total_weight = (1 - std::exp(-len_seq)) / (1 - std::exp(-1.0));
-
-        std::uniform_real_distribution<double> dist(0.0, total_weight);
-        const double random_value = dist(thread_local_gen);
-
-        // Using inverse CDF to directly compute the index
-        // If F(x) = (1-e^(-x))/(1-e^(-1)) is our CDF
-        // Then F^(-1)(y) = -ln(1 - y*(1-e^(-1)))
-        const int index = static_cast<int>(-std::log(1 - random_value * (1.0 - std::exp(-1.0))));
-        return start + std::min(index, len_seq - 1);
+        // For prioritizing start: P(i) ∝ exp(len_seq - 1 - i)
+        // So index i gets weight e^(len_seq - 1 - i)
+        // This gives highest weight e^(len_seq-1) to index 0
+        const int revered_index = len_seq - 1 - index;
+        return start + std::max(0, revered_index);
     }
 }

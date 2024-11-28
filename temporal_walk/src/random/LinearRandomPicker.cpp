@@ -34,6 +34,7 @@ int LinearRandomPicker::pick_random(const int start, const int end, const bool p
     } else {
         // For prioritize_end=false, we reverse the index to give
         // higher probability to smaller indices
-        return start + (len_seq - 1 - std::min(index, len_seq - 1));
+        const int revered_index = len_seq - 1 - index;
+        return start + std::max(0, revered_index);
     }
 }
