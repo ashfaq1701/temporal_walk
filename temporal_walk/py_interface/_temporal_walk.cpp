@@ -3,7 +3,11 @@
 #include <pybind11/numpy.h>
 #include <optional>
 #include "../src/core/TemporalWalk.h"
+#include "../src/random/LinearRandomPicker.h"
+#include "../src/random/ExponentialRandomPicker.h"
+#include "../src/random/UniformRandomPicker.h"
 #include <stdexcept>
+
 
 namespace py = pybind11;
 
@@ -334,4 +338,22 @@ PYBIND11_MODULE(_temporal_walk, m)
             networkx.Graph: The exported networkx graph.
             )"
         );
+
+    py::class_<LinearRandomPicker>(m, "LinearRandomPicker")
+        .def(py::init<>(), "Initialize a LinearRandomPicker instance.")
+        .def("pick_random", &LinearRandomPicker::pick_random,
+             "Pick a random index with linear probabilities.",
+             py::arg("start"), py::arg("end"), py::arg("prioritize_end") = true);
+
+    py::class_<ExponentialRandomPicker>(m, "ExponentialRandomPicker")
+        .def(py::init<>(), "Initialize a ExponentialRandomPicker instance.")
+        .def("pick_random", &ExponentialRandomPicker::pick_random,
+             "Pick a random index with exponential probabilities.",
+             py::arg("start"), py::arg("end"), py::arg("prioritize_end") = true);
+
+    py::class_<UniformRandomPicker>(m, "UniformRandomPicker")
+        .def(py::init<>(), "Initialize a UniformRandomPicker instance.")
+        .def("pick_random", &UniformRandomPicker::pick_random,
+             "Pick a random index with uniform probabilities.",
+             py::arg("start"), py::arg("end"), py::arg("prioritize_end") = true);
 }
