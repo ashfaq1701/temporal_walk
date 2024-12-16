@@ -1,6 +1,7 @@
 #include "ExponentialRandomPicker.h"
 #include <random>
 #include <cmath>
+#include <iostream>
 #include <stdexcept>
 
 int ExponentialRandomPicker::pick_random(const int start, const int end, const bool prioritize_end) {
@@ -10,36 +11,29 @@ int ExponentialRandomPicker::pick_random(const int start, const int end, const b
 
     const int len_seq = end - start;
 
-    // Generate a random value 'u' uniformly distributed in the range [0, 1)
+    // Generate uniform random number between 0 and 1
     std::uniform_real_distribution<double> dist(0.0, 1.0);
     const double u = dist(thread_local_gen);
 
-    // Original formula:
-    // log_index = log1p(u * (exp(len_seq) - 1))
-    // To avoid computing exp(len_seq) directly (which can overflow), we rewrite it using logarithmic properties:
-    // log_index = log((1 - u) * exp(len_seq) + u) = len_seq + log1p(-u) + log1p(u * exp(-shifted_log))
+    double k;
+    if (len_seq < 710) {
+        // Inverse CDF formula,
+        // k = ln(1 + u * (e^len seq − 1)) − 1
+        k = log1p(u * expm1(len_seq)) - 1;
+    } else {
+        // Inverse CDF approximation for large len_seq,
+        // k = len_seq + ln(u) − 1
+        k = len_seq + std::log(u) - 1;
+    }
 
-    // log(1 - u) is always negative since 0 ≤ u < 1
-    // This term helps avoid direct computation of exp(len_seq), which can overflow
-    const double log_term = std::log1p(-u);
-
-    // We shifted the log by adding len_seq, effectively computing len_seq + log(1 - u)
-    // This value represents a logarithmic offset to avoid dealing with large numbers directly
-    const double shifted_log = log_term + len_seq;
-
-    // Added another adjustment to account for the scaled contribution of u in log-space
-    // This avoids overflow by computing log1p(u * exp(-shifted_log))
-    // log_index represents the position in the sequence in log-space
-    const double log_index = shifted_log + std::log1p(u * std::exp(-shifted_log));
+    // Due to rounding, the trailing "-1" in the inverse CDF formula causes error.
+    // To compensate for this we add 1 with k.
+    // And bound the results within limits.
+    const int rounded_index = std::max(0, std::min(static_cast<int>(k + 1), len_seq - 1));
 
     if (prioritize_end) {
-        // When prioritizing end, we used the computed log_index directly
-        // Ensuring the index does not exceed len_seq - 1
-        return start + std::min(static_cast<int>(log_index), len_seq - 1);
+        return start + rounded_index;
     } else {
-        // When prioritizing start, we reversed the computed index
-        // Ensuring the reversed index does not drop below 0
-        const int revered_index = len_seq - 1 - static_cast<int>(log_index);
-        return start + std::max(0, revered_index);
+        return start + (len_seq - 1 - rounded_index);
     }
 }

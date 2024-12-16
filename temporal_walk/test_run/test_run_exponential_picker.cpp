@@ -1,7 +1,7 @@
 #include <iostream>
 #include "../src/random/ExponentialRandomPicker.h"
 
-constexpr int TOTAL_TIMESTEPS = 25000000;
+constexpr int TOTAL_TIMESTEPS = 100000000;
 
 int main()
 {

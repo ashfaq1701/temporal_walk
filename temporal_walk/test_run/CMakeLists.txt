@@ -15,4 +15,3 @@ add_executable(test_run_exponential_random_picker test_run_exponential_picker.cp
 set_target_properties(test_run_exponential_random_picker PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
-
