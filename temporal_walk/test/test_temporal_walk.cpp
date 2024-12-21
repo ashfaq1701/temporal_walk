@@ -15,6 +15,8 @@ constexpr int RANDOM_START = 0;
 constexpr int RANDOM_END = 10000;
 constexpr int RANDOM_NUM_SAMPLES = 1000000;
 
+constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;
+
 class RandomPickerTest : public ::testing::Test {
 protected:
 
@@ -36,7 +38,7 @@ protected:
 class EmptyTemporalWalkTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(NUM_WALKS, LEN_WALK, RandomPickerType::Linear);
+        temporal_walk = std::make_unique<TemporalWalk>();
     }
 
     std::unique_ptr<TemporalWalk> temporal_walk;
@@ -45,7 +47,7 @@ protected:
 class EmptyTemporalWalkTestWithMaxCapacity : public ::testing::Test {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(NUM_WALKS, LEN_WALK, RandomPickerType::Linear, MAX_TIME_CAPACITY);
+        temporal_walk = std::make_unique<TemporalWalk>(MAX_TIME_CAPACITY);
     }
 
     std::unique_ptr<TemporalWalk> temporal_walk;
@@ -58,7 +60,7 @@ protected:
     }
 
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(NUM_WALKS, LEN_WALK, RandomPickerType::Linear);
+        temporal_walk = std::make_unique<TemporalWalk>();
         temporal_walk->add_multiple_edges(sample_edges);
     }
 
@@ -246,8 +248,7 @@ TEST_F(RandomPickerTest, TwoElementRangeDistributionTestForExponentialRandomPick
 
 // Test the constructor of TemporalWalk to ensure it initializes correctly.
 TEST_F(EmptyTemporalWalkTest, ConstructorTest) {
-    EXPECT_NO_THROW(temporal_walk = std::make_unique<TemporalWalk>(NUM_WALKS, LEN_WALK, RandomPickerType::Uniform));
-    EXPECT_EQ(temporal_walk->get_len_walk(), LEN_WALK);
+    EXPECT_NO_THROW(temporal_walk = std::make_unique<TemporalWalk>());
     EXPECT_EQ(temporal_walk->get_node_count(), 0); // Assuming initial node count is 0
 }
 
@@ -316,7 +317,7 @@ TEST_F(FilledTemporalWalkTest, TestNodeFoundTest) {
 // Test that the number of random walks generated matches the expected count and checks that no walk exceeds its length.
 // Also test that the system can sample walks of length more than 1.
 TEST_F(FilledTemporalWalkTest, WalkCountAndLensTest) {
-    const auto walks = temporal_walk->get_random_walks_with_times(WalkStartAt::Random, TEST_NODE_ID);
+    const auto walks = temporal_walk->get_random_walks_with_times(WalkStartAt::Random, NUM_WALKS, LEN_WALK, &linear_picker_type, TEST_NODE_ID);
     EXPECT_EQ(walks.size(), NUM_WALKS);
 
     int total_walk_lens = 0;
@@ -334,7 +335,7 @@ TEST_F(FilledTemporalWalkTest, WalkCountAndLensTest) {
 
 // Test that all walks starting from a specific node begin with that node.
 TEST_F(FilledTemporalWalkTest, WalkStartTest) {
-    const auto walks = temporal_walk->get_random_walks_with_times(WalkStartAt::Begin, TEST_NODE_ID);
+    const auto walks = temporal_walk->get_random_walks_with_times(WalkStartAt::Begin, NUM_WALKS, LEN_WALK, &linear_picker_type, TEST_NODE_ID);
     for (const auto& walk : walks) {
         EXPECT_EQ(walk[0].node, TEST_NODE_ID);
     }
@@ -342,7 +343,7 @@ TEST_F(FilledTemporalWalkTest, WalkStartTest) {
 
 // Test that all walks ending at a specific node conclude with that node.
 TEST_F(FilledTemporalWalkTest, WalkEndTest) {
-    const auto walks = temporal_walk->get_random_walks_with_times(WalkStartAt::End, TEST_NODE_ID);
+    const auto walks = temporal_walk->get_random_walks_with_times(WalkStartAt::End, NUM_WALKS, LEN_WALK, &linear_picker_type, TEST_NODE_ID);
     for (const auto& walk : walks) {
         EXPECT_EQ(walk.back().node, TEST_NODE_ID);
     }
@@ -350,7 +351,7 @@ TEST_F(FilledTemporalWalkTest, WalkEndTest) {
 
 // Test to verify that the timestamps in each walk are strictly increasing.
 TEST_F(FilledTemporalWalkTest, WalkIncreasingTimestampTest) {
-    const auto walks = temporal_walk->get_random_walks_with_times(WalkStartAt::Random, TEST_NODE_ID);
+    const auto walks = temporal_walk->get_random_walks_with_times(WalkStartAt::Random, NUM_WALKS, LEN_WALK, &linear_picker_type, TEST_NODE_ID);
 
     for (const auto& walk : walks) {
         for (size_t i = 1; i < walk.size(); ++i) {
@@ -369,7 +370,7 @@ TEST_F(FilledTemporalWalkTest, CheckWalksForNodes) {
     const auto nodes = temporal_walk->get_node_ids();
     const auto selected_nodes = std::vector<int>(nodes.begin(), nodes.begin() + num_selected_walks);
 
-    const auto walks_for_nodes = temporal_walk->get_random_walks_for_nodes_with_times(WalkStartAt::Random, selected_nodes);
+    const auto walks_for_nodes = temporal_walk->get_random_walks_for_nodes_with_times(WalkStartAt::Random, selected_nodes, NUM_WALKS, LEN_WALK, &linear_picker_type);
     EXPECT_EQ(walks_for_nodes.size(), num_selected_walks);
 
     for (const auto& node : selected_nodes) {

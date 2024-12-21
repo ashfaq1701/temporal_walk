@@ -17,7 +17,7 @@ def test_networkx_integration():
     nx_graph.add_edges_from(edges_with_timestamps)
 
     # Create TemporalWalk instance
-    tw = TemporalWalk(num_walks=10, len_walk=4, picker_type="Linear")
+    tw = TemporalWalk()
 
     # Test importing from NetworkX
     tw.add_edges_from_networkx(nx_graph)
@@ -41,7 +41,7 @@ def test_networkx_integration():
 def test_networkx_integration_empty_graph():
     # Test with empty graph
     G = nx.DiGraph()
-    tw = TemporalWalk(num_walks=5, len_walk=3, picker_type="Linear")
+    tw = TemporalWalk()
 
     # Should work with empty graph
     tw.add_edges_from_networkx(G)
@@ -53,7 +53,7 @@ def test_networkx_integration_invalid_timestamp():
     # Add edge with missing timestamp
     G.add_edge(0, 1)
 
-    tw = TemporalWalk(num_walks=5, len_walk=3, picker_type="Linear")
+    tw = TemporalWalk()
 
     # Should raise an error when timestamp is missing
     with pytest.raises(KeyError):
@@ -61,7 +61,7 @@ def test_networkx_integration_invalid_timestamp():
 
 def test_networkx_integration_with_existing_edges():
     # Create TemporalWalk instance
-    tw = TemporalWalk(num_walks=10, len_walk=4, picker_type="Linear")
+    tw = TemporalWalk()
 
     # Add some initial edges directly
     initial_edges = [

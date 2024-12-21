@@ -22,16 +22,17 @@ int main() {
         EdgeInfo{5, 4, 32}
     };
 
-    TemporalWalk temporal_walk(5, 10, RandomPickerType::Linear);
+    TemporalWalk temporal_walk;
     temporal_walk.add_multiple_edges(edges);
 
     constexpr int selected_node = 2;
+    constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;
 
-    const auto walks_starting_at = temporal_walk.get_random_walks_with_times(WalkStartAt::Begin, selected_node);
+    const auto walks_starting_at = temporal_walk.get_random_walks_with_times(WalkStartAt::Begin, 5, 10, &linear_picker_type, selected_node);
     std::cout << "Walks starting at " << selected_node << std::endl;
     print_temporal_walks_with_times(walks_starting_at);
 
-    const auto walks_ending_at = temporal_walk.get_random_walks_with_times(WalkStartAt::End, selected_node);
+    const auto walks_ending_at = temporal_walk.get_random_walks_with_times(WalkStartAt::End, 5, 10, &linear_picker_type, selected_node);
     std::cout << "Walks ending at " << selected_node << std::endl;
     print_temporal_walks_with_times(walks_ending_at);
 

@@ -10,7 +10,7 @@ def print_walks_for_nodes(node_walks_map):
     print("\n-----------------------------------------------------------------------------\n")
 
 if __name__ == '__main__':
-    temporal_walk_obj = TemporalWalk(100, 50, "Linear")
+    temporal_walk_obj = TemporalWalk()
 
     data_file_path = 'data/sample_data.csv'
 
@@ -31,5 +31,5 @@ if __name__ == '__main__':
     print(f'Total nodes: {temporal_walk_obj.get_node_count()}')
 
     all_nodes = temporal_walk_obj.get_node_ids()
-    walks_for_nodes = temporal_walk_obj.get_random_walks_for_nodes("Random", all_nodes, 0)
+    walks_for_nodes = temporal_walk_obj.get_random_walks_for_nodes(all_nodes, 100, 50, "Linear", None, "Random")
     print_walks_for_nodes(walks_for_nodes)

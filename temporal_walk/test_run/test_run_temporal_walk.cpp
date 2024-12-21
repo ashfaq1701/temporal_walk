@@ -15,7 +15,7 @@ int main() {
     const auto edge_infos = read_edges_from_csv("../../data/sample_data.csv");
     std::cout << edge_infos.size() << std::endl;
 
-    TemporalWalk temporal_walk(NUM_WALKS, LEN_WALK, RANDOM_PICKER_TYPE);
+    TemporalWalk temporal_walk;
     temporal_walk.add_multiple_edges(edge_infos);
 
     const std::vector<int> nodes = temporal_walk.get_node_ids();
@@ -23,18 +23,18 @@ int main() {
 
     const auto selected_nodes = std::vector<int>(nodes.begin(), nodes.begin() + 100);
 
-    const auto walks_for_nodes = temporal_walk.get_random_walks_for_nodes(WalkStartAt::Random, selected_nodes);
+    const auto walks_for_nodes = temporal_walk.get_random_walks_for_nodes(WalkStartAt::Random, selected_nodes, NUM_WALKS, LEN_WALK, &RANDOM_PICKER_TYPE);
     print_temporal_walks_for_nodes(walks_for_nodes);
 
-    const auto walks_for_nodes_with_times = temporal_walk.get_random_walks_for_nodes_with_times(WalkStartAt::Random, selected_nodes);
+    const auto walks_for_nodes_with_times = temporal_walk.get_random_walks_for_nodes_with_times(WalkStartAt::Random, selected_nodes, NUM_WALKS, LEN_WALK, &RANDOM_PICKER_TYPE);
     print_temporal_walks_for_nodes_with_times(walks_for_nodes_with_times);
 
     const auto end = std::chrono::high_resolution_clock::now();
     const std::chrono::duration<double> duration = end - start;
 
 
-    const auto random_walks_from_begin = temporal_walk.get_random_walks(WalkStartAt::Begin);
-    const auto random_walks_from_end = temporal_walk.get_random_walks(WalkStartAt::End);
+    const auto random_walks_from_begin = temporal_walk.get_random_walks(WalkStartAt::Begin, NUM_WALKS, LEN_WALK, &RANDOM_PICKER_TYPE);
+    const auto random_walks_from_end = temporal_walk.get_random_walks(WalkStartAt::End, NUM_WALKS, LEN_WALK, &RANDOM_PICKER_TYPE);
 
     std::cout << "------------------------------------------------------" << std::endl;
     std::cout << "Random Walks from beginning to end" << std::endl;

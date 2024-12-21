@@ -56,16 +56,10 @@ WalkStartAt walk_start_at_from_string(const std::string& walk_start_at_str)
 PYBIND11_MODULE(_temporal_walk, m)
 {
     py::class_<TemporalWalk>(m, "TemporalWalk")
-        .def(py::init([](int num_walks, int len_walk, const std::string& picker_type_str,
-                         const std::optional<int64_t> max_time_capacity)
+        .def(py::init([](const std::optional<int64_t> max_time_capacity)
              {
-                 RandomPickerType picker_type = picker_type_from_string(picker_type_str);
-                 return std::make_unique<
-                     TemporalWalk>(num_walks, len_walk, picker_type, max_time_capacity.value_or(-1));
+                 return std::make_unique<TemporalWalk>(max_time_capacity.value_or(-1));
              }),
-             py::arg("num_walks"),
-             py::arg("len_walk"),
-             py::arg("picker_type"),
              py::arg("max_time_capacity") = py::none())
         .def("add_multiple_edges", [](TemporalWalk& tw, const std::vector<std::tuple<int, int, int64_t>>& edge_infos)
              {
@@ -88,13 +82,23 @@ PYBIND11_MODULE(_temporal_walk, m)
             - edge_infos (List[Tuple[int, int, int64_t]]): A list of tuples, each containing (source node, destination node, timestamp).
             )"
         )
-        .def("get_random_walks", [](TemporalWalk& tw, const std::string& walk_start_at_str="Random", const int end_node=-1,
+        .def("get_random_walks", [](TemporalWalk& tw, const int num_walks, const int len_walk,
+                                    const std::string& edge_picker_type, const int end_node = -1,
+                                    const std::optional<std::string>& start_picker_type = std::nullopt,
+                                    const std::string& walk_start_at_str = "Random",
                                     const int fill_value = DEFAULT_WALK_FILL_VALUE)
              {
                  const WalkStartAt walk_start_at = walk_start_at_from_string(walk_start_at_str);
-                 const auto walks = tw.get_random_walks(walk_start_at, end_node);
-                 const int num_walks = static_cast<int>(walks.size());
-                 const int len_walk = tw.get_len_walk();
+                 const RandomPickerType edge_picker_type_enum = picker_type_from_string(edge_picker_type);
+                 const RandomPickerType* start_picker_type_enum_ptr = nullptr;
+                 if (start_picker_type.has_value())
+                 {
+                     static const RandomPickerType start_picker_type_enum = picker_type_from_string(*start_picker_type);
+                     start_picker_type_enum_ptr = &start_picker_type_enum;
+                 }
+
+                 const auto walks = tw.get_random_walks(walk_start_at, num_walks, len_walk, &edge_picker_type_enum,
+                                                        end_node, start_picker_type_enum_ptr);
 
                  py::array_t<int> py_walks({num_walks, len_walk});
                  auto py_walks_mutable = py_walks.mutable_unchecked<2>();
@@ -116,32 +120,51 @@ PYBIND11_MODULE(_temporal_walk, m)
             Generates random walks from the temporal graph.
 
             Parameters:
-            - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random"), .
+            - num_walks (int): Number of walks to generate.
+            - len_walk (int): Length of each walk.
+            - edge_picker_type (str): Type of edge picker ("Linear", "Exponential", "Uniform").
             - end_node (int, optional): An optional end node ID to start or end the walks. Default is -1 (random).
+            - start_picker_type (str, optional): Type of start edge picker ("Linear", "Exponential", "Uniform"). Defaults to `edge_picker_type` if none passed.
+            - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random").
             - fill_value (int, optional): The value used to pad the walks. Default is 0.
 
             Returns:
             np.ndarray: A 2D NumPy array containing the generated random walks, padded where necessary.
             )"
              , py::return_value_policy::move,
-             py::arg("walk_start_at") = py::str("Random"),
+             py::arg("num_walks"),
+             py::arg("len_walk"),
+             py::arg("edge_picker_type"),
              py::arg("end_node") = -1,
+             py::arg("start_picker_type") = std::nullopt,
+             py::arg("walk_start_at") = py::str("Random"),
              py::arg("fill_value") = DEFAULT_WALK_FILL_VALUE
         )
-        .def("get_random_walks_for_nodes", [](TemporalWalk& tw, const std::string& walk_start_at_str,
-                                              const std::vector<int>& end_nodes,
+        .def("get_random_walks_for_nodes", [](TemporalWalk& tw, const std::vector<int>& end_nodes, const int num_walks,
+                                              const int len_walk,
+                                              const std::string& edge_picker_type,
+                                              const std::optional<std::string>& start_picker_type = std::nullopt,
+                                              const std::string& walk_start_at_str = "Random",
                                               const int fill_value = DEFAULT_WALK_FILL_VALUE)
              {
                  const WalkStartAt walk_start_at = walk_start_at_from_string(walk_start_at_str);
-                 auto walks_for_nodes = tw.get_random_walks_for_nodes(walk_start_at, end_nodes);
-                 const int len_walk = tw.get_len_walk();
+                 const RandomPickerType edge_picker_type_enum = picker_type_from_string(edge_picker_type);
+                 const RandomPickerType* start_picker_type_enum_ptr = nullptr;
+                 if (start_picker_type.has_value())
+                 {
+                     static const RandomPickerType start_picker_type_enum = picker_type_from_string(*start_picker_type);
+                     start_picker_type_enum_ptr = &start_picker_type_enum;
+                 }
+
+                 auto walks_for_nodes = tw.get_random_walks_for_nodes(walk_start_at, end_nodes, num_walks, len_walk,
+                                                                      &edge_picker_type_enum,
+                                                                      start_picker_type_enum_ptr);
 
                  py::dict py_walks_dict; // Create a Python dictionary
 
                  for (int node : end_nodes)
                  {
                      const auto& walks = walks_for_nodes[node];
-                     const int num_walks = static_cast<int>(walks.size());
 
                      py::array_t<int> py_walks({num_walks, len_walk});
                      auto py_walks_mutable = py_walks.mutable_unchecked<2>();
@@ -166,23 +189,42 @@ PYBIND11_MODULE(_temporal_walk, m)
             Generates random walks for multiple specified nodes in the temporal graph.
 
             Parameters:
-            - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random").
             - end_nodes (List[int]): A list of node IDs for which the walks will be generated.
+            - num_walks (int): Number of walks to generate.
+            - len_walk (int): Length of each walk.
+            - edge_picker_type (str): Type of edge picker ("Linear", "Exponential", "Uniform").
+            - start_picker_type (str, optional): Type of start edge picker ("Linear", "Exponential", "Uniform"). Defaults to `edge_picker_type` if none passed.
+            - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random"). Defaults to "Random".
             - fill_value (int, optional): The value used to pad the walks. Default is 0.
 
             Returns:
             Dict[int, np.ndarray]: A dictionary mapping node IDs to their corresponding random walks.
             )",
              py::return_value_policy::move,
-             py::arg("walk_start_at_str"),
              py::arg("end_nodes"),
+             py::arg("num_walks"),
+             py::arg("len_walk"),
+             py::arg("edge_picker_type"),
+             py::arg("start_picker_type") = std::nullopt,
+             py::arg("walk_start_at_str") = py::str("Random"),
              py::arg("fill_value") = DEFAULT_WALK_FILL_VALUE
         )
         .def("get_random_walks_with_times",
-             [](TemporalWalk& tw, const std::string& walk_start_at_str="Random", const int end_node = -1)
+             [](TemporalWalk& tw, const int num_walks, const int len_walk, const std::string& edge_picker_type,
+                const int end_node = -1, const std::optional<std::string>& start_picker_type = std::nullopt,
+                const std::string& walk_start_at_str = "Random")
              {
                  const WalkStartAt walk_start_at = walk_start_at_from_string(walk_start_at_str);
-                 const auto walks_with_times = tw.get_random_walks_with_times(walk_start_at, end_node);
+                 const RandomPickerType edge_picker_type_enum = picker_type_from_string(edge_picker_type);
+                 const RandomPickerType* start_picker_type_enum_ptr = nullptr;
+                 if (start_picker_type.has_value())
+                 {
+                     static const RandomPickerType start_picker_type_enum = picker_type_from_string(*start_picker_type);
+                     start_picker_type_enum_ptr = &start_picker_type_enum;
+                 }
+
+                 const auto walks_with_times = tw.get_random_walks_with_times(
+                     walk_start_at, num_walks, len_walk, &edge_picker_type_enum, end_node, start_picker_type_enum_ptr);
 
                  // Convert the result to a Python list of lists of tuples
                  std::vector<std::vector<std::tuple<int, int64_t>>> py_walks;
@@ -202,21 +244,40 @@ PYBIND11_MODULE(_temporal_walk, m)
             Generates random walks with timestamps from the temporal graph.
 
             Parameters:
-            - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random"), default is "Random".
+            - num_walks (int): Number of walks to generate.
+            - len_walk (int): Length of each walk.
+            - edge_picker_type (str): Type of edge picker ("Linear", "Exponential", "Uniform").
             - end_node (int, optional): An optional end node ID to start or end the walks. Default is -1 (random).
+            - start_picker_type (str, optional): Type of start edge picker ("Linear", "Exponential", "Uniform"). Defaults to `edge_picker_type` if none passed.
+            - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random"), default is "Random".
 
             Returns:
             List[List[Tuple[int, int64_t]]]: A list of random walks, each walk is a list of tuples containing (node_id, timestamp).
             )",
              py::return_value_policy::move,
-             py::arg("walk_start_at") = py::str("Random"),
-             py::arg("end_node") = -1
+             py::arg("num_walks"),
+             py::arg("len_walk"),
+             py::arg("edge_picker_type"),
+             py::arg("end_node") = -1,
+             py::arg("start_picker_type") = std::nullopt,
+             py::arg("walk_start_at") = py::str("Random")
         )
         .def("get_random_walks_for_nodes_with_times",
-             [](TemporalWalk& tw, const std::string& walk_start_at_str, const std::vector<int>& end_nodes)
+             [](TemporalWalk& tw, const std::vector<int>& end_nodes, const int num_walks, const int len_walk,
+                const std::string& edge_picker_type, const std::optional<std::string>& start_picker_type = std::nullopt,
+                const std::string& walk_start_at_str = "Random")
              {
                  const WalkStartAt walk_start_at = walk_start_at_from_string(walk_start_at_str);
-                 auto walks_for_nodes_with_times = tw.get_random_walks_for_nodes_with_times(walk_start_at, end_nodes);
+                 const RandomPickerType edge_picker_type_enum = picker_type_from_string(edge_picker_type);
+                 const RandomPickerType* start_picker_type_enum_ptr = nullptr;
+                 if (start_picker_type.has_value())
+                 {
+                     static const RandomPickerType start_picker_type_enum = picker_type_from_string(*start_picker_type);
+                     start_picker_type_enum_ptr = &start_picker_type_enum;
+                 }
+
+                 auto walks_for_nodes_with_times = tw.get_random_walks_for_nodes_with_times(
+                     walk_start_at, end_nodes, num_walks, len_walk, &edge_picker_type_enum, start_picker_type_enum_ptr);
 
                  // Convert the result to a Python dictionary of lists of lists of tuples
                  py::dict py_walks_dict;
@@ -241,13 +302,24 @@ PYBIND11_MODULE(_temporal_walk, m)
             Generates random walks with timestamps for multiple specified nodes in the temporal graph.
 
             Parameters:
-            - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random").
             - end_nodes (List[int]): A list of node IDs for which the walks will be generated.
+            - end_nodes (List[int]): A list of node IDs for which the walks will be generated.
+            - num_walks (int): Number of walks to generate.
+            - len_walk (int): Length of each walk.
+            - edge_picker_type (str): Type of edge picker ("Linear", "Exponential", "Uniform").
+            - start_picker_type (str, optional): Type of start edge picker ("Linear", "Exponential", "Uniform"). Defaults to `edge_picker_type` if none passed.
+            - walk_start_at (str): The starting point for the walks ("Begin", "End", "Random"). Default is "Random".
 
             Returns:
             Dict[int, List[List[Tuple[int, int64_t]]]]: A dictionary mapping node IDs to their corresponding random walks, each walk is a list of tuples containing (node_id, timestamp).
             )",
-             py::return_value_policy::move
+             py::return_value_policy::move,
+             py::arg("end_nodes"),
+             py::arg("num_walks"),
+             py::arg("len_walk"),
+             py::arg("edge_picker_type"),
+             py::arg("start_picker_type") = std::nullopt,
+             py::arg("walk_start_at") = py::str("Random")
         )
         .def("get_node_count", &TemporalWalk::get_node_count,
              R"(
