@@ -12,10 +12,14 @@ enum RandomPickerType {
     Exponential
 };
 
-enum WalkStartAt {
-    Begin,
-    End,
-    Random
+enum WalkInitEdgeTimeBias {
+    Bias_Earliest_Time,
+    Bias_Latest_Time
+};
+
+enum WalkDirection {
+    Forward_In_Time,
+    Backward_In_Time
 };
 
 struct EdgeInfo {
@@ -40,7 +44,13 @@ class TemporalWalk {
 
     BS::thread_pool thread_pool;
 
-    void generate_random_walk_with_time(std::vector<NodeWithTime>* walk, bool begin_from_end, int len_walk, const std::shared_ptr<RandomPicker>& edge_picker, const std::shared_ptr<RandomPicker>& start_picker, int end_node=-1) const;
+    void generate_random_walk_with_time(
+        std::vector<NodeWithTime>* walk,
+        const std::shared_ptr<RandomPicker>& edge_picker,
+        const std::shared_ptr<RandomPicker>& start_picker,
+        int max_walk_len,
+        bool should_walk_forward,
+        bool init_edge_picker_end_prioritization) const;
 
     void add_edge(int u, int i, int64_t t);
 
@@ -49,11 +59,27 @@ class TemporalWalk {
 public:
     explicit TemporalWalk(int64_t max_time_capacity=-1);
 
-    [[nodiscard]] std::vector<std::vector<NodeWithTime>> get_random_walks_with_times(WalkStartAt walk_start_at, int num_walks, int len_walk, const RandomPickerType* edge_picker_type, int end_node=-1, const RandomPickerType* start_picker_type=nullptr);
-    [[nodiscard]] std::unordered_map<int, std::vector<std::vector<NodeWithTime>>> get_random_walks_for_nodes_with_times(WalkStartAt walk_start_at, const std::vector<int>& end_nodes, int num_walks, int len_walk, const RandomPickerType* edge_picker_type, const RandomPickerType* start_picker_type=nullptr);
+    [[nodiscard]] std::vector<std::vector<NodeWithTime>> get_random_walks_with_times(
+        int max_walk_len,
+        const RandomPickerType* walk_bias,
+        const RandomPickerType* initial_edge_bias=nullptr,
+        long num_cw=-1,
+        int num_walks_per_node=-1,
+        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
+        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time,
+        int context_window_len=-1,
+        float p_walk_success_threshold=0.95);
 
-    [[nodiscard]] std::vector<std::vector<int>> get_random_walks(WalkStartAt walk_start_at, int num_walks, int len_walk, const RandomPickerType* edge_picker_type, int end_node=-1, const RandomPickerType* start_picker_type=nullptr);
-    [[nodiscard]] std::unordered_map<int, std::vector<std::vector<int>>> get_random_walks_for_nodes(WalkStartAt walk_start_at, const std::vector<int>& end_nodes, int num_walks, int len_walk, const RandomPickerType* edge_picker_type, const RandomPickerType* start_picker_type=nullptr);
+    [[nodiscard]] std::vector<std::vector<int>> TemporalWalk::get_random_walks(
+        int max_walk_len,
+        const RandomPickerType* walk_bias,
+        const RandomPickerType* initial_edge_bias=nullptr,
+        long num_cw=-1,
+        int num_walks_per_node=-1,
+        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
+        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time,
+        int context_window_len=-1,
+        float p_walk_success_threshold=0.95);
 
     void add_multiple_edges(const std::vector<EdgeInfo>& edge_infos);
 

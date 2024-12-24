@@ -47,15 +47,15 @@ size_t Node::count_timestamps_greater_than_given(const int64_t given_timestamp) 
     return count_elements_greater_than(edges_as_um, given_timestamp, TimestampGroupedEdgesComparator());
 }
 
-TemporalEdge* Node::pick_temporal_edge(RandomPicker* random_picker, const bool prioritize_end, const int64_t given_timestamp) const {
-    const auto list_to_use = prioritize_end ? edges_as_dm : edges_as_um;
+TemporalEdge* Node::pick_temporal_edge(RandomPicker* random_picker, const bool should_walk_forward, const int64_t given_timestamp) const {
+    const auto list_to_use = should_walk_forward ? edges_as_um : edges_as_dm;
 
     size_t count_edge_times = list_to_use.size();
     if (given_timestamp != -1) {
-        if (prioritize_end) {
-            count_edge_times = count_timestamps_less_than_given(given_timestamp);
-        } else {
+        if (should_walk_forward) {
             count_edge_times = count_timestamps_greater_than_given(given_timestamp);
+        } else {
+            count_edge_times = count_timestamps_less_than_given(given_timestamp);
         }
     }
 
@@ -63,14 +63,14 @@ TemporalEdge* Node::pick_temporal_edge(RandomPicker* random_picker, const bool p
         return nullptr;
     }
 
-    const int random_timestamp_idx = random_picker->pick_random(0, static_cast<int>(count_edge_times), prioritize_end);
+    const int random_timestamp_idx = random_picker->pick_random(0, static_cast<int>(count_edge_times), !should_walk_forward);
 
-    auto it = prioritize_end ? list_to_use.begin() : list_to_use.end();
+    auto it = should_walk_forward ? list_to_use.end() : list_to_use.begin();
 
-    if (prioritize_end) {
-        std::advance(it, random_timestamp_idx);
-    } else {
+    if (should_walk_forward) {
         std::advance(it, -(count_edge_times - random_timestamp_idx));
+    } else {
+        std::advance(it, random_timestamp_idx);
     }
     return it->get()->select_random_edge();
 }

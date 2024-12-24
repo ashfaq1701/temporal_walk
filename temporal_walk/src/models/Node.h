@@ -36,8 +36,8 @@ public:
 
     [[nodiscard]] size_t count_timestamps_greater_than_given(int64_t given_timestamp) const;
 
-    TemporalEdge* pick_temporal_edge(RandomPicker* random_picker, bool prioritize_end, int64_t given_timestamp=-1) const;
-    bool is_empty() const;
+    TemporalEdge* pick_temporal_edge(RandomPicker* random_picker, bool should_walk_forward, int64_t given_timestamp=-1) const;
+    [[nodiscard]] bool is_empty() const;
 };
 
 #endif //NODE_H

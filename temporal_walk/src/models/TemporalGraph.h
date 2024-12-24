@@ -18,7 +18,7 @@ public:
     void add_node(int id);
     Node* get_node(int id);
     Node* get_or_create_node(int id);
-    Node* get_random_node(RandomPicker* random_picker, bool begin_from_end);
+    Node* get_random_node(RandomPicker* random_picker, bool should_walk_forward, bool init_edge_picker_end_prioritization);
     void add_edge(int id1, int id2, int64_t timestamp);
     std::vector<TemporalEdge*> get_edges() const;
     void sort_edges();
