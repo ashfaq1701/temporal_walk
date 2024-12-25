@@ -97,9 +97,9 @@ PYBIND11_MODULE(_temporal_walk, m)
         .def("get_random_walks", [](TemporalWalk& tw,
                                     const int max_walk_len,
                                     const std::string& walk_bias,
-                                    const std::optional<std::string>& initial_edge_bias = std::nullopt,
                                     const std::optional<long> num_cw = std::nullopt,
                                     const std::optional<int> num_walks_per_node = std::nullopt,
+                                    const std::optional<std::string>& initial_edge_bias = std::nullopt,
                                     const std::string& walk_direction = "Forward_In_Time",
                                     const std::string& walk_init_edge_time_bias = "Bias_Earliest_Time",
                                     const std::optional<int> context_window_len = std::nullopt,
@@ -158,9 +158,9 @@ PYBIND11_MODULE(_temporal_walk, m)
         .def("get_random_walks_with_times", [](TemporalWalk& tw,
                                                const int max_walk_len,
                                                const std::string& walk_bias,
-                                               const std::optional<std::string>& initial_edge_bias = std::nullopt,
                                                const std::optional<long> num_cw = std::nullopt,
                                                const std::optional<int> num_walks_per_node = std::nullopt,
+                                               const std::optional<std::string>& initial_edge_bias = std::nullopt,
                                                const std::string& walk_direction = "Forward_In_Time",
                                                const std::string& walk_init_edge_time_bias = "Bias_Earliest_Time",
                                                const std::optional<int> context_window_len = std::nullopt,
@@ -178,7 +178,7 @@ PYBIND11_MODULE(_temporal_walk, m)
                  WalkInitEdgeTimeBias walk_init_edge_time_bias_enum = walk_init_edge_time_bias_from_string(
                      walk_init_edge_time_bias);
 
-                 return tw.get_random_walks_with_times(
+                 auto walks_with_times = tw.get_random_walks_with_times(
                      max_walk_len,
                      &walk_bias_enum,
                      num_cw.value_or(-1),
@@ -188,6 +188,22 @@ PYBIND11_MODULE(_temporal_walk, m)
                      walk_init_edge_time_bias_enum,
                      context_window_len.value_or(-1),
                      p_walk_success_threshold);
+
+                std::vector<std::vector<std::tuple<int, int64_t>>> result;
+                result.reserve(walks_with_times.size());
+
+                for (const auto& walk : walks_with_times) {
+                    std::vector<std::tuple<int, int64_t>> converted_walk;
+                    converted_walk.reserve(walk.size());
+
+                    for (const auto& node_time : walk) {
+                        converted_walk.emplace_back(node_time.node, node_time.timestamp);
+                    }
+
+                    result.push_back(std::move(converted_walk));
+                }
+
+                return result;
              },
              R"(
             Generates temporal random walks with timestamps.
