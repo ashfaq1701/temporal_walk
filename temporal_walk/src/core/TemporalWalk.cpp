@@ -12,7 +12,10 @@ constexpr int DEFAULT_NUM_WALKS_PER_THREAD = 500;
 
 EdgeInfo::EdgeInfo(const int u, const int i, const int64_t t): u(u), i(i), t(t) {}
 
-TemporalWalk::TemporalWalk(int64_t max_time_capacity): max_time_capacity(max_time_capacity) {
+TemporalWalk::TemporalWalk(
+    int64_t max_time_capacity
+    ): max_time_capacity(max_time_capacity), thread_pool(std::thread::hardware_concurrency()) {
+
     temporal_graph = std::make_unique<TemporalGraph>();
 }
 
@@ -138,12 +141,13 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_with_times
         }
     };
 
-    std::vector<std::future<void>> futures;
     const size_t num_threads = std::thread::hardware_concurrency();
+    std::vector<std::future<void>> futures;
+    futures.reserve(num_threads);
 
     for (size_t i = 0; i < num_threads; ++i)
     {
-        futures.push_back(thread_pool.submit_task(generate_walks_thread));
+        futures.push_back(thread_pool.enqueue(generate_walks_thread));
     }
 
     for (auto& future : futures) {

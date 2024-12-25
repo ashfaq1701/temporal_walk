@@ -2,7 +2,7 @@
 #define TEMPORAL_WALK_H
 
 #include<vector>
-#include "../../libs/thread-pool/include/BS_thread_pool.hpp"
+#include "../../libs/thread-pool/ThreadPool.h"
 #include "../random/RandomPicker.h"
 #include "../models/TemporalGraph.h"
 
@@ -42,7 +42,7 @@ class TemporalWalk {
 
     std::unique_ptr<TemporalGraph> temporal_graph;
 
-    BS::thread_pool thread_pool;
+    ThreadPool thread_pool;
 
     void generate_random_walk_with_time(
         std::vector<NodeWithTime>* walk,
@@ -56,7 +56,7 @@ class TemporalWalk {
 
     static std::shared_ptr<RandomPicker> get_random_picker(const RandomPickerType* picker_type);
 
-    long estimate_cw_count(int num_walks_per_node, int max_walk_len, int min_walk_len) const;
+    [[nodiscard]] long estimate_cw_count(int num_walks_per_node, int max_walk_len, int min_walk_len) const;
 
 public:
     explicit TemporalWalk(int64_t max_time_capacity=-1);
