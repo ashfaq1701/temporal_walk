@@ -56,26 +56,28 @@ class TemporalWalk {
 
     static std::shared_ptr<RandomPicker> get_random_picker(const RandomPickerType* picker_type);
 
+    long estimate_cw_count(int num_walks_per_node, int max_walk_len, int min_walk_len) const;
+
 public:
     explicit TemporalWalk(int64_t max_time_capacity=-1);
 
     [[nodiscard]] std::vector<std::vector<NodeWithTime>> get_random_walks_with_times(
         int max_walk_len,
         const RandomPickerType* walk_bias,
-        const RandomPickerType* initial_edge_bias=nullptr,
         long num_cw=-1,
         int num_walks_per_node=-1,
+        const RandomPickerType* initial_edge_bias=nullptr,
         WalkDirection walk_direction=WalkDirection::Forward_In_Time,
         WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time,
         int context_window_len=-1,
         float p_walk_success_threshold=0.95);
 
-    [[nodiscard]] std::vector<std::vector<int>> TemporalWalk::get_random_walks(
+    [[nodiscard]] std::vector<std::vector<int>> get_random_walks(
         int max_walk_len,
         const RandomPickerType* walk_bias,
-        const RandomPickerType* initial_edge_bias=nullptr,
         long num_cw=-1,
         int num_walks_per_node=-1,
+        const RandomPickerType* initial_edge_bias=nullptr,
         WalkDirection walk_direction=WalkDirection::Forward_In_Time,
         WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time,
         int context_window_len=-1,

@@ -36,9 +36,9 @@ std::shared_ptr<RandomPicker> TemporalWalk::get_random_picker(const RandomPicker
 std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_with_times(
     const int max_walk_len,
     const RandomPickerType* walk_bias,
-    const RandomPickerType* initial_edge_bias,
     const long num_cw,
     const int num_walks_per_node,
+    const RandomPickerType* initial_edge_bias,
     const WalkDirection walk_direction,
     const WalkInitEdgeTimeBias walk_init_edge_time_bias,
     const int context_window_len,
@@ -46,7 +46,7 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_with_times
 
     const std::shared_ptr<RandomPicker> edge_picker = get_random_picker(walk_bias);
     std::shared_ptr<RandomPicker> start_picker;
-    if (!initial_edge_bias) {
+    if (initial_edge_bias) {
         start_picker = get_random_picker(initial_edge_bias);
     } else {
         start_picker = edge_picker;
@@ -86,7 +86,7 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_with_times
     }
 
     if (num_cw == -1) {
-        cw_count = static_cast<long>(get_node_count()) * num_walks_per_node * (max_walk_len - min_walk_len + 1);
+        cw_count = estimate_cw_count(num_walks_per_node, max_walk_len, min_walk_len);
     }
 
     std::atomic<size_t> num_cw_curr{0};
@@ -165,15 +165,15 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_with_times
 std::vector<std::vector<int>> TemporalWalk::get_random_walks(
     const int max_walk_len,
     const RandomPickerType* walk_bias,
-    const RandomPickerType* initial_edge_bias,
     const long num_cw,
     const int num_walks_per_node,
+    const RandomPickerType* initial_edge_bias,
     const WalkDirection walk_direction,
     const WalkInitEdgeTimeBias walk_init_edge_time_bias,
     const int context_window_len,
     const float p_walk_success_threshold) {
 
-    std::vector<std::vector<NodeWithTime>> walks_with_times = get_random_walks_with_times(max_walk_len, walk_bias, initial_edge_bias, num_cw, num_walks_per_node, walk_direction, walk_init_edge_time_bias, context_window_len, p_walk_success_threshold);
+    std::vector<std::vector<NodeWithTime>> walks_with_times = get_random_walks_with_times(max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias, walk_direction, walk_init_edge_time_bias, context_window_len, p_walk_success_threshold);
     std::vector<std::vector<int>> walks;
 
     for (auto & walk_with_time : walks_with_times)
@@ -198,7 +198,7 @@ void TemporalWalk::generate_random_walk_with_time(
     const int max_walk_len,
     const bool should_walk_forward,
     const bool init_edge_picker_end_prioritization) const {
-    Node* graph_node = temporal_graph->get_random_node(
+    const Node* graph_node = temporal_graph->get_random_node(
         start_picker.get(),
         should_walk_forward,
         init_edge_picker_end_prioritization);
@@ -225,6 +225,10 @@ void TemporalWalk::generate_random_walk_with_time(
         current_node = should_walk_forward ? picked_edge->i : picked_edge->u;
         current_timestamp = picked_edge->timestamp;
     }
+
+    if (!should_walk_forward) {
+        std::reverse(walk->begin(), walk->end());
+    }
 }
 
 void TemporalWalk::add_edge(const int u, const int i, const int64_t t) {
@@ -247,6 +251,14 @@ void TemporalWalk::add_multiple_edges(const std::vector<EdgeInfo>& edge_infos) {
 
 size_t TemporalWalk::get_node_count() const {
     return temporal_graph->get_node_count();
+}
+
+long TemporalWalk::estimate_cw_count(
+    const int num_walks_per_node,
+    const int max_walk_len,
+    const int min_walk_len) const {
+
+    return static_cast<long>(get_node_count()) * num_walks_per_node * (max_walk_len - min_walk_len + 1);
 }
 
 size_t TemporalWalk::get_edge_count() const {

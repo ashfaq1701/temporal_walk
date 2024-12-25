@@ -2,39 +2,30 @@
 
 #include "../src/core/TemporalWalk.h"
 #include "print_walks.h"
+#include "../test/test_utils.h"
 
 int main() {
-    const std::vector<EdgeInfo> edges {
-        EdgeInfo{4, 5, 71},
-        EdgeInfo{3, 5, 82},
-        EdgeInfo{1, 3, 19},
-        EdgeInfo{4, 2, 34},
-        EdgeInfo{4, 3, 79},
-        EdgeInfo{2, 5, 19},
-        EdgeInfo{2, 3, 70},
-        EdgeInfo{5, 4, 97},
-        EdgeInfo{4, 6, 57},
-        EdgeInfo{6, 4, 27},
-        EdgeInfo{2, 6, 80},
-        EdgeInfo{6, 1, 42},
-        EdgeInfo{4, 6, 98},
-        EdgeInfo{1, 4, 17},
-        EdgeInfo{5, 4, 32}
-    };
+    const auto start = std::chrono::high_resolution_clock::now();
+
+    const auto edge_infos = read_edges_from_csv("../../data/sample_data.csv");
+    std::cout << edge_infos.size() << std::endl;
 
     TemporalWalk temporal_walk;
-    temporal_walk.add_multiple_edges(edges);
+    temporal_walk.add_multiple_edges(edge_infos);
 
     constexpr int selected_node = 2;
     constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;
+    constexpr RandomPickerType exponential_picker_type = RandomPickerType::Exponential;
 
-    const auto walks_starting_at = temporal_walk.get_random_walks_with_times(WalkStartAt::Begin, 5, 10, &linear_picker_type, selected_node);
-    std::cout << "Walks starting at " << selected_node << std::endl;
-    print_temporal_walks_with_times(walks_starting_at);
+    const auto walks_forward = temporal_walk.get_random_walks_with_times(20, &exponential_picker_type, -1, 10, &linear_picker_type, WalkDirection::Forward_In_Time, WalkInitEdgeTimeBias::Bias_Earliest_Time, 4, 0.5);
+    std::cout << "Walks forward: " << walks_forward.size() << std::endl;
 
-    const auto walks_ending_at = temporal_walk.get_random_walks_with_times(WalkStartAt::End, 5, 10, &linear_picker_type, selected_node);
-    std::cout << "Walks ending at " << selected_node << std::endl;
-    print_temporal_walks_with_times(walks_ending_at);
+    const auto walks_backward = temporal_walk.get_random_walks_with_times(20, &exponential_picker_type, -1, 10, nullptr, WalkDirection::Backward_In_Time, WalkInitEdgeTimeBias::Bias_Latest_Time, 3, 0.7);
+    std::cout << "Walks forward: " << walks_backward.size() << std::endl;
+
+    const auto end = std::chrono::high_resolution_clock::now();
+    const std::chrono::duration<double> duration = end - start;
+    std::cout << "Runtime: " << duration.count() << " seconds" << std::endl;
 
     return 0;
 }

@@ -120,9 +120,9 @@ PYBIND11_MODULE(_temporal_walk, m)
                  return tw.get_random_walks(
                      max_walk_len,
                      &walk_bias_enum,
-                     initial_edge_bias_enum_ptr,
                      num_cw.value_or(-1),
                      num_walks_per_node.value_or(-1),
+                     initial_edge_bias_enum_ptr,
                      walk_direction_enum,
                      walk_init_edge_time_bias_enum,
                      context_window_len.value_or(-1),
@@ -134,9 +134,9 @@ PYBIND11_MODULE(_temporal_walk, m)
              Parameters:
              max_walk_len (int): Maximum length of each random walk
              walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "Exponential")
-             initial_edge_bias (str, optional): Type of bias for selecting initial edge
              num_cw (int, optional): Number of context windows to generate
              num_walks_per_node (int, optional): Number of walks per node (used if num_cw not specified)
+             initial_edge_bias (str, optional): Type of bias for selecting initial edge
              walk_direction (str): Direction of walk ("Forward_In_Time" or "Backward_In_Time")
              walk_init_edge_time_bias (str): Time bias for initial edge ("Bias_Earliest_Time" or "Bias_Latest_Time")
              context_window_len (int, optional): Size of context window
@@ -147,9 +147,9 @@ PYBIND11_MODULE(_temporal_walk, m)
              )",
              py::arg("max_walk_len"),
              py::arg("walk_bias"),
-             py::arg("initial_edge_bias") = py::none(),
              py::arg("num_cw") = py::none(),
              py::arg("num_walks_per_node") = py::none(),
+             py::arg("initial_edge_bias") = py::none(),
              py::arg("walk_direction") = "Forward_In_Time",
              py::arg("walk_init_edge_time_bias") = "Bias_Earliest_Time",
              py::arg("context_window_len") = py::none(),
@@ -181,9 +181,9 @@ PYBIND11_MODULE(_temporal_walk, m)
                  return tw.get_random_walks_with_times(
                      max_walk_len,
                      &walk_bias_enum,
-                     initial_edge_bias_enum_ptr,
                      num_cw.value_or(-1),
                      num_walks_per_node.value_or(-1),
+                     initial_edge_bias_enum_ptr,
                      walk_direction_enum,
                      walk_init_edge_time_bias_enum,
                      context_window_len.value_or(-1),
@@ -195,9 +195,9 @@ PYBIND11_MODULE(_temporal_walk, m)
             Parameters:
             max_walk_len (int): Maximum length of each random walk
             walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "Exponential")
-            initial_edge_bias (str, optional): Type of bias for selecting initial edge
             num_cw (int, optional): Number of context windows to generate
             num_walks_per_node (int, optional): Number of walks per node (used if num_cw not specified)
+            initial_edge_bias (str, optional): Type of bias for selecting initial edge
             walk_direction (str): Direction of walk ("Forward_In_Time" or "Backward_In_Time")
             walk_init_edge_time_bias (str): Time bias for initial edge ("Bias_Earliest_Time" or "Bias_Latest_Time")
             context_window_len (int, optional): Size of context window
@@ -208,9 +208,9 @@ PYBIND11_MODULE(_temporal_walk, m)
             )",
              py::arg("max_walk_len"),
              py::arg("walk_bias"),
-             py::arg("initial_edge_bias") = py::none(),
              py::arg("num_cw") = py::none(),
              py::arg("num_walks_per_node") = py::none(),
+             py::arg("initial_edge_bias") = py::none(),
              py::arg("walk_direction") = "Forward_In_Time",
              py::arg("walk_init_edge_time_bias") = "Bias_Earliest_Time",
              py::arg("context_window_len") = py::none(),

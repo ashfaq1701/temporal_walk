@@ -7,14 +7,14 @@
 #include "../src/random/LinearRandomPicker.h"
 
 constexpr int TEST_NODE_ID = 647;
-constexpr int LEN_WALK = 20;
-constexpr int NUM_WALKS = 1000;
+constexpr int MAX_WALK_LEN = 20;
 constexpr int64_t MAX_TIME_CAPACITY = 5;
 
 constexpr int RANDOM_START = 0;
 constexpr int RANDOM_END = 10000;
 constexpr int RANDOM_NUM_SAMPLES = 1000000;
 
+constexpr RandomPickerType exponential_picker_type = RandomPickerType::Exponential;
 constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;
 
 class RandomPickerTest : public ::testing::Test {
@@ -317,13 +317,12 @@ TEST_F(FilledTemporalWalkTest, TestNodeFoundTest) {
 // Test that the number of random walks generated matches the expected count and checks that no walk exceeds its length.
 // Also test that the system can sample walks of length more than 1.
 TEST_F(FilledTemporalWalkTest, WalkCountAndLensTest) {
-    const auto walks = temporal_walk->get_random_walks_with_times(WalkStartAt::Random, NUM_WALKS, LEN_WALK, &linear_picker_type, TEST_NODE_ID);
-    EXPECT_EQ(walks.size(), NUM_WALKS);
+    const auto walks = temporal_walk->get_random_walks_with_times(MAX_WALK_LEN, &linear_picker_type, -1, 10);
 
     int total_walk_lens = 0;
 
     for (const auto& walk : walks) {
-        EXPECT_LE(walk.size(), LEN_WALK) << "A walk exceeds the maximum length of " << LEN_WALK;
+        EXPECT_LE(walk.size(), MAX_WALK_LEN) << "A walk exceeds the maximum length of " << MAX_WALK_LEN;
         EXPECT_GT(walk.size(), 0);
 
         total_walk_lens += static_cast<int>(walk.size());
@@ -333,25 +332,9 @@ TEST_F(FilledTemporalWalkTest, WalkCountAndLensTest) {
     EXPECT_GT(average_walk_len, 1) << "System could not sample any walk of length more than 1";
 }
 
-// Test that all walks starting from a specific node begin with that node.
-TEST_F(FilledTemporalWalkTest, WalkStartTest) {
-    const auto walks = temporal_walk->get_random_walks_with_times(WalkStartAt::Begin, NUM_WALKS, LEN_WALK, &linear_picker_type, TEST_NODE_ID);
-    for (const auto& walk : walks) {
-        EXPECT_EQ(walk[0].node, TEST_NODE_ID);
-    }
-}
-
-// Test that all walks ending at a specific node conclude with that node.
-TEST_F(FilledTemporalWalkTest, WalkEndTest) {
-    const auto walks = temporal_walk->get_random_walks_with_times(WalkStartAt::End, NUM_WALKS, LEN_WALK, &linear_picker_type, TEST_NODE_ID);
-    for (const auto& walk : walks) {
-        EXPECT_EQ(walk.back().node, TEST_NODE_ID);
-    }
-}
-
 // Test to verify that the timestamps in each walk are strictly increasing.
 TEST_F(FilledTemporalWalkTest, WalkIncreasingTimestampTest) {
-    const auto walks = temporal_walk->get_random_walks_with_times(WalkStartAt::Random, NUM_WALKS, LEN_WALK, &linear_picker_type, TEST_NODE_ID);
+    const auto walks = temporal_walk->get_random_walks_with_times(MAX_WALK_LEN, &linear_picker_type, -1, 10);
 
     for (const auto& walk : walks) {
         for (size_t i = 1; i < walk.size(); ++i) {
@@ -359,37 +342,6 @@ TEST_F(FilledTemporalWalkTest, WalkIncreasingTimestampTest) {
                 << "Timestamps are not strictly increasing in walk: "
                 << i << " with node: " << walk[i].node
                 << ", previous node: " << walk[i - 1].node;
-        }
-    }
-}
-
-// Test to verify random walks for selected nodes and their properties.
-TEST_F(FilledTemporalWalkTest, CheckWalksForNodes) {
-    constexpr int num_selected_walks = 100;
-
-    const auto nodes = temporal_walk->get_node_ids();
-    const auto selected_nodes = std::vector<int>(nodes.begin(), nodes.begin() + num_selected_walks);
-
-    const auto walks_for_nodes = temporal_walk->get_random_walks_for_nodes_with_times(WalkStartAt::Random, selected_nodes, NUM_WALKS, LEN_WALK, &linear_picker_type);
-    EXPECT_EQ(walks_for_nodes.size(), num_selected_walks);
-
-    for (const auto& node : selected_nodes) {
-        auto it = walks_for_nodes.find(node);
-        EXPECT_NE(it, walks_for_nodes.end()) << "Node " << node << " is not present in walks_for_nodes.";
-        EXPECT_EQ(it->second.size(), NUM_WALKS) << "Node " << node << " does not have the expected number of walks.";
-    }
-
-    // Test that each walk for each node is strictly increasing in time.
-    for (const auto& node : selected_nodes) {
-        auto walks = walks_for_nodes.at(node);
-
-        for (const auto& walk : walks) {
-            for (size_t i = 1; i < walk.size(); ++i) {
-                EXPECT_GT(walk[i].timestamp, walk[i - 1].timestamp)
-                    << "Timestamps are not strictly increasing in walk: "
-                    << i << " with node: " << walk[i].node
-                    << ", previous node: " << walk[i - 1].node;
-            }
         }
     }
 }

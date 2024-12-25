@@ -51,64 +51,24 @@ For a given temporal network with following edges (upstream node, downstream nod
 
 <img src="https://raw.githubusercontent.com/ashfaq1701/temporal_walk/refs/heads/master/images/network.png" alt="Sample Temporal Graph" style="width: 600px; margin: auto"/>
 
-Five walks staring at node `2` with linear probability along with their timestamps,
+Some forward walks (past to future), 
 
 ```
-(2, -9223372036854775808), (3, 70), (5, 82), (4, 97), (6, 98)
 (2, -9223372036854775808), (5, 19), (4, 32), (5, 71), (4, 97), (6, 98)
-(2, -9223372036854775808), (5, 19), (4, 32), (2, 34), (3, 70), (5, 82), (4, 97), (6, 98)
-(2, -9223372036854775808), (5, 19), (4, 97), (6, 98)
-(2, -9223372036854775808), (3, 70), (5, 82), (4, 97), (6, 98)
+(1, -9223372036854775808), (3, 19), (5, 82), (4, 97), (6, 98)
+(6, -9223372036854775808), (4, 27), (3, 79), (5, 82), (4, 97), (6, 98)
+(1, -9223372036854775808), (4, 17), (2, 34), (3, 70), (5, 82), (4, 97), (6, 98)
+(1, -9223372036854775808), (5, 19), (4, 32), (3, 79), (5, 82), (4, 97), (6, 98)
 ```
 
-Five walks ending at node `2` with linear probability,
+Some reverse walks (Future to past and then reversed),
 
 ```
-(6, 27), (4, 34), (2, 9223372036854775807)
-(2, 19), (5, 32), (4, 34), (2, 9223372036854775807)
-(6, 27), (4, 34), (2, 9223372036854775807)
-(6, 27), (4, 34), (2, 9223372036854775807)
-(1, 17), (4, 34), (2, 9223372036854775807)
-```
-
-Five walks staring at node `2` with exponential probability,
-
-```
-(2, -9223372036854775808), (6, 80)
-(2, -9223372036854775808), (5, 19), (4, 32), (2, 34), (3, 70), (5, 82), (4, 97), (6, 98)
-(2, -9223372036854775808), (5, 19), (4, 32), (2, 34), (6, 80)
-(2, -9223372036854775808), (5, 19), (4, 32), (5, 71), (4, 97), (6, 98)
-(2, -9223372036854775808), (5, 19), (4, 32), (2, 34), (6, 80)
-```
-
-Five walks ending at node `2` with exponential probability,
-
-```
-(2, 19), (5, 32), (4, 34), (2, 9223372036854775807)
-(2, 19), (5, 32), (4, 34), (2, 9223372036854775807)
-(6, 27), (4, 34), (2, 9223372036854775807)
-(2, 19), (5, 32), (4, 34), (2, 9223372036854775807)
-(2, 19), (5, 32), (4, 34), (2, 9223372036854775807)
-```
-
-Five walks staring at node `2` with uniform probability,
-
-```
-(2, -9223372036854775808), (3, 70), (5, 82), (4, 97), (6, 98)
-(2, -9223372036854775808), (5, 19), (4, 97), (6, 98)
-(2, -9223372036854775808), (5, 19), (4, 97), (6, 98)
-(2, -9223372036854775808), (6, 80)
-(2, -9223372036854775808), (5, 19), (4, 32), (2, 34), (6, 80)
-```
-
-Five walks ending at node `2` with uniform probability,
-
-```
-(6, 27), (4, 34), (2, 9223372036854775807)
-(6, 27), (4, 34), (2, 9223372036854775807)
-(2, 19), (5, 32), (4, 34), (2, 9223372036854775807)
-(1, 17), (4, 34), (2, 9223372036854775807)
-(6, 27), (4, 34), (2, 9223372036854775807)
+(6, 27), (4, 79), (3, 82), (5, 97), (4, 9223372036854775807)
+(2, 19), (5, 32), (4, 57), (6, 9223372036854775807)
+(2, 19), (5, 32), (4, 34), (2, 80), (6, 9223372036854775807)
+(6, 27), (4, 98), (6, 9223372036854775807)
+(2, 19), (5, 32), (4, 79), (3, 82), (5, 97), (4, 98), (6, 9223372036854775807)
 ```
 
 ## Installation
@@ -142,35 +102,68 @@ Adds multiple edges to the temporal graph based on the provided vector of EdgeIn
 ### get_random_walks
 
 ```cpp
-std::vector<std::vector<int>> get_random_walks(WalkStartAt walk_start_at, int num_walks, int len_walk, RandomPickerType* edge_picker_type, int end_node, RandomPickerType* start_picker_type);
+std::vector<std::vector<int>> get_random_walks(
+        int max_walk_len,
+        const RandomPickerType* walk_bias,
+        long num_cw=-1,
+        int num_walks_per_node=-1,
+        const RandomPickerType* initial_edge_bias=nullptr,
+        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
+        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time,
+        int context_window_len=-1,
+        float p_walk_success_threshold=0.95);
 ```
 
-The get_random_walks method generates a specified number of random walks from the temporal graph, with each walk having a maximum length defined by len_walk. The direction of the walks can be controlled using the walk_start_at parameter, which accepts Begin, End, or Random to determine whether the walk starts from the beginning, end, or a random position within the graph. The edge_picker_type parameter, passed as a pointer, specifies the sampling strategy for edges during the walk and can be Linear, Exponential, or Uniform. Optionally, an end_node can be provided to define a fixed node to start or end the walks, with a default value of -1 selecting a random node. Additionally, the start_picker_type parameter, also a pointer, specifies the sampling strategy for the starting edge and defaults to the value of edge_picker_type if set to nullptr.
+Generates temporal random walks similar to get_random_walks_with_times but returns only the node IDs without timestamps.
 
-### get_random_walks_for_nodes
+Parameters:
 
-```cpp
-std::unordered_map<int, std::vector<std::vector<int>>> get_random_walks_for_nodes(WalkStartAt walk_start_at, std::vector<int>& end_nodes, int num_walks, int len_walk, RandomPickerType* edge_picker_type, RandomPickerType* start_picker_type);
-```
+* max_walk_len: Maximum length of each random walk
+* walk_bias: Type of bias for selecting next edges during walk (Uniform, Linear, or Exponential)
+* num_cw: Number of context windows to generate. If -1, calculated using num_walks_per_node
+* num_walks_per_node: Number of walks per node. Used only if num_cw is -1
+* initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, or Exponential). If nullptr, uses walk_bias
+* walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
+* walk_init_edge_time_bias: Bias for initial edge selection (Bias_Earliest_Time or Bias_Latest_Time)
+* context_window_len: Minimum length of walks. Default is 2 if -1 provided
+* p_walk_success_threshold: Minimum required success rate for walk generation (default 0.95)
 
-The get_random_walks_for_nodes method generates random walks for multiple specified nodes in the temporal graph. The direction of the walks is controlled by the walk_start_at parameter, which can take the values Begin, End, or Random to determine whether the walks start from the beginning, end, or a random position in the graph. The end_nodes parameter is a vector of node IDs for which the walks will be generated, with each node producing a specified number of random walks (num_walks) of a given maximum length (len_walk). The edge_picker_type parameter, passed as a pointer, defines the sampling strategy for edges during the walk and supports Linear, Exponential, or Uniform sampling. Similarly, the start_picker_type parameter, also a pointer, specifies the sampling strategy for the starting edge and defaults to the value of edge_picker_type if set to nullptr.
+Returns:
+
+A vector of walks, where each walk is a vector of node IDs representing the temporal path through the network.
 
 ### get_random_walks_with_times
 
 ```cpp
-std::vector<std::vector<std::pair<int, int64_t>>> get_random_walks_with_times(WalkStartAt walk_start_at, int num_walks, int len_walk, RandomPickerType* edge_picker_type, int end_node, RandomPickerType* start_picker_type)
+std::vector<std::vector<NodeWithTime>> get_random_walks_with_times(
+        int max_walk_len,
+        const RandomPickerType* walk_bias,
+        long num_cw=-1,
+        int num_walks_per_node=-1,
+        const RandomPickerType* initial_edge_bias=nullptr,
+        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
+        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time,
+        int context_window_len=-1,
+        float p_walk_success_threshold=0.95);
 ```
 
+Generates temporal random walks where each step contains both node ID and timestamp. Each walk respects temporal ordering based on the specified direction and biases.
 
-The get_random_walks_with_times method generates random walks from the temporal graph, where each step in the walk includes both the node ID and its corresponding timestamp. The direction of the walks is controlled by the walk_start_at parameter, which can take the values Begin, End, or Random to specify whether the walks start from the beginning, end, or a random position in the graph. The num_walks parameter defines the number of walks to generate, while len_walk specifies the maximum length of each walk. The edge_picker_type parameter, passed as a pointer, determines the sampling strategy for edges during the walk and supports Linear, Exponential, or Uniform sampling methods. Similarly, the start_picker_type parameter, also a pointer, specifies the sampling strategy for the starting edge and defaults to the value of edge_picker_type if set to nullptr. An optional end_node parameter can be provided to define a specific node for starting or ending the walks; if set to -1, the end-node is selected randomly.
+Parameters:
 
-### get_random_walks_for_nodes_with_times
+* max_walk_len: Maximum length of each random walk
+* walk_bias: Type of bias for selecting next edges during walk (Uniform, Linear, or Exponential)
+* num_cw: Number of context windows to generate. If -1, calculated using num_walks_per_node
+* num_walks_per_node: Number of walks per node. Used only if num_cw is -1
+* initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, or Exponential). If nullptr, uses walk_bias
+* walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
+* walk_init_edge_time_bias: Bias for initial edge selection (Bias_Earliest_Time or Bias_Latest_Time)
+* context_window_len: Minimum length of walks. Default is 2 if -1 provided
+* p_walk_success_threshold: Minimum required success rate for walk generation (default 0.95)
 
-```cpp
-std::unordered_map<int, std::vector<std::vector<std::pair<int, int64_t>>>> get_random_walks_for_nodes_with_times(const WalkStartAt walk_start_at, const std::vector<int>& end_nodes, const int num_walks, const int len_walk, const RandomPickerType* edge_picker_type, const RandomPickerType* start_picker_type)
-```
+Returns:
 
-The get_random_walks_for_nodes_with_times method generates timestamped random walks for multiple specified nodes in the temporal graph. The walk_start_at parameter controls the starting point of the walks, allowing values Begin, End, or Random to specify whether the walks start from the beginning, end, or a random position in the graph. The end_nodes parameter is a vector of node IDs for which the walks will be generated. For each node in end_nodes, the function generates a specified number of walks (num_walks) with a maximum length of len_walk. The edge_picker_type parameter, passed as a pointer, determines the sampling strategy for edges during the walk and can be Linear, Exponential, or Uniform. The start_picker_type parameter, also passed as a pointer, specifies the sampling strategy for the starting edge and defaults to the value of edge_picker_type if set to nullptr.
+A vector of temporal walks, where each walk is a vector of NodeWithTime pairs containing node IDs and their corresponding timestamps.
 
 ### get_edge_count
 
@@ -230,49 +223,91 @@ Adds multiple directed edges to the temporal graph based on the provided list of
 
 ```python
 get_random_walks(
-    num_walks: int, len_walk: int, edge_picker_type: str, 
-    end_node: int = -1, start_picker_type: Optional[str] = None, 
-    walk_start_at: str = "Random",fill_value: int = 0
-) -> np.ndarray:
+    max_walk_len: int,
+    walk_bias: str,
+    num_cw: Optional[int] = None,
+    num_walks_per_node: Optional[int] = None,
+    initial_edge_bias: Optional[str] = None,
+    walk_direction: str = "Forward_In_Time",
+    walk_init_edge_time_bias: str = "Bias_Earliest_Time",
+    context_window_len: Optional[int] = None,
+    p_walk_success_threshold: float = 0.95
+) -> List[List[int]]:
 ```
 
-Generates random walks from the temporal graph. The walk_start_at parameter controls the starting point for the walks, which can be "Begin", "End", or "Random". The num_walks specifies how many random walks to generate, and len_walk determines the length of each walk. The edge_picker_type parameter defines the sampling strategy for selecting edges during the walk and can be "Linear", "Exponential", or "Uniform". Optionally, an end_node can be provided to specify a fixed node to start or end the walks; if set to -1, the end node is chosen randomly. The start_picker_type can be used to define a separate sampling strategy for the starting edge; if not provided, it defaults to the same value as edge_picker_type. The function returns a 2D NumPy array containing the generated walks, padded with the fill_value where necessary to ensure all walks are of the same length.
+Generates temporal random walks from the graph using parallel processing with hardware concurrency.
 
-### get_random_walks_for_nodes
+Parameters
 
-```python
-get_random_walks_for_nodes(
-    end_nodes: List[int], num_walks: int, len_walk: int,
-    edge_picker_type: str, start_picker_type: Optional[str] = None,
-    walk_start_at: str = "Random", fill_value: int = 0
-) -> Dict[int, np.ndarray]:
-```
+* max_walk_len - Maximum length of each random walk
+* walk_bias - Type of bias for selecting next edges during walk:
+  * "Uniform": Equal probability for all valid edges
+  * "Linear": Linear decay based on time
+  * "Exponential": Exponential decay based on time
 
-Generates random walks for multiple specified nodes in the temporal graph. The walk_start_at parameter controls the starting point for the walks, which can be "Begin", "End", or "Random". The end_nodes parameter is a list of node IDs for which the walks will be generated. For each node in end_nodes, the method generates num_walks random walks, each of length len_walk. The edge_picker_type determines the sampling strategy for selecting edges during the walk, with possible values of "Linear", "Exponential", or "Uniform". The start_picker_type allows the specification of a different sampling strategy for the starting edges; if not provided, it defaults to edge_picker_type. The function returns a dictionary where the keys are node IDs, and the values are 2D NumPy arrays containing the random walks for those nodes. If any walk is shorter than len_walk, it will be padded with fill_value to ensure uniform length across all walks.
+* num_cw - Number of context windows to generate. If None, calculated using num_walks_per_node
+* num_walks_per_node - Number of walks per node. Used only if num_cw is None
+* initial_edge_bias - Optional bias type for selecting initial edges. Uses walk_bias if None
+
+* walk_direction - Direction of temporal walks:
+  * "Forward_In_Time": Walks progress from past to future
+  * "Backward_In_Time": Walks progress from future to past
+
+* walk_init_edge_time_bias - Bias for initial edge selection:
+
+  * "Bias_Earliest_Time": Prioritize earlier timestamps
+  * "Bias_Latest_Time": Prioritize later timestamps
+
+* context_window_len - Minimum length of walks (default 2 if None provided)
+* p_walk_success_threshold - Minimum required success rate for walk generation (default 0.95)
+
+Returns
+
+List of walks, where each walk is a list of node IDs representing the temporal path through the network.
 
 ### get_random_walks_with_times
 
 ```python
 get_random_walks_with_times(
-    num_walks: int, len_walk: int, edge_picker_type: str,
-    walk_start_at: str = "Random", end_node: int = -1,
-    start_picker_type: Optional[str] = None
-) -> List[List[Tuple[int, int]]]:
+    max_walk_len: int,
+    walk_bias: str,
+    num_cw: Optional[int] = None,
+    num_walks_per_node: Optional[int] = None,
+    initial_edge_bias: Optional[str] = None,
+    walk_direction: str = "Forward_In_Time",
+    walk_init_edge_time_bias: str = "Bias_Earliest_Time",
+    context_window_len: Optional[int] = None,
+    p_walk_success_threshold: float = 0.95
+) -> List[List[Tuple[int, int64_t]]]:
 ```
 
-Generates timestamped random walks from the temporal graph, where each step in the walk consists of a node ID and its corresponding timestamp. The walk_start_at parameter controls the sampling point for the walk, which can be "Begin", "End", or "Random". An optional end_node can be specified to control the endpoint of the walk. If -1 is provided, the endpoint is selected randomly. The edge_picker_type parameter determines the sampling strategy for selecting edges during the walk, with possible values of "Linear", "Exponential", or "Uniform". The start_picker_type allows the specification of a different edge picker type for the starting edges; if not provided, it defaults to edge_picker_type. This function returns a list of walks, where each walk is represented as a list of tuples, with each tuple containing the node ID and the corresponding timestamp.
+Similar to get_random_walks but includes timestamps with each node in the walks. Uses parallel processing with hardware concurrency.
 
-### get_random_walks_for_nodes_with_times
+Parameters
 
-```python
-get_random_walks_for_nodes_with_times(
-    num_walks: int, len_walk: int, edge_picker_type: str,
-    walk_start_at: str = "Random", end_nodes: List[int],
-    start_picker_type: Optional[str] = None
-) -> Dict[int, List[List[Tuple[int, int]]]]:
-```
+* max_walk_len - Maximum length of each random walk
+* walk_bias - Type of bias for selecting next edges during walk:
+  * "Uniform": Equal probability for all valid edges
+  * "Linear": Linear decay based on time
+  * "Exponential": Exponential decay based on time
 
-Generates timestamped random walks for each specified node in end_nodes. The walk_start_at parameter controls the sampling point for the walk, which can be "Begin", "End", or "Random". The end_nodes parameter is a list of node IDs for which the walks are generated. The edge_picker_type determines the sampling strategy for selecting edges during the walk, with possible values of "Linear", "Exponential", or "Uniform". If start_picker_type is provided, it specifies the edge picker type for the starting edges, otherwise, it defaults to edge_picker_type. This method returns a dictionary that maps each node ID to a list of walks, where each walk is represented as a list of tuples, containing the node ID and timestamp.
+* num_cw - Number of context windows to generate. If None, calculated using num_walks_per_node
+* num_walks_per_node - Number of walks per node. Used only if num_cw is None
+* initial_edge_bias - Optional bias type for selecting initial edges. Uses walk_bias if None
+* walk_direction - Direction of temporal walks:
+  * "Forward_In_Time": Walks progress from past to future
+  * "Backward_In_Time": Walks progress from future to past
+
+* walk_init_edge_time_bias - Bias for initial edge selection:
+  * "Bias_Earliest_Time": Prioritize earlier timestamps
+  * "Bias_Latest_Time": Prioritize later timestamps
+
+* context_window_len - Minimum length of walks (default 2 if None provided)
+* p_walk_success_threshold - Minimum required success rate for walk generation (default 0.95)
+
+Returns
+
+List of walks, where each walk is a list of tuples containing (node_id, timestamp) pairs, representing the temporal path through the network with corresponding timestamps.
 
 ### get_node_count
 

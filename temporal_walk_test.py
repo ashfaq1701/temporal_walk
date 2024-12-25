@@ -30,6 +30,6 @@ if __name__ == '__main__':
     print(f'Total edges: {temporal_walk_obj.get_edge_count()}')
     print(f'Total nodes: {temporal_walk_obj.get_node_count()}')
 
-    all_nodes = temporal_walk_obj.get_node_ids()
-    walks_for_nodes = temporal_walk_obj.get_random_walks_for_nodes(all_nodes, 100, 50, "Linear", None, "Random")
-    print_walks_for_nodes(walks_for_nodes)
+    walks = temporal_walk_obj.get_random_walks_for_nodes(20, "Exponential", -1, 10, "Linear", "Forward_In_Time", "Bias_Earliest_Time", 4, 0.5)
+    print(f"Number of walks {walks}")
+    print_walks_for_nodes(walks[:100])

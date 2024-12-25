@@ -1,52 +1,40 @@
-#include <iostream>
-#include <fstream>
 #include <vector>
-#include "../test/test_utils.h"
+
 #include "../src/core/TemporalWalk.h"
 #include "print_walks.h"
 
-constexpr int NUM_WALKS = 20;
-constexpr int LEN_WALK = 500;
-constexpr RandomPickerType RANDOM_PICKER_TYPE = RandomPickerType::Linear;
-
 int main() {
-    const auto start = std::chrono::high_resolution_clock::now();
-
-    const auto edge_infos = read_edges_from_csv("../../data/sample_data.csv");
-    std::cout << edge_infos.size() << std::endl;
+    const std::vector<EdgeInfo> edges {
+        EdgeInfo{4, 5, 71},
+        EdgeInfo{3, 5, 82},
+        EdgeInfo{1, 3, 19},
+        EdgeInfo{4, 2, 34},
+        EdgeInfo{4, 3, 79},
+        EdgeInfo{2, 5, 19},
+        EdgeInfo{2, 3, 70},
+        EdgeInfo{5, 4, 97},
+        EdgeInfo{4, 6, 57},
+        EdgeInfo{6, 4, 27},
+        EdgeInfo{2, 6, 80},
+        EdgeInfo{6, 1, 42},
+        EdgeInfo{4, 6, 98},
+        EdgeInfo{1, 4, 17},
+        EdgeInfo{5, 4, 32}
+    };
 
     TemporalWalk temporal_walk;
-    temporal_walk.add_multiple_edges(edge_infos);
+    temporal_walk.add_multiple_edges(edges);
 
-    const std::vector<int> nodes = temporal_walk.get_node_ids();
-    std::cout << "Total node count: " << nodes.size() << std::endl;
+    constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;
+    constexpr RandomPickerType exponential_picker_type = RandomPickerType::Exponential;
 
-    const auto selected_nodes = std::vector<int>(nodes.begin(), nodes.begin() + 100);
+    const auto walks_forward = temporal_walk.get_random_walks_with_times(20, &linear_picker_type, -1, 10, &exponential_picker_type, WalkDirection::Forward_In_Time, WalkInitEdgeTimeBias::Bias_Earliest_Time);
+    std::cout << "Forward walks:" << std::endl;
+    print_temporal_walks_with_times(walks_forward);
 
-    const auto walks_for_nodes = temporal_walk.get_random_walks_for_nodes(WalkStartAt::Random, selected_nodes, NUM_WALKS, LEN_WALK, &RANDOM_PICKER_TYPE);
-    print_temporal_walks_for_nodes(walks_for_nodes);
-
-    const auto walks_for_nodes_with_times = temporal_walk.get_random_walks_for_nodes_with_times(WalkStartAt::Random, selected_nodes, NUM_WALKS, LEN_WALK, &RANDOM_PICKER_TYPE);
-    print_temporal_walks_for_nodes_with_times(walks_for_nodes_with_times);
-
-    const auto end = std::chrono::high_resolution_clock::now();
-    const std::chrono::duration<double> duration = end - start;
-
-
-    const auto random_walks_from_begin = temporal_walk.get_random_walks(WalkStartAt::Begin, NUM_WALKS, LEN_WALK, &RANDOM_PICKER_TYPE);
-    const auto random_walks_from_end = temporal_walk.get_random_walks(WalkStartAt::End, NUM_WALKS, LEN_WALK, &RANDOM_PICKER_TYPE);
-
-    std::cout << "------------------------------------------------------" << std::endl;
-    std::cout << "Random Walks from beginning to end" << std::endl;
-    print_temporal_walks(random_walks_from_begin);
-    std::cout << "------------------------------------------------------" << std::endl;
-
-    std::cout << "------------------------------------------------------" << std::endl;
-    std::cout << "Random Walks from end to beginning" << std::endl;
-    print_temporal_walks(random_walks_from_end);
-    std::cout << "------------------------------------------------------" << std::endl;
-
-    std::cout << "Runtime: " << duration.count() << " seconds" << std::endl;
+    const auto walks_backward = temporal_walk.get_random_walks_with_times(20, &linear_picker_type, -1, 10, &exponential_picker_type, WalkDirection::Backward_In_Time, WalkInitEdgeTimeBias::Bias_Latest_Time);
+    std::cout << "Backward walks:" << std::endl;
+    print_temporal_walks_with_times(walks_backward);
 
     return 0;
 }
