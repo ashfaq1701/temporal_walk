@@ -111,7 +111,7 @@ std::vector<std::vector<int>> get_random_walks(
         WalkDirection walk_direction=WalkDirection::Forward_In_Time,
         WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time,
         int context_window_len=-1,
-        float p_walk_success_threshold=0.95);
+        float p_walk_success_threshold=0.01);
 ```
 
 Generates temporal random walks similar to get_random_walks_with_times but returns only the node IDs without timestamps.
@@ -126,7 +126,7 @@ Parameters:
 * walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
 * walk_init_edge_time_bias: Bias for initial edge selection (Bias_Earliest_Time or Bias_Latest_Time)
 * context_window_len: Minimum length of walks. Default is 2 if -1 provided
-* p_walk_success_threshold: Minimum required success rate for walk generation (default 0.95)
+* p_walk_success_threshold: Minimum required success rate for walk generation (default 0.01)
 
 Returns:
 
@@ -144,7 +144,7 @@ std::vector<std::vector<NodeWithTime>> get_random_walks_with_times(
         WalkDirection walk_direction=WalkDirection::Forward_In_Time,
         WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time,
         int context_window_len=-1,
-        float p_walk_success_threshold=0.95);
+        float p_walk_success_threshold=0.01);
 ```
 
 Generates temporal random walks where each step contains both node ID and timestamp. Each walk respects temporal ordering based on the specified direction and biases.
@@ -159,7 +159,7 @@ Parameters:
 * walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
 * walk_init_edge_time_bias: Bias for initial edge selection (Bias_Earliest_Time or Bias_Latest_Time)
 * context_window_len: Minimum length of walks. Default is 2 if -1 provided
-* p_walk_success_threshold: Minimum required success rate for walk generation (default 0.95)
+* p_walk_success_threshold: Minimum required success rate for walk generation (default 0.01)
 
 Returns:
 
@@ -231,7 +231,7 @@ get_random_walks(
     walk_direction: str = "Forward_In_Time",
     walk_init_edge_time_bias: str = "Bias_Earliest_Time",
     context_window_len: Optional[int] = None,
-    p_walk_success_threshold: float = 0.95
+    p_walk_success_threshold: float = 0.01
 ) -> List[List[int]]:
 ```
 
@@ -259,7 +259,7 @@ Parameters
   * "Bias_Latest_Time": Prioritize later timestamps
 
 * context_window_len - Minimum length of walks (default 2 if None provided)
-* p_walk_success_threshold - Minimum required success rate for walk generation (default 0.95)
+* p_walk_success_threshold - Minimum required success rate for walk generation (default 0.01)
 
 Returns
 
@@ -277,7 +277,7 @@ get_random_walks_with_times(
     walk_direction: str = "Forward_In_Time",
     walk_init_edge_time_bias: str = "Bias_Earliest_Time",
     context_window_len: Optional[int] = None,
-    p_walk_success_threshold: float = 0.95
+    p_walk_success_threshold: float = 0.01
 ) -> List[List[Tuple[int, int64_t]]]:
 ```
 
@@ -303,7 +303,7 @@ Parameters
   * "Bias_Latest_Time": Prioritize later timestamps
 
 * context_window_len - Minimum length of walks (default 2 if None provided)
-* p_walk_success_threshold - Minimum required success rate for walk generation (default 0.95)
+* p_walk_success_threshold - Minimum required success rate for walk generation (default 0.01)
 
 Returns
 

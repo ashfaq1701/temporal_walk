@@ -11,8 +11,6 @@
 
 namespace py = pybind11;
 
-constexpr int DEFAULT_WALK_FILL_VALUE = 0;
-
 RandomPickerType picker_type_from_string(const std::string& picker_type_str)
 {
     if (picker_type_str == "Uniform")
@@ -103,7 +101,7 @@ PYBIND11_MODULE(_temporal_walk, m)
                                     const std::string& walk_direction = "Forward_In_Time",
                                     const std::string& walk_init_edge_time_bias = "Bias_Earliest_Time",
                                     const std::optional<int> context_window_len = std::nullopt,
-                                    const float p_walk_success_threshold = 0.95)
+                                    const float p_walk_success_threshold = DEFAULT_SUCCESS_THRESHOLD)
              {
                  const RandomPickerType walk_bias_enum = picker_type_from_string(walk_bias);
                  const RandomPickerType* initial_edge_bias_enum_ptr = nullptr;
@@ -140,7 +138,7 @@ PYBIND11_MODULE(_temporal_walk, m)
              walk_direction (str): Direction of walk ("Forward_In_Time" or "Backward_In_Time")
              walk_init_edge_time_bias (str): Time bias for initial edge ("Bias_Earliest_Time" or "Bias_Latest_Time")
              context_window_len (int, optional): Size of context window
-             p_walk_success_threshold (float): Minimum proportion of successful walks (default: 0.95)
+             p_walk_success_threshold (float): Minimum proportion of successful walks (default: 0.01)
 
              Returns:
              List[List[int]]: List of walks, each containing a sequence of node IDs
@@ -153,7 +151,7 @@ PYBIND11_MODULE(_temporal_walk, m)
              py::arg("walk_direction") = "Forward_In_Time",
              py::arg("walk_init_edge_time_bias") = "Bias_Earliest_Time",
              py::arg("context_window_len") = py::none(),
-             py::arg("p_walk_success_threshold") = 0.95)
+             py::arg("p_walk_success_threshold") = DEFAULT_SUCCESS_THRESHOLD)
 
         .def("get_random_walks_with_times", [](TemporalWalk& tw,
                                                const int max_walk_len,
@@ -164,7 +162,7 @@ PYBIND11_MODULE(_temporal_walk, m)
                                                const std::string& walk_direction = "Forward_In_Time",
                                                const std::string& walk_init_edge_time_bias = "Bias_Earliest_Time",
                                                const std::optional<int> context_window_len = std::nullopt,
-                                               const float p_walk_success_threshold = 0.95)
+                                               const float p_walk_success_threshold = DEFAULT_SUCCESS_THRESHOLD)
              {
                  const RandomPickerType walk_bias_enum = picker_type_from_string(walk_bias);
                  const RandomPickerType* initial_edge_bias_enum_ptr = nullptr;
@@ -217,7 +215,7 @@ PYBIND11_MODULE(_temporal_walk, m)
             walk_direction (str): Direction of walk ("Forward_In_Time" or "Backward_In_Time")
             walk_init_edge_time_bias (str): Time bias for initial edge ("Bias_Earliest_Time" or "Bias_Latest_Time")
             context_window_len (int, optional): Size of context window
-            p_walk_success_threshold (float): Minimum proportion of successful walks (default: 0.95)
+            p_walk_success_threshold (float): Minimum proportion of successful walks (default: 0.01)
 
             Returns:
             List[List[Tuple[int, int64_t]]]: List of walks, each containing (node_id, timestamp) pairs
@@ -230,7 +228,7 @@ PYBIND11_MODULE(_temporal_walk, m)
              py::arg("walk_direction") = "Forward_In_Time",
              py::arg("walk_init_edge_time_bias") = "Bias_Earliest_Time",
              py::arg("context_window_len") = py::none(),
-             py::arg("p_walk_success_threshold") = 0.95)
+             py::arg("p_walk_success_threshold") = DEFAULT_SUCCESS_THRESHOLD)
 
         .def("get_node_count", &TemporalWalk::get_node_count,
              R"(

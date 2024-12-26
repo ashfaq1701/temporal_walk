@@ -6,6 +6,8 @@
 #include "../random/RandomPicker.h"
 #include "../models/TemporalGraph.h"
 
+constexpr float DEFAULT_SUCCESS_THRESHOLD = 0.01;
+
 enum RandomPickerType {
     Uniform,
     Linear,
@@ -70,7 +72,7 @@ public:
         WalkDirection walk_direction=WalkDirection::Forward_In_Time,
         WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time,
         int context_window_len=-1,
-        float p_walk_success_threshold=0.95);
+        float p_walk_success_threshold=DEFAULT_SUCCESS_THRESHOLD);
 
     [[nodiscard]] std::vector<std::vector<int>> get_random_walks(
         int max_walk_len,
@@ -81,7 +83,7 @@ public:
         WalkDirection walk_direction=WalkDirection::Forward_In_Time,
         WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time,
         int context_window_len=-1,
-        float p_walk_success_threshold=0.95);
+        float p_walk_success_threshold=DEFAULT_SUCCESS_THRESHOLD);
 
     void add_multiple_edges(const std::vector<EdgeInfo>& edge_infos);
 
