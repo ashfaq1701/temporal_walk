@@ -13,8 +13,8 @@ constexpr int DEFAULT_NUM_WALKS_PER_THREAD = 500;
 EdgeInfo::EdgeInfo(const int u, const int i, const int64_t t): u(u), i(i), t(t) {}
 
 TemporalWalk::TemporalWalk(
-    int64_t max_time_capacity
-    ): max_time_capacity(max_time_capacity), thread_pool(std::thread::hardware_concurrency()) {
+    int64_t max_time_capacity,
+    size_t n_threads): max_time_capacity(max_time_capacity), thread_pool(n_threads) {
 
     temporal_graph = std::make_unique<TemporalGraph>();
 }
