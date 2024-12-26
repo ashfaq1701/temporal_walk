@@ -16,6 +16,8 @@ execute_process(
 set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};${PYBIND11_DIR}")
 find_package(pybind11 REQUIRED)
 
+find_package(Boost REQUIRED COMPONENTS math)
+
 # Automatically find all source files in src directory
 file(GLOB_RECURSE SRC_FILES temporal_walk/src/*.cpp)
 

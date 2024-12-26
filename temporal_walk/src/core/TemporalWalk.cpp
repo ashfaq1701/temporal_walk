@@ -132,9 +132,10 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_with_times
 
                 size_t total = successes + failures;
                 if (total > 100) {
-                    float success_rate = static_cast<float>(successes) / static_cast<float>(total);
-                    if (success_rate < p_walk_success_threshold) {
-                        throw std::runtime_error("Too many walks being discarded. Consider using a smaller context window size.");
+                    const float posterior = compute_beta_95th_percentile(successes, failures);
+                    if (posterior < p_walk_success_threshold) {
+                        throw std::runtime_error("Too many walks being discarded. "
+                                                 "Consider using a smaller context window size.");
                     }
                 }
             }

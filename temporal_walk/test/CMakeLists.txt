@@ -7,4 +7,5 @@ target_link_libraries(test_temporal_walk PRIVATE
         GTest::gtest_main
         GTest::gmock
         GTest::gmock_main
+        Boost::math
 )
