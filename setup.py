@@ -53,7 +53,7 @@ setup(
     version=read_version_number(),
     author="Ashfaq Salehin",
     author_email="ashfaq.salehin1701@gmail.com",
-    description="A library to sample temporal walks from an in-memory temporal graph",
+    description="A library to sample temporal walks from in-memory temporal graphs",
     long_description=open('README.md').read(),
     packages=find_packages(),
     package_data={
