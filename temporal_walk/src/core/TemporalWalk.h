@@ -38,6 +38,8 @@ struct NodeWithTime {
 };
 
 class TemporalWalk {
+    bool is_directed;
+
     int64_t max_time_capacity;
 
     int64_t max_edge_time = 0;
@@ -61,7 +63,10 @@ class TemporalWalk {
     [[nodiscard]] long estimate_cw_count(int num_walks_per_node, int max_walk_len, int min_walk_len) const;
 
 public:
-    explicit TemporalWalk(int64_t max_time_capacity=-1, size_t n_threads=std::thread::hardware_concurrency());
+    explicit TemporalWalk(
+        bool is_directed,
+        int64_t max_time_capacity=-1,
+        size_t n_threads=std::thread::hardware_concurrency());
 
     [[nodiscard]] std::vector<std::vector<NodeWithTime>> get_random_walks_with_times(
         int max_walk_len,
@@ -94,6 +99,8 @@ public:
     [[nodiscard]] std::vector<int> get_node_ids() const;
 
     [[nodiscard]] std::vector<EdgeInfo> get_edges() const;
+
+    [[nodiscard]] bool get_is_directed() const;
 
     void clear();
 };

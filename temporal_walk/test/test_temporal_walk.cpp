@@ -6,7 +6,7 @@
 #include "../src/random/ExponentialRandomPicker.h"
 #include "../src/random/LinearRandomPicker.h"
 
-constexpr int TEST_NODE_ID = 647;
+constexpr int TEST_NODE_ID = 42;
 constexpr int MAX_WALK_LEN = 20;
 constexpr int64_t MAX_TIME_CAPACITY = 5;
 
@@ -38,7 +38,7 @@ protected:
 class EmptyTemporalWalkTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>();
+        temporal_walk = std::make_unique<TemporalWalk>(true);
     }
 
     std::unique_ptr<TemporalWalk> temporal_walk;
@@ -47,20 +47,35 @@ protected:
 class EmptyTemporalWalkTestWithMaxCapacity : public ::testing::Test {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(MAX_TIME_CAPACITY);
+        temporal_walk = std::make_unique<TemporalWalk>(true, MAX_TIME_CAPACITY);
     }
 
     std::unique_ptr<TemporalWalk> temporal_walk;
 };
 
-class FilledTemporalWalkTest : public ::testing::Test {
+class FilledDirectedTemporalWalkTest : public ::testing::Test {
 protected:
-    FilledTemporalWalkTest() {
+    FilledDirectedTemporalWalkTest() {
         sample_edges = read_edges_from_csv("../../../data/sample_data.csv");
     }
 
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>();
+        temporal_walk = std::make_unique<TemporalWalk>(true);
+        temporal_walk->add_multiple_edges(sample_edges);
+    }
+
+    std::vector<EdgeInfo> sample_edges;
+    std::unique_ptr<TemporalWalk> temporal_walk;
+};
+
+class FilledUndirectedTemporalWalkTest : public ::testing::Test {
+protected:
+    FilledUndirectedTemporalWalkTest() {
+        sample_edges = read_edges_from_csv("../../../data/sample_data.csv");
+    }
+
+    void SetUp() override {
+        temporal_walk = std::make_unique<TemporalWalk>(false);
         temporal_walk->add_multiple_edges(sample_edges);
     }
 
@@ -248,7 +263,7 @@ TEST_F(RandomPickerTest, TwoElementRangeDistributionTestForExponentialRandomPick
 
 // Test the constructor of TemporalWalk to ensure it initializes correctly.
 TEST_F(EmptyTemporalWalkTest, ConstructorTest) {
-    EXPECT_NO_THROW(temporal_walk = std::make_unique<TemporalWalk>());
+    EXPECT_NO_THROW(temporal_walk = std::make_unique<TemporalWalk>(true));
     EXPECT_EQ(temporal_walk->get_node_count(), 0); // Assuming initial node count is 0
 }
 
@@ -308,7 +323,7 @@ TEST_F(EmptyTemporalWalkTestWithMaxCapacity, WhenMaxTimeCapacityExceedsEdgesAreD
 }
 
 // Test to check if a specific node ID is present in the filled TemporalWalk.
-TEST_F(FilledTemporalWalkTest, TestNodeFoundTest) {
+TEST_F(FilledDirectedTemporalWalkTest, TestNodeFoundTest) {
     const auto nodes = temporal_walk->get_node_ids();
     const auto it = std::find(nodes.begin(), nodes.end(), TEST_NODE_ID);
     EXPECT_NE(it, nodes.end());
@@ -316,7 +331,7 @@ TEST_F(FilledTemporalWalkTest, TestNodeFoundTest) {
 
 // Test that the number of random walks generated matches the expected count and checks that no walk exceeds its length.
 // Also test that the system can sample walks of length more than 1.
-TEST_F(FilledTemporalWalkTest, WalkCountAndLensTest) {
+TEST_F(FilledDirectedTemporalWalkTest, WalkCountAndLensTest) {
     const auto walks = temporal_walk->get_random_walks_with_times(MAX_WALK_LEN, &linear_picker_type, -1, 10);
 
     int total_walk_lens = 0;
@@ -332,8 +347,22 @@ TEST_F(FilledTemporalWalkTest, WalkCountAndLensTest) {
     EXPECT_GT(average_walk_len, 1) << "System could not sample any walk of length more than 1";
 }
 
-// Test to verify that the timestamps in each walk are strictly increasing.
-TEST_F(FilledTemporalWalkTest, WalkIncreasingTimestampTest) {
+// Test to verify that the timestamps in each walk are strictly increasing in directed graphs.
+TEST_F(FilledDirectedTemporalWalkTest, WalkIncreasingTimestampTest) {
+    const auto walks = temporal_walk->get_random_walks_with_times(MAX_WALK_LEN, &linear_picker_type, -1, 10);
+
+    for (const auto& walk : walks) {
+        for (size_t i = 1; i < walk.size(); ++i) {
+            EXPECT_GT(walk[i].timestamp, walk[i - 1].timestamp)
+                << "Timestamps are not strictly increasing in walk: "
+                << i << " with node: " << walk[i].node
+                << ", previous node: " << walk[i - 1].node;
+        }
+    }
+}
+
+// Test to verify that the timestamps in each walk are strictly increasing in undirected graphs.
+TEST_F(FilledUndirectedTemporalWalkTest, WalkIncreasingTimestampTest) {
     const auto walks = temporal_walk->get_random_walks_with_times(MAX_WALK_LEN, &linear_picker_type, -1, 10);
 
     for (const auto& walk : walks) {

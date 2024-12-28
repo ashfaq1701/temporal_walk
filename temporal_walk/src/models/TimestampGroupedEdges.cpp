@@ -8,7 +8,6 @@ int64_t TimestampGroupedEdges::get_timestamp() const {
     return timestamp;
 }
 
-
 void TimestampGroupedEdges::add_edge(const std::shared_ptr<TemporalEdge>& edge) {
     edges.push_back(edge);
 }

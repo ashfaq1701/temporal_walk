@@ -86,10 +86,10 @@ pip install temporal-walk
 ### Constructor
 
 ```cpp
-TemporalWalk(int64_t max_time_capacity=-1);
+TemporalWalk(bool is_directed, int64_t max_time_capacity=-1);
 ```
 
-Initializes a TemporalWalk object with the maximum time capacity of the graph. The default value of `max_time_capacity` is -1, which means unlimited capacity. If set then edges older than `max_time_capacity` from the latest timestamp are deleted automatically.
+Initializes a (Un)directed TemporalWalk object with the maximum time capacity of the graph. The is_directed parameter defines if the graph is directed or not. The default value of `max_time_capacity` is -1, which means unlimited capacity. If set then edges older than `max_time_capacity` from the latest timestamp are deleted automatically.
 
 ### add_multiple_edges
 
@@ -206,10 +206,10 @@ The Python bindings for the `TemporalWalk` class provide a seamless way to inter
 ### Constructor
 
 ```python
-TemporalWalk(max_time_capacity: int=-1):
+TemporalWalk(bool is_directed, max_time_capacity: int=-1):
 ```
 
-Initializes a TemporalWalk object with the maximum time capacity of the graph.
+Initializes a (Un)directed TemporalWalk object with the maximum time capacity of the graph. The is_directed parameter defines if the graph is directed or not.
 
 ### add_multiple_edges
 

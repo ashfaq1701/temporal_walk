@@ -5,6 +5,8 @@
 #include "../utils/utils.h"
 #include "../random/RandomPicker.h"
 
+TemporalGraph::TemporalGraph(bool is_directed): is_directed(is_directed){}
+
 void TemporalGraph::add_node(const int id) {
     if (nodes.find(id) == nodes.end()) {
         nodes[id] = std::make_shared<Node>(id);
@@ -26,7 +28,10 @@ Node* TemporalGraph::get_node(const int id) {
     return nodes[id].get();
 }
 
-Node* TemporalGraph::get_random_node(RandomPicker* random_picker, const bool should_walk_forward, const bool init_edge_picker_end_prioritization) {
+Node* TemporalGraph::get_random_node(
+    RandomPicker* random_picker,
+    const bool should_walk_forward,
+    const bool init_edge_picker_end_prioritization) {
     if (edges.empty()) {
         return nullptr;
     }
@@ -40,16 +45,27 @@ Node* TemporalGraph::get_random_node(RandomPicker* random_picker, const bool sho
     }
 
     const auto random_edge = it->get()->select_random_edge();
-    return should_walk_forward ? random_edge->u : random_edge->i;
+
+    if (is_directed) {
+        return should_walk_forward ? random_edge->u : random_edge->i;
+    } else {
+        return random_edge->pick_random_endpoint();
+    }
 }
 
-void TemporalGraph::add_edge(const int id1, const int id2, int64_t timestamp) {
+void TemporalGraph::add_edge(const int id1, const int id2, const int64_t timestamp) {
     Node* node1 = get_or_create_node(id1);
     Node* node2 = get_or_create_node(id2);
 
     const auto edge = std::make_shared<TemporalEdge>(node1, node2, timestamp);
-    node1->add_edges_as_um(edge);
-    node2->add_edges_as_dm(edge);
+
+    if (is_directed) {
+        node1->add_edges_as_um(edge);
+        node2->add_edges_as_dm(edge);
+    } else {
+        node1->add_undirected_edge(edge);
+        node2->add_undirected_edge(edge);
+    }
 
     if (edge_index.find(timestamp) == edge_index.end()) {
         const auto group = std::make_shared<TimestampGroupedEdges>(timestamp);

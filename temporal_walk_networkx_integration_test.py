@@ -17,7 +17,7 @@ def test_networkx_integration():
     nx_graph.add_edges_from(edges_with_timestamps)
 
     # Create TemporalWalk instance
-    tw = TemporalWalk()
+    tw = TemporalWalk(True)
 
     # Test importing from NetworkX
     tw.add_edges_from_networkx(nx_graph)
@@ -41,7 +41,7 @@ def test_networkx_integration():
 def test_networkx_integration_empty_graph():
     # Test with empty graph
     G = nx.DiGraph()
-    tw = TemporalWalk()
+    tw = TemporalWalk(True)
 
     # Should work with empty graph
     tw.add_edges_from_networkx(G)
@@ -53,7 +53,7 @@ def test_networkx_integration_invalid_timestamp():
     # Add edge with missing timestamp
     G.add_edge(0, 1)
 
-    tw = TemporalWalk()
+    tw = TemporalWalk(True)
 
     # Should raise an error when timestamp is missing
     with pytest.raises(KeyError):
@@ -61,7 +61,7 @@ def test_networkx_integration_invalid_timestamp():
 
 def test_networkx_integration_with_existing_edges():
     # Create TemporalWalk instance
-    tw = TemporalWalk()
+    tw = TemporalWalk(True)
 
     # Add some initial edges directly
     initial_edges = [
@@ -121,10 +121,53 @@ def test_networkx_integration_with_existing_edges():
     for u, v in nx_graph_2.edges():
         assert (u, v) in expected_edges, f"Unexpected edge ({u},{v}) found"
 
+def test_networkx_integration_directed_undirected():
+    # Test directed graph
+    tw_directed = TemporalWalk(True)  # is_directed = True
+    tw_directed.add_multiple_edges([
+        (0, 1, 100),
+        (1, 2, 200),
+        (2, 0, 300),
+    ])
+
+    nx_directed = tw_directed.to_networkx()
+    # Verify it's a directed graph
+    assert isinstance(nx_directed, nx.DiGraph)
+    # Check edges are directed
+    assert nx_directed.has_edge(0, 1) and not nx_directed.has_edge(1, 0)
+    assert nx_directed.has_edge(1, 2) and not nx_directed.has_edge(2, 1)
+    assert nx_directed.has_edge(2, 0) and not nx_directed.has_edge(0, 2)
+
+    # Test undirected graph
+    tw_undirected = TemporalWalk(False)  # is_directed = False
+    tw_undirected.add_multiple_edges([
+        (0, 1, 100),
+        (1, 2, 200),
+        (2, 0, 300),
+    ])
+
+    nx_undirected = tw_undirected.to_networkx()
+    # Verify it's an undirected graph
+    assert isinstance(nx_undirected, nx.Graph)
+    # Check edges are undirected (both directions exist)
+    assert nx_undirected.has_edge(0, 1) and nx_undirected.has_edge(1, 0)
+    assert nx_undirected.has_edge(1, 2) and nx_undirected.has_edge(2, 1)
+    assert nx_undirected.has_edge(2, 0) and nx_undirected.has_edge(0, 2)
+
+    # Verify timestamps are preserved
+    assert nx_directed[0][1]['timestamp'] == 100
+    assert nx_directed[1][2]['timestamp'] == 200
+    assert nx_directed[2][0]['timestamp'] == 300
+
+    assert nx_undirected[0][1]['timestamp'] == 100
+    assert nx_undirected[1][2]['timestamp'] == 200
+    assert nx_undirected[2][0]['timestamp'] == 300
+
 
 if __name__ == "__main__":
     test_networkx_integration()
     test_networkx_integration_empty_graph()
     test_networkx_integration_invalid_timestamp()
     test_networkx_integration_with_existing_edges()
+    test_networkx_integration_directed_undirected()
     print("All tests passed!")

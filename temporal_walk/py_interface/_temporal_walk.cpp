@@ -66,10 +66,11 @@ WalkDirection walk_direction_from_string(const std::string& walk_direction_str)
 PYBIND11_MODULE(_temporal_walk, m)
 {
     py::class_<TemporalWalk>(m, "TemporalWalk")
-        .def(py::init([](const std::optional<int64_t> max_time_capacity)
+        .def(py::init([](const bool is_directed, const std::optional<int64_t> max_time_capacity)
              {
-                 return std::make_unique<TemporalWalk>(max_time_capacity.value_or(-1));
+                 return std::make_unique<TemporalWalk>(is_directed, max_time_capacity.value_or(-1));
              }),
+             py::arg("is_directed"),
              py::arg("max_time_capacity") = py::none())
         .def("add_multiple_edges", [](TemporalWalk& tw, const std::vector<std::tuple<int, int, int64_t>>& edge_infos)
              {
@@ -291,7 +292,7 @@ PYBIND11_MODULE(_temporal_walk, m)
             Adds edges from a networkx graph to the current TemporalWalk object.
 
             Parameters:
-            - nx_graph (networkx.DiGraph): The networkx graph to load edges from.
+            - nx_graph (networkx.Graph): The networkx graph to load edges from.
             )"
         )
         .def("to_networkx", [](const TemporalWalk& tw)
@@ -299,8 +300,8 @@ PYBIND11_MODULE(_temporal_walk, m)
                  const auto edges = tw.get_edges();
 
                  const py::module nx = py::module::import("networkx");
-                 const py::object DiGraph = nx.attr("DiGraph");
-                 py::object nx_graph = DiGraph();
+                 const py::object GraphClass = tw.get_is_directed() ? nx.attr("DiGraph") : nx.attr("Graph");
+                 py::object nx_graph = GraphClass();
 
                  for (const auto& edge : edges)
                  {

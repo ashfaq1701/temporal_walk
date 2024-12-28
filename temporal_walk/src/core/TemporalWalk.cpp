@@ -13,10 +13,11 @@ constexpr int DEFAULT_NUM_WALKS_PER_THREAD = 500;
 EdgeInfo::EdgeInfo(const int u, const int i, const int64_t t): u(u), i(i), t(t) {}
 
 TemporalWalk::TemporalWalk(
+    bool is_directed,
     int64_t max_time_capacity,
-    size_t n_threads): max_time_capacity(max_time_capacity), thread_pool(n_threads) {
+    size_t n_threads): is_directed(is_directed), max_time_capacity(max_time_capacity), thread_pool(n_threads) {
 
-    temporal_graph = std::make_unique<TemporalGraph>();
+    temporal_graph = std::make_unique<TemporalGraph>(is_directed);
 }
 
 std::shared_ptr<RandomPicker> TemporalWalk::get_random_picker(const RandomPickerType* picker_type) {
@@ -220,6 +221,7 @@ void TemporalWalk::generate_random_walk_with_time(
         const auto picked_edge = current_node->pick_temporal_edge(
             edge_picker.get(),
             should_walk_forward,
+            is_directed,
             current_timestamp);
 
         if (picked_edge == nullptr) {
@@ -227,7 +229,12 @@ void TemporalWalk::generate_random_walk_with_time(
             continue;
         }
 
-        current_node = should_walk_forward ? picked_edge->i : picked_edge->u;
+        if (is_directed) {
+            current_node = should_walk_forward ? picked_edge->i : picked_edge->u;
+        } else {
+            current_node = picked_edge->select_other_endpoint(current_node);
+        }
+
         current_timestamp = picked_edge->timestamp;
     }
 
@@ -284,6 +291,10 @@ std::vector<EdgeInfo> TemporalWalk::get_edges() const {
     return edges;
 }
 
+bool TemporalWalk::get_is_directed() const {
+    return is_directed;
+}
+
 void TemporalWalk::clear() {
-    temporal_graph = std::make_unique<TemporalGraph>();
+    temporal_graph = std::make_unique<TemporalGraph>(is_directed);
 }

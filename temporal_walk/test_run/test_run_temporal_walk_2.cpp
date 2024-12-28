@@ -10,7 +10,7 @@ int main() {
     const auto edge_infos = read_edges_from_csv("../../data/sample_data.csv");
     std::cout << edge_infos.size() << std::endl;
 
-    TemporalWalk temporal_walk;
+    TemporalWalk temporal_walk(false);
     temporal_walk.add_multiple_edges(edge_infos);
 
     constexpr int selected_node = 2;

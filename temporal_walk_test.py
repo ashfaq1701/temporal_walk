@@ -6,7 +6,7 @@ def print_walks_for_nodes(walks):
         print(f"Walk {idx}: {','.join(map(str, walk))}")
 
 if __name__ == '__main__':
-    temporal_walk_obj = TemporalWalk()
+    temporal_walk_obj = TemporalWalk(False)
 
     data_file_path = 'data/sample_data.csv'
 
