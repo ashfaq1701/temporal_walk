@@ -93,7 +93,235 @@ PYBIND11_MODULE(_temporal_walk, m)
             - edge_infos (List[Tuple[int, int, int64_t]]): A list of tuples, each containing (source node, destination node, timestamp).
             )"
         )
+        .def("get_random_walks_for_all_nodes", [](TemporalWalk& tw,
+                                    const int max_walk_len,
+                                    const std::string& walk_bias,
+                                    const int num_walks_per_node,
+                                    const std::optional<std::string>& initial_edge_bias = std::nullopt,
+                                    const std::string& walk_direction = "Forward_In_Time",
+                                    const std::string& walk_init_edge_time_bias = "Bias_Earliest_Time")
+             {
+                 const RandomPickerType walk_bias_enum = picker_type_from_string(walk_bias);
+                 const RandomPickerType* initial_edge_bias_enum_ptr = nullptr;
+                 if (initial_edge_bias.has_value())
+                 {
+                     static const RandomPickerType edge_bias_enum = picker_type_from_string(*initial_edge_bias);
+                     initial_edge_bias_enum_ptr = &edge_bias_enum;
+                 }
+
+                 WalkDirection walk_direction_enum = walk_direction_from_string(walk_direction);
+                 WalkInitEdgeTimeBias walk_init_edge_time_bias_enum = walk_init_edge_time_bias_from_string(
+                     walk_init_edge_time_bias);
+
+                 return tw.get_random_walks_for_all_nodes(
+                     max_walk_len,
+                     &walk_bias_enum,
+                     num_walks_per_node,
+                     initial_edge_bias_enum_ptr,
+                     walk_direction_enum,
+                     walk_init_edge_time_bias_enum);
+             },
+             R"(
+             Generates temporal random walks for all the nodes in the graph.
+
+             Parameters:
+             max_walk_len (int): Maximum length of each random walk
+             walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "Exponential")
+             num_walks_per_node (int): Number of walks per node
+             initial_edge_bias (str, optional): Type of bias for selecting initial edge
+             walk_direction (str): Direction of walk ("Forward_In_Time" or "Backward_In_Time")
+             walk_init_edge_time_bias (str): Time bias for initial edge ("Bias_Earliest_Time" or "Bias_Latest_Time")
+
+             Returns:
+             List[List[int]]: List of walks, each containing a sequence of node IDs
+             )",
+             py::arg("max_walk_len"),
+             py::arg("walk_bias"),
+             py::arg("num_walks_per_node"),
+             py::arg("initial_edge_bias") = py::none(),
+             py::arg("walk_direction") = "Forward_In_Time",
+             py::arg("walk_init_edge_time_bias") = "Bias_Earliest_Time")
+
+        .def("get_random_walks_and_times_for_all_nodes", [](TemporalWalk& tw,
+                                               const int max_walk_len,
+                                               const std::string& walk_bias,
+                                               const int num_walks_per_node,
+                                               const std::optional<std::string>& initial_edge_bias = std::nullopt,
+                                               const std::string& walk_direction = "Forward_In_Time",
+                                               const std::string& walk_init_edge_time_bias = "Bias_Earliest_Time")
+             {
+                 const RandomPickerType walk_bias_enum = picker_type_from_string(walk_bias);
+                 const RandomPickerType* initial_edge_bias_enum_ptr = nullptr;
+                 if (initial_edge_bias.has_value())
+                 {
+                     static const RandomPickerType edge_bias_enum = picker_type_from_string(*initial_edge_bias);
+                     initial_edge_bias_enum_ptr = &edge_bias_enum;
+                 }
+
+                 WalkDirection walk_direction_enum = walk_direction_from_string(walk_direction);
+                 WalkInitEdgeTimeBias walk_init_edge_time_bias_enum = walk_init_edge_time_bias_from_string(
+                     walk_init_edge_time_bias);
+
+                 auto walks_with_times = tw.get_random_walks_and_times_for_all_nodes(
+                     max_walk_len,
+                     &walk_bias_enum,
+                     num_walks_per_node,
+                     initial_edge_bias_enum_ptr,
+                     walk_direction_enum,
+                     walk_init_edge_time_bias_enum);
+
+                std::vector<std::vector<std::tuple<int, int64_t>>> result;
+                result.reserve(walks_with_times.size());
+
+                for (const auto& walk : walks_with_times) {
+                    std::vector<std::tuple<int, int64_t>> converted_walk;
+                    converted_walk.reserve(walk.size());
+
+                    for (const auto& node_time : walk) {
+                        converted_walk.emplace_back(node_time.node, node_time.timestamp);
+                    }
+
+                    result.push_back(std::move(converted_walk));
+                }
+
+                return result;
+             },
+             R"(
+            Generates temporal random walks with timestamps for all the nodes in the graph.
+
+            Parameters:
+            max_walk_len (int): Maximum length of each random walk
+            walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "Exponential")
+            num_walks_per_node (int): Number of walks per node
+            initial_edge_bias (str, optional): Type of bias for selecting initial edge
+            walk_direction (str): Direction of walk ("Forward_In_Time" or "Backward_In_Time")
+            walk_init_edge_time_bias (str): Time bias for initial edge ("Bias_Earliest_Time" or "Bias_Latest_Time")
+
+            Returns:
+            List[List[Tuple[int, int64_t]]]: List of walks, each containing (node_id, timestamp) pairs
+            )",
+             py::arg("max_walk_len"),
+             py::arg("walk_bias"),
+             py::arg("num_walks_per_node"),
+             py::arg("initial_edge_bias") = py::none(),
+             py::arg("walk_direction") = "Forward_In_Time",
+             py::arg("walk_init_edge_time_bias") = "Bias_Earliest_Time")
+
         .def("get_random_walks", [](TemporalWalk& tw,
+                                    const int max_walk_len,
+                                    const std::string& walk_bias,
+                                    const int num_walks_per_node,
+                                    const std::optional<std::string>& initial_edge_bias = std::nullopt,
+                                    const std::string& walk_direction = "Forward_In_Time",
+                                    const std::string& walk_init_edge_time_bias = "Bias_Earliest_Time")
+             {
+                 const RandomPickerType walk_bias_enum = picker_type_from_string(walk_bias);
+                 const RandomPickerType* initial_edge_bias_enum_ptr = nullptr;
+                 if (initial_edge_bias.has_value())
+                 {
+                     static const RandomPickerType edge_bias_enum = picker_type_from_string(*initial_edge_bias);
+                     initial_edge_bias_enum_ptr = &edge_bias_enum;
+                 }
+
+                 WalkDirection walk_direction_enum = walk_direction_from_string(walk_direction);
+                 WalkInitEdgeTimeBias walk_init_edge_time_bias_enum = walk_init_edge_time_bias_from_string(
+                     walk_init_edge_time_bias);
+
+                 return tw.get_random_walks(
+                     max_walk_len,
+                     &walk_bias_enum,
+                     num_walks_per_node,
+                     initial_edge_bias_enum_ptr,
+                     walk_direction_enum,
+                     walk_init_edge_time_bias_enum);
+             },
+             R"(
+             Generates temporal random walks.
+
+             Parameters:
+             max_walk_len (int): Maximum length of each random walk
+             walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "Exponential")
+             num_walks_per_node (int): Number of walks per node
+             initial_edge_bias (str, optional): Type of bias for selecting initial edge
+             walk_direction (str): Direction of walk ("Forward_In_Time" or "Backward_In_Time")
+             walk_init_edge_time_bias (str): Time bias for initial edge ("Bias_Earliest_Time" or "Bias_Latest_Time")
+
+             Returns:
+             List[List[int]]: List of walks, each containing a sequence of node IDs
+             )",
+             py::arg("max_walk_len"),
+             py::arg("walk_bias"),
+             py::arg("num_walks_per_node"),
+             py::arg("initial_edge_bias") = py::none(),
+             py::arg("walk_direction") = "Forward_In_Time",
+             py::arg("walk_init_edge_time_bias") = "Bias_Earliest_Time")
+
+        .def("get_random_walks_and_times", [](TemporalWalk& tw,
+                                               const int max_walk_len,
+                                               const std::string& walk_bias,
+                                               const int num_walks_per_node,
+                                               const std::optional<std::string>& initial_edge_bias = std::nullopt,
+                                               const std::string& walk_direction = "Forward_In_Time",
+                                               const std::string& walk_init_edge_time_bias = "Bias_Earliest_Time")
+             {
+                 const RandomPickerType walk_bias_enum = picker_type_from_string(walk_bias);
+                 const RandomPickerType* initial_edge_bias_enum_ptr = nullptr;
+                 if (initial_edge_bias.has_value())
+                 {
+                     static const RandomPickerType edge_bias_enum = picker_type_from_string(*initial_edge_bias);
+                     initial_edge_bias_enum_ptr = &edge_bias_enum;
+                 }
+
+                 WalkDirection walk_direction_enum = walk_direction_from_string(walk_direction);
+                 WalkInitEdgeTimeBias walk_init_edge_time_bias_enum = walk_init_edge_time_bias_from_string(
+                     walk_init_edge_time_bias);
+
+                 auto walks_with_times = tw.get_random_walks_and_times(
+                     max_walk_len,
+                     &walk_bias_enum,
+                     num_walks_per_node,
+                     initial_edge_bias_enum_ptr,
+                     walk_direction_enum,
+                     walk_init_edge_time_bias_enum);
+
+                std::vector<std::vector<std::tuple<int, int64_t>>> result;
+                result.reserve(walks_with_times.size());
+
+                for (const auto& walk : walks_with_times) {
+                    std::vector<std::tuple<int, int64_t>> converted_walk;
+                    converted_walk.reserve(walk.size());
+
+                    for (const auto& node_time : walk) {
+                        converted_walk.emplace_back(node_time.node, node_time.timestamp);
+                    }
+
+                    result.push_back(std::move(converted_walk));
+                }
+
+                return result;
+             },
+             R"(
+            Generates temporal random walks with timestamps.
+
+            Parameters:
+            max_walk_len (int): Maximum length of each random walk
+            walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "Exponential")
+            num_walks_per_node (int): Number of walks per node
+            initial_edge_bias (str, optional): Type of bias for selecting initial edge
+            walk_direction (str): Direction of walk ("Forward_In_Time" or "Backward_In_Time")
+            walk_init_edge_time_bias (str): Time bias for initial edge ("Bias_Earliest_Time" or "Bias_Latest_Time")
+
+            Returns:
+            List[List[Tuple[int, int64_t]]]: List of walks, each containing (node_id, timestamp) pairs
+            )",
+             py::arg("max_walk_len"),
+             py::arg("walk_bias"),
+             py::arg("num_walks_per_node"),
+             py::arg("initial_edge_bias") = py::none(),
+             py::arg("walk_direction") = "Forward_In_Time",
+             py::arg("walk_init_edge_time_bias") = "Bias_Earliest_Time")
+
+        .def("get_random_walks_with_specific_number_of_contexts", [](TemporalWalk& tw,
                                     const int max_walk_len,
                                     const std::string& walk_bias,
                                     const std::optional<long> num_cw = std::nullopt,
@@ -116,7 +344,7 @@ PYBIND11_MODULE(_temporal_walk, m)
                  WalkInitEdgeTimeBias walk_init_edge_time_bias_enum = walk_init_edge_time_bias_from_string(
                      walk_init_edge_time_bias);
 
-                 return tw.get_random_walks(
+                 return tw.get_random_walks_with_specific_number_of_contexts(
                      max_walk_len,
                      &walk_bias_enum,
                      num_cw.value_or(-1),
@@ -128,7 +356,7 @@ PYBIND11_MODULE(_temporal_walk, m)
                      p_walk_success_threshold);
              },
              R"(
-             Generates temporal random walks.
+             Generates temporal random walks with specified number of contexts. Here number of walks can vary based on their actual lengths.
 
              Parameters:
              max_walk_len (int): Maximum length of each random walk
@@ -154,7 +382,7 @@ PYBIND11_MODULE(_temporal_walk, m)
              py::arg("context_window_len") = py::none(),
              py::arg("p_walk_success_threshold") = DEFAULT_SUCCESS_THRESHOLD)
 
-        .def("get_random_walks_with_times", [](TemporalWalk& tw,
+        .def("get_random_walks_and_times_with_specific_number_of_contexts", [](TemporalWalk& tw,
                                                const int max_walk_len,
                                                const std::string& walk_bias,
                                                const std::optional<long> num_cw = std::nullopt,
@@ -177,7 +405,7 @@ PYBIND11_MODULE(_temporal_walk, m)
                  WalkInitEdgeTimeBias walk_init_edge_time_bias_enum = walk_init_edge_time_bias_from_string(
                      walk_init_edge_time_bias);
 
-                 auto walks_with_times = tw.get_random_walks_with_times(
+                 auto walks_with_times = tw.get_random_walks_and_times_with_specific_number_of_contexts(
                      max_walk_len,
                      &walk_bias_enum,
                      num_cw.value_or(-1),
@@ -205,7 +433,7 @@ PYBIND11_MODULE(_temporal_walk, m)
                 return result;
              },
              R"(
-            Generates temporal random walks with timestamps.
+            Generates temporal random walks with timestamps with specified number of contexts. Here number of walks can vary based on their actual lengths.
 
             Parameters:
             max_walk_len (int): Maximum length of each random walk

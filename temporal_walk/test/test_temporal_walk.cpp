@@ -332,7 +332,7 @@ TEST_F(FilledDirectedTemporalWalkTest, TestNodeFoundTest) {
 // Test that the number of random walks generated matches the expected count and checks that no walk exceeds its length.
 // Also test that the system can sample walks of length more than 1.
 TEST_F(FilledDirectedTemporalWalkTest, WalkCountAndLensTest) {
-    const auto walks = temporal_walk->get_random_walks_with_times(MAX_WALK_LEN, &linear_picker_type, -1, 10);
+    const auto walks = temporal_walk->get_random_walks_and_times_for_all_nodes(MAX_WALK_LEN, &linear_picker_type, 10);
 
     int total_walk_lens = 0;
 
@@ -349,7 +349,7 @@ TEST_F(FilledDirectedTemporalWalkTest, WalkCountAndLensTest) {
 
 // Test to verify that the timestamps in each walk are strictly increasing in directed graphs.
 TEST_F(FilledDirectedTemporalWalkTest, WalkIncreasingTimestampTest) {
-    const auto walks = temporal_walk->get_random_walks_with_times(MAX_WALK_LEN, &linear_picker_type, -1, 10);
+    const auto walks = temporal_walk->get_random_walks_and_times_for_all_nodes(MAX_WALK_LEN, &linear_picker_type, 10);
 
     for (const auto& walk : walks) {
         for (size_t i = 1; i < walk.size(); ++i) {
@@ -363,7 +363,7 @@ TEST_F(FilledDirectedTemporalWalkTest, WalkIncreasingTimestampTest) {
 
 // Test to verify that the timestamps in each walk are strictly increasing in undirected graphs.
 TEST_F(FilledUndirectedTemporalWalkTest, WalkIncreasingTimestampTest) {
-    const auto walks = temporal_walk->get_random_walks_with_times(MAX_WALK_LEN, &linear_picker_type, -1, 10);
+    const auto walks = temporal_walk->get_random_walks_and_times_for_all_nodes(MAX_WALK_LEN, &linear_picker_type, 10);
 
     for (const auto& walk : walks) {
         for (size_t i = 1; i < walk.size(); ++i) {

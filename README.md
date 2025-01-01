@@ -99,10 +99,118 @@ void add_multiple_edges(const std::vector<EdgeInfo>& edge_infos);
 
 Adds multiple edges to the temporal graph based on the provided vector of EdgeInfo structures, where each structure contains the source node `u`, destination node `i`, and timestamp `t`.
 
+### get_random_walks_for_all_nodes
+
+```cpp
+std::vector<std::vector<int>> get_random_walks_for_all_nodes(
+        int max_walk_len,
+        const RandomPickerType* walk_bias,
+        int num_walks_per_node,
+        const RandomPickerType* initial_edge_bias=nullptr,
+        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
+        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Tim);
+```
+
+Generates temporal random walks for all nodes in the graph similar to get_random_walks_and_times_for_all_nodes but returns only the node IDs without timestamps.
+
+Parameters:
+
+* max_walk_len: Maximum length of each random walk
+* walk_bias: Type of bias for selecting next edges during walk (Uniform, Linear, or Exponential)
+* num_walks_per_node: Number of walks per node.
+* initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, or Exponential). If nullptr, uses walk_bias
+* walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
+* walk_init_edge_time_bias: Bias for initial edge selection (Bias_Earliest_Time or Bias_Latest_Time)
+
+Returns:
+
+A vector of walks, where each walk is a vector of node IDs representing the temporal path through the network.
+
+### get_random_walks_and_times_for_all_nodes
+
+```cpp
+std::vector<std::vector<NodeWithTime>> get_random_walks_and_times_for_all_nodes(
+        int max_walk_len,
+        const RandomPickerType* walk_bias,
+        int num_walks_per_node,
+        const RandomPickerType* initial_edge_bias=nullptr,
+        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
+        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time);
+```
+
+Generates temporal random walks for all nodes in the graph where each step contains both node ID and timestamp. Each walk respects temporal ordering based on the specified direction and biases. In this function the number of contexts remain fixed. The number of walks can vary based on their actual lengths after sampling.
+
+Parameters:
+
+* max_walk_len: Maximum length of each random walk
+* walk_bias: Type of bias for selecting next edges during walk (Uniform, Linear, or Exponential)
+* num_walks_per_node: Number of walks per node.
+* initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, or Exponential). If nullptr, uses walk_bias
+* walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
+* walk_init_edge_time_bias: Bias for initial edge selection (Bias_Earliest_Time or Bias_Latest_Time)
+
+Returns:
+
+A vector of temporal walks, where each walk is a vector of NodeWithTime pairs containing node IDs and their corresponding timestamps.
+
 ### get_random_walks
 
 ```cpp
 std::vector<std::vector<int>> get_random_walks(
+        int max_walk_len,
+        const RandomPickerType* walk_bias,
+        int num_walks_per_node,
+        const RandomPickerType* initial_edge_bias=nullptr,
+        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
+        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Tim);
+```
+
+Generates temporal random walks similar to get_random_walks_and_times but returns only the node IDs without timestamps.
+
+Parameters:
+
+* max_walk_len: Maximum length of each random walk
+* walk_bias: Type of bias for selecting next edges during walk (Uniform, Linear, or Exponential)
+* num_walks_per_node: Number of walks per node.
+* initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, or Exponential). If nullptr, uses walk_bias
+* walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
+* walk_init_edge_time_bias: Bias for initial edge selection (Bias_Earliest_Time or Bias_Latest_Time)
+
+Returns:
+
+A vector of walks, where each walk is a vector of node IDs representing the temporal path through the network.
+
+### get_random_walks_and_times
+
+```cpp
+std::vector<std::vector<NodeWithTime>> get_random_walks_and_times(
+        int max_walk_len,
+        const RandomPickerType* walk_bias,
+        int num_walks_per_node,
+        const RandomPickerType* initial_edge_bias=nullptr,
+        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
+        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time);
+```
+
+Generates temporal random walks where each step contains both node ID and timestamp. Each walk respects temporal ordering based on the specified direction and biases. In this function the number of contexts remain fixed. The number of walks can vary based on their actual lengths after sampling.
+
+Parameters:
+
+* max_walk_len: Maximum length of each random walk
+* walk_bias: Type of bias for selecting next edges during walk (Uniform, Linear, or Exponential)
+* num_walks_per_node: Number of walks per node.
+* initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, or Exponential). If nullptr, uses walk_bias
+* walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
+* walk_init_edge_time_bias: Bias for initial edge selection (Bias_Earliest_Time or Bias_Latest_Time)
+
+Returns:
+
+A vector of temporal walks, where each walk is a vector of NodeWithTime pairs containing node IDs and their corresponding timestamps.
+
+### get_random_walks_with_specific_number_of_contexts
+
+```cpp
+std::vector<std::vector<int>> get_random_walks_with_specific_number_of_contexts(
         int max_walk_len,
         const RandomPickerType* walk_bias,
         long num_cw=-1,
@@ -114,7 +222,7 @@ std::vector<std::vector<int>> get_random_walks(
         float p_walk_success_threshold=0.01);
 ```
 
-Generates temporal random walks similar to get_random_walks_with_times but returns only the node IDs without timestamps.
+Generates temporal random walks similar to get_random_walks_and_times_with_specific_number_of_contexts but returns only the node IDs without timestamps. In this function the number of contexts remain fixed. The number of walks can vary based on their actual lengths after sampling.
 
 Parameters:
 
@@ -132,10 +240,10 @@ Returns:
 
 A vector of walks, where each walk is a vector of node IDs representing the temporal path through the network.
 
-### get_random_walks_with_times
+### get_random_walks_and_times_with_specific_number_of_contexts
 
 ```cpp
-std::vector<std::vector<NodeWithTime>> get_random_walks_with_times(
+std::vector<std::vector<NodeWithTime>> get_random_walks_and_times_with_specific_number_of_contexts(
         int max_walk_len,
         const RandomPickerType* walk_bias,
         long num_cw=-1,
@@ -147,7 +255,7 @@ std::vector<std::vector<NodeWithTime>> get_random_walks_with_times(
         float p_walk_success_threshold=0.01);
 ```
 
-Generates temporal random walks where each step contains both node ID and timestamp. Each walk respects temporal ordering based on the specified direction and biases.
+Generates temporal random walks where each step contains both node ID and timestamp. Each walk respects temporal ordering based on the specified direction and biases. In this function the number of contexts remain fixed. The number of walks can vary based on their actual lengths after sampling.
 
 Parameters:
 
@@ -219,10 +327,10 @@ def add_multiple_edges(edge_infos: List[Tuple[int, int, int64_t]]):
 
 Adds multiple directed edges to the temporal graph based on the provided list of tuples. Each tuple should contain three elements: the source node `u`, the destination node `i`, and the timestamp `t`.
 
-### get_random_walks
+### get_random_walks_with_specific_number_of_contexts
 
 ```python
-get_random_walks(
+get_random_walks_with_specific_number_of_contexts(
     max_walk_len: int,
     walk_bias: str,
     num_cw: Optional[int] = None,
@@ -235,7 +343,7 @@ get_random_walks(
 ) -> List[List[int]]:
 ```
 
-Generates temporal random walks from the graph using parallel processing with hardware concurrency.
+Generates temporal random walks from the graph using parallel processing with hardware concurrency. In this function the number of contexts remain fixed. The number of walks can vary based on their actual lengths after sampling.
 
 Parameters
 
@@ -265,10 +373,10 @@ Returns
 
 List of walks, where each walk is a list of node IDs representing the temporal path through the network.
 
-### get_random_walks_with_times
+### get_random_walks_and_times_with_specific_number_of_contexts
 
 ```python
-get_random_walks_with_times(
+get_random_walks_and_times_with_specific_number_of_contexts(
     max_walk_len: int,
     walk_bias: str,
     num_cw: Optional[int] = None,
@@ -281,7 +389,7 @@ get_random_walks_with_times(
 ) -> List[List[Tuple[int, int64_t]]]:
 ```
 
-Similar to get_random_walks but includes timestamps with each node in the walks. Uses parallel processing with hardware concurrency.
+Similar to get_random_walks but includes timestamps with each node in the walks. Uses parallel processing with hardware concurrency. In this function the number of contexts remain fixed. The number of walks can vary based on their actual lengths after sampling.
 
 Parameters
 

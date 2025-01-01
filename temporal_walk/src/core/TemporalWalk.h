@@ -42,19 +42,22 @@ class TemporalWalk {
 
     int64_t max_time_capacity;
 
+    int n_threads;
+
     int64_t max_edge_time = 0;
 
     std::unique_ptr<TemporalGraph> temporal_graph;
 
     ThreadPool thread_pool;
 
-    void generate_random_walk_with_time(
+    void generate_random_walk_and_time(
         std::vector<NodeWithTime>* walk,
         const std::shared_ptr<RandomPicker>& edge_picker,
         const std::shared_ptr<RandomPicker>& start_picker,
         int max_walk_len,
         bool should_walk_forward,
-        bool init_edge_picker_end_prioritization) const;
+        bool init_edge_picker_end_prioritization,
+        const Node* start_node=nullptr) const;
 
     void add_edge(int u, int i, int64_t t);
 
@@ -68,7 +71,39 @@ public:
         int64_t max_time_capacity=-1,
         size_t n_threads=std::thread::hardware_concurrency());
 
-    [[nodiscard]] std::vector<std::vector<NodeWithTime>> get_random_walks_with_times(
+    [[nodiscard]] std::vector<std::vector<NodeWithTime>> get_random_walks_and_times_for_all_nodes(
+        int max_walk_len,
+        const RandomPickerType* walk_bias,
+        int num_walks_per_node,
+        const RandomPickerType* initial_edge_bias=nullptr,
+        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
+        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time);
+
+    [[nodiscard]] std::vector<std::vector<int>> get_random_walks_for_all_nodes(
+        int max_walk_len,
+        const RandomPickerType* walk_bias,
+        int num_walks_per_node,
+        const RandomPickerType* initial_edge_bias=nullptr,
+        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
+        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time);
+
+    [[nodiscard]] std::vector<std::vector<NodeWithTime>> get_random_walks_and_times(
+        int max_walk_len,
+        const RandomPickerType* walk_bias,
+        int num_walks_total,
+        const RandomPickerType* initial_edge_bias=nullptr,
+        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
+        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time);
+
+    [[nodiscard]] std::vector<std::vector<int>> get_random_walks(
+        int max_walk_len,
+        const RandomPickerType* walk_bias,
+        int num_walks_total,
+        const RandomPickerType* initial_edge_bias=nullptr,
+        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
+        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time);
+
+    [[nodiscard]] std::vector<std::vector<NodeWithTime>> get_random_walks_and_times_with_specific_number_of_contexts(
         int max_walk_len,
         const RandomPickerType* walk_bias,
         long num_cw=-1,
@@ -79,7 +114,7 @@ public:
         int context_window_len=-1,
         float p_walk_success_threshold=DEFAULT_SUCCESS_THRESHOLD);
 
-    [[nodiscard]] std::vector<std::vector<int>> get_random_walks(
+    [[nodiscard]] std::vector<std::vector<int>> get_random_walks_with_specific_number_of_contexts(
         int max_walk_len,
         const RandomPickerType* walk_bias,
         long num_cw=-1,

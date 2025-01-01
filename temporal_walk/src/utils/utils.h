@@ -64,4 +64,44 @@ inline float compute_beta_95th_percentile(size_t successes, size_t failures) {
     return boost::math::quantile(beta_dist, 0.95f); // 95th percentile
 }
 
+inline std::vector<int> repeat_elements(const std::vector<int>& arr, int times) {
+    std::vector<int> repeated_items;
+    repeated_items.reserve(arr.size() * times);
+
+    for (const auto& item : arr) {
+        for (int i = 0; i < times; ++i) {
+            repeated_items.push_back(item);
+        }
+    }
+
+    return repeated_items;
+}
+
+inline std::vector<std::vector<int>> divide_vector(const std::vector<int>& input, int n) {
+    std::vector<std::vector<int>> result(n);
+    const int total_size = static_cast<int>(input.size());
+    const int base_size = total_size / n;
+    const int remainder = total_size % n;
+
+    int start = 0;
+    for (int i = 0; i < n; ++i) {
+        const int current_size = base_size + (i < remainder ? 1 : 0);
+        result[i].assign(input.begin() + start, input.begin() + start + current_size);
+        start += current_size;
+    }
+
+    return result;
+}
+
+inline std::vector<int> divide_number(int n, int i) {
+    std::vector<int> parts(i, n / i);
+    const int remainder = n % i;
+
+    for (int j = 0; j < remainder; ++j) {
+        ++parts[j];
+    }
+
+    return parts;
+}
+
 #endif //UTILS_H

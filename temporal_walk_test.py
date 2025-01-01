@@ -26,16 +26,13 @@ if __name__ == '__main__':
     print(f'Total edges: {temporal_walk_obj.get_edge_count()}')
     print(f'Total nodes: {temporal_walk_obj.get_node_count()}')
 
-    walks = temporal_walk_obj.get_random_walks_with_times(
+    walks = temporal_walk_obj.get_random_walks_and_times_for_all_nodes(
         max_walk_len=20,
         walk_bias="Exponential",
-        num_cw=-1,
         num_walks_per_node=10,
         initial_edge_bias="Linear",
         walk_direction="Forward_In_Time",
-        walk_init_edge_time_bias="Bias_Earliest_Time",
-        context_window_len=3,
-        p_walk_success_threshold=0.8
+        walk_init_edge_time_bias="Bias_Earliest_Time"
     )
 
     print(f"Number of walks {len(walks)}")
