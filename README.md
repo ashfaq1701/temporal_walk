@@ -327,6 +327,158 @@ def add_multiple_edges(edge_infos: List[Tuple[int, int, int64_t]]):
 
 Adds multiple directed edges to the temporal graph based on the provided list of tuples. Each tuple should contain three elements: the source node `u`, the destination node `i`, and the timestamp `t`.
 
+### get_random_walks_for_all_nodes
+
+```python
+get_random_walks_for_all_nodes(
+    max_walk_len: int,
+    walk_bias: str,
+    num_walks_per_node: int,
+    initial_edge_bias: Optional[str] = None,
+    walk_direction: str = "Forward_In_Time",
+    walk_init_edge_time_bias: str = "Bias_Earliest_Time"
+) -> List[List[int]]:
+```
+
+Generates temporal random walks for all nodes in the graph using parallel processing with hardware concurrency.
+
+Parameters
+
+* max_walk_len - Maximum length of each random walk
+* walk_bias - Type of bias for selecting next edges during walk:
+  * "Uniform": Equal probability for all valid edges
+  * "Linear": Linear decay based on time
+  * "Exponential": Exponential decay based on time
+
+* num_walks_per_node - Number of walks per node.
+* initial_edge_bias - Optional bias type for selecting initial edges. Uses walk_bias if None
+
+* walk_direction - Direction of temporal walks:
+  * "Forward_In_Time": Walks progress from past to future
+  * "Backward_In_Time": Walks progress from future to past
+
+* walk_init_edge_time_bias - Bias for initial edge selection:
+
+  * "Bias_Earliest_Time": Prioritize earlier timestamps
+  * "Bias_Latest_Time": Prioritize later timestamps
+
+Returns
+
+List of walks, where each walk is a list of node IDs representing the temporal path through the network.
+
+### get_random_walks_and_times_for_all_nodes
+
+```python
+get_random_walks_and_times_for_all_nodes(
+    max_walk_len: int,
+    walk_bias: str,
+    num_walks_per_node: int,
+    initial_edge_bias: Optional[str] = None,
+    walk_direction: str = "Forward_In_Time",
+    walk_init_edge_time_bias: str = "Bias_Earliest_Time"
+) -> List[List[Tuple[int, int64_t]]]:
+```
+
+Similar to get_random_walks_for_all_nodes but includes timestamps with each node in the walks. Uses parallel processing with hardware concurrency.
+
+Parameters
+
+* max_walk_len - Maximum length of each random walk
+* walk_bias - Type of bias for selecting next edges during walk:
+  * "Uniform": Equal probability for all valid edges
+  * "Linear": Linear decay based on time
+  * "Exponential": Exponential decay based on time
+
+* num_walks_per_node - Number of walks per node.
+* initial_edge_bias - Optional bias type for selecting initial edges. Uses walk_bias if None
+* walk_direction - Direction of temporal walks:
+  * "Forward_In_Time": Walks progress from past to future
+  * "Backward_In_Time": Walks progress from future to past
+
+* walk_init_edge_time_bias - Bias for initial edge selection:
+  * "Bias_Earliest_Time": Prioritize earlier timestamps
+  * "Bias_Latest_Time": Prioritize later timestamps
+
+Returns
+
+List of walks, where each walk is a list of tuples containing (node_id, timestamp) pairs, representing the temporal path through the network with corresponding timestamps.
+
+### get_random_walks
+
+```python
+get_random_walks(
+    max_walk_len: int,
+    walk_bias: str,
+    num_walks_per_node: int,
+    initial_edge_bias: Optional[str] = None,
+    walk_direction: str = "Forward_In_Time",
+    walk_init_edge_time_bias: str = "Bias_Earliest_Time"
+) -> List[List[int]]:
+```
+
+Generates temporal random walks from the graph using parallel processing with hardware concurrency.
+
+Parameters
+
+* max_walk_len - Maximum length of each random walk
+* walk_bias - Type of bias for selecting next edges during walk:
+  * "Uniform": Equal probability for all valid edges
+  * "Linear": Linear decay based on time
+  * "Exponential": Exponential decay based on time
+
+* num_walks_per_node - Number of walks per node.
+* initial_edge_bias - Optional bias type for selecting initial edges. Uses walk_bias if None
+
+* walk_direction - Direction of temporal walks:
+  * "Forward_In_Time": Walks progress from past to future
+  * "Backward_In_Time": Walks progress from future to past
+
+* walk_init_edge_time_bias - Bias for initial edge selection:
+
+  * "Bias_Earliest_Time": Prioritize earlier timestamps
+  * "Bias_Latest_Time": Prioritize later timestamps
+
+Returns
+
+List of walks, where each walk is a list of node IDs representing the temporal path through the network.
+
+### get_random_walks_and_times
+
+```python
+get_random_walks_and_times(
+    max_walk_len: int,
+    walk_bias: str,
+    num_walks_per_node: int,
+    initial_edge_bias: Optional[str] = None,
+    walk_direction: str = "Forward_In_Time",
+    walk_init_edge_time_bias: str = "Bias_Earliest_Time"
+) -> List[List[Tuple[int, int64_t]]]:
+```
+
+Similar to get_random_walks but includes timestamps with each node in the walks. Uses parallel processing with hardware concurrency.
+
+Parameters
+
+* max_walk_len - Maximum length of each random walk
+* walk_bias - Type of bias for selecting next edges during walk:
+  * "Uniform": Equal probability for all valid edges
+  * "Linear": Linear decay based on time
+  * "Exponential": Exponential decay based on time
+
+* num_walks_per_node - Number of walks per node.
+* initial_edge_bias - Optional bias type for selecting initial edges. Uses walk_bias if None
+* walk_direction - Direction of temporal walks:
+  * "Forward_In_Time": Walks progress from past to future
+  * "Backward_In_Time": Walks progress from future to past
+
+* walk_init_edge_time_bias - Bias for initial edge selection:
+  * "Bias_Earliest_Time": Prioritize earlier timestamps
+  * "Bias_Latest_Time": Prioritize later timestamps
+
+Returns
+
+List of walks, where each walk is a list of tuples containing (node_id, timestamp) pairs, representing the temporal path through the network with corresponding timestamps.
+
 ### get_random_walks_with_specific_number_of_contexts
 
 ```python
@@ -389,7 +541,7 @@ get_random_walks_and_times_with_specific_number_of_contexts(
 ) -> List[List[Tuple[int, int64_t]]]:
 ```
 
-Similar to get_random_walks but includes timestamps with each node in the walks. Uses parallel processing with hardware concurrency. In this function the number of contexts remain fixed. The number of walks can vary based on their actual lengths after sampling.
+Similar to get_random_walks_with_specific_number_of_contexts but includes timestamps with each node in the walks. Uses parallel processing with hardware concurrency. In this function the number of contexts remain fixed. The number of walks can vary based on their actual lengths after sampling.
 
 Parameters
 
