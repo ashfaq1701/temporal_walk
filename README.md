@@ -108,7 +108,7 @@ std::vector<std::vector<int>> get_random_walks_for_all_nodes(
         int num_walks_per_node,
         const RandomPickerType* initial_edge_bias=nullptr,
         WalkDirection walk_direction=WalkDirection::Forward_In_Time,
-        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Tim);
+        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time);
 ```
 
 Generates temporal random walks for all nodes in the graph similar to get_random_walks_and_times_for_all_nodes but returns only the node IDs without timestamps.
@@ -162,7 +162,7 @@ std::vector<std::vector<int>> get_random_walks(
         int num_walks_per_node,
         const RandomPickerType* initial_edge_bias=nullptr,
         WalkDirection walk_direction=WalkDirection::Forward_In_Time,
-        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Tim);
+        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time);
 ```
 
 Generates temporal random walks similar to get_random_walks_and_times but returns only the node IDs without timestamps.
