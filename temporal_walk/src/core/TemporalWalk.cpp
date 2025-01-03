@@ -22,17 +22,6 @@ TemporalWalk::TemporalWalk(
     temporal_graph = std::make_unique<TemporalGraph>(is_directed);
 }
 
-bool get_init_edge_picker_end_prioritization(WalkInitEdgeTimeBias walk_init_edge_time_bias) {
-    switch (walk_init_edge_time_bias) {
-    case WalkInitEdgeTimeBias::Bias_Earliest_Time:
-        return false;
-    case WalkInitEdgeTimeBias::Bias_Latest_Time:
-        return true;
-    default:
-        throw std::invalid_argument("Invalid walk init edge time bias");
-    }
-}
-
 bool get_should_walk_forward(WalkDirection walk_direction) {
     switch (walk_direction)
     {
@@ -67,8 +56,7 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_and_times_
     const RandomPickerType* walk_bias,
     const int num_walks_per_node,
     const RandomPickerType* initial_edge_bias,
-    const WalkDirection walk_direction,
-    const WalkInitEdgeTimeBias walk_init_edge_time_bias) {
+    const WalkDirection walk_direction) {
 
     const std::shared_ptr<RandomPicker> edge_picker = get_random_picker(walk_bias);
     std::shared_ptr<RandomPicker> start_picker;
@@ -82,24 +70,29 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_and_times_
     std::vector<std::vector<int>> distributed_node_ids = divide_vector(repeated_node_ids, n_threads);
 
     auto generate_walks_thread = [&](const std::vector<int>& start_node_ids) -> std::vector<std::vector<NodeWithTime>> {
-        std::vector walks(start_node_ids.size(), std::vector<NodeWithTime>());
-        walks.reserve(max_walk_len);
+        std::vector<std::vector<NodeWithTime>> walks_internal;
+        walks_internal.reserve(start_node_ids.size());
 
-        for (int i = 0; i < start_node_ids.size(); i++) {
-            const bool init_edge_picker_end_prioritization = get_init_edge_picker_end_prioritization(walk_init_edge_time_bias);
+        for (const int start_node_id : start_node_ids) {
             const bool should_walk_forward = get_should_walk_forward(walk_direction);
 
+            std::vector<NodeWithTime> walk;
+            walk.reserve(max_walk_len);
+
             generate_random_walk_and_time(
-                &walks[i],
+                &walk,
                 edge_picker,
                 start_picker,
                 max_walk_len,
                 should_walk_forward,
-                init_edge_picker_end_prioritization,
-                temporal_graph->get_node(start_node_ids[i]));
+                temporal_graph->get_node(start_node_id));
+
+            if (!walk.empty()) {
+                walks_internal.emplace_back(std::move(walk));
+            }
         }
 
-        return walks;
+        return walks_internal;
     };
 
     std::vector<std::future<std::vector<std::vector<NodeWithTime>>>> futures;
@@ -136,16 +129,14 @@ std::vector<std::vector<int>> TemporalWalk::get_random_walks_for_all_nodes(
         const RandomPickerType* walk_bias,
         const int num_walks_per_node,
         const RandomPickerType* initial_edge_bias,
-        const WalkDirection walk_direction,
-        const WalkInitEdgeTimeBias walk_init_edge_time_bias) {
+        const WalkDirection walk_direction) {
 
     std::vector<std::vector<NodeWithTime>> walks_with_times = get_random_walks_and_times_for_all_nodes(
         max_walk_len,
         walk_bias,
         num_walks_per_node,
         initial_edge_bias,
-        walk_direction,
-        walk_init_edge_time_bias);
+        walk_direction);
 
     std::vector<std::vector<int>> walks;
 
@@ -169,8 +160,7 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_and_times(
     const RandomPickerType* walk_bias,
     const int num_walks_total,
     const RandomPickerType* initial_edge_bias,
-    const WalkDirection walk_direction,
-    const WalkInitEdgeTimeBias walk_init_edge_time_bias) {
+    const WalkDirection walk_direction) {
 
     const std::shared_ptr<RandomPicker> edge_picker = get_random_picker(walk_bias);
     std::shared_ptr<RandomPicker> start_picker;
@@ -181,23 +171,30 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_and_times(
     }
 
     auto generate_walks_thread = [&](int n_walks) -> std::vector<std::vector<NodeWithTime>> {
-        std::vector walks(n_walks, std::vector<NodeWithTime>());
-        walks.reserve(max_walk_len);
+        std::vector<std::vector<NodeWithTime>> walks_internal;
+        walks_internal.reserve(n_walks);
 
-        for (int i = 0; i < n_walks; i++) {
-            const bool init_edge_picker_end_prioritization = get_init_edge_picker_end_prioritization(walk_init_edge_time_bias);
+        int remaining_walks = n_walks;
+        while (remaining_walks > 0) {
             const bool should_walk_forward = get_should_walk_forward(walk_direction);
 
+            std::vector<NodeWithTime> walk;
+            walk.reserve(max_walk_len);
+
             generate_random_walk_and_time(
-                &walks[i],
+                &walk,
                 edge_picker,
                 start_picker,
                 max_walk_len,
-                should_walk_forward,
-                init_edge_picker_end_prioritization);
+                should_walk_forward);
+
+            if (!walk.empty()) {
+                walks_internal.emplace_back(std::move(walk));
+                remaining_walks--;
+            }
         }
 
-        return walks;
+        return walks_internal;
     };
 
     std::vector<std::future<std::vector<std::vector<NodeWithTime>>>> futures;
@@ -235,16 +232,14 @@ std::vector<std::vector<int>> TemporalWalk::get_random_walks(
         const RandomPickerType* walk_bias,
         int num_walks_total,
         const RandomPickerType* initial_edge_bias,
-        WalkDirection walk_direction,
-        WalkInitEdgeTimeBias walk_init_edge_time_bias) {
+        WalkDirection walk_direction) {
 
     std::vector<std::vector<NodeWithTime>> walks_with_times = get_random_walks_and_times(
         max_walk_len,
         walk_bias,
         num_walks_total,
         initial_edge_bias,
-        walk_direction,
-        walk_init_edge_time_bias);
+        walk_direction);
 
     std::vector<std::vector<int>> walks;
 
@@ -270,7 +265,6 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_and_times_
     const int num_walks_per_node,
     const RandomPickerType* initial_edge_bias,
     const WalkDirection walk_direction,
-    const WalkInitEdgeTimeBias walk_init_edge_time_bias,
     const int context_window_len,
     const float p_walk_success_threshold) {
 
@@ -307,7 +301,6 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_and_times_
     auto generate_walks_thread = [&]()
     {
         while (num_cw_curr < cw_count) {
-            const bool init_edge_picker_end_prioritization = get_init_edge_picker_end_prioritization(walk_init_edge_time_bias);
             const bool should_walk_forward = get_should_walk_forward(walk_direction);
 
             std::vector<NodeWithTime> walk;
@@ -318,8 +311,7 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_and_times_
                 edge_picker,
                 start_picker,
                 max_walk_len,
-                should_walk_forward,
-                init_edge_picker_end_prioritization);
+                should_walk_forward);
 
             if (walk.size() >= min_walk_len) {
                 const size_t new_cw = walk.size() - min_walk_len + 1;
@@ -377,11 +369,10 @@ std::vector<std::vector<int>> TemporalWalk::get_random_walks_with_specific_numbe
     const int num_walks_per_node,
     const RandomPickerType* initial_edge_bias,
     const WalkDirection walk_direction,
-    const WalkInitEdgeTimeBias walk_init_edge_time_bias,
     const int context_window_len,
     const float p_walk_success_threshold) {
 
-    std::vector<std::vector<NodeWithTime>> walks_with_times = get_random_walks_and_times_with_specific_number_of_contexts(max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias, walk_direction, walk_init_edge_time_bias, context_window_len, p_walk_success_threshold);
+    std::vector<std::vector<NodeWithTime>> walks_with_times = get_random_walks_and_times_with_specific_number_of_contexts(max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias, walk_direction, context_window_len, p_walk_success_threshold);
     std::vector<std::vector<int>> walks;
 
     for (auto & walk_with_time : walks_with_times)
@@ -407,42 +398,48 @@ void TemporalWalk::generate_random_walk_and_time(
     const std::shared_ptr<RandomPicker>& start_picker,
     const int max_walk_len,
     const bool should_walk_forward,
-    const bool init_edge_picker_end_prioritization,
     const Node* start_node) const {
 
-    const Node* start_node_ptr;
+    const TemporalEdge* start_edge;
 
     if (start_node == nullptr) {
-        start_node_ptr = temporal_graph->get_random_node(
+        start_edge = temporal_graph->get_random_edge(
+            start_picker.get(),
+            should_walk_forward);
+    } else {
+        start_edge = start_node->pick_temporal_edge(
             start_picker.get(),
             should_walk_forward,
-            init_edge_picker_end_prioritization);
-    } else {
-        start_node_ptr = start_node;
+            is_directed);
     }
 
-    if (start_node_ptr == nullptr) {
+    if (start_edge == nullptr) {
         return;
     }
 
-    auto current_node = start_node_ptr;
+    Node* current_node = nullptr;
     auto current_timestamp = should_walk_forward ? INT64_MIN : INT64_MAX;
+    if (is_directed) {
+        if (should_walk_forward) {
+            walk->emplace_back(NodeWithTime { start_edge->u->id, current_timestamp });
+            current_node = start_edge->i;
+        } else {
+            walk->emplace_back(NodeWithTime { start_edge->i->id, current_timestamp });
+            current_node = start_edge->u;
+        }
+    } else {
+        const Node* selected_node = start_edge->pick_random_endpoint();
+        walk->emplace_back(NodeWithTime { selected_node->id, current_timestamp });
+        current_node = start_edge->select_other_endpoint(selected_node);;
+    }
+
+    current_timestamp = start_edge->timestamp;
 
     while (walk->size() < max_walk_len && current_node != nullptr) {
-        RandomPicker* picker;
-
-        if (start_node != nullptr && walk->empty()) {
-            // If start node is pre-defined and isn't already picked using start_picker, then use start_picker.
-            picker = start_picker.get();
-        } else {
-            // If start node is already picked using start_picker, then use edge_picker.
-            picker = edge_picker.get();
-        }
-
         walk->emplace_back(NodeWithTime {current_node->id, current_timestamp});
 
         const auto picked_edge = current_node->pick_temporal_edge(
-            picker,
+            edge_picker.get(),
             should_walk_forward,
             is_directed,
             current_timestamp);

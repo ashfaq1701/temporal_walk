@@ -25,7 +25,6 @@ int main() {
         10,
         &uniform_picker_type,
         WalkDirection::Forward_In_Time,
-        WalkInitEdgeTimeBias::Bias_Earliest_Time,
         10);
     std::cout << "Walks forward (with specific number of contexts): " << walks_forward_with_specific_number_of_contexts.size() << std::endl;
 
@@ -36,7 +35,6 @@ int main() {
         10,
         nullptr,
         WalkDirection::Backward_In_Time,
-        WalkInitEdgeTimeBias::Bias_Latest_Time,
         10);
     std::cout << "Walks backward (with specific number of contexts): " << walks_backward_with_specific_number_of_contexts.size() << std::endl;
 
@@ -51,8 +49,7 @@ int main() {
         &exponential_picker_type,
         10,
         &uniform_picker_type,
-        WalkDirection::Forward_In_Time,
-        WalkInitEdgeTimeBias::Bias_Earliest_Time);
+        WalkDirection::Forward_In_Time);
     std::cout << "Walks forward (for all nodes): " << walks_forward_for_all_nodes.size() << std::endl;
 
     const auto walks_backward_for_all_nodes = temporal_walk.get_random_walks_and_times_for_all_nodes(
@@ -60,8 +57,7 @@ int main() {
         &exponential_picker_type,
         10,
         nullptr,
-        WalkDirection::Backward_In_Time,
-        WalkInitEdgeTimeBias::Bias_Latest_Time);
+        WalkDirection::Backward_In_Time);
     std::cout << "Walks backward (for all nodes): " << walks_backward_for_all_nodes.size() << std::endl;
 
     end = std::chrono::high_resolution_clock::now();

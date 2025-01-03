@@ -107,8 +107,7 @@ std::vector<std::vector<int>> get_random_walks_for_all_nodes(
         const RandomPickerType* walk_bias,
         int num_walks_per_node,
         const RandomPickerType* initial_edge_bias=nullptr,
-        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
-        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time);
+        WalkDirection walk_direction=WalkDirection::Forward_In_Time);
 ```
 
 Generates temporal random walks for all nodes in the graph similar to get_random_walks_and_times_for_all_nodes but returns only the node IDs without timestamps.
@@ -120,7 +119,6 @@ Parameters:
 * num_walks_per_node: Number of walks per node.
 * initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, or Exponential). If nullptr, uses walk_bias
 * walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
-* walk_init_edge_time_bias: Bias for initial edge selection (Bias_Earliest_Time or Bias_Latest_Time)
 
 Returns:
 
@@ -134,8 +132,7 @@ std::vector<std::vector<NodeWithTime>> get_random_walks_and_times_for_all_nodes(
         const RandomPickerType* walk_bias,
         int num_walks_per_node,
         const RandomPickerType* initial_edge_bias=nullptr,
-        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
-        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time);
+        WalkDirection walk_direction=WalkDirection::Forward_In_Time);
 ```
 
 Generates temporal random walks for all nodes in the graph where each step contains both node ID and timestamp. Each walk respects temporal ordering based on the specified direction and biases. In this function the number of contexts remain fixed. The number of walks can vary based on their actual lengths after sampling.
@@ -147,7 +144,6 @@ Parameters:
 * num_walks_per_node: Number of walks per node.
 * initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, or Exponential). If nullptr, uses walk_bias
 * walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
-* walk_init_edge_time_bias: Bias for initial edge selection (Bias_Earliest_Time or Bias_Latest_Time)
 
 Returns:
 
@@ -161,8 +157,7 @@ std::vector<std::vector<int>> get_random_walks(
         const RandomPickerType* walk_bias,
         int num_walks_per_node,
         const RandomPickerType* initial_edge_bias=nullptr,
-        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
-        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time);
+        WalkDirection walk_direction=WalkDirection::Forward_In_Time);
 ```
 
 Generates temporal random walks similar to get_random_walks_and_times but returns only the node IDs without timestamps.
@@ -174,7 +169,6 @@ Parameters:
 * num_walks_per_node: Number of walks per node.
 * initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, or Exponential). If nullptr, uses walk_bias
 * walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
-* walk_init_edge_time_bias: Bias for initial edge selection (Bias_Earliest_Time or Bias_Latest_Time)
 
 Returns:
 
@@ -188,8 +182,7 @@ std::vector<std::vector<NodeWithTime>> get_random_walks_and_times(
         const RandomPickerType* walk_bias,
         int num_walks_per_node,
         const RandomPickerType* initial_edge_bias=nullptr,
-        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
-        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time);
+        WalkDirection walk_direction=WalkDirection::Forward_In_Time);
 ```
 
 Generates temporal random walks where each step contains both node ID and timestamp. Each walk respects temporal ordering based on the specified direction and biases. In this function the number of contexts remain fixed. The number of walks can vary based on their actual lengths after sampling.
@@ -201,7 +194,6 @@ Parameters:
 * num_walks_per_node: Number of walks per node.
 * initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, or Exponential). If nullptr, uses walk_bias
 * walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
-* walk_init_edge_time_bias: Bias for initial edge selection (Bias_Earliest_Time or Bias_Latest_Time)
 
 Returns:
 
@@ -217,7 +209,6 @@ std::vector<std::vector<int>> get_random_walks_with_specific_number_of_contexts(
         int num_walks_per_node=-1,
         const RandomPickerType* initial_edge_bias=nullptr,
         WalkDirection walk_direction=WalkDirection::Forward_In_Time,
-        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time,
         int context_window_len=-1,
         float p_walk_success_threshold=0.01);
 ```
@@ -232,7 +223,6 @@ Parameters:
 * num_walks_per_node: Number of walks per node. Used only if num_cw is -1
 * initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, or Exponential). If nullptr, uses walk_bias
 * walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
-* walk_init_edge_time_bias: Bias for initial edge selection (Bias_Earliest_Time or Bias_Latest_Time)
 * context_window_len: Minimum length of walks. Default is 2 if -1 provided
 * p_walk_success_threshold: Minimum required success rate for walk generation (default 0.01)
 
@@ -250,7 +240,6 @@ std::vector<std::vector<NodeWithTime>> get_random_walks_and_times_with_specific_
         int num_walks_per_node=-1,
         const RandomPickerType* initial_edge_bias=nullptr,
         WalkDirection walk_direction=WalkDirection::Forward_In_Time,
-        WalkInitEdgeTimeBias walk_init_edge_time_bias=WalkInitEdgeTimeBias::Bias_Earliest_Time,
         int context_window_len=-1,
         float p_walk_success_threshold=0.01);
 ```
@@ -265,7 +254,6 @@ Parameters:
 * num_walks_per_node: Number of walks per node. Used only if num_cw is -1
 * initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, or Exponential). If nullptr, uses walk_bias
 * walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
-* walk_init_edge_time_bias: Bias for initial edge selection (Bias_Earliest_Time or Bias_Latest_Time)
 * context_window_len: Minimum length of walks. Default is 2 if -1 provided
 * p_walk_success_threshold: Minimum required success rate for walk generation (default 0.01)
 
@@ -335,8 +323,7 @@ get_random_walks_for_all_nodes(
     walk_bias: str,
     num_walks_per_node: int,
     initial_edge_bias: Optional[str] = None,
-    walk_direction: str = "Forward_In_Time",
-    walk_init_edge_time_bias: str = "Bias_Earliest_Time"
+    walk_direction: str = "Forward_In_Time"
 ) -> List[List[int]]:
 ```
 
@@ -357,11 +344,6 @@ Parameters
   * "Forward_In_Time": Walks progress from past to future
   * "Backward_In_Time": Walks progress from future to past
 
-* walk_init_edge_time_bias - Bias for initial edge selection:
-
-  * "Bias_Earliest_Time": Prioritize earlier timestamps
-  * "Bias_Latest_Time": Prioritize later timestamps
-
 Returns
 
 List of walks, where each walk is a list of node IDs representing the temporal path through the network.
@@ -374,8 +356,7 @@ get_random_walks_and_times_for_all_nodes(
     walk_bias: str,
     num_walks_per_node: int,
     initial_edge_bias: Optional[str] = None,
-    walk_direction: str = "Forward_In_Time",
-    walk_init_edge_time_bias: str = "Bias_Earliest_Time"
+    walk_direction: str = "Forward_In_Time"
 ) -> List[List[Tuple[int, int64_t]]]:
 ```
 
@@ -395,10 +376,6 @@ Parameters
   * "Forward_In_Time": Walks progress from past to future
   * "Backward_In_Time": Walks progress from future to past
 
-* walk_init_edge_time_bias - Bias for initial edge selection:
-  * "Bias_Earliest_Time": Prioritize earlier timestamps
-  * "Bias_Latest_Time": Prioritize later timestamps
-
 Returns
 
 List of walks, where each walk is a list of tuples containing (node_id, timestamp) pairs, representing the temporal path through the network with corresponding timestamps.
@@ -411,8 +388,7 @@ get_random_walks(
     walk_bias: str,
     num_walks_per_node: int,
     initial_edge_bias: Optional[str] = None,
-    walk_direction: str = "Forward_In_Time",
-    walk_init_edge_time_bias: str = "Bias_Earliest_Time"
+    walk_direction: str = "Forward_In_Time"
 ) -> List[List[int]]:
 ```
 
@@ -433,11 +409,6 @@ Parameters
   * "Forward_In_Time": Walks progress from past to future
   * "Backward_In_Time": Walks progress from future to past
 
-* walk_init_edge_time_bias - Bias for initial edge selection:
-
-  * "Bias_Earliest_Time": Prioritize earlier timestamps
-  * "Bias_Latest_Time": Prioritize later timestamps
-
 Returns
 
 List of walks, where each walk is a list of node IDs representing the temporal path through the network.
@@ -450,8 +421,7 @@ get_random_walks_and_times(
     walk_bias: str,
     num_walks_per_node: int,
     initial_edge_bias: Optional[str] = None,
-    walk_direction: str = "Forward_In_Time",
-    walk_init_edge_time_bias: str = "Bias_Earliest_Time"
+    walk_direction: str = "Forward_In_Time"
 ) -> List[List[Tuple[int, int64_t]]]:
 ```
 
@@ -471,10 +441,6 @@ Parameters
   * "Forward_In_Time": Walks progress from past to future
   * "Backward_In_Time": Walks progress from future to past
 
-* walk_init_edge_time_bias - Bias for initial edge selection:
-  * "Bias_Earliest_Time": Prioritize earlier timestamps
-  * "Bias_Latest_Time": Prioritize later timestamps
-
 Returns
 
 List of walks, where each walk is a list of tuples containing (node_id, timestamp) pairs, representing the temporal path through the network with corresponding timestamps.
@@ -489,7 +455,6 @@ get_random_walks_with_specific_number_of_contexts(
     num_walks_per_node: Optional[int] = None,
     initial_edge_bias: Optional[str] = None,
     walk_direction: str = "Forward_In_Time",
-    walk_init_edge_time_bias: str = "Bias_Earliest_Time",
     context_window_len: Optional[int] = None,
     p_walk_success_threshold: float = 0.01
 ) -> List[List[int]]:
@@ -513,11 +478,6 @@ Parameters
   * "Forward_In_Time": Walks progress from past to future
   * "Backward_In_Time": Walks progress from future to past
 
-* walk_init_edge_time_bias - Bias for initial edge selection:
-
-  * "Bias_Earliest_Time": Prioritize earlier timestamps
-  * "Bias_Latest_Time": Prioritize later timestamps
-
 * context_window_len - Minimum length of walks (default 2 if None provided)
 * p_walk_success_threshold - Minimum required success rate for walk generation (default 0.01)
 
@@ -535,7 +495,6 @@ get_random_walks_and_times_with_specific_number_of_contexts(
     num_walks_per_node: Optional[int] = None,
     initial_edge_bias: Optional[str] = None,
     walk_direction: str = "Forward_In_Time",
-    walk_init_edge_time_bias: str = "Bias_Earliest_Time",
     context_window_len: Optional[int] = None,
     p_walk_success_threshold: float = 0.01
 ) -> List[List[Tuple[int, int64_t]]]:
@@ -557,10 +516,6 @@ Parameters
 * walk_direction - Direction of temporal walks:
   * "Forward_In_Time": Walks progress from past to future
   * "Backward_In_Time": Walks progress from future to past
-
-* walk_init_edge_time_bias - Bias for initial edge selection:
-  * "Bias_Earliest_Time": Prioritize earlier timestamps
-  * "Bias_Latest_Time": Prioritize later timestamps
 
 * context_window_len - Minimum length of walks (default 2 if None provided)
 * p_walk_success_threshold - Minimum required success rate for walk generation (default 0.01)

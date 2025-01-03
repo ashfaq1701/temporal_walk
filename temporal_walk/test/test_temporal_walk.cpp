@@ -349,9 +349,19 @@ TEST_F(FilledDirectedTemporalWalkTest, WalkCountAndLensTest) {
 
 // Test to verify that the timestamps in each walk are strictly increasing in directed graphs.
 TEST_F(FilledDirectedTemporalWalkTest, WalkIncreasingTimestampTest) {
-    const auto walks = temporal_walk->get_random_walks_and_times_for_all_nodes(MAX_WALK_LEN, &linear_picker_type, 10);
+    const auto walks_forward = temporal_walk->get_random_walks_and_times_for_all_nodes(MAX_WALK_LEN, &linear_picker_type, 10);
 
-    for (const auto& walk : walks) {
+    for (const auto& walk : walks_forward) {
+        for (size_t i = 1; i < walk.size(); ++i) {
+            EXPECT_GT(walk[i].timestamp, walk[i - 1].timestamp)
+                << "Timestamps are not strictly increasing in walk: "
+                << i << " with node: " << walk[i].node
+                << ", previous node: " << walk[i - 1].node;
+        }
+    }
+
+    const auto walks_backward = temporal_walk->get_random_walks_and_times_for_all_nodes(MAX_WALK_LEN, &linear_picker_type, 10, nullptr, WalkDirection::Backward_In_Time);
+    for (const auto& walk : walks_backward) {
         for (size_t i = 1; i < walk.size(); ++i) {
             EXPECT_GT(walk[i].timestamp, walk[i - 1].timestamp)
                 << "Timestamps are not strictly increasing in walk: "
@@ -366,6 +376,16 @@ TEST_F(FilledUndirectedTemporalWalkTest, WalkIncreasingTimestampTest) {
     const auto walks = temporal_walk->get_random_walks_and_times_for_all_nodes(MAX_WALK_LEN, &linear_picker_type, 10);
 
     for (const auto& walk : walks) {
+        for (size_t i = 1; i < walk.size(); ++i) {
+            EXPECT_GT(walk[i].timestamp, walk[i - 1].timestamp)
+                << "Timestamps are not strictly increasing in walk: "
+                << i << " with node: " << walk[i].node
+                << ", previous node: " << walk[i - 1].node;
+        }
+    }
+
+    const auto walks_backward = temporal_walk->get_random_walks_and_times_for_all_nodes(MAX_WALK_LEN, &linear_picker_type, 10, nullptr, WalkDirection::Backward_In_Time);
+    for (const auto& walk : walks_backward) {
         for (size_t i = 1; i < walk.size(); ++i) {
             EXPECT_GT(walk[i].timestamp, walk[i - 1].timestamp)
                 << "Timestamps are not strictly increasing in walk: "

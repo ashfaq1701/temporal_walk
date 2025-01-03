@@ -62,7 +62,12 @@ size_t Node::count_timestamps_greater_than_given(const int64_t given_timestamp, 
     return count_elements_greater_than(list_to_use, given_timestamp, TimestampGroupedEdgesComparator());
 }
 
-TemporalEdge* Node::pick_temporal_edge(RandomPicker* random_picker, const bool should_walk_forward, const bool is_directed, const int64_t given_timestamp) const {
+TemporalEdge* Node::pick_temporal_edge(
+    RandomPicker* random_picker,
+    const bool should_walk_forward,
+    const bool is_directed,
+    const int64_t given_timestamp) const {
+
     std::vector<std::shared_ptr<TimestampGroupedEdges>> list_to_use;
     if (is_directed) {
         list_to_use = should_walk_forward ? edges_as_um : edges_as_dm;

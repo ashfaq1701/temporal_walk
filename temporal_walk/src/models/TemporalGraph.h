@@ -22,10 +22,11 @@ public:
     void add_node(int id);
     Node* get_node(int id);
     Node* get_or_create_node(int id);
-    Node* get_random_node(
+
+    TemporalEdge* get_random_edge(
         RandomPicker* random_picker,
-        bool should_walk_forward,
-        bool init_edge_picker_end_prioritization);
+        bool should_walk_forward);
+
     void add_edge(int id1, int id2, int64_t timestamp);
     [[nodiscard]] std::vector<TemporalEdge*> get_edges() const;
     void sort_edges();

@@ -31,8 +31,7 @@ if __name__ == '__main__':
         walk_bias="Exponential",
         num_walks_per_node=10,
         initial_edge_bias="Linear",
-        walk_direction="Forward_In_Time",
-        walk_init_edge_time_bias="Bias_Earliest_Time"
+        walk_direction="Forward_In_Time"
     )
 
     print(f"Number of walks {len(walks)}")
