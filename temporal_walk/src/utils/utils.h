@@ -104,4 +104,11 @@ inline std::vector<int> divide_number(int n, int i) {
     return parts;
 }
 
+template <typename T>
+void shuffle_vector(std::vector<T>& vec) {
+    std::random_device rd;
+    std::mt19937 rng(rd());
+    std::shuffle(vec.begin(), vec.end(), rng);
+}
+
 #endif //UTILS_H

@@ -66,7 +66,8 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_and_times_
         start_picker = edge_picker;
     }
 
-    const std::vector<int> repeated_node_ids = repeat_elements(get_node_ids(), num_walks_per_node);
+    std::vector<int> repeated_node_ids = repeat_elements(get_node_ids(), num_walks_per_node);
+    shuffle_vector(repeated_node_ids);
     std::vector<std::vector<int>> distributed_node_ids = divide_vector(repeated_node_ids, n_threads);
 
     auto generate_walks_thread = [&](const std::vector<int>& start_node_ids) -> std::vector<std::vector<NodeWithTime>> {
