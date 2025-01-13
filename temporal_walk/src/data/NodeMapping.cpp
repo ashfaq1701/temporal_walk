@@ -1,5 +1,15 @@
 #include "NodeMapping.h"
 
+void NodeMapping::clear() {
+    sparse_to_dense.clear();
+    dense_to_sparse.clear();
+}
+
+void NodeMapping::reserve(size_t size) {
+    sparse_to_dense.reserve(size);
+    dense_to_sparse.reserve(size);
+}
+
 void NodeMapping::update(const EdgeData& edges, size_t start_idx, size_t end_idx) {
     // First pass: find max node ID
     int max_node_id = 0;
@@ -35,4 +45,12 @@ int NodeMapping::to_sparse(int dense_idx) const {
 
 size_t NodeMapping::size() const {
     return dense_to_sparse.size();
+}
+
+bool NodeMapping::has_node(int sparse_id) const {
+    return sparse_id < sparse_to_dense.size() && sparse_to_dense[sparse_id] != -1;
+}
+
+std::vector<int> NodeMapping::get_all_sparse_ids() const {
+    return dense_to_sparse;
 }

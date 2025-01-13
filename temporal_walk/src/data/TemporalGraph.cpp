@@ -3,71 +3,11 @@
 #include <numeric>
 
 
-// TemporalGraph implementation
+// In implementation file (TemporalGraph.cpp):
 TemporalGraph::TemporalGraph(bool directed, int64_t window)
     : is_directed(directed), time_window(window), latest_timestamp(0) {}
 
-void TemporalGraph::sort_and_merge_edges(size_t start_idx) {
-    // Sort new edges
-    if (start_idx < edges.size()) {
-        std::vector<size_t> indices(edges.size() - start_idx);
-        std::iota(indices.begin(), indices.end(), 0);
-
-        std::sort(indices.begin(), indices.end(),
-            [this, start_idx](size_t a, size_t b) {
-                return edges.timestamps[start_idx + a] < edges.timestamps[start_idx + b];
-            });
-
-        EdgeData temp;
-        temp.reserve(edges.size() - start_idx);
-        for (size_t idx : indices) {
-            temp.push_back(
-                edges.sources[start_idx + idx],
-                edges.targets[start_idx + idx],
-                edges.timestamps[start_idx + idx]
-            );
-        }
-
-        // Copy back sorted edges
-        for (size_t i = 0; i < temp.size(); i++) {
-            edges.sources[start_idx + i] = temp.sources[i];
-            edges.targets[start_idx + i] = temp.targets[i];
-            edges.timestamps[start_idx + i] = temp.timestamps[i];
-        }
-
-        // Merge with existing edges if needed
-        if (start_idx > 0) {
-            std::inplace_merge(
-                edges.timestamps.begin(),
-                edges.timestamps.begin() + start_idx,
-                edges.timestamps.end(),
-                std::less<>()
-            );
-
-            std::vector<size_t> merge_indices(edges.size());
-            std::iota(merge_indices.begin(), merge_indices.end(), 0);
-            std::sort(merge_indices.begin(), merge_indices.end(),
-                [this](size_t a, size_t b) {
-                    return edges.timestamps[a] < edges.timestamps[b];
-                });
-
-            EdgeData merged;
-            merged.reserve(edges.size());
-            for (size_t idx : merge_indices) {
-                merged.push_back(
-                    edges.sources[idx],
-                    edges.targets[idx],
-                    edges.timestamps[idx]
-                );
-            }
-            edges = std::move(merged);
-        }
-    }
-}
-
-void TemporalGraph::add_multiple_edges(
-    const std::vector<std::tuple<int, int, int64_t>>& new_edges) {
-
+void TemporalGraph::add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& new_edges) {
     if (new_edges.empty()) return;
 
     size_t start_idx = edges.size();
@@ -83,19 +23,72 @@ void TemporalGraph::add_multiple_edges(
         latest_timestamp = std::max(latest_timestamp, ts);
     }
 
-    // Sort and merge edges
+    // Sort and merge new edges
     sort_and_merge_edges(start_idx);
 
-    // Update node mappings for new nodes
+    // Update node mappings
     node_mapping.update(edges, start_idx, edges.size());
 
-    // Remove old edges if time window is set
+    // Handle time window
     if (time_window > 0) {
         delete_old_edges();
     }
 
-    // Rebuild node edge indices
+    // Rebuild edge indices
     node_index.rebuild(edges, node_mapping, is_directed);
+}
+
+void TemporalGraph::sort_and_merge_edges(size_t start_idx) {
+    if (start_idx >= edges.size()) return;
+
+    // Sort new edges first
+    std::vector<size_t> indices(edges.size() - start_idx);
+    std::iota(indices.begin(), indices.end(), 0);
+
+    std::sort(indices.begin(), indices.end(),
+        [this, start_idx](size_t a, size_t b) {
+            return edges.timestamps[start_idx + a] < edges.timestamps[start_idx + b];
+        });
+
+    // Apply permutation
+    EdgeData temp;
+    temp.reserve(edges.size() - start_idx);
+    for (size_t idx : indices) {
+        temp.push_back(
+            edges.sources[start_idx + idx],
+            edges.targets[start_idx + idx],
+            edges.timestamps[start_idx + idx]
+        );
+    }
+
+    // Copy back sorted edges
+    for (size_t i = 0; i < temp.size(); i++) {
+        edges.sources[start_idx + i] = temp.sources[i];
+        edges.targets[start_idx + i] = temp.targets[i];
+        edges.timestamps[start_idx + i] = temp.timestamps[i];
+    }
+
+    // If needed, merge with existing edges
+    if (start_idx > 0) {
+        std::vector<size_t> merge_indices(edges.size());
+        std::iota(merge_indices.begin(), merge_indices.end(), 0);
+
+        std::sort(merge_indices.begin(), merge_indices.end(),
+            [this](size_t a, size_t b) {
+                return edges.timestamps[a] < edges.timestamps[b];
+            });
+
+        EdgeData merged;
+        merged.reserve(edges.size());
+        for (size_t idx : merge_indices) {
+            merged.push_back(
+                edges.sources[idx],
+                edges.targets[idx],
+                edges.timestamps[idx]
+            );
+        }
+        edges = std::move(merged);
+    }
 }
 
 void TemporalGraph::delete_old_edges() {
@@ -117,164 +110,224 @@ void TemporalGraph::delete_old_edges() {
     edges.resize(remaining);
 }
 
-size_t TemporalGraph::count_edges_less_than(int64_t timestamp) const {
-    return std::lower_bound(edges.timestamps.begin(), edges.timestamps.end(), timestamp)
-           - edges.timestamps.begin();
-}
+// Counting methods
+size_t TemporalGraph::count_timestamps_less_than(int64_t timestamp) const {
+    if (edges.empty()) return 0;
 
-size_t TemporalGraph::count_edges_greater_than(int64_t timestamp) const {
-    return edges.timestamps.end() -
-           std::upper_bound(edges.timestamps.begin(), edges.timestamps.end(), timestamp);
-}
+    auto it = std::lower_bound(edges.timestamps.begin(), edges.timestamps.end(), timestamp);
+    if (it == edges.timestamps.begin()) return 0;
+    --it;
 
-size_t TemporalGraph::count_node_edges_less_than(int node_id, int64_t timestamp, bool forward) const {
-    int dense_idx = node_mapping.to_dense(node_id);
-    if (dense_idx < 0) return 0;
+    size_t count = 1;  // First timestamp group
+    int64_t prev_ts = edges.timestamps[0];
 
-    auto [start_offset, end_offset] = node_index.get_edge_range(dense_idx, forward, is_directed);
-    const auto& indices = forward ? node_index.outbound_indices : node_index.inbound_indices;
-
-    return std::lower_bound(
-        indices.begin() + start_offset,
-        indices.begin() + end_offset,
-        timestamp,
-        [this](size_t idx, int64_t ts) {
-            return edges.timestamps[idx] < ts;
+    for (auto curr = edges.timestamps.begin() + 1; curr <= it; ++curr) {
+        if (*curr != prev_ts) {
+            count++;
+            prev_ts = *curr;
         }
-    ) - (indices.begin() + start_offset);
+    }
+    return count;
 }
 
-size_t TemporalGraph::count_node_edges_greater_than(int node_id, int64_t timestamp, bool forward) const {
+size_t TemporalGraph::count_timestamps_greater_than(int64_t timestamp) const {
+    if (edges.empty()) return 0;
+
+    auto it = std::upper_bound(edges.timestamps.begin(), edges.timestamps.end(), timestamp);
+    if (it == edges.timestamps.end()) return 0;
+
+    size_t count = 1;  // First timestamp group after timestamp
+    int64_t prev_ts = *it;
+
+    for (auto curr = it + 1; curr != edges.timestamps.end(); ++curr) {
+        if (*curr != prev_ts) {
+            count++;
+            prev_ts = *curr;
+        }
+    }
+    return count;
+}
+
+size_t TemporalGraph::count_node_timestamps_less_than(int node_id, int64_t timestamp) const {
+    // Used for backward walks
     int dense_idx = node_mapping.to_dense(node_id);
     if (dense_idx < 0) return 0;
 
-    auto [start_offset, end_offset] = node_index.get_edge_range(dense_idx, forward, is_directed);
-    const auto& indices = forward ? node_index.outbound_indices : node_index.inbound_indices;
+    const auto& groups = is_directed ?
+        node_index.inbound_timestamp_groups[dense_idx] :
+        node_index.outbound_timestamp_groups[dense_idx];
 
-    return (indices.begin() + end_offset) -
-           std::upper_bound(
-               indices.begin() + start_offset,
-               indices.begin() + end_offset,
-               timestamp,
-               [this](int64_t ts, size_t idx) {
-                   return ts < edges.timestamps[idx];
-               }
-           );
+    if (groups.empty()) return 0;
+
+    auto it = std::lower_bound(groups.begin(), groups.end() - 1, timestamp,
+        [this, dense_idx](size_t group_start, int64_t ts) {
+            const auto& indices = is_directed ?
+                node_index.inbound_indices :
+                node_index.outbound_indices;
+            return edges.timestamps[indices[group_start]] < ts;
+        });
+
+    return std::distance(groups.begin(), it);
 }
 
-std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(
-   size_t index, int64_t timestamp, bool forward) const {
+size_t TemporalGraph::count_node_timestamps_greater_than(int node_id, int64_t timestamp) const {
+    // Used for forward walks
+    int dense_idx = node_mapping.to_dense(node_id);
+    if (dense_idx < 0) return 0;
 
-   if (edges.empty()) return {-1, -1, -1};
+    const auto& groups = is_directed ?
+        node_index.outbound_timestamp_groups[dense_idx] :
+        node_index.outbound_timestamp_groups[dense_idx];
 
-   if (timestamp != -1) {
-       if (forward) {
-           // Find first edge after timestamp
-           auto it = std::upper_bound(edges.timestamps.begin(), edges.timestamps.end(), timestamp);
-           size_t start_idx = it - edges.timestamps.begin();
-           size_t available_edges = edges.size() - start_idx;
+    if (groups.empty()) return 0;
 
-           if (index >= available_edges) return {-1, -1, -1};
-           return {
-               edges.sources[start_idx + index],
-               edges.targets[start_idx + index],
-               edges.timestamps[start_idx + index]
-           };
-       } else {
-           // Find edges before timestamp
-           auto it = std::lower_bound(edges.timestamps.begin(), edges.timestamps.end(), timestamp);
-           size_t available_edges = it - edges.timestamps.begin();
+    auto it = std::upper_bound(groups.begin(), groups.end() - 1, timestamp,
+        [this, dense_idx](int64_t ts, size_t group_start) {
+            const auto& indices = is_directed ?
+                node_index.outbound_indices :
+                node_index.outbound_indices;
+            return ts < edges.timestamps[indices[group_start]];
+        });
 
-           if (index >= available_edges) return {-1, -1, -1};
-           // Move backwards from cutoff point
-           return {
-               edges.sources[available_edges - index - 1],
-               edges.targets[available_edges - index - 1],
-               edges.timestamps[available_edges - index - 1]
-           };
-       }
-   } else {
-       // No timestamp constraint
-       if (index >= edges.size()) return {-1, -1, -1};
-       return {
-           edges.sources[index],
-           edges.targets[index],
-           edges.timestamps[index]
-       };
-   }
+    return std::distance(it, groups.end() - 1);
+}
+
+std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(size_t index, int64_t timestamp, bool forward) const {
+    if (edges.empty()) return {-1, -1, -1};
+
+    if (timestamp != -1) {
+        // Forward walk: select from edges after timestamp
+        // Backward walk: select from edges before timestamp
+        size_t available_groups = forward ?
+            count_timestamps_greater_than(timestamp) :
+            count_timestamps_less_than(timestamp);
+
+        if (index >= available_groups) return {-1, -1, -1};
+
+        // Find the group boundaries
+        auto it = forward ?
+            std::upper_bound(edges.timestamps.begin(), edges.timestamps.end(), timestamp) :
+            std::lower_bound(edges.timestamps.begin(), edges.timestamps.end(), timestamp);
+
+        size_t group_start = it - edges.timestamps.begin();
+        for (size_t i = 0; i < index; i++) {
+            // Skip to desired group
+            int64_t curr_ts = edges.timestamps[group_start];
+            while (group_start < edges.size() && edges.timestamps[group_start] == curr_ts) {
+                group_start++;
+            }
+        }
+
+        // Find end of selected group
+        size_t group_end = group_start;
+        int64_t group_ts = edges.timestamps[group_start];
+        while (group_end < edges.size() && edges.timestamps[group_end] == group_ts) {
+            group_end++;
+        }
+
+        // Random selection from group
+        size_t random_idx = group_start + get_random_number(group_end - group_start);
+        return {
+            edges.sources[random_idx],
+            edges.targets[random_idx],
+            edges.timestamps[random_idx]
+        };
+    } else {
+        // No timestamp constraint
+        size_t total_groups = count_timestamps_less_than(edges.timestamps.back() + 1);
+        if (index >= total_groups) return {-1, -1, -1};
+
+        size_t group_idx = forward ? index : (total_groups - 1 - index);
+
+        // Find the group
+        size_t group_start = 0;
+        for (size_t i = 0; i < group_idx; i++) {
+            int64_t curr_ts = edges.timestamps[group_start];
+            while (group_start < edges.size() && edges.timestamps[group_start] == curr_ts) {
+                group_start++;
+            }
+        }
+
+        // Find group end
+        size_t group_end = group_start;
+        int64_t group_ts = edges.timestamps[group_start];
+        while (group_end < edges.size() && edges.timestamps[group_end] == group_ts) {
+            group_end++;
+        }
+
+        // Random selection from group
+        size_t random_idx = group_start + get_random_number(group_end - group_start);
+        return {
+            edges.sources[random_idx],
+            edges.targets[random_idx],
+            edges.timestamps[random_idx]
+        };
+    }
 }
 
 std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
-   int node_id, size_t index, int64_t timestamp, bool forward) const {
+    int node_id, size_t index, int64_t timestamp, bool forward) const {
 
-   int dense_idx = node_mapping.to_dense(node_id);
-   if (dense_idx < 0) return {-1, -1, -1};
+    int dense_idx = node_mapping.to_dense(node_id);
+    if (dense_idx < 0) return {-1, -1, -1};
 
-   auto [start_offset, end_offset] = node_index.get_edge_range(dense_idx, forward, is_directed);
-   const auto& indices = forward ? node_index.outbound_indices : node_index.inbound_indices;
+    const auto& groups = forward ?
+        (is_directed ? node_index.outbound_timestamp_groups[dense_idx] :
+                      node_index.outbound_timestamp_groups[dense_idx]) :
+        (is_directed ? node_index.inbound_timestamp_groups[dense_idx] :
+                      node_index.outbound_timestamp_groups[dense_idx]);
 
-   if (timestamp != -1) {
-       if (forward) {
-           // Find first edge after timestamp
-           auto it = std::upper_bound(
-               indices.begin() + start_offset,
-               indices.begin() + end_offset,
-               timestamp,
-               [this](int64_t ts, size_t idx) {
-                   return ts < edges.timestamps[idx];
-               }
-           );
+    const auto& indices = forward ?
+        (is_directed ? node_index.outbound_indices : node_index.outbound_indices) :
+        (is_directed ? node_index.inbound_indices : node_index.outbound_indices);
 
-           size_t available_edges = end_offset - (it - indices.begin());
-           if (available_edges == 0 || index >= available_edges) return {-1, -1, -1};
+    if (groups.empty()) return {-1, -1, -1};
 
-           size_t edge_idx = *(it + index);
-           return {
-               edges.sources[edge_idx],
-               edges.targets[edge_idx],
-               edges.timestamps[edge_idx]
-           };
-       } else {
-           // Find first edge at or after timestamp
-           auto it = std::lower_bound(
-               indices.begin() + start_offset,
-               indices.begin() + end_offset,
-               timestamp,
-               [this](size_t idx, int64_t ts) {
-                   return edges.timestamps[idx] < ts;
-               }
-           );
+    if (timestamp != -1) {
+        size_t available_groups = forward ?
+            count_node_timestamps_greater_than(node_id, timestamp) :
+            count_node_timestamps_less_than(node_id, timestamp);
 
-           size_t available_edges = (it - indices.begin()) - start_offset;
-           if (index >= available_edges) return {-1, -1, -1};
+        if (index >= available_groups) return {-1, -1, -1};
 
-           // Move backwards from cutoff point
-           size_t edge_idx = *(it - index - 1);
-           return {
-               edges.sources[edge_idx],
-               edges.targets[edge_idx],
-               edges.timestamps[edge_idx]
-           };
-       }
-   } else {
-       // No timestamp constraint
-       if (index >= (end_offset - start_offset)) return {-1, -1, -1};
+        // Find group boundaries
+        size_t group_idx;
+        if (forward) {
+            group_idx = std::upper_bound(groups.begin(), groups.end() - 1, timestamp,
+                [this, &indices](int64_t ts, size_t group_start) {
+                    return ts < edges.timestamps[indices[group_start]];
+                }) - groups.begin() + index;
+        } else {
+            group_idx = std::lower_bound(groups.begin(), groups.end() - 1, timestamp,
+                [this, &indices](size_t group_start, int64_t ts) {
+                    return edges.timestamps[indices[group_start]] < ts;
+                }) - groups.begin() - index;
+        }
 
-       if (forward) {
-           size_t edge_idx = indices[start_offset + index];
-           return {
-               edges.sources[edge_idx],
-               edges.targets[edge_idx],
-               edges.timestamps[edge_idx]
-           };
-       } else {
-           // For backward walks without timestamp, still walk backwards
-           size_t edge_idx = indices[end_offset - index - 1];
-           return {
-               edges.sources[edge_idx],
-               edges.targets[edge_idx],
-               edges.timestamps[edge_idx]
-           };
-       }
-   }
+        // Random selection from group
+        size_t group_start = groups[group_idx];
+        size_t group_end = groups[group_idx + 1];
+        size_t random_idx = indices[group_start + get_random_number(group_end - group_start)];
+
+        return {
+            edges.sources[random_idx],
+            edges.targets[random_idx],
+            edges.timestamps[random_idx]
+        };
+    } else {
+        if (index >= groups.size() - 1) return {-1, -1, -1};
+
+        size_t group_idx = forward ? index : (groups.size() - 2 - index);
+
+        // Random selection from group
+        size_t group_start = groups[group_idx];
+        size_t group_end = groups[group_idx + 1];
+        size_t random_idx = indices[group_start + get_random_number(group_end - group_start)];
+
+        return {
+            edges.sources[random_idx],
+            edges.targets[random_idx],
+            edges.timestamps[random_idx]
+        };
+    }
 }
