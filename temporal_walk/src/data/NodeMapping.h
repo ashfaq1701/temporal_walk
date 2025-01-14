@@ -15,6 +15,7 @@ struct NodeMapping {
    [[nodiscard]] int to_dense(int sparse_id) const;
    [[nodiscard]] int to_sparse(int dense_idx) const;
    [[nodiscard]] size_t size() const;
+   [[nodiscard]] size_t active_size() const;
 
    // Helper methods
    [[nodiscard]] std::vector<int> get_active_node_ids() const;

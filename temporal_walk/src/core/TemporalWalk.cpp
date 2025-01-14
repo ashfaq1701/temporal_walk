@@ -17,7 +17,7 @@ TemporalWalk::TemporalWalk(
     is_directed(is_directed), max_time_capacity(max_time_capacity),
     n_threads(static_cast<int>(n_threads)), thread_pool(n_threads)
 {
-    temporal_graph = std::make_unique<TemporalGraph>(is_directed);
+    temporal_graph = std::make_unique<TemporalGraph>(is_directed, max_time_capacity);
 }
 
 bool get_should_walk_forward(WalkDirection walk_direction) {

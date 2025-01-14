@@ -3,11 +3,13 @@
 void NodeMapping::clear() {
     sparse_to_dense.clear();
     dense_to_sparse.clear();
+    is_deleted.clear();
 }
 
 void NodeMapping::reserve(size_t size) {
     sparse_to_dense.reserve(size);
     dense_to_sparse.reserve(size);
+    is_deleted.reserve(size);
 }
 
 void NodeMapping::mark_node_deleted(int sparse_id) {
@@ -26,10 +28,14 @@ void NodeMapping::update(const EdgeData& edges, size_t start_idx, size_t end_idx
     // Extend sparse_to_dense if needed
     if (max_node_id >= sparse_to_dense.size()) {
         sparse_to_dense.resize(max_node_id + 1, -1);
+        is_deleted.resize(max_node_id + 1, true);
     }
 
     // Map unmapped nodes
     for (size_t i = start_idx; i < end_idx; i++) {
+        is_deleted[edges.sources[i]] = false;
+        is_deleted[edges.targets[i]] = false;
+
         if (sparse_to_dense[edges.sources[i]] == -1) {
             sparse_to_dense[edges.sources[i]] = dense_to_sparse.size();
             dense_to_sparse.push_back(edges.sources[i]);
@@ -50,6 +56,10 @@ int NodeMapping::to_sparse(int dense_idx) const {
 }
 
 size_t NodeMapping::size() const {
+    return dense_to_sparse.size();
+}
+
+size_t NodeMapping::active_size() const {
     return std::count(is_deleted.begin(), is_deleted.end(), false);
 }
 

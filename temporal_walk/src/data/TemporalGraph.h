@@ -44,9 +44,9 @@ public:
 
     // Utility methods
     [[nodiscard]] size_t get_total_edges() const { return edges.size(); }
-    [[nodiscard]] size_t get_node_count() const { return node_mapping.size(); }
+    [[nodiscard]] size_t get_node_count() const { return node_mapping.active_size(); }
     [[nodiscard]] int64_t get_latest_timestamp() const { return latest_timestamp; }
-    [[nodiscard]] std::vector<int> get_node_ids();
+    [[nodiscard]] std::vector<int> get_node_ids() const;
     [[nodiscard]] std::vector<std::tuple<int, int, int64_t>> get_edges();
 };
 
