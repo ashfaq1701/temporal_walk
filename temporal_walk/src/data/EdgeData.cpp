@@ -1,5 +1,7 @@
 #include "EdgeData.h"
 
+#include <iostream>
+
 void EdgeData::reserve(size_t size) {
     sources.reserve(size);
     targets.reserve(size);
@@ -90,6 +92,5 @@ size_t EdgeData::find_group_before_timestamp(int64_t timestamp) const {
     if (unique_timestamps.empty()) return 0;
 
     auto it = std::lower_bound(unique_timestamps.begin(), unique_timestamps.end(), timestamp);
-    if (it == unique_timestamps.begin()) return 0;
     return (it - unique_timestamps.begin()) - 1;
 }

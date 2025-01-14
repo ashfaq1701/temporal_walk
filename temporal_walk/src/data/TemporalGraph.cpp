@@ -144,9 +144,7 @@ void TemporalGraph::delete_old_edges() {
     // Update all data structures after edge deletion
     edges.update_timestamp_groups();
     node_mapping.update(edges, 0, edges.size());
-    std::cout << "Done" << std::endl;
     node_index.rebuild(edges, node_mapping, is_directed);
-    std::cout << "Done" << std::endl;
 }
 
 size_t TemporalGraph::count_timestamps_less_than(int64_t timestamp) const {
@@ -285,7 +283,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(std::function<size_t(in
 }
 
 std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
-   int node_id, std::function<size_t(int, int, bool)> index_selector, int64_t timestamp, bool forward) const {
+   int node_id, const std::function<size_t(int, int, bool)>& index_selector, int64_t timestamp, bool forward) const {
 
    int dense_idx = node_mapping.to_dense(node_id);
    if (dense_idx < 0) return {-1, -1, -1};
@@ -327,10 +325,6 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
            // Get index using lambda
            // Last param says if we should prioritize the end of the sequence, which is opposite to forward
            size_t index = index_selector(0, available, false);
-           if (index >= available) return {-1, -1, -1};
-
-           group_pos = (it - group_indices.begin()) + index;
-
            if (index >= available) return {-1, -1, -1};
 
            // Select index'th group after timestamp
