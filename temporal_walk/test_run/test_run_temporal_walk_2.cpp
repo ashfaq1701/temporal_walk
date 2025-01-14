@@ -64,5 +64,10 @@ int main() {
     duration = end - start;
     std::cout << "Runtime (for all nodes): " << duration.count() << " seconds" << std::endl;
 
+    std::vector<std::vector<NodeWithTime>> first_100_walks_forward;
+    first_100_walks_forward.assign(walks_forward_for_all_nodes.begin(), walks_forward_for_all_nodes.begin() + 100);
+
+    print_temporal_walks_with_times(first_100_walks_forward);
+
     return 0;
 }

@@ -40,9 +40,10 @@ void EdgeData::push_back(int src, int tgt, int64_t ts) {
 
 std::vector<std::tuple<int, int, int64_t>> EdgeData::get_edges() {
     std::vector<std::tuple<int, int, int64_t>> edges;
+    edges.reserve(sources.size());
 
     for (int i = 0; i < sources.size(); i++) {
-        edges.push_back(std::make_tuple(sources[i], targets[i], timestamps[i]));
+        edges.emplace_back(sources[i], targets[i], timestamps[i]);
     }
 
     return edges;
