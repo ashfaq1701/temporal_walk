@@ -8,7 +8,6 @@
 #include "NodeEdgeIndex.h"
 #include "../utils/utils.h"
 
-// In header file (TemporalGraph.h):
 class TemporalGraph
 {
 private:

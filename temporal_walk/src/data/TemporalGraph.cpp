@@ -3,7 +3,6 @@
 #include <numeric>
 
 
-// In implementation file (TemporalGraph.cpp):
 TemporalGraph::TemporalGraph(bool directed, int64_t window)
     : is_directed(directed), time_window(window), latest_timestamp(0) {}
 

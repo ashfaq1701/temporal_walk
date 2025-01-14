@@ -6,7 +6,6 @@
 #include <tuple>
 #include "EdgeData.h"
 
-// In header file:
 struct NodeMapping {
    std::vector<int> sparse_to_dense;    // Maps sparse ID to dense index
    std::vector<int> dense_to_sparse;    // Maps dense index back to sparse ID
