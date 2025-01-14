@@ -111,4 +111,14 @@ void shuffle_vector(std::vector<T>& vec) {
     std::shuffle(vec.begin(), vec.end(), rng);
 }
 
+inline int pick_random_number(const int a, const int b) {
+    return get_random_boolean() ? a : b;
+}
+
+inline int pick_other_number(const std::tuple<int, int>& number, int picked_number) {
+    const int first = std::get<0>(number);
+    const int second = std::get<1>(number);
+    return (picked_number == first) ? second : first;
+}
+
 #endif //UTILS_H

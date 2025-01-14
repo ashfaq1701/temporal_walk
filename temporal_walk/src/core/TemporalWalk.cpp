@@ -399,62 +399,76 @@ void TemporalWalk::generate_random_walk_and_time(
     const bool should_walk_forward,
     const int start_node_id) const {
 
-    const TemporalEdge* start_edge;
-
-    if (start_node == nullptr) {
-        start_edge = temporal_graph->get_random_edge(
-            start_picker.get(),
+    std::tuple<int, int, int64_t> start_edge;
+    if (start_node_id == -1) {
+        start_edge = temporal_graph->get_edge_at(
+            [&start_picker](int start, int end, bool prioritize_end)
+            {
+                return start_picker->pick_random(start, end, prioritize_end);
+            },
+            -1,
             should_walk_forward);
     } else {
-        start_edge = start_node->pick_temporal_edge(
-            start_picker.get(),
-            should_walk_forward,
-            is_directed);
+        start_edge = temporal_graph->get_node_edge_at(
+            start_node_id,
+            [&start_picker](int start, int end, bool prioritize_end)
+            {
+                return start_picker->pick_random(start, end, prioritize_end);
+            },
+            -1,
+            should_walk_forward
+        );
     }
 
-    if (start_edge == nullptr) {
+    if (std::get<2>(start_edge) == -1) {
         return;
     }
 
-    Node* current_node = nullptr;
+    int current_node = -1;
     auto current_timestamp = should_walk_forward ? INT64_MIN : INT64_MAX;
+    auto [start_src, start_dst, start_ts] = start_edge;
+
     if (is_directed) {
         if (should_walk_forward) {
-            walk->emplace_back(NodeWithTime { start_edge->u->id, current_timestamp });
-            current_node = start_edge->i;
+            walk->emplace_back(NodeWithTime { start_src, current_timestamp });
+            current_node = start_dst;
         } else {
-            walk->emplace_back(NodeWithTime { start_edge->i->id, current_timestamp });
-            current_node = start_edge->u;
+            walk->emplace_back(NodeWithTime { start_dst, current_timestamp });
+            current_node = start_src;
         }
     } else {
-        const Node* selected_node = start_edge->pick_random_endpoint();
-        walk->emplace_back(NodeWithTime { selected_node->id, current_timestamp });
-        current_node = start_edge->select_other_endpoint(selected_node);;
+        const int picked_node = pick_random_number(start_src, start_dst);
+        walk->emplace_back(NodeWithTime { picked_node, current_timestamp });
+        current_node = pick_other_number({start_src, start_dst}, picked_node);
     }
 
-    current_timestamp = start_edge->timestamp;
+    current_timestamp = start_ts;
 
-    while (walk->size() < max_walk_len && current_node != nullptr) {
-        walk->emplace_back(NodeWithTime {current_node->id, current_timestamp});
+    while (walk->size() < max_walk_len && current_node != -1) {
+        walk->emplace_back(NodeWithTime {current_node, current_timestamp});
 
-        const auto picked_edge = current_node->pick_temporal_edge(
-            edge_picker.get(),
-            should_walk_forward,
-            is_directed,
-            current_timestamp);
+        auto [picked_src, picked_dst, picked_ts] = temporal_graph->get_node_edge_at(
+            current_node,
+            [&edge_picker](int start, int end, bool prioritize_end)
+            {
+                return edge_picker->pick_random(start, end, prioritize_end);
+            },
+            current_timestamp,
+            is_directed
+        );
 
-        if (picked_edge == nullptr) {
-            current_node = nullptr;
+        if (picked_ts == -1) {
+            current_node = -1;
             continue;
         }
 
         if (is_directed) {
-            current_node = should_walk_forward ? picked_edge->i : picked_edge->u;
+            current_node = should_walk_forward ? picked_src : picked_dst;
         } else {
-            current_node = picked_edge->select_other_endpoint(current_node);
+            current_node = pick_other_number({picked_src, picked_dst}, current_node);
         }
 
-        current_timestamp = picked_edge->timestamp;
+        current_timestamp = picked_ts;
     }
 
     if (!should_walk_forward) {
@@ -462,7 +476,7 @@ void TemporalWalk::generate_random_walk_and_time(
     }
 }
 
-void TemporalWalk::add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& edge_infos) {
+void TemporalWalk::add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& edge_infos) const {
     temporal_graph->add_multiple_edges(edge_infos);
 }
 

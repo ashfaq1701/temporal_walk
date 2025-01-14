@@ -449,7 +449,7 @@ PYBIND11_MODULE(_temporal_walk, m)
                      const auto attrs = edge_tuple[2].cast<py::dict>();
                      const int64_t timestamp = py::cast<int64_t>(attrs["timestamp"]);
 
-                     edge_infos.emplace_back({source, target, timestamp});
+                     edge_infos.emplace_back(source, target, timestamp);
                  }
 
                  tw.add_multiple_edges(edge_infos);
@@ -469,12 +469,12 @@ PYBIND11_MODULE(_temporal_walk, m)
                  const py::object GraphClass = tw.get_is_directed() ? nx.attr("DiGraph") : nx.attr("Graph");
                  py::object nx_graph = GraphClass();
 
-                 for (const auto& edge : edges)
+                 for (const auto& [src, dest, ts] : edges)
                  {
                      py::dict kwargs;
-                     kwargs["timestamp"] = edge.t;
+                     kwargs["timestamp"] = ts;
 
-                     nx_graph.attr("add_edge")(edge.u, edge.i, **kwargs);
+                     nx_graph.attr("add_edge")(src, dest, **kwargs);
                  }
 
                  return nx_graph;

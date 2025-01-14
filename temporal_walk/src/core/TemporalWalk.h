@@ -103,7 +103,7 @@ public:
         int context_window_len=-1,
         float p_walk_success_threshold=DEFAULT_SUCCESS_THRESHOLD);
 
-    void add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& edge_infos);
+    void add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& edge_infos) const;
 
     [[nodiscard]] size_t get_node_count() const;
 

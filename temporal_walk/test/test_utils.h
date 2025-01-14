@@ -1,7 +1,6 @@
 #include <sstream>
 #include <string>
 #include <fstream>
-#include "../src/core/TemporalWalk.h"
 
 inline std::vector<std::tuple<int, int, int64_t>> read_edges_from_csv(const std::string& filename) {
     std::ifstream file(filename);

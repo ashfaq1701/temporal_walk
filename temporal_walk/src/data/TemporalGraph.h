@@ -9,14 +9,15 @@
 #include "../utils/utils.h"
 
 // In header file (TemporalGraph.h):
-class TemporalGraph {
+class TemporalGraph
+{
 private:
     bool is_directed;
-    int64_t time_window;         // Time duration to keep edges (-1 means keep all)
-    int64_t latest_timestamp;    // Track latest edge timestamp
-    EdgeData edges;              // Main edge storage
-    NodeMapping node_mapping;    // Sparse to dense node ID mapping
-    NodeEdgeIndex node_index;    // Node to edge mappings
+    int64_t time_window; // Time duration to keep edges (-1 means keep all)
+    int64_t latest_timestamp; // Track latest edge timestamp
+    EdgeData edges; // Main edge storage
+    NodeMapping node_mapping; // Sparse to dense node ID mapping
+    NodeEdgeIndex node_index; // Node to edge mappings
 
     void sort_and_merge_edges(size_t start_idx);
     void delete_old_edges();
@@ -34,8 +35,13 @@ public:
     [[nodiscard]] size_t count_node_timestamps_greater_than(int node_id, int64_t timestamp) const;
 
     // Edge selection
-    [[nodiscard]] std::tuple<int, int, int64_t> get_edge_at(size_t index, int64_t timestamp = -1, bool forward = true) const;
-    [[nodiscard]] std::tuple<int, int, int64_t> get_node_edge_at(int node_id, size_t index, int64_t timestamp = -1, bool forward = true) const;
+    [[nodiscard]] std::tuple<int, int, int64_t> get_edge_at(
+        std::function<size_t(int, int, bool)> index_selector, int64_t timestamp = -1,
+        bool forward = true) const;
+    [[nodiscard]] std::tuple<int, int, int64_t> get_node_edge_at(int node_id,
+                                                                 std::function<size_t(int, int, bool)>
+                                                                 index_selector, int64_t timestamp = -1,
+                                                                 bool forward = true) const;
 
     // Utility methods
     [[nodiscard]] size_t get_total_edges() const { return edges.size(); }
