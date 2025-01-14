@@ -10,6 +10,12 @@ void NodeMapping::reserve(size_t size) {
     dense_to_sparse.reserve(size);
 }
 
+void NodeMapping::mark_node_deleted(int sparse_id) {
+    if (sparse_id < is_deleted.size()) {
+        is_deleted[sparse_id] = true;
+    }
+}
+
 void NodeMapping::update(const EdgeData& edges, size_t start_idx, size_t end_idx) {
     // First pass: find max node ID
     int max_node_id = 0;
@@ -44,7 +50,18 @@ int NodeMapping::to_sparse(int dense_idx) const {
 }
 
 size_t NodeMapping::size() const {
-    return dense_to_sparse.size();
+    return std::count(is_deleted.begin(), is_deleted.end(), false);
+}
+
+std::vector<int> NodeMapping::get_active_node_ids() const {
+    std::vector<int> active_ids;
+    active_ids.reserve(dense_to_sparse.size());
+    for (int sparse_id : dense_to_sparse) {
+        if (!is_deleted[sparse_id]) {
+            active_ids.push_back(sparse_id);
+        }
+    }
+    return active_ids;
 }
 
 bool NodeMapping::has_node(int sparse_id) const {

@@ -117,17 +117,33 @@ void TemporalGraph::delete_old_edges() {
     size_t delete_count = it - edges.timestamps.begin();
     size_t remaining = edges.size() - delete_count;
 
+    // Track which nodes still have edges
+    std::vector<bool> has_edges(node_mapping.sparse_to_dense.size(), false);
+
     if (remaining > 0) {
         std::move(edges.sources.begin() + delete_count, edges.sources.end(), edges.sources.begin());
         std::move(edges.targets.begin() + delete_count, edges.targets.end(), edges.targets.begin());
         std::move(edges.timestamps.begin() + delete_count, edges.timestamps.end(), edges.timestamps.begin());
+
+        // Mark nodes that still have edges
+        for (size_t i = 0; i < remaining; i++) {
+            has_edges[edges.sources[i]] = true;
+            has_edges[edges.targets[i]] = true;
+        }
     }
 
     edges.resize(remaining);
 
+    // Mark nodes with no edges as deleted
+    for (size_t i = 0; i < has_edges.size(); i++) {
+        if (!has_edges[i]) {
+            node_mapping.mark_node_deleted(i);
+        }
+    }
+
     // Update all data structures after edge deletion
     edges.update_timestamp_groups();
-    node_mapping.update(edges, 0, edges.size());  // Rebuild from scratch since indices changed
+    node_mapping.update(edges, 0, edges.size());
     node_index.rebuild(edges, node_mapping, is_directed);
 }
 
@@ -384,7 +400,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
 }
 
 std::vector<int> TemporalGraph::get_node_ids() {
-    return node_mapping.get_all_sparse_ids();
+    return node_mapping.get_active_node_ids();
 }
 
 std::vector<std::tuple<int, int, int64_t>> TemporalGraph::get_edges() {
