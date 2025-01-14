@@ -3,9 +3,9 @@
 #include <fstream>
 #include "../src/core/TemporalWalk.h"
 
-inline std::vector<EdgeInfo> read_edges_from_csv(const std::string& filename) {
+inline std::vector<std::tuple<int, int, int64_t>> read_edges_from_csv(const std::string& filename) {
     std::ifstream file(filename);
-    std::vector<EdgeInfo> edges;
+    std::vector<std::tuple<int, int, int64_t>> edges;
     std::string line;
 
     std::getline(file, line);
@@ -17,9 +17,7 @@ inline std::vector<EdgeInfo> read_edges_from_csv(const std::string& filename) {
         std::getline(ss, u_str, ',');
         std::getline(ss, i_str, ',');
         std::getline(ss, t_str, ',');
-
-        EdgeInfo edge{std::stoi(u_str), std::stoi(i_str), std::stoll(t_str)};
-        edges.push_back(edge);
+        edges.emplace_back(std::stoi(u_str), std::stoi(i_str), std::stoll(t_str));
     }
 
     return edges;

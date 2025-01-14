@@ -36,6 +36,16 @@ void EdgeData::push_back(int src, int tgt, int64_t ts) {
     timestamps.push_back(ts);
 }
 
+std::vector<std::tuple<int, int, int64_t>> EdgeData::get_edges() {
+    std::vector<std::tuple<int, int, int64_t>> edges;
+
+    for (int i = 0; i < sources.size(); i++) {
+        edges.push_back(std::make_tuple(sources[i], targets[i], timestamps[i]));
+    }
+
+    return edges;
+}
+
 void EdgeData::update_timestamp_groups() {
     if (timestamps.empty()) {
         group_offsets.clear();

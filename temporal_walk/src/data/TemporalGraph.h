@@ -28,19 +28,21 @@ public:
     void add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& new_edges);
 
     // Timestamp group counting
-    size_t count_timestamps_less_than(int64_t timestamp) const;
-    size_t count_timestamps_greater_than(int64_t timestamp) const;
-    size_t count_node_timestamps_less_than(int node_id, int64_t timestamp) const;
-    size_t count_node_timestamps_greater_than(int node_id, int64_t timestamp) const;
+    [[nodiscard]] size_t count_timestamps_less_than(int64_t timestamp) const;
+    [[nodiscard]] size_t count_timestamps_greater_than(int64_t timestamp) const;
+    [[nodiscard]] size_t count_node_timestamps_less_than(int node_id, int64_t timestamp) const;
+    [[nodiscard]] size_t count_node_timestamps_greater_than(int node_id, int64_t timestamp) const;
 
     // Edge selection
-    std::tuple<int, int, int64_t> get_edge_at(size_t index, int64_t timestamp = -1, bool forward = true) const;
-    std::tuple<int, int, int64_t> get_node_edge_at(int node_id, size_t index, int64_t timestamp = -1, bool forward = true) const;
+    [[nodiscard]] std::tuple<int, int, int64_t> get_edge_at(size_t index, int64_t timestamp = -1, bool forward = true) const;
+    [[nodiscard]] std::tuple<int, int, int64_t> get_node_edge_at(int node_id, size_t index, int64_t timestamp = -1, bool forward = true) const;
 
     // Utility methods
-    size_t get_total_edges() const { return edges.size(); }
-    size_t get_node_count() const { return node_mapping.size(); }
-    int64_t get_latest_timestamp() const { return latest_timestamp; }
+    [[nodiscard]] size_t get_total_edges() const { return edges.size(); }
+    [[nodiscard]] size_t get_node_count() const { return node_mapping.size(); }
+    [[nodiscard]] int64_t get_latest_timestamp() const { return latest_timestamp; }
+    [[nodiscard]] std::vector<int> get_node_ids();
+    [[nodiscard]] std::vector<std::tuple<int, int, int64_t>> get_edges();
 };
 
 #endif //TEMPORALGRAPH_H

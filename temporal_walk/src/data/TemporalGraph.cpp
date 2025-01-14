@@ -350,3 +350,11 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
        edges.timestamps[edge_idx]
    };
 }
+
+std::vector<int> TemporalGraph::get_node_ids() {
+    return node_mapping.get_all_sparse_ids();
+}
+
+std::vector<std::tuple<int, int, int64_t>> TemporalGraph::get_edges() {
+    return edges.get_edges();
+}

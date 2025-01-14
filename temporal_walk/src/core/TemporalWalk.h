@@ -4,7 +4,7 @@
 #include<vector>
 #include "../../libs/thread-pool/ThreadPool.h"
 #include "../random/RandomPicker.h"
-#include "../models/TemporalGraph.h"
+#include "../data/TemporalGraph.h"
 
 constexpr float DEFAULT_SUCCESS_THRESHOLD = 0.01;
 
@@ -17,14 +17,6 @@ enum RandomPickerType {
 enum WalkDirection {
     Forward_In_Time,
     Backward_In_Time
-};
-
-struct EdgeInfo {
-    int u;
-    int i;
-    int64_t t;
-
-    EdgeInfo(int u, int i, int64_t t);
 };
 
 struct NodeWithTime {
@@ -51,9 +43,7 @@ class TemporalWalk {
         const std::shared_ptr<RandomPicker>& start_picker,
         int max_walk_len,
         bool should_walk_forward,
-        const Node* start_node=nullptr) const;
-
-    void add_edge(int u, int i, int64_t t);
+        int start_node_id=-1) const;
 
     static std::shared_ptr<RandomPicker> get_random_picker(const RandomPickerType* picker_type);
 
@@ -113,7 +103,7 @@ public:
         int context_window_len=-1,
         float p_walk_success_threshold=DEFAULT_SUCCESS_THRESHOLD);
 
-    void add_multiple_edges(const std::vector<EdgeInfo>& edge_infos);
+    void add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& edge_infos);
 
     [[nodiscard]] size_t get_node_count() const;
 
@@ -121,7 +111,7 @@ public:
 
     [[nodiscard]] std::vector<int> get_node_ids() const;
 
-    [[nodiscard]] std::vector<EdgeInfo> get_edges() const;
+    [[nodiscard]] std::vector<std::tuple<int, int, int64_t>> get_edges() const;
 
     [[nodiscard]] bool get_is_directed() const;
 

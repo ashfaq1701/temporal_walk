@@ -10,8 +10,6 @@
 constexpr int DEFAULT_CONTEXT_WINDOW_LEN = 2;
 constexpr int DEFAULT_NUM_WALKS_PER_THREAD = 500;
 
-EdgeInfo::EdgeInfo(const int u, const int i, const int64_t t): u(u), i(i), t(t) {}
-
 TemporalWalk::TemporalWalk(
     bool is_directed,
     int64_t max_time_capacity,
@@ -86,7 +84,7 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_and_times_
                 start_picker,
                 max_walk_len,
                 should_walk_forward,
-                temporal_graph->get_node(start_node_id));
+                start_node_id);
 
             if (!walk.empty()) {
                 walks_internal.emplace_back(std::move(walk));
@@ -399,7 +397,7 @@ void TemporalWalk::generate_random_walk_and_time(
     const std::shared_ptr<RandomPicker>& start_picker,
     const int max_walk_len,
     const bool should_walk_forward,
-    const Node* start_node) const {
+    const int start_node_id) const {
 
     const TemporalEdge* start_edge;
 
@@ -464,22 +462,8 @@ void TemporalWalk::generate_random_walk_and_time(
     }
 }
 
-void TemporalWalk::add_edge(const int u, const int i, const int64_t t) {
-    temporal_graph->add_edge(u, i, t);
-    max_edge_time = std::max(max_edge_time, t);
-}
-
-void TemporalWalk::add_multiple_edges(const std::vector<EdgeInfo>& edge_infos) {
-    for (const auto& [u, i, t] : edge_infos) {
-        add_edge(u, i, t);
-    }
-
-    temporal_graph->sort_edges();
-
-    if (max_time_capacity != -1) {
-        const int64_t min_edge_time = std::max(max_edge_time - max_time_capacity + 1, static_cast<int64_t>(0));
-        temporal_graph->delete_edges_less_than_time(min_edge_time);
-    }
+void TemporalWalk::add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& edge_infos) {
+    temporal_graph->add_multiple_edges(edge_infos);
 }
 
 size_t TemporalWalk::get_node_count() const {
@@ -495,21 +479,15 @@ long TemporalWalk::estimate_cw_count(
 }
 
 size_t TemporalWalk::get_edge_count() const {
-    return temporal_graph->get_edge_count();
+    return temporal_graph->get_total_edges();
 }
 
 std::vector<int> TemporalWalk::get_node_ids() const {
     return temporal_graph->get_node_ids();
 }
 
-std::vector<EdgeInfo> TemporalWalk::get_edges() const {
-    std::vector<EdgeInfo> edges;
-
-    for (const auto& edge : temporal_graph->get_edges()) {
-        edges.emplace_back( edge->u->id, edge->i->id, edge->timestamp );
-    }
-
-    return edges;
+std::vector<std::tuple<int, int, int64_t>> TemporalWalk::get_edges() const {
+    return temporal_graph->get_edges();
 }
 
 bool TemporalWalk::get_is_directed() const {

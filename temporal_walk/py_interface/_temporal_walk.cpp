@@ -58,17 +58,7 @@ PYBIND11_MODULE(_temporal_walk, m)
              py::arg("max_time_capacity") = py::none())
         .def("add_multiple_edges", [](TemporalWalk& tw, const std::vector<std::tuple<int, int, int64_t>>& edge_infos)
              {
-                 std::vector<EdgeInfo> edges;
-
-                 for (const auto& edge_info : edge_infos)
-                 {
-                     int u = std::get<0>(edge_info);
-                     int i = std::get<1>(edge_info);
-                     int64_t t = std::get<2>(edge_info);
-                     edges.emplace_back(EdgeInfo{u, i, t});
-                 }
-
-                 tw.add_multiple_edges(edges);
+                 tw.add_multiple_edges(edge_infos);
              },
              R"(
             Adds multiple directed edges to the temporal graph based on the provided vector of tuples.
@@ -450,7 +440,7 @@ PYBIND11_MODULE(_temporal_walk, m)
              {
                  const py::object edges = nx_graph.attr("edges")(py::arg("data") = true);
 
-                 std::vector<EdgeInfo> edge_infos;
+                 std::vector<std::tuple<int, int, int64_t>> edge_infos;
                  for (const auto& edge : edges)
                  {
                      auto edge_tuple = edge.cast<py::tuple>();
@@ -459,7 +449,7 @@ PYBIND11_MODULE(_temporal_walk, m)
                      const auto attrs = edge_tuple[2].cast<py::dict>();
                      const int64_t timestamp = py::cast<int64_t>(attrs["timestamp"]);
 
-                     edge_infos.emplace_back(EdgeInfo{source, target, timestamp});
+                     edge_infos.emplace_back({source, target, timestamp});
                  }
 
                  tw.add_multiple_edges(edge_infos);

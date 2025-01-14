@@ -94,10 +94,10 @@ Initializes a (Un)directed TemporalWalk object with the maximum time capacity of
 ### add_multiple_edges
 
 ```cpp
-void add_multiple_edges(const std::vector<EdgeInfo>& edge_infos);
+void add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& edge_infos);
 ```
 
-Adds multiple edges to the temporal graph based on the provided vector of EdgeInfo structures, where each structure contains the source node `u`, destination node `i`, and timestamp `t`.
+Adds multiple edges to the temporal graph based on the provided vector of tuple structures, where each tuple contains the source node, destination node, and timestamp.
 
 ### get_random_walks_for_all_nodes
 
