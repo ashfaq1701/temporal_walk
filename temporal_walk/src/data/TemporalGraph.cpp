@@ -192,25 +192,25 @@ size_t TemporalGraph::count_node_timestamps_greater_than(int node_id, int64_t ti
     int dense_idx = node_mapping.to_dense(node_id);
     if (dense_idx < 0) return 0;
 
-    const auto& group_offsets = node_index.outbound_timestamp_group_offsets;
-    const auto& group_indices = node_index.outbound_timestamp_group_indices;
+    const auto& timestamp_group_offsets = node_index.outbound_timestamp_group_offsets;
+    const auto& timestamp_group_indices = node_index.outbound_timestamp_group_indices;
     const auto& edge_indices = node_index.outbound_indices;
 
-    const size_t group_start = group_offsets[dense_idx];
-    const size_t group_end = group_offsets[dense_idx + 1];
+    const size_t group_start = timestamp_group_offsets[dense_idx];
+    const size_t group_end = timestamp_group_offsets[dense_idx + 1];
     if (group_start == group_end) return 0;
 
     // Binary search on group indices
     const auto it = std::upper_bound(
-        group_indices.begin() + static_cast<int>(group_start),
-        group_indices.begin() + static_cast<int>(group_end),
+        timestamp_group_indices.begin() + static_cast<int>(group_start),
+        timestamp_group_indices.begin() + static_cast<int>(group_end),
         timestamp,
         [this, &edge_indices](int64_t ts, size_t group_pos)
         {
             return ts < edges.timestamps[edge_indices[group_pos]];
         });
 
-    return std::distance(it, group_indices.begin() + static_cast<int>(group_end));
+    return std::distance(it, timestamp_group_indices.begin() + static_cast<int>(group_end));
 }
 
 std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(const std::function<size_t(int, int, bool)>& index_selector,
