@@ -56,7 +56,7 @@ protected:
 class FilledDirectedTemporalWalkTest : public ::testing::Test {
 protected:
     FilledDirectedTemporalWalkTest() {
-        sample_edges = read_edges_from_csv("../../../data/sample_data.csv");
+        sample_edges = read_edges_from_csv("../../../data/sample_edges.csv");
     }
 
     void SetUp() override {
@@ -71,7 +71,7 @@ protected:
 class FilledUndirectedTemporalWalkTest : public ::testing::Test {
 protected:
     FilledUndirectedTemporalWalkTest() {
-        sample_edges = read_edges_from_csv("../../../data/sample_data.csv");
+        sample_edges = read_edges_from_csv("../../../data/sample_edges.csv");
     }
 
     void SetUp() override {

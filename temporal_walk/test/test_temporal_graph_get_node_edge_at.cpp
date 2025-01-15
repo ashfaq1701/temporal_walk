@@ -29,7 +29,7 @@ protected:
     }
 
     // Helper to verify edge fields
-    void verify_edge(const std::tuple<int, int, int64_t>& edge,
+    static void verify_edge(const std::tuple<int, int, int64_t>& edge,
                      int expected_src, int expected_tgt, int64_t expected_ts)
     {
         EXPECT_EQ(std::get<0>(edge), expected_src);

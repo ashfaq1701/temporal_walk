@@ -389,8 +389,6 @@ std::vector<std::vector<int>> TemporalWalk::get_random_walks_with_specific_numbe
     return walks;
 }
 
-
-
 void TemporalWalk::generate_random_walk_and_time(
     std::vector<NodeWithTime>* walk,
     const std::shared_ptr<RandomPicker>& edge_picker,
@@ -454,7 +452,7 @@ void TemporalWalk::generate_random_walk_and_time(
                 return edge_picker->pick_random(start, end, prioritize_end);
             },
             current_timestamp,
-            is_directed
+            should_walk_forward
         );
 
         if (picked_ts == -1) {
