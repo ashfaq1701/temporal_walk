@@ -7,6 +7,7 @@ add_executable(
         test_node_edge_index.cpp
         test_node_mapping.cpp
         test_temporal_graph.cpp
+        test_temporal_graph_get_node_edge_at.cpp
         ${SRC_FILES}
 )
 

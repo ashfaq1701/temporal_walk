@@ -329,7 +329,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
 
            // Select index'th group after timestamp
            group_pos = (it - group_indices.begin()) + index;
-       } else {
+       } else {  // backward case
            // Find first group >= timestamp
            auto it = std::lower_bound(
                group_indices.begin() + group_start_offset,
@@ -339,17 +339,16 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
                    return edges.timestamps[edge_indices[pos]] < ts;
                });
 
-           // Count available groups before timestamp
+           // Count all available groups before timestamp
            size_t available = it - (group_indices.begin() + group_start_offset);
            if (available == 0) return {-1, -1, -1};
 
            // Get index using lambda
-           // Last param says if we should prioritize the end of the sequence, which is opposite to forward
            const size_t index = index_selector(0, available, true);
            if (index >= available) return {-1, -1, -1};
 
-           // Select index'th group before timestamp
-           group_pos = (it - group_indices.begin()) - index;
+           // Go backward by index from the last available position
+           group_pos = (it - group_indices.begin()) - index - 1;
        }
    } else {
        // No timestamp constraint - select from all groups
@@ -357,14 +356,18 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
        if (num_groups == 0) return {-1, -1, -1};
 
        // Get index using lambda
-       // Last param says if we should prioritize the end of the sequence, which is opposite to forward
        size_t index = index_selector(0, num_groups, !forward);
        if (index >= num_groups) return {-1, -1, -1};
 
        // Select group based on direction
-       group_pos = forward ?
-           group_start_offset + index :
-           group_end_offset - 1 - index;
+       if (forward) {
+           group_pos = group_start_offset + index;  // Forward walks unchanged
+       } else {
+           // For backward walks:
+           // select_first() with index=0 should get latest timestamp
+           // select_last() with index=num_groups-1 should get earliest timestamp
+           group_pos = group_end_offset - index - 1;
+       }
    }
 
    // Get edge range for selected group

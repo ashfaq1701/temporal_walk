@@ -32,9 +32,5 @@ int main() {
     std::cout << "Forward walks:" << std::endl;
     print_temporal_walks_with_times(walks_forward);
 
-    const auto walks_backward = temporal_walk.get_random_walks_and_times_for_all_nodes(20, &linear_picker_type, 10, &exponential_picker_type, WalkDirection::Backward_In_Time);
-    std::cout << "Backward walks:" << std::endl;
-    print_temporal_walks_with_times(walks_backward);
-
     return 0;
 }

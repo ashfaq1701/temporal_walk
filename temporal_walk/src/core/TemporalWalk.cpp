@@ -437,7 +437,7 @@ void TemporalWalk::generate_random_walk_and_time(
             current_node = start_src;
         }
     } else {
-        const int picked_node = pick_random_number(start_src, start_dst);
+        const int picked_node = start_node_id;
         walk->emplace_back(NodeWithTime { picked_node, current_timestamp });
         current_node = pick_other_number({start_src, start_dst}, picked_node);
     }
