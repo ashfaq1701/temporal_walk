@@ -45,12 +45,12 @@ protected:
 TEST_F(NodeEdgeIndexTest, EmptyStateTest) {
     EXPECT_TRUE(index.outbound_offsets.empty());
     EXPECT_TRUE(index.outbound_indices.empty());
-    EXPECT_TRUE(index.outbound_group_offsets.empty());
-    EXPECT_TRUE(index.outbound_group_indices.empty());
+    EXPECT_TRUE(index.outbound_timestamp_group_offsets.empty());
+    EXPECT_TRUE(index.outbound_timestamp_group_indices.empty());
     EXPECT_TRUE(index.inbound_offsets.empty());
     EXPECT_TRUE(index.inbound_indices.empty());
-    EXPECT_TRUE(index.inbound_group_offsets.empty());
-    EXPECT_TRUE(index.inbound_group_indices.empty());
+    EXPECT_TRUE(index.inbound_timestamp_group_offsets.empty());
+    EXPECT_TRUE(index.inbound_timestamp_group_indices.empty());
 }
 
 // Test edge ranges in directed graph

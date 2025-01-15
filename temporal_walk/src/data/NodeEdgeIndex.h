@@ -13,14 +13,14 @@ struct NodeEdgeIndex
    std::vector<size_t> outbound_indices; // Size: num_edges
 
    // CSR format for timestamp groups
-   std::vector<size_t> outbound_group_offsets; // Size: num_nodes + 1
-   std::vector<size_t> outbound_group_indices; // Each group's start position in outbound_indices
+   std::vector<size_t> outbound_timestamp_group_offsets; // Size: num_nodes + 1
+   std::vector<size_t> outbound_timestamp_group_indices; // Each group's start position in outbound_indices
 
    // Mirror structures for directed graphs
    std::vector<size_t> inbound_offsets;
    std::vector<size_t> inbound_indices;
-   std::vector<size_t> inbound_group_offsets;
-   std::vector<size_t> inbound_group_indices;
+   std::vector<size_t> inbound_timestamp_group_offsets;
+   std::vector<size_t> inbound_timestamp_group_indices;
 
    void clear();
    void rebuild(const EdgeData& edges, const NodeMapping& mapping, bool is_directed);

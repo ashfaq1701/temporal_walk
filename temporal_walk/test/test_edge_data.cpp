@@ -18,7 +18,7 @@ protected:
 TEST_F(EdgeDataTest, EmptyStateTest) {
     EXPECT_TRUE(edges.empty());
     EXPECT_EQ(edges.size(), 0);
-    EXPECT_TRUE(edges.group_offsets.empty());
+    EXPECT_TRUE(edges.timestamp_group_offsets.empty());
     EXPECT_TRUE(edges.unique_timestamps.empty());
 }
 
@@ -31,9 +31,9 @@ TEST_F(EdgeDataTest, SingleEdgeTest) {
 
     edges.update_timestamp_groups();
     EXPECT_EQ(edges.unique_timestamps.size(), 1);
-    EXPECT_EQ(edges.group_offsets.size(), 2);  // n+1 offsets for n groups
-    EXPECT_EQ(edges.group_offsets[0], 0);
-    EXPECT_EQ(edges.group_offsets[1], 1);
+    EXPECT_EQ(edges.timestamp_group_offsets.size(), 2);  // n+1 offsets for n groups
+    EXPECT_EQ(edges.timestamp_group_offsets[0], 0);
+    EXPECT_EQ(edges.timestamp_group_offsets[1], 1);
 }
 
 // Test multiple edges with same timestamp
@@ -44,9 +44,9 @@ TEST_F(EdgeDataTest, SameTimestampEdgesTest) {
 
     edges.update_timestamp_groups();
     EXPECT_EQ(edges.unique_timestamps.size(), 1);
-    EXPECT_EQ(edges.group_offsets.size(), 2);
-    EXPECT_EQ(edges.group_offsets[0], 0);
-    EXPECT_EQ(edges.group_offsets[1], 3);
+    EXPECT_EQ(edges.timestamp_group_offsets.size(), 2);
+    EXPECT_EQ(edges.timestamp_group_offsets[0], 0);
+    EXPECT_EQ(edges.timestamp_group_offsets[1], 3);
 }
 
 // Test edges with different timestamps
@@ -57,11 +57,11 @@ TEST_F(EdgeDataTest, DifferentTimestampEdgesTest) {
 
     edges.update_timestamp_groups();
     EXPECT_EQ(edges.unique_timestamps.size(), 3);
-    EXPECT_EQ(edges.group_offsets.size(), 4);
-    EXPECT_EQ(edges.group_offsets[0], 0);
-    EXPECT_EQ(edges.group_offsets[1], 1);
-    EXPECT_EQ(edges.group_offsets[2], 2);
-    EXPECT_EQ(edges.group_offsets[3], 3);
+    EXPECT_EQ(edges.timestamp_group_offsets.size(), 4);
+    EXPECT_EQ(edges.timestamp_group_offsets[0], 0);
+    EXPECT_EQ(edges.timestamp_group_offsets[1], 1);
+    EXPECT_EQ(edges.timestamp_group_offsets[2], 2);
+    EXPECT_EQ(edges.timestamp_group_offsets[3], 3);
 }
 
 // Test find_group functions

@@ -6,7 +6,7 @@ void EdgeData::reserve(size_t size) {
     sources.reserve(size);
     targets.reserve(size);
     timestamps.reserve(size);
-    group_offsets.reserve(size/4 + 1);  // Estimate for group count
+    timestamp_group_offsets.reserve(size/4 + 1);  // Estimate for group count
     unique_timestamps.reserve(size/4);
 }
 
@@ -14,7 +14,7 @@ void EdgeData::clear() {
     sources.clear();
     targets.clear();
     timestamps.clear();
-    group_offsets.clear();
+    timestamp_group_offsets.clear();
     unique_timestamps.clear();
 }
 
@@ -51,31 +51,31 @@ std::vector<std::tuple<int, int, int64_t>> EdgeData::get_edges() {
 
 void EdgeData::update_timestamp_groups() {
     if (timestamps.empty()) {
-        group_offsets.clear();
+        timestamp_group_offsets.clear();
         unique_timestamps.clear();
         return;
     }
 
-    group_offsets.clear();
+    timestamp_group_offsets.clear();
     unique_timestamps.clear();
 
-    group_offsets.push_back(0);
+    timestamp_group_offsets.push_back(0);
     unique_timestamps.push_back(timestamps[0]);
 
     for (size_t i = 1; i < timestamps.size(); i++) {
         if (timestamps[i] != timestamps[i-1]) {
-            group_offsets.push_back(i);
+            timestamp_group_offsets.push_back(i);
             unique_timestamps.push_back(timestamps[i]);
         }
     }
-    group_offsets.push_back(timestamps.size());
+    timestamp_group_offsets.push_back(timestamps.size());
 }
 
 std::pair<size_t, size_t> EdgeData::get_timestamp_group_range(size_t group_idx) const {
     if (group_idx >= unique_timestamps.size()) {
         return {0, 0};
     }
-    return {group_offsets[group_idx], group_offsets[group_idx + 1]};
+    return {timestamp_group_offsets[group_idx], timestamp_group_offsets[group_idx + 1]};
 }
 
 size_t EdgeData::get_timestamp_group_count() const {

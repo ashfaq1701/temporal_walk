@@ -4,14 +4,14 @@ void NodeEdgeIndex::clear() {
    // Clear edge CSR structures
    outbound_offsets.clear();
    outbound_indices.clear();
-   outbound_group_offsets.clear();
-   outbound_group_indices.clear();
+   outbound_timestamp_group_offsets.clear();
+   outbound_timestamp_group_indices.clear();
 
    // Clear inbound structures
    inbound_offsets.clear();
    inbound_indices.clear();
-   inbound_group_offsets.clear();
-   inbound_group_indices.clear();
+   inbound_timestamp_group_offsets.clear();
+   inbound_timestamp_group_indices.clear();
 }
 
 void NodeEdgeIndex::rebuild(
@@ -23,11 +23,11 @@ void NodeEdgeIndex::rebuild(
 
    // Initialize base CSR structures
    outbound_offsets.assign(num_nodes + 1, 0);
-   outbound_group_offsets.assign(num_nodes + 1, 0);
+   outbound_timestamp_group_offsets.assign(num_nodes + 1, 0);
 
    if (is_directed) {
        inbound_offsets.assign(num_nodes + 1, 0);
-       inbound_group_offsets.assign(num_nodes + 1, 0);
+       inbound_timestamp_group_offsets.assign(num_nodes + 1, 0);
    }
 
    // First pass: count edges per node
@@ -119,30 +119,30 @@ void NodeEdgeIndex::rebuild(
 
    // Calculate prefix sums for group offsets
    for (size_t i = 0; i < num_nodes; i++) {
-       outbound_group_offsets[i + 1] = outbound_group_offsets[i] + outbound_group_count[i];
+       outbound_timestamp_group_offsets[i + 1] = outbound_timestamp_group_offsets[i] + outbound_group_count[i];
        if (is_directed) {
-           inbound_group_offsets[i + 1] = inbound_group_offsets[i] + inbound_group_count[i];
+           inbound_timestamp_group_offsets[i + 1] = inbound_timestamp_group_offsets[i] + inbound_group_count[i];
        }
    }
 
    // Allocate and fill group indices
-   outbound_group_indices.resize(outbound_group_offsets.back());
+   outbound_timestamp_group_indices.resize(outbound_timestamp_group_offsets.back());
    if (is_directed) {
-       inbound_group_indices.resize(inbound_group_offsets.back());
+       inbound_timestamp_group_indices.resize(inbound_timestamp_group_offsets.back());
    }
 
    // Final pass: fill group indices
    for (size_t node = 0; node < num_nodes; node++) {
        size_t start = outbound_offsets[node];
        size_t end = outbound_offsets[node + 1];
-       size_t group_pos = outbound_group_offsets[node];
+       size_t group_pos = outbound_timestamp_group_offsets[node];
 
        if (start < end) {
-           outbound_group_indices[group_pos++] = start;
+           outbound_timestamp_group_indices[group_pos++] = start;
            for (size_t i = start + 1; i < end; i++) {
                if (edges.timestamps[outbound_indices[i]] !=
                    edges.timestamps[outbound_indices[i-1]]) {
-                   outbound_group_indices[group_pos++] = i;
+                   outbound_timestamp_group_indices[group_pos++] = i;
                }
            }
        }
@@ -150,14 +150,14 @@ void NodeEdgeIndex::rebuild(
        if (is_directed) {
            start = inbound_offsets[node];
            end = inbound_offsets[node + 1];
-           group_pos = inbound_group_offsets[node];
+           group_pos = inbound_timestamp_group_offsets[node];
 
            if (start < end) {
-               inbound_group_indices[group_pos++] = start;
+               inbound_timestamp_group_indices[group_pos++] = start;
                for (size_t i = start + 1; i < end; i++) {
                    if (edges.timestamps[inbound_indices[i]] !=
                        edges.timestamps[inbound_indices[i-1]]) {
-                       inbound_group_indices[group_pos++] = i;
+                       inbound_timestamp_group_indices[group_pos++] = i;
                    }
                }
            }
@@ -191,9 +191,9 @@ std::pair<size_t, size_t> NodeEdgeIndex::get_timestamp_group_range(
    bool is_directed) const {
 
    const auto& group_offsets = (is_directed && !forward) ?
-       inbound_group_offsets : outbound_group_offsets;
+       inbound_timestamp_group_offsets : outbound_timestamp_group_offsets;
    const auto& group_indices = (is_directed && !forward) ?
-       inbound_group_indices : outbound_group_indices;
+       inbound_timestamp_group_indices : outbound_timestamp_group_indices;
    const auto& edge_offsets = (is_directed && !forward) ?
        inbound_offsets : outbound_offsets;
 
@@ -226,7 +226,7 @@ size_t NodeEdgeIndex::get_timestamp_group_count(
    bool is_directed) const {
 
    const auto& offsets = (is_directed && !forward) ?
-       inbound_group_offsets : outbound_group_offsets;
+       inbound_timestamp_group_offsets : outbound_timestamp_group_offsets;
 
    if (dense_node_id < 0 || dense_node_id >= offsets.size() - 1) {
        return 0;

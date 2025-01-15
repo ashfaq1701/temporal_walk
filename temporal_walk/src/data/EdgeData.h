@@ -12,7 +12,7 @@ struct EdgeData {
     std::vector<int64_t> timestamps;
 
     // Timestamp grouping
-    std::vector<size_t> group_offsets;     // Start of each timestamp group
+    std::vector<size_t> timestamp_group_offsets;     // Start of each timestamp group
     std::vector<int64_t> unique_timestamps; // Corresponding unique timestamps
 
     void reserve(size_t size);
