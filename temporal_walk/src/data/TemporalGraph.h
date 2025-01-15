@@ -35,7 +35,7 @@ public:
 
     // Edge selection
     [[nodiscard]] std::tuple<int, int, int64_t> get_edge_at(
-        std::function<size_t(int, int, bool)> index_selector, int64_t timestamp = -1,
+        const std::function<size_t(int, int, bool)>& index_selector, int64_t timestamp = -1,
         bool forward = true) const;
     [[nodiscard]] std::tuple<int, int, int64_t> get_node_edge_at(int node_id,
                                                                  const std::function<size_t(int, int, bool)>&

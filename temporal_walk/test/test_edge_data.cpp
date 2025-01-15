@@ -6,7 +6,7 @@ protected:
     EdgeData edges;
 
     // Helper function to verify edge content
-    void verify_edge(size_t index, int expected_src, int expected_tgt, int64_t expected_ts) {
+    void verify_edge(size_t index, int expected_src, int expected_tgt, int64_t expected_ts) const {
         ASSERT_LT(index, edges.size());
         EXPECT_EQ(edges.sources[index], expected_src);
         EXPECT_EQ(edges.targets[index], expected_tgt);

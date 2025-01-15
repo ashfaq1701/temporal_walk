@@ -37,11 +37,11 @@ void NodeMapping::update(const EdgeData& edges, size_t start_idx, size_t end_idx
         is_deleted[edges.targets[i]] = false;
 
         if (sparse_to_dense[edges.sources[i]] == -1) {
-            sparse_to_dense[edges.sources[i]] = dense_to_sparse.size();
+            sparse_to_dense[edges.sources[i]] = static_cast<int>(dense_to_sparse.size());
             dense_to_sparse.push_back(edges.sources[i]);
         }
         if (sparse_to_dense[edges.targets[i]] == -1) {
-            sparse_to_dense[edges.targets[i]] = dense_to_sparse.size();
+            sparse_to_dense[edges.targets[i]] = static_cast<int>(dense_to_sparse.size());
             dense_to_sparse.push_back(edges.targets[i]);
         }
     }
