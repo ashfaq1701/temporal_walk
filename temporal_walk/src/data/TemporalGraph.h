@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdint>
 #include <tuple>
+#include <functional>
 #include "NodeMapping.h"
 #include "NodeEdgeIndex.h"
 #include "../utils/utils.h"

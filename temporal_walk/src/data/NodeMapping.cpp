@@ -1,4 +1,5 @@
 #include "NodeMapping.h"
+#include <algorithm>
 
 void NodeMapping::clear() {
     sparse_to_dense.clear();

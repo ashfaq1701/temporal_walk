@@ -1,5 +1,5 @@
 #include "EdgeData.h"
-
+#include <algorithm>
 #include <iostream>
 
 void EdgeData::reserve(size_t size) {
