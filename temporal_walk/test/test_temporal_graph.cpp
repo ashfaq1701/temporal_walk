@@ -38,30 +38,57 @@ TEST_F(TemporalGraphTest, BasicEdgeAdditionTest) {
     EXPECT_EQ(graph->get_node_ids().size(), 3);
 }
 
-// Test sort and merge functionality
-TEST_F(TemporalGraphTest, SortAndMergeTest) {
-    // Add edges in non-chronological order
+TEST_F(TemporalGraphTest, MaintainSortedOrderTest) {
+    // First addition
     auto edges1 = create_edges({
-        {1, 2, 300},  // Later timestamp
-        {2, 3, 100}   // Earlier timestamp
+        {10, 20, 200},  // Out of order timestamps
+        {20, 30, 100}
     });
     graph->add_multiple_edges(edges1);
 
-    auto edges = graph->get_edges();
-    EXPECT_EQ(std::get<2>(edges[0]), 100);  // Should be sorted by timestamp
-    EXPECT_EQ(std::get<2>(edges[1]), 300);
+    // Check first addition is sorted
+    auto sorted_edges = graph->get_edges();
+    EXPECT_EQ(std::get<2>(sorted_edges[0]), 100);
+    EXPECT_EQ(std::get<2>(sorted_edges[1]), 200);
 
-    // Add more edges that need to be merged
+    // Second addition with timestamps that need to be merged
     auto edges2 = create_edges({
-        {3, 4, 200}  // Should be inserted between existing edges
+        {30, 40, 150},
+        {40, 50, 250}
     });
     graph->add_multiple_edges(edges2);
 
-    edges = graph->get_edges();
-    EXPECT_EQ(edges.size(), 3);
-    EXPECT_EQ(std::get<2>(edges[0]), 100);
-    EXPECT_EQ(std::get<2>(edges[1]), 200);
-    EXPECT_EQ(std::get<2>(edges[2]), 300);
+    // Verify all timestamps are still sorted
+    sorted_edges = graph->get_edges();
+    EXPECT_EQ(sorted_edges.size(), 4);
+    EXPECT_EQ(std::get<2>(sorted_edges[0]), 100);
+    EXPECT_EQ(std::get<2>(sorted_edges[1]), 150);
+    EXPECT_EQ(std::get<2>(sorted_edges[2]), 200);
+    EXPECT_EQ(std::get<2>(sorted_edges[3]), 250);
+
+    // Third addition with duplicate timestamps
+    auto edges3 = create_edges({
+        {50, 60, 150},
+        {60, 70, 200},
+        {70, 80, 175}
+    });
+    graph->add_multiple_edges(edges3);
+
+    // Verify order is maintained with duplicates
+    sorted_edges = graph->get_edges();
+    EXPECT_EQ(sorted_edges.size(), 7);
+    EXPECT_EQ(std::get<2>(sorted_edges[0]), 100);
+    EXPECT_EQ(std::get<2>(sorted_edges[1]), 150);
+    EXPECT_EQ(std::get<2>(sorted_edges[2]), 150);
+    EXPECT_EQ(std::get<2>(sorted_edges[3]), 175);
+    EXPECT_EQ(std::get<2>(sorted_edges[4]), 200);
+    EXPECT_EQ(std::get<2>(sorted_edges[5]), 200);
+    EXPECT_EQ(std::get<2>(sorted_edges[6]), 250);
+
+    // Verify node timestamp groups are correct
+    // Node 30 has edges at 100 (inbound) and 150 (outbound)
+    EXPECT_EQ(graph->count_node_timestamps_greater_than(30, 50), 1);   // Should see 150
+    EXPECT_EQ(graph->count_node_timestamps_less_than(30, 200), 1);     // Should see 100
 }
 
 // Test time window functionality
