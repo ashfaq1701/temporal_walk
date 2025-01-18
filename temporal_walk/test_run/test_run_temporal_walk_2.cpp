@@ -5,7 +5,7 @@
 #include "../test/test_utils.h"
 
 int main() {
-    const auto edge_infos = read_edges_from_csv("../../data/sample_edges.csv");
+    const auto edge_infos = read_edges_from_csv("../../data/sample_data.csv");
     std::cout << edge_infos.size() << std::endl;
 
     TemporalWalk temporal_walk(false);

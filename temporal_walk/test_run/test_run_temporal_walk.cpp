@@ -22,7 +22,7 @@ int main() {
         {5, 4, 32}
     };
 
-    TemporalWalk temporal_walk(false);
+    TemporalWalk temporal_walk(true);
     temporal_walk.add_multiple_edges(edges);
 
     constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;

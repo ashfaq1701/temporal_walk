@@ -461,7 +461,7 @@ void TemporalWalk::generate_random_walk_and_time(
         }
 
         if (is_directed) {
-            current_node = should_walk_forward ? picked_src : picked_dst;
+            current_node = should_walk_forward ? picked_dst : picked_src;
         } else {
             current_node = pick_other_number({picked_src, picked_dst}, current_node);
         }

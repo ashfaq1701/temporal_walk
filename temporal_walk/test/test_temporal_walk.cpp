@@ -56,7 +56,7 @@ protected:
 class FilledDirectedTemporalWalkTest : public ::testing::Test {
 protected:
     FilledDirectedTemporalWalkTest() {
-        sample_edges = read_edges_from_csv("../../../data/sample_edges.csv");
+        sample_edges = read_edges_from_csv("../../../data/sample_data.csv");
     }
 
     void SetUp() override {
@@ -71,7 +71,7 @@ protected:
 class FilledUndirectedTemporalWalkTest : public ::testing::Test {
 protected:
     FilledUndirectedTemporalWalkTest() {
-        sample_edges = read_edges_from_csv("../../../data/sample_edges.csv");
+        sample_edges = read_edges_from_csv("../../../data/sample_data.csv");
     }
 
     void SetUp() override {
@@ -391,6 +391,134 @@ TEST_F(FilledUndirectedTemporalWalkTest, WalkIncreasingTimestampTest) {
                 << "Timestamps are not strictly increasing in walk: "
                 << i << " with node: " << walk[i].node
                 << ", previous node: " << walk[i - 1].node;
+        }
+    }
+}
+
+// Test to verify that each step in walks uses valid edges from the graph
+TEST_F(FilledDirectedTemporalWalkTest, WalkValidEdgesTest) {
+    // Create a map of valid edges for O(1) lookup
+    std::map<std::tuple<int, int, int64_t>, bool> valid_edges;
+    for (const auto& edge : sample_edges) {
+        valid_edges[edge] = true;
+    }
+
+    // Check forward walks
+    const auto walks_forward = temporal_walk->get_random_walks_and_times_for_all_nodes(
+        MAX_WALK_LEN, &linear_picker_type, 10, nullptr, WalkDirection::Forward_In_Time);
+
+    for (const auto& walk : walks_forward) {
+        if (walk.size() <= 1) continue;
+
+        for (size_t i = 0; i < walk.size() - 1; i++) {
+            int src = walk[i].node;
+            int dst = walk[i+1].node;
+            int64_t ts = walk[i+1].timestamp;
+
+            bool edge_exists = valid_edges.count({src, dst, ts}) > 0;
+            EXPECT_TRUE(edge_exists)
+                << "Invalid forward edge in walk: (" << src << "," << dst << "," << ts << ")";
+        }
+    }
+
+    // Check backward walks
+    const auto walks_backward = temporal_walk->get_random_walks_and_times_for_all_nodes(
+        MAX_WALK_LEN, &linear_picker_type, 10, nullptr, WalkDirection::Backward_In_Time);
+
+    for (const auto& walk : walks_backward) {
+        if (walk.size() <= 1) continue;
+
+        for (size_t i = 1; i < walk.size(); i++) {
+            int src = walk[i - 1].node;
+            int dst = walk[i].node;
+            int64_t ts = walk[i - 1].timestamp;
+
+            bool edge_exists = valid_edges.count({src, dst, ts}) > 0;
+            EXPECT_TRUE(edge_exists)
+                << "Invalid backward edge in walk: (" << src << "," << dst << "," << ts << ")";
+        }
+    }
+}
+
+TEST_F(FilledDirectedTemporalWalkTest, WalkTerminalEdgesTest) {
+    // For forward walks, track maximum outgoing timestamps
+    std::map<int, int64_t> max_outgoing_timestamps;
+    // For backward walks, track minimum incoming timestamps
+    std::map<int, int64_t> min_incoming_timestamps;
+
+    // Build timestamp maps
+    for (const auto& [src, dst, ts] : sample_edges) {
+        // Track max timestamp of outgoing edges for forward walks
+        if (!max_outgoing_timestamps.count(src) || max_outgoing_timestamps[src] < ts) {
+            max_outgoing_timestamps[src] = ts;
+        }
+        // Track min timestamp of incoming edges for backward walks
+        if (!min_incoming_timestamps.count(dst) || min_incoming_timestamps[dst] > ts) {
+            min_incoming_timestamps[dst] = ts;
+        }
+    }
+
+    // Check forward walks
+    const auto walks_forward = temporal_walk->get_random_walks_and_times_for_all_nodes(
+        MAX_WALK_LEN, &linear_picker_type, 10, nullptr, WalkDirection::Forward_In_Time);
+
+    for (const auto& walk : walks_forward) {
+        if (walk.empty()) continue;
+
+        // MAX_WALK_LEN approached. No need to check such walks, because they might have finished immaturely.
+        if (walk.size() == MAX_WALK_LEN) continue;
+
+        int last_node = walk.back().node;
+        const int64_t last_ts = walk.back().timestamp;
+
+        // Skip if node has no outgoing edges
+        if (!max_outgoing_timestamps.count(last_node)) continue;
+
+        int64_t max_ts = max_outgoing_timestamps[last_node];
+        if (last_ts < max_ts) {
+            // Check for valid edges that we could have walked to
+            for (const auto& [src, dst, ts] : sample_edges) {
+                if (src == last_node && ts > last_ts && ts <= max_ts) {
+                    FAIL() << "Forward walk incorrectly terminated:\n"
+                          << "  Node: " << last_node << "\n"
+                          << "  Current timestamp: " << last_ts << "\n"
+                          << "  Found valid edge at timestamp: " << ts << "\n"
+                          << "  Max possible timestamp: " << max_ts << "\n"
+                          << "  Edge: (" << src << "," << dst << "," << ts << ")";
+                }
+            }
+        }
+    }
+
+    // Check backward walks
+    const auto walks_backward = temporal_walk->get_random_walks_and_times_for_all_nodes(
+        MAX_WALK_LEN, &linear_picker_type, 10, nullptr, WalkDirection::Backward_In_Time);
+
+    for (const auto& walk : walks_backward) {
+        if (walk.empty()) continue;
+
+        // MAX_WALK_LEN approached. No need to check such walks, because they might have finished immaturely.
+        if (walk.size() == MAX_WALK_LEN) continue;
+
+        int first_node = walk.front().node;
+        const int64_t first_ts = walk.front().timestamp;
+
+        // Skip if node has no incoming edges
+        if (!min_incoming_timestamps.count(first_node)) continue;
+
+        int64_t min_ts = min_incoming_timestamps[first_node];
+        if (first_ts > min_ts) {
+            // Check for valid edges that we could have walked to
+            for (const auto& [src, dst, ts] : sample_edges) {
+                if (dst == first_node && ts < first_ts && ts >= min_ts) {
+                    FAIL() << "Backward walk incorrectly terminated:\n"
+                          << "  Node: " << first_node << "\n"
+                          << "  Current timestamp: " << first_ts << "\n"
+                          << "  Found valid edge at timestamp: " << ts << "\n"
+                          << "  Min possible timestamp: " << min_ts << "\n"
+                          << "  Edge: (" << src << "," << dst << "," << ts << ")";
+                }
+            }
         }
     }
 }

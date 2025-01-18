@@ -258,12 +258,12 @@ std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(const std::function<siz
         };
     } else {
         // No timestamp constraint
-        size_t num_groups = edges.get_timestamp_group_count();
+        const size_t num_groups = edges.get_timestamp_group_count();
         if (num_groups == 0) return {-1, -1, -1};
 
         // Get index using lambda
         // Last param says if we should prioritize the end of the sequence, which is opposite to forward
-        size_t index = index_selector(0, static_cast<int>(num_groups), !forward);
+        const size_t index = index_selector(0, static_cast<int>(num_groups), !forward);
         if (index >= num_groups) return {-1, -1, -1};
 
         size_t group_idx = forward ? index : (num_groups - 1 - index);
@@ -283,8 +283,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(const std::function<siz
 std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
     const int node_id, const std::function<size_t(int, int, bool)>& index_selector, const int64_t timestamp,
     const bool forward) const {
-
-    int dense_idx = node_mapping.to_dense(node_id);
+    const int dense_idx = node_mapping.to_dense(node_id);
     if (dense_idx < 0) return {-1, -1, -1};
 
     // Get appropriate node indices based on direction and graph type
@@ -358,11 +357,11 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
         }
     } else {
         // No timestamp constraint - select from all groups
-        size_t num_groups = group_end_offset - group_start_offset;
+        const size_t num_groups = group_end_offset - group_start_offset;
         if (num_groups == 0) return {-1, -1, -1};
 
         // Get index using lambda
-        size_t index = index_selector(0, static_cast<int>(num_groups), !forward);
+        const size_t index = index_selector(0, static_cast<int>(num_groups), !forward);
         if (index >= num_groups) return {-1, -1, -1};
 
         // Select group based on direction
