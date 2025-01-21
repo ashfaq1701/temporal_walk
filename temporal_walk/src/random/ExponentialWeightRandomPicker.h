@@ -4,13 +4,14 @@
 #include "WeightBasedRandomPicker.h"
 #include <vector>
 
-class ExponentialWeightRandomPicker : public WeightBasedRandomPicker {
+class ExponentialWeightRandomPicker : public WeightBasedRandomPicker
+{
 public:
     [[nodiscard]] int pick_random(
-        const std::vector<double>& prob,
-        const std::vector<int>& alias,
-        int start,
-        int length) override;
+        const std::vector<double>& group_probs,
+        const std::vector<int>& group_aliases,
+        int group_start,
+        int group_length) override;
 };
 
 #endif //EXPONENTIALWEIGHTRANDOMPICKER_H

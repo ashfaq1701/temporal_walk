@@ -18,14 +18,15 @@ private:
     int64_t time_window; // Time duration to keep edges (-1 means keep all)
     bool enable_weight_computation;
     int64_t latest_timestamp; // Track latest edge timestamp
-    EdgeData edges; // Main edge storage
-    NodeMapping node_mapping; // Sparse to dense node ID mapping
-    NodeEdgeIndex node_index; // Node to edge mappings
 
     void sort_and_merge_edges(size_t start_idx);
     void delete_old_edges();
 
 public:
+    NodeEdgeIndex node_index; // Node to edge mappings
+    EdgeData edges; // Main edge storage
+    NodeMapping node_mapping; // Sparse to dense node ID mapping
+
     explicit TemporalGraph(bool directed, int64_t window = -1, bool enable_weight_computation = false);
 
     // Edge addition

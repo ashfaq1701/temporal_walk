@@ -44,7 +44,8 @@ void TemporalGraph::add_multiple_edges(const std::vector<std::tuple<int, int, in
     node_index.rebuild(edges, node_mapping, is_directed);
 
     if (enable_weight_computation) {
-
+        edges.update_temporal_weights();
+        node_index.update_temporal_weights(edges);
     }
 }
 
@@ -244,12 +245,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(
                 group_idx = first_group + index;
             } else {
                 auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
-                group_idx = first_group + weight_picker->pick_random(
-                    edges.forward_ts_prob,
-                    edges.forward_ts_alias,
-                    static_cast<int>(first_group),
-                    static_cast<int>(available_groups)
-                );
+
             }
         } else {
             const size_t last_group = edges.find_group_before_timestamp(timestamp);
@@ -262,12 +258,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(
                 group_idx = last_group - index;
             } else {
                 auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
-                group_idx = weight_picker->pick_random(
-                    edges.backward_ts_prob,
-                    edges.backward_ts_alias,
-                    0,
-                    static_cast<int>(available_groups)
-                );
+
             }
         }
     } else {
@@ -279,19 +270,9 @@ std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(
         } else {
             auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
             if (forward) {
-                group_idx = weight_picker->pick_random(
-                    edges.forward_ts_prob,
-                    edges.forward_ts_alias,
-                    0,
-                    static_cast<int>(num_groups)
-                );
+
             } else {
-                group_idx = weight_picker->pick_random(
-                    edges.backward_ts_prob,
-                    edges.backward_ts_alias,
-                    0,
-                    static_cast<int>(num_groups)
-                );
+
             }
         }
     }
@@ -360,13 +341,8 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
                 group_pos = start_pos + index;
             } else {
                 auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
-                // For forward walks on nodes, use outbound weights (favoring later timestamps)
-                group_pos = start_pos + weight_picker->pick_random(
-                    node_index.outbound_ts_prob,
-                    node_index.outbound_ts_alias,
-                    dense_idx,
-                    static_cast<int>(available)
-                );
+                // For forward walks, use forward weights (favoring later timestamps)
+
             }
         } else {
             // Find first group >= timestamp
@@ -388,14 +364,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
                 group_pos = (it - timestamp_group_indices.begin()) - index - 1;
             } else {
                 auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
-                // For backward walks on nodes, use inbound weights (favoring earlier timestamps)
-                const size_t offset = it - timestamp_group_indices.begin() - available;
-                group_pos = offset + weight_picker->pick_random(
-                    node_index.inbound_ts_prob,
-                    node_index.inbound_ts_alias,
-                    dense_idx,
-                    static_cast<int>(available)
-                );
+
             }
         }
     } else {
@@ -412,19 +381,9 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
         } else {
             auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
             if (forward) {
-                group_pos = group_start_offset + weight_picker->pick_random(
-                    node_index.outbound_ts_prob,
-                    node_index.outbound_ts_alias,
-                    dense_idx,
-                    static_cast<int>(num_groups)
-                );
+
             } else {
-                group_pos = group_start_offset + weight_picker->pick_random(
-                    node_index.inbound_ts_prob,
-                    node_index.inbound_ts_alias,
-                    dense_idx,
-                    static_cast<int>(num_groups)
-                );
+
             }
         }
     }

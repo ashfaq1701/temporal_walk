@@ -4,10 +4,13 @@ add_executable(
         test_temporal_walk
         test_temporal_walk.cpp
         test_edge_data.cpp
+        test_edge_data_weights.cpp
         test_node_edge_index.cpp
+        test_node_edge_index_weights.cpp
         test_node_mapping.cpp
         test_temporal_graph.cpp
         test_temporal_graph_get_node_edge_at.cpp
+        test_temporal_graph_weights.cpp
         ${SRC_FILES}
 )
 

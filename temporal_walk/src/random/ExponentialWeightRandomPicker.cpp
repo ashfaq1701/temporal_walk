@@ -1,25 +1,25 @@
 #include "ExponentialWeightRandomPicker.h"
 
 int ExponentialWeightRandomPicker::pick_random(
-    const std::vector<double>& prob,
-    const std::vector<int>& alias,
-    int start,
-    int length) {
+    const std::vector<double>& group_probs,
+    const std::vector<int>& group_aliases,
+    int group_start,
+    int group_length) {
 
     // Validate inputs
-    if (length <= 0 || start < 0 ||
-        start >= static_cast<int>(prob.size()) ||
-        start >= static_cast<int>(alias.size()) ||
-        start + length > static_cast<int>(prob.size()) ||
-        start + length > static_cast<int>(alias.size())) {
+    if (group_length <= 0 || group_start < 0 ||
+        group_start >= static_cast<int>(group_probs.size()) ||
+        group_start >= static_cast<int>(group_aliases.size()) ||
+        group_start + group_length > static_cast<int>(group_probs.size()) ||
+        group_start + group_length > static_cast<int>(group_aliases.size())) {
         return -1;
     }
 
     // Generate random column index
-    const int col = start + get_random_number(length);
+    const int col = group_start + get_random_number(group_length);
 
     // Perform alias table lookup
     // If random value < stored probability, return this index
     // Otherwise return the alias index for this position
-    return (get_random_double() < prob[col]) ? col : alias[col];
+    return (get_random_double() < group_probs[col]) ? col : group_aliases[col];
 }
