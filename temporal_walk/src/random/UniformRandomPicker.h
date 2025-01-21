@@ -1,9 +1,9 @@
 #ifndef UNIFORMRANDOMPICKER_H
 #define UNIFORMRANDOMPICKER_H
 
-#include "RandomPicker.h"
+#include "IndexBasedRandomPicker.h"
 
-class UniformRandomPicker : public RandomPicker {
+class UniformRandomPicker final : public IndexBasedRandomPicker {
 public:
     int pick_random(int start, int end, bool prioritize_end) override;
 };

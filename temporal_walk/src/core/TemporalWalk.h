@@ -11,7 +11,8 @@ constexpr float DEFAULT_SUCCESS_THRESHOLD = 0.01;
 enum RandomPickerType {
     Uniform,
     Linear,
-    Exponential
+    ExponentialIndex,
+    ExponentialWeight
 };
 
 enum WalkDirection {
@@ -31,6 +32,8 @@ class TemporalWalk {
 
     int n_threads;
 
+    bool enable_weight_computation;
+
     int64_t max_edge_time = 0;
 
     std::unique_ptr<TemporalGraph> temporal_graph;
@@ -45,7 +48,7 @@ class TemporalWalk {
         bool should_walk_forward,
         int start_node_id=-1) const;
 
-    static std::shared_ptr<RandomPicker> get_random_picker(const RandomPickerType* picker_type);
+    std::shared_ptr<RandomPicker> get_random_picker(const RandomPickerType* picker_type);
 
     [[nodiscard]] long estimate_cw_count(int num_walks_per_node, int max_walk_len, int min_walk_len) const;
 
@@ -53,6 +56,7 @@ public:
     explicit TemporalWalk(
         bool is_directed,
         int64_t max_time_capacity=-1,
+        bool enable_weight_computation=false,
         size_t n_threads=std::thread::hardware_concurrency());
 
     [[nodiscard]] std::vector<std::vector<NodeWithTime>> get_random_walks_and_times_for_all_nodes(

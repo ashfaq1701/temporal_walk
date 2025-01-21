@@ -4,7 +4,8 @@
 #include "../utils/utils.h"
 #include "../random/UniformRandomPicker.h"
 #include "../random/LinearRandomPicker.h"
-#include "../random/ExponentialRandomPicker.h"
+#include "../random/ExponentialIndexRandomPicker.h"
+#include "../random/ExponentialWeightRandomPicker.h"
 
 
 constexpr int DEFAULT_CONTEXT_WINDOW_LEN = 2;
@@ -13,11 +14,13 @@ constexpr int DEFAULT_NUM_WALKS_PER_THREAD = 500;
 TemporalWalk::TemporalWalk(
     bool is_directed,
     int64_t max_time_capacity,
+    bool enable_weight_computation,
     size_t n_threads):
     is_directed(is_directed), max_time_capacity(max_time_capacity),
-    n_threads(static_cast<int>(n_threads)), thread_pool(n_threads)
+    n_threads(static_cast<int>(n_threads)), enable_weight_computation(enable_weight_computation),
+    thread_pool(n_threads)
 {
-    temporal_graph = std::make_unique<TemporalGraph>(is_directed, max_time_capacity);
+    temporal_graph = std::make_unique<TemporalGraph>(is_directed, max_time_capacity, enable_weight_computation);
 }
 
 bool get_should_walk_forward(WalkDirection walk_direction) {
@@ -42,8 +45,13 @@ std::shared_ptr<RandomPicker> TemporalWalk::get_random_picker(const RandomPicker
         return std::make_shared<UniformRandomPicker>();
     case Linear:
         return std::make_shared<LinearRandomPicker>();
-    case Exponential:
-        return std::make_shared<ExponentialRandomPicker>();
+    case ExponentialIndex:
+        return std::make_shared<ExponentialIndexRandomPicker>();
+    case ExponentialWeight:
+        if (!enable_weight_computation) {
+            throw std::invalid_argument("To enable weight based random pickers, set enable_weight_computation constructor argument to true.");
+        }
+        return std::make_shared<ExponentialWeightRandomPicker>();
     default:
         throw std::invalid_argument("Invalid picker type");
     }
@@ -400,19 +408,13 @@ void TemporalWalk::generate_random_walk_and_time(
     std::tuple<int, int, int64_t> start_edge;
     if (start_node_id == -1) {
         start_edge = temporal_graph->get_edge_at(
-            [&start_picker](int start, int end, bool prioritize_end)
-            {
-                return start_picker->pick_random(start, end, prioritize_end);
-            },
+            *start_picker,
             -1,
             should_walk_forward);
     } else {
         start_edge = temporal_graph->get_node_edge_at(
             start_node_id,
-            [&start_picker](int start, int end, bool prioritize_end)
-            {
-                return start_picker->pick_random(start, end, prioritize_end);
-            },
+            *start_picker,
             -1,
             should_walk_forward
         );
@@ -447,10 +449,7 @@ void TemporalWalk::generate_random_walk_and_time(
 
         auto [picked_src, picked_dst, picked_ts] = temporal_graph->get_node_edge_at(
             current_node,
-            [&edge_picker](int start, int end, bool prioritize_end)
-            {
-                return edge_picker->pick_random(start, end, prioritize_end);
-            },
+            *edge_picker,
             current_timestamp,
             should_walk_forward
         );

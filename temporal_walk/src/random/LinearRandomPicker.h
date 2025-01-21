@@ -1,9 +1,9 @@
 #ifndef LINEARRANDOMPICKER_H
 #define LINEARRANDOMPICKER_H
 
-#include "RandomPicker.h"
+#include "IndexBasedRandomPicker.h"
 
-class LinearRandomPicker : public RandomPicker {
+class LinearRandomPicker final : public IndexBasedRandomPicker {
 public:
     int pick_random(int start, int end, bool prioritize_end) override;
 };

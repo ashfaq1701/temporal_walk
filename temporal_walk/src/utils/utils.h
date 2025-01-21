@@ -43,6 +43,11 @@ inline bool get_random_boolean() {
     return dist(gen) == 1;
 }
 
+inline double get_random_double() {
+    std::uniform_real_distribution<double> dist(0.0, 1.0);
+    return dist(thread_local_gen);
+}
+
 template <typename K, typename V>
 void delete_items_less_than_key(std::map<K, V>& map_obj, const K& key) {
     const auto it = map_obj.lower_bound(key);

@@ -1,13 +1,34 @@
 #include <gtest/gtest.h>
 #include "../src/data/TemporalGraph.h"
+#include "../src/random/IndexBasedRandomPicker.h"
+
+// Test-specific picker that always selects first element
+class FirstIndexPicker : public IndexBasedRandomPicker {
+public:
+    [[nodiscard]] int pick_random(int start, int end, bool prioritize_end) override {
+        return start;
+    }
+};
+
+// Test-specific picker that always selects last element
+class LastIndexPicker : public IndexBasedRandomPicker {
+public:
+    [[nodiscard]] int pick_random(int start, int end, bool prioritize_end) override {
+        return end - 1;
+    }
+};
 
 class TemporalGraphTest : public ::testing::Test {
 protected:
     std::unique_ptr<TemporalGraph> graph;
+    std::unique_ptr<FirstIndexPicker> first_picker;
+    std::unique_ptr<LastIndexPicker> last_picker;
 
     void SetUp() override {
         // Create directed graph by default
         graph = std::make_unique<TemporalGraph>(true);
+        first_picker = std::make_unique<FirstIndexPicker>();
+        last_picker = std::make_unique<LastIndexPicker>();
     }
 
     // Helper to create edge tuples
@@ -322,15 +343,6 @@ TEST_F(TemporalGraphTest, CountNodeTimestampsDuplicatesTest) {
 }
 
 TEST_F(TemporalGraphTest, GetEdgeAtTest) {
-    // Helper lambda for index selection
-    auto select_first = [](int start, int end, bool prioritize_end) -> size_t {
-        return start;
-    };
-
-    auto select_last = [](int start, int end, bool prioritize_end) -> size_t {
-        return end - 1;
-    };
-
     // Set up test graph with carefully structured timestamps
     const auto edges = create_edges({
         {10, 20, 100},  // Group 0: timestamp 100
@@ -345,38 +357,38 @@ TEST_F(TemporalGraphTest, GetEdgeAtTest) {
     // Test forward direction (looking for timestamps > given)
 
     // Test with timestamp = -1 (no constraint)
-    auto [src1, tgt1, ts1] = graph->get_edge_at(select_first, -1, true);
+    auto [src1, tgt1, ts1] = graph->get_edge_at(*first_picker, -1, true);
     EXPECT_EQ(ts1, 100);  // Should select from first group
 
-    auto [src2, tgt2, ts2] = graph->get_edge_at(select_last, -1, true);
+    auto [src2, tgt2, ts2] = graph->get_edge_at(*last_picker, -1, true);
     EXPECT_EQ(ts2, 400);  // Should select from last group
 
     // Test with timestamp constraints
-    auto [src3, tgt3, ts3] = graph->get_edge_at(select_first, 100, true);
+    auto [src3, tgt3, ts3] = graph->get_edge_at(*first_picker, 100, true);
     EXPECT_EQ(ts3, 200);  // Should select first group after 100
 
-    auto [src4, tgt4, ts4] = graph->get_edge_at(select_first, 300, true);
+    auto [src4, tgt4, ts4] = graph->get_edge_at(*first_picker, 300, true);
     EXPECT_EQ(ts4, 400);  // Should select first group after 300
 
     // Test backward direction (looking for timestamps < given)
-    auto [src5, tgt5, ts5] = graph->get_edge_at(select_first, 400, false);
+    auto [src5, tgt5, ts5] = graph->get_edge_at(*first_picker, 400, false);
     EXPECT_EQ(ts5, 300);  // Should select last group before 400
 
-    auto [src6, tgt6, ts6] = graph->get_edge_at(select_last, 250, false);
+    auto [src6, tgt6, ts6] = graph->get_edge_at(*last_picker, 250, false);
     EXPECT_EQ(ts6, 100);  // Should select earliest group before 250
 
     // Test edge cases
     // No groups after timestamp
-    auto [src7, tgt7, ts7] = graph->get_edge_at(select_first, 500, true);
+    auto [src7, tgt7, ts7] = graph->get_edge_at(*first_picker, 500, true);
     EXPECT_EQ(ts7, -1);  // Should return -1 when no valid groups
 
     // No groups before timestamp
-    auto [src8, tgt8, ts8] = graph->get_edge_at(select_first, 50, false);
+    auto [src8, tgt8, ts8] = graph->get_edge_at(*first_picker, 50, false);
     EXPECT_EQ(ts8, -1);
 
     // Test with empty graph
     graph = std::make_unique<TemporalGraph>(true);
-    auto [src9, tgt9, ts9] = graph->get_edge_at(select_first, 100, true);
+    auto [src9, tgt9, ts9] = graph->get_edge_at(*first_picker, 100, true);
     EXPECT_EQ(ts9, -1);
 }
 
@@ -392,29 +404,21 @@ TEST_F(TemporalGraphTest, GetEdgeAtDuplicateTimestampsTest) {
     });
     graph->add_multiple_edges(edges);
 
-    auto select_index = [](int start, int end, bool prioritize_end) -> size_t {
-        return start;  // Always select first available group
-    };
-
     // Test forward selection
-    auto [src1, tgt1, ts1] = graph->get_edge_at(select_index, 50, true);
+    auto [src1, tgt1, ts1] = graph->get_edge_at(*first_picker, 50, true);
     EXPECT_EQ(ts1, 100);
     EXPECT_TRUE((src1 == 10 && tgt1 == 20) ||
                 (src1 == 30 && tgt1 == 40) ||
                 (src1 == 50 && tgt1 == 60));  // Should be one of the t=100 edges
 
     // Test backward selection
-    auto [src2, tgt2, ts2] = graph->get_edge_at(select_index, 250, false);
+    auto [src2, tgt2, ts2] = graph->get_edge_at(*first_picker, 250, false);
     EXPECT_EQ(ts2, 200);
     EXPECT_TRUE((src2 == 70 && tgt2 == 80) ||
                 (src2 == 90 && tgt2 == 100));  // Should be one of the t=200 edges
 }
 
 TEST_F(TemporalGraphTest, GetEdgeAtBoundaryConditionsTest) {
-    auto select_first = [](int start, int end, bool prioritize_end) -> size_t {
-        return start;
-    };
-
     // Test exact timestamp boundaries
     auto edges = create_edges({
         {10, 20, 100},
@@ -424,17 +428,17 @@ TEST_F(TemporalGraphTest, GetEdgeAtBoundaryConditionsTest) {
     graph->add_multiple_edges(edges);
 
     // Forward direction
-    auto [src1, tgt1, ts1] = graph->get_edge_at(select_first, 100, true);
+    auto [src1, tgt1, ts1] = graph->get_edge_at(*first_picker, 100, true);
     EXPECT_EQ(ts1, 200);  // Should get next timestamp
 
-    auto [src2, tgt2, ts2] = graph->get_edge_at(select_first, 300, true);
+    auto [src2, tgt2, ts2] = graph->get_edge_at(*first_picker, 300, true);
     EXPECT_EQ(ts2, -1);   // No timestamps after 300
 
     // Backward direction
-    auto [src3, tgt3, ts3] = graph->get_edge_at(select_first, 200, false);
+    auto [src3, tgt3, ts3] = graph->get_edge_at(*first_picker, 200, false);
     EXPECT_EQ(ts3, 100);  // Should get previous timestamp
 
-    auto [src4, tgt4, ts4] = graph->get_edge_at(select_first, 100, false);
+    auto [src4, tgt4, ts4] = graph->get_edge_at(*first_picker, 100, false);
     EXPECT_EQ(ts4, -1);   // No timestamps before 100
 }
 
@@ -447,16 +451,12 @@ TEST_F(TemporalGraphTest, GetEdgeAtRandomSelectionTest) {
     });
     graph->add_multiple_edges(edges);
 
-    auto select_first = [](int start, int end, bool prioritize_end) -> size_t {
-        return start;
-    };
-
     // Make multiple selections and verify we can get different edges
     std::set<std::pair<int, int>> seen_edges;
     constexpr int NUM_TRIES = 50;
 
     for (int i = 0; i < NUM_TRIES; i++) {
-        auto [src, tgt, ts] = graph->get_edge_at(select_first, 50, true);
+        auto [src, tgt, ts] = graph->get_edge_at(*first_picker, 50, true);
         EXPECT_EQ(ts, 100);
         seen_edges.insert({src, tgt});
     }

@@ -3,7 +3,7 @@
 
 #include "test_utils.h"
 #include "../src/core/TemporalWalk.h"
-#include "../src/random/ExponentialRandomPicker.h"
+#include "../src/random/ExponentialIndexRandomPicker.h"
 #include "../src/random/LinearRandomPicker.h"
 
 constexpr int TEST_NODE_ID = 42;
@@ -14,14 +14,14 @@ constexpr int RANDOM_START = 0;
 constexpr int RANDOM_END = 10000;
 constexpr int RANDOM_NUM_SAMPLES = 1000000;
 
-constexpr RandomPickerType exponential_picker_type = RandomPickerType::Exponential;
+constexpr RandomPickerType exponential_picker_type = RandomPickerType::ExponentialIndex;
 constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;
 
 class RandomPickerTest : public ::testing::Test {
 protected:
 
     LinearRandomPicker linear_picker;
-    ExponentialRandomPicker exp_picker;
+    ExponentialIndexRandomPicker exp_picker;
 
     double compute_average_picks(const bool use_exponential, const bool prioritize_end) {
         double sum = 0;

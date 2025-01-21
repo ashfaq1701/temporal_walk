@@ -2,9 +2,13 @@
 #include <algorithm>
 #include <iostream>
 
+#include "../random/IndexBasedRandomPicker.h"
+#include "../random/WeightBasedRandomPicker.h"
+#include "../random/RandomPicker.h"
 
-TemporalGraph::TemporalGraph(bool directed, int64_t window)
-    : is_directed(directed), time_window(window), latest_timestamp(0) {}
+
+TemporalGraph::TemporalGraph(bool directed, int64_t window, bool enable_weight_computation)
+    : is_directed(directed), time_window(window), enable_weight_computation(enable_weight_computation), latest_timestamp(0) {}
 
 void TemporalGraph::add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& new_edges) {
     if (new_edges.empty()) return;
@@ -38,6 +42,10 @@ void TemporalGraph::add_multiple_edges(const std::vector<std::tuple<int, int, in
 
     // Rebuild edge indices
     node_index.rebuild(edges, node_mapping, is_directed);
+
+    if (enable_weight_computation) {
+
+    }
 }
 
 void TemporalGraph::sort_and_merge_edges(size_t start_idx) {
@@ -213,99 +221,119 @@ size_t TemporalGraph::count_node_timestamps_greater_than(int node_id, int64_t ti
     return std::distance(it, timestamp_group_indices.begin() + static_cast<int>(group_end));
 }
 
-std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(const std::function<size_t(int, int, bool)>& index_selector,
-                                                         int64_t timestamp, bool forward) const {
+std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(
+    RandomPicker& picker,
+    int64_t timestamp,
+    bool forward) const {
+
     if (edges.empty()) return {-1, -1, -1};
 
+    const size_t num_groups = edges.get_timestamp_group_count();
+    if (num_groups == 0) return {-1, -1, -1};
+
+    size_t group_idx;
     if (timestamp != -1) {
-        // Forward walk: select from edges after timestamp
-        // Backward walk: select from edges before timestamp
-        size_t group_idx;
         if (forward) {
             const size_t first_group = edges.find_group_after_timestamp(timestamp);
-            const size_t num_groups = edges.get_timestamp_group_count() - first_group;
-            if (num_groups == 0) return {-1, -1, -1};
+            const size_t available_groups = num_groups - first_group;
+            if (available_groups == 0) return {-1, -1, -1};
 
-            // Get index using lambda
-            // Last param says if we should prioritize the end of the sequence, which is opposite to forward
-            const size_t index = index_selector(0, static_cast<int>(num_groups), false);
-            if (index >= num_groups) return {-1, -1, -1};
-
-            group_idx = first_group + index;
-        }
-        else {
+            if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+                const size_t index = index_picker->pick_random(0, static_cast<int>(available_groups), false);
+                if (index >= available_groups) return {-1, -1, -1};
+                group_idx = first_group + index;
+            } else {
+                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
+                group_idx = first_group + weight_picker->pick_random(
+                    edges.forward_ts_prob,
+                    edges.forward_ts_alias,
+                    static_cast<int>(first_group),
+                    static_cast<int>(available_groups)
+                );
+            }
+        } else {
             const size_t last_group = edges.find_group_before_timestamp(timestamp);
             if (last_group == static_cast<size_t>(-1)) return {-1, -1, -1};
 
-            const size_t num_groups = last_group + 1;
-
-            const size_t index = index_selector(0, static_cast<int>(num_groups), true);
-            if (index >= num_groups) return {-1, -1, -1};
-
-            group_idx = last_group - index;
+            const size_t available_groups = last_group + 1;
+            if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+                const size_t index = index_picker->pick_random(0, static_cast<int>(available_groups), true);
+                if (index >= available_groups) return {-1, -1, -1};
+                group_idx = last_group - index;
+            } else {
+                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
+                group_idx = weight_picker->pick_random(
+                    edges.backward_ts_prob,
+                    edges.backward_ts_alias,
+                    0,
+                    static_cast<int>(available_groups)
+                );
+            }
         }
-
-        // Get group boundaries directly
-        auto [group_start, group_end] = edges.get_timestamp_group_range(group_idx);
-        if (group_start == group_end) return {-1, -1, -1};
-
-        // Random selection from group
-        size_t random_idx = group_start + get_random_number(static_cast<int>(group_end - group_start));
-        return {
-            edges.sources[random_idx],
-            edges.targets[random_idx],
-            edges.timestamps[random_idx]
-        };
     } else {
-        // No timestamp constraint
-        const size_t num_groups = edges.get_timestamp_group_count();
-        if (num_groups == 0) return {-1, -1, -1};
-
-        // Get index using lambda
-        // Last param says if we should prioritize the end of the sequence, which is opposite to forward
-        const size_t index = index_selector(0, static_cast<int>(num_groups), !forward);
-        if (index >= num_groups) return {-1, -1, -1};
-
-        size_t group_idx = forward ? index : (num_groups - 1 - index);
-        auto [group_start, group_end] = edges.get_timestamp_group_range(group_idx);
-        if (group_start == group_end) return {-1, -1, -1};
-
-        // Random selection from group
-        size_t random_idx = group_start + get_random_number(static_cast<int>(group_end - group_start));
-        return {
-            edges.sources[random_idx],
-            edges.targets[random_idx],
-            edges.timestamps[random_idx]
-        };
+        // No timestamp constraint - select from all groups
+        if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+            const size_t index = index_picker->pick_random(0, static_cast<int>(num_groups), !forward);
+            if (index >= num_groups) return {-1, -1, -1};
+            group_idx = forward ? index : num_groups - 1 - index;
+        } else {
+            auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
+            if (forward) {
+                group_idx = weight_picker->pick_random(
+                    edges.forward_ts_prob,
+                    edges.forward_ts_alias,
+                    0,
+                    static_cast<int>(num_groups)
+                );
+            } else {
+                group_idx = weight_picker->pick_random(
+                    edges.backward_ts_prob,
+                    edges.backward_ts_alias,
+                    0,
+                    static_cast<int>(num_groups)
+                );
+            }
+        }
     }
+
+    // Get selected group's boundaries
+    auto [group_start, group_end] = edges.get_timestamp_group_range(group_idx);
+    if (group_start == group_end) return {-1, -1, -1};
+
+    // Random selection from the chosen group
+    const size_t random_idx = group_start + get_random_number(static_cast<int>(group_end - group_start));
+    return {
+        edges.sources[random_idx],
+        edges.targets[random_idx],
+        edges.timestamps[random_idx]
+    };
 }
 
 std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
-    const int node_id, const std::function<size_t(int, int, bool)>& index_selector, const int64_t timestamp,
+    const int node_id,
+    RandomPicker& picker,
+    const int64_t timestamp,
     const bool forward) const {
+
     const int dense_idx = node_mapping.to_dense(node_id);
     if (dense_idx < 0) return {-1, -1, -1};
 
     // Get appropriate node indices based on direction and graph type
     const auto& timestamp_group_offsets = forward
-                                    ? node_index.outbound_timestamp_group_offsets
-                                    : (is_directed
-                                           ? node_index.inbound_timestamp_group_offsets
-                                           : node_index.outbound_timestamp_group_offsets);
+        ? node_index.outbound_timestamp_group_offsets
+        : (is_directed ? node_index.inbound_timestamp_group_offsets : node_index.outbound_timestamp_group_offsets);
 
     const auto& timestamp_group_indices = forward
-                                    ? node_index.outbound_timestamp_group_indices
-                                    : (is_directed
-                                           ? node_index.inbound_timestamp_group_indices
-                                           : node_index.outbound_timestamp_group_indices);
+        ? node_index.outbound_timestamp_group_indices
+        : (is_directed ? node_index.inbound_timestamp_group_indices : node_index.outbound_timestamp_group_indices);
 
     const auto& edge_indices = forward
-                                   ? node_index.outbound_indices
-                                   : (is_directed ? node_index.inbound_indices : node_index.outbound_indices);
+        ? node_index.outbound_indices
+        : (is_directed ? node_index.inbound_indices : node_index.outbound_indices);
 
     // Get node's group range
-    size_t group_start_offset = timestamp_group_offsets[dense_idx];
-    size_t group_end_offset = timestamp_group_offsets[dense_idx + 1];
+    const size_t group_start_offset = timestamp_group_offsets[dense_idx];
+    const size_t group_end_offset = timestamp_group_offsets[dense_idx + 1];
     if (group_start_offset == group_end_offset) return {-1, -1, -1};
 
     size_t group_pos;
@@ -316,76 +344,98 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
                 timestamp_group_indices.begin() + static_cast<int>(group_start_offset),
                 timestamp_group_indices.begin() + static_cast<int>(group_end_offset),
                 timestamp,
-                [this, &edge_indices](int64_t ts, size_t pos)
-                {
+                [this, &edge_indices](int64_t ts, size_t pos) {
                     return ts < edges.timestamps[edge_indices[pos]];
                 });
 
             // Count available groups after timestamp
-            size_t available = timestamp_group_indices.begin() + static_cast<int>(group_end_offset) - it;
+            const size_t available = timestamp_group_indices.begin() +
+                static_cast<int>(group_end_offset) - it;
             if (available == 0) return {-1, -1, -1};
 
-            // Get index using lambda
-            // Last param says if we should prioritize the end of the sequence, which is opposite to forward
-            size_t index = index_selector(0, static_cast<int>(available), false);
-            if (index >= available) return {-1, -1, -1};
-
-            // Select index th group after timestamp
-            group_pos = (it - timestamp_group_indices.begin()) + index;
+            const size_t start_pos = it - timestamp_group_indices.begin();
+            if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+                const size_t index = index_picker->pick_random(0, static_cast<int>(available), false);
+                if (index >= available) return {-1, -1, -1};
+                group_pos = start_pos + index;
+            } else {
+                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
+                // For forward walks on nodes, use outbound weights (favoring later timestamps)
+                group_pos = start_pos + weight_picker->pick_random(
+                    node_index.outbound_ts_prob,
+                    node_index.outbound_ts_alias,
+                    dense_idx,
+                    static_cast<int>(available)
+                );
+            }
         } else {
-            // backward case
             // Find first group >= timestamp
             auto it = std::lower_bound(
                 timestamp_group_indices.begin() + static_cast<int>(group_start_offset),
                 timestamp_group_indices.begin() + static_cast<int>(group_end_offset),
                 timestamp,
-                [this, &edge_indices](size_t pos, int64_t ts)
-                {
+                [this, &edge_indices](size_t pos, int64_t ts) {
                     return edges.timestamps[edge_indices[pos]] < ts;
                 });
 
-            // Count all available groups before timestamp
-            size_t available = it - (timestamp_group_indices.begin() + static_cast<int>(group_start_offset));
+            const size_t available = it - (timestamp_group_indices.begin() +
+                static_cast<int>(group_start_offset));
             if (available == 0) return {-1, -1, -1};
 
-            // Get index using lambda
-            const size_t index = index_selector(0, static_cast<int>(available), true);
-            if (index >= available) return {-1, -1, -1};
-
-            // Go backward by index from the last available position
-            group_pos = (it - timestamp_group_indices.begin()) - index - 1;
+            if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+                const size_t index = index_picker->pick_random(0, static_cast<int>(available), true);
+                if (index >= available) return {-1, -1, -1};
+                group_pos = (it - timestamp_group_indices.begin()) - index - 1;
+            } else {
+                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
+                // For backward walks on nodes, use inbound weights (favoring earlier timestamps)
+                const size_t offset = it - timestamp_group_indices.begin() - available;
+                group_pos = offset + weight_picker->pick_random(
+                    node_index.inbound_ts_prob,
+                    node_index.inbound_ts_alias,
+                    dense_idx,
+                    static_cast<int>(available)
+                );
+            }
         }
     } else {
         // No timestamp constraint - select from all groups
         const size_t num_groups = group_end_offset - group_start_offset;
         if (num_groups == 0) return {-1, -1, -1};
 
-        // Get index using lambda
-        const size_t index = index_selector(0, static_cast<int>(num_groups), !forward);
-        if (index >= num_groups) return {-1, -1, -1};
-
-        // Select group based on direction
-        if (forward) {
-            group_pos = group_start_offset + index;
+        if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+            const size_t index = index_picker->pick_random(0, static_cast<int>(num_groups), !forward);
+            if (index >= num_groups) return {-1, -1, -1};
+            group_pos = forward
+                ? group_start_offset + index
+                : group_end_offset - index - 1;
         } else {
-            // For backward walks:
-            // select_first() with index=0 should get latest timestamp
-            // select_last() with index=num_groups-1 should get the earliest timestamp
-            group_pos = group_end_offset - index - 1;
+            auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
+            if (forward) {
+                group_pos = group_start_offset + weight_picker->pick_random(
+                    node_index.outbound_ts_prob,
+                    node_index.outbound_ts_alias,
+                    dense_idx,
+                    static_cast<int>(num_groups)
+                );
+            } else {
+                group_pos = group_start_offset + weight_picker->pick_random(
+                    node_index.inbound_ts_prob,
+                    node_index.inbound_ts_alias,
+                    dense_idx,
+                    static_cast<int>(num_groups)
+                );
+            }
         }
     }
 
     // Get edge range for selected group
     const size_t edge_start = timestamp_group_indices[group_pos];
-    size_t edge_end;
-    if (group_pos + 1 < group_end_offset) {
-        edge_end = timestamp_group_indices[group_pos + 1];
-    } else {
-        const auto& edge_offsets = forward
-                                       ? node_index.outbound_offsets
-                                       : (is_directed ? node_index.inbound_offsets : node_index.outbound_offsets);
-        edge_end = edge_offsets[dense_idx + 1];
-    }
+    const size_t edge_end = (group_pos + 1 < group_end_offset)
+        ? timestamp_group_indices[group_pos + 1]
+        : (forward ? node_index.outbound_offsets[dense_idx + 1]
+                  : (is_directed ? node_index.inbound_offsets[dense_idx + 1]
+                                : node_index.outbound_offsets[dense_idx + 1]));
 
     // Random selection from group
     const size_t edge_idx = edge_indices[edge_start + get_random_number(static_cast<int>(edge_end - edge_start))];

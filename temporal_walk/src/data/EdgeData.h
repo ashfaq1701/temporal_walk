@@ -6,6 +6,14 @@
 #include <tuple>
 
 struct EdgeData {
+private:
+    static void create_alias_table(
+        const std::vector<double>& weights,
+        std::vector<double>& probs,
+        std::vector<int>& alias);
+
+public:
+
     // Core edge data
     std::vector<int> sources;
     std::vector<int> targets;
@@ -13,7 +21,13 @@ struct EdgeData {
 
     // Timestamp grouping
     std::vector<size_t> timestamp_group_offsets;     // Start of each timestamp group
-    std::vector<int64_t> unique_timestamps; // Corresponding unique timestamps
+    std::vector<int64_t> unique_timestamps;          // Corresponding unique timestamps
+
+    // Global timestamp selection
+    std::vector<double> forward_ts_prob;  // exp(tmax - T(e))/sum
+    std::vector<int> forward_ts_alias;    // For forward walks - favors earlier timestamps
+    std::vector<double> backward_ts_prob; // exp(T(e) - tmin)/sum
+    std::vector<int> backward_ts_alias;   // For backward walks - favors later timestamps
 
     void reserve(size_t size);
     void clear();
@@ -26,6 +40,8 @@ struct EdgeData {
 
     // Group management
     void update_timestamp_groups();  // Call after sorting
+    void update_temporal_weights();
+
     [[nodiscard]] std::pair<size_t, size_t> get_timestamp_group_range(size_t group_idx) const;
     [[nodiscard]] size_t get_timestamp_group_count() const;
 

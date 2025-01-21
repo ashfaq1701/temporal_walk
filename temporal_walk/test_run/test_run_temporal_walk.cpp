@@ -26,7 +26,7 @@ int main() {
     temporal_walk.add_multiple_edges(edges);
 
     constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;
-    constexpr RandomPickerType exponential_picker_type = RandomPickerType::Exponential;
+    constexpr RandomPickerType exponential_picker_type = RandomPickerType::ExponentialIndex;
 
     const auto walks_forward = temporal_walk.get_random_walks_and_times_for_all_nodes(20, &linear_picker_type, 10, &exponential_picker_type, WalkDirection::Forward_In_Time);
     std::cout << "Forward walks:" << std::endl;

@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     walks = temporal_walk_obj.get_random_walks_and_times_for_all_nodes(
         max_walk_len=20,
-        walk_bias="Exponential",
+        walk_bias="ExponentialIndex",
         num_walks_per_node=10,
         initial_edge_bias="Linear",
         walk_direction="Forward_In_Time"

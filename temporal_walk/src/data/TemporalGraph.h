@@ -9,11 +9,14 @@
 #include "NodeEdgeIndex.h"
 #include "../utils/utils.h"
 
+class RandomPicker;
+
 class TemporalGraph
 {
 private:
     bool is_directed;
     int64_t time_window; // Time duration to keep edges (-1 means keep all)
+    bool enable_weight_computation;
     int64_t latest_timestamp; // Track latest edge timestamp
     EdgeData edges; // Main edge storage
     NodeMapping node_mapping; // Sparse to dense node ID mapping
@@ -23,7 +26,7 @@ private:
     void delete_old_edges();
 
 public:
-    explicit TemporalGraph(bool directed, int64_t window = -1);
+    explicit TemporalGraph(bool directed, int64_t window = -1, bool enable_weight_computation = false);
 
     // Edge addition
     void add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& new_edges);
@@ -36,11 +39,12 @@ public:
 
     // Edge selection
     [[nodiscard]] std::tuple<int, int, int64_t> get_edge_at(
-        const std::function<size_t(int, int, bool)>& index_selector, int64_t timestamp = -1,
+        RandomPicker& picker, int64_t timestamp = -1,
         bool forward = true) const;
+
     [[nodiscard]] std::tuple<int, int, int64_t> get_node_edge_at(int node_id,
-                                                                 const std::function<size_t(int, int, bool)>&
-                                                                 index_selector, int64_t timestamp = -1,
+                                                                 RandomPicker& picker,
+                                                                 int64_t timestamp = -1,
                                                                  bool forward = true) const;
 
     // Utility methods

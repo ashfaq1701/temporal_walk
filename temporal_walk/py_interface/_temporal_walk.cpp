@@ -4,7 +4,7 @@
 #include <optional>
 #include "../src/core/TemporalWalk.h"
 #include "../src/random/LinearRandomPicker.h"
-#include "../src/random/ExponentialRandomPicker.h"
+#include "../src/random/ExponentialIndexRandomPicker.h"
 #include "../src/random/UniformRandomPicker.h"
 #include <stdexcept>
 
@@ -21,9 +21,13 @@ RandomPickerType picker_type_from_string(const std::string& picker_type_str)
     {
         return RandomPickerType::Linear;
     }
-    else if (picker_type_str == "Exponential")
+    else if (picker_type_str == "ExponentialIndex")
     {
-        return RandomPickerType::Exponential;
+        return RandomPickerType::ExponentialIndex;
+    }
+    else if (picker_type_str == "ExponentialWeight")
+    {
+        return RandomPickerType::ExponentialWeight;
     }
     else
     {
@@ -96,7 +100,7 @@ PYBIND11_MODULE(_temporal_walk, m)
 
              Parameters:
              max_walk_len (int): Maximum length of each random walk
-             walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "Exponential")
+             walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "ExponentialIndex" or "ExponentialWeight")
              num_walks_per_node (int): Number of walks per node
              initial_edge_bias (str, optional): Type of bias for selecting initial edge
              walk_direction (str): Direction of walk ("Forward_In_Time" or "Backward_In_Time")
@@ -155,7 +159,7 @@ PYBIND11_MODULE(_temporal_walk, m)
 
             Parameters:
             max_walk_len (int): Maximum length of each random walk
-            walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "Exponential")
+            walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "ExponentialIndex", "ExponentialWeight")
             num_walks_per_node (int): Number of walks per node
             initial_edge_bias (str, optional): Type of bias for selecting initial edge
             walk_direction (str): Direction of walk ("Forward_In_Time" or "Backward_In_Time")
@@ -198,7 +202,7 @@ PYBIND11_MODULE(_temporal_walk, m)
 
              Parameters:
              max_walk_len (int): Maximum length of each random walk
-             walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "Exponential")
+             walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "ExponentialIndex", "ExponentialWeight")
              num_walks_per_node (int): Number of walks per node
              initial_edge_bias (str, optional): Type of bias for selecting initial edge
              walk_direction (str): Direction of walk ("Forward_In_Time" or "Backward_In_Time")
@@ -257,7 +261,7 @@ PYBIND11_MODULE(_temporal_walk, m)
 
             Parameters:
             max_walk_len (int): Maximum length of each random walk
-            walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "Exponential")
+            walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "ExponentialIndex", "ExponentialWeight")
             num_walks_per_node (int): Number of walks per node
             initial_edge_bias (str, optional): Type of bias for selecting initial edge
             walk_direction (str): Direction of walk ("Forward_In_Time" or "Backward_In_Time")
@@ -306,7 +310,7 @@ PYBIND11_MODULE(_temporal_walk, m)
 
              Parameters:
              max_walk_len (int): Maximum length of each random walk
-             walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "Exponential")
+             walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "ExponentialIndex", "ExponentialWeight")
              num_cw (int, optional): Number of context windows to generate
              num_walks_per_node (int, optional): Number of walks per node (used if num_cw not specified)
              initial_edge_bias (str, optional): Type of bias for selecting initial edge
@@ -377,7 +381,7 @@ PYBIND11_MODULE(_temporal_walk, m)
 
             Parameters:
             max_walk_len (int): Maximum length of each random walk
-            walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "Exponential")
+            walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "ExponentialIndex", "ExponentialWeight")
             num_cw (int, optional): Number of context windows to generate
             num_walks_per_node (int, optional): Number of walks per node (used if num_cw not specified)
             initial_edge_bias (str, optional): Type of bias for selecting initial edge
@@ -493,10 +497,10 @@ PYBIND11_MODULE(_temporal_walk, m)
              "Pick a random index with linear probabilities.",
              py::arg("start"), py::arg("end"), py::arg("prioritize_end") = true);
 
-    py::class_<ExponentialRandomPicker>(m, "ExponentialRandomPicker")
-        .def(py::init<>(), "Initialize a ExponentialRandomPicker instance.")
-        .def("pick_random", &ExponentialRandomPicker::pick_random,
-             "Pick a random index with exponential probabilities.",
+    py::class_<ExponentialIndexRandomPicker>(m, "ExponentialIndexRandomPicker")
+        .def(py::init<>(), "Initialize a ExponentialIndexRandomPicker instance.")
+        .def("pick_random", &ExponentialIndexRandomPicker::pick_random,
+             "Pick a random index with exponential probabilities with index sampling.",
              py::arg("start"), py::arg("end"), py::arg("prioritize_end") = true);
 
     py::class_<UniformRandomPicker>(m, "UniformRandomPicker")

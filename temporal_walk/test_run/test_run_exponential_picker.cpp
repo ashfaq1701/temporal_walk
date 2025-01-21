@@ -1,11 +1,11 @@
 #include <iostream>
-#include "../src/random/ExponentialRandomPicker.h"
+#include "../src/random/ExponentialIndexRandomPicker.h"
 
 constexpr int TOTAL_TIMESTEPS = 100000000;
 
 int main()
 {
-    ExponentialRandomPicker random_picker;
+    ExponentialIndexRandomPicker random_picker;
 
     std::cout << "Prioritizing end: " << std::endl;
     std::cout << "---------------------------------------" << std::endl;
