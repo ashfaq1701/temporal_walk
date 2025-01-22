@@ -44,9 +44,13 @@ void TemporalGraph::add_multiple_edges(const std::vector<std::tuple<int, int, in
     node_index.rebuild(edges, node_mapping, is_directed);
 
     if (enable_weight_computation) {
-        edges.update_temporal_weights();
-        node_index.update_temporal_weights(edges);
+        update_temporal_weights();
     }
+}
+
+void TemporalGraph::update_temporal_weights() {
+    edges.update_temporal_weights();
+    node_index.update_temporal_weights(edges);
 }
 
 void TemporalGraph::sort_and_merge_edges(size_t start_idx) {
@@ -243,9 +247,13 @@ std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(
                 const size_t index = index_picker->pick_random(0, static_cast<int>(available_groups), false);
                 if (index >= available_groups) return {-1, -1, -1};
                 group_idx = first_group + index;
-            } else {
+            }
+            else {
                 auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
-
+                group_idx = weight_picker->pick_random(
+                    edges.forward_cumulative_weights,
+                    static_cast<int>(first_group),
+                    static_cast<int>(num_groups));
             }
         } else {
             const size_t last_group = edges.find_group_before_timestamp(timestamp);
@@ -256,9 +264,13 @@ std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(
                 const size_t index = index_picker->pick_random(0, static_cast<int>(available_groups), true);
                 if (index >= available_groups) return {-1, -1, -1};
                 group_idx = last_group - index;
-            } else {
+            }
+            else {
                 auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
-
+                group_idx = weight_picker->pick_random(
+                    edges.backward_cumulative_weights,
+                    0,
+                    static_cast<int>(last_group + 1));
             }
         }
     } else {
@@ -270,9 +282,16 @@ std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(
         } else {
             auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
             if (forward) {
-
-            } else {
-
+                group_idx = weight_picker->pick_random(
+                    edges.forward_cumulative_weights,
+                    0,
+                    static_cast<int>(num_groups));
+            }
+            else {
+                group_idx = weight_picker->pick_random(
+                    edges.backward_cumulative_weights,
+                    0,
+                    static_cast<int>(num_groups));
             }
         }
     }
@@ -339,10 +358,14 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
                 const size_t index = index_picker->pick_random(0, static_cast<int>(available), false);
                 if (index >= available) return {-1, -1, -1};
                 group_pos = start_pos + index;
-            } else {
+            }
+            else
+            {
                 auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
-                // For forward walks, use forward weights (favoring later timestamps)
-
+                group_pos = weight_picker->pick_random(
+                    node_index.outbound_forward_weights,
+                    static_cast<int>(start_pos),
+                    static_cast<int>(group_end_offset));
             }
         } else {
             // Find first group >= timestamp
@@ -362,9 +385,17 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
                 const size_t index = index_picker->pick_random(0, static_cast<int>(available), true);
                 if (index >= available) return {-1, -1, -1};
                 group_pos = (it - timestamp_group_indices.begin()) - index - 1;
-            } else {
+            }
+            else
+            {
                 auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
-
+                group_pos = weight_picker->pick_random(
+                    is_directed
+                        ? node_index.inbound_backward_weights
+                        : node_index.outbound_backward_weights,
+                    static_cast<int>(group_start_offset), // start from node's first group
+                    static_cast<int>(it - timestamp_group_indices.begin() + 1) // up to and excluding first group >= timestamp
+                );
             }
         }
     } else {
@@ -378,12 +409,25 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
             group_pos = forward
                 ? group_start_offset + index
                 : group_end_offset - index - 1;
-        } else {
+        }
+        else
+        {
             auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
-            if (forward) {
-
-            } else {
-
+            if (forward)
+            {
+                group_pos = weight_picker->pick_random(
+                    node_index.outbound_forward_weights,
+                    static_cast<int>(group_start_offset),
+                    static_cast<int>(group_end_offset));
+            }
+            else
+            {
+                group_pos = weight_picker->pick_random(
+                    is_directed
+                        ? node_index.inbound_backward_weights
+                        : node_index.outbound_backward_weights,
+                    static_cast<int>(group_start_offset),
+                    static_cast<int>(group_end_offset));
             }
         }
     }

@@ -3,14 +3,13 @@
 
 #include "RandomPicker.h"
 
-class WeightBasedRandomPicker : public RandomPicker {
-
+class WeightBasedRandomPicker : public RandomPicker
+{
 public:
-    virtual int pick_random(
-        const std::vector<double>& prob,
-        const std::vector<int>& alias,
-        int start,
-        int length) = 0;
+    [[nodiscard]] virtual int pick_random(
+        const std::vector<double>& cumulative_weights,
+        int group_start,
+        int group_end) = 0;
 };
 
 #endif //WEIGHTBASEDRANDOMPICKER_H

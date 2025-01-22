@@ -72,7 +72,43 @@ void EdgeData::update_timestamp_groups() {
 }
 
 void EdgeData::update_temporal_weights() {
+    if (timestamps.empty()) {
+        forward_cumulative_weights.clear();
+        backward_cumulative_weights.clear();
+        return;
+    }
 
+    // Find global min/max timestamps
+    const int64_t min_timestamp = timestamps[0];
+
+    const size_t num_groups = get_timestamp_group_count();
+    forward_cumulative_weights.resize(num_groups);
+    backward_cumulative_weights.resize(num_groups);
+
+    // First calculate raw weights and total sum
+    double forward_sum = 0.0;
+    double backward_sum = 0.0;
+
+    for (size_t group = 0; group < num_groups; group++) {
+        const size_t start = timestamp_group_offsets[group];
+        const int64_t group_timestamp = timestamps[start];
+
+        // Forward weight (relative to min timestamp)
+        const double forward_weight = exp(static_cast<double>(min_timestamp - group_timestamp));
+        forward_sum += forward_weight;
+        forward_cumulative_weights[group] = forward_sum;
+
+        // Backward weight (relative to max timestamp)
+        const double backward_weight = exp(static_cast<double>(group_timestamp - min_timestamp));
+        backward_sum += backward_weight;
+        backward_cumulative_weights[group] = backward_sum;
+    }
+
+    // Normalize to get cumulative probabilities
+    for (size_t group = 0; group < num_groups; group++) {
+        forward_cumulative_weights[group] /= forward_sum;
+        backward_cumulative_weights[group] /= backward_sum;
+    }
 }
 
 std::pair<size_t, size_t> EdgeData::get_timestamp_group_range(size_t group_idx) const {

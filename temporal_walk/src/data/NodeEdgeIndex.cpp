@@ -168,7 +168,86 @@ void NodeEdgeIndex::rebuild(
 }
 
 void NodeEdgeIndex::update_temporal_weights(const EdgeData& edges) {
+   const size_t num_nodes = outbound_offsets.size() - 1;
 
+   // Resize weight vectors to match timestamp group counts
+   outbound_forward_weights.resize(outbound_timestamp_group_indices.size());
+   outbound_backward_weights.resize(outbound_timestamp_group_indices.size());
+   if (!inbound_offsets.empty()) {
+       inbound_backward_weights.resize(inbound_timestamp_group_indices.size());
+   }
+
+   // Process each node
+   for (size_t node = 0; node < num_nodes; node++) {
+       // Process outbound timestamp groups
+       size_t num_groups = get_timestamp_group_count(static_cast<int>(node), true, !inbound_offsets.empty());
+
+       if (num_groups > 0) {
+           // Get min/max timestamps for this node's groups
+           const size_t first_group_start = outbound_timestamp_group_indices[outbound_timestamp_group_offsets[node]];
+           const int64_t min_ts = edges.timestamps[outbound_indices[first_group_start]];
+
+           // Calculate weights and running sums
+           double forward_sum = 0.0;
+           double backward_sum = 0.0;
+
+           for (size_t group = 0; group < num_groups; group++) {
+               const size_t group_pos = outbound_timestamp_group_offsets[node] + group;
+               const size_t edge_start = outbound_timestamp_group_indices[group_pos];
+               const int64_t group_ts = edges.timestamps[outbound_indices[edge_start]];
+
+               // Forward weights
+               const double forward_weight = exp(static_cast<double>(min_ts - group_ts));
+               forward_sum += forward_weight;
+               outbound_forward_weights[group_pos] = forward_sum;
+
+               // Backward weights
+               const double backward_weight = exp(static_cast<double>(group_ts - min_ts));
+               backward_sum += backward_weight;
+               outbound_backward_weights[group_pos] = backward_sum;
+           }
+
+           // Normalize
+           const size_t start_pos = outbound_timestamp_group_offsets[node];
+           const size_t end_pos = outbound_timestamp_group_offsets[node + 1];
+           for (size_t pos = start_pos; pos < end_pos; pos++) {
+               outbound_forward_weights[pos] /= forward_sum;
+               outbound_backward_weights[pos] /= backward_sum;
+           }
+       }
+
+       // Process inbound timestamp groups for directed graphs
+       if (!inbound_offsets.empty()) {
+           num_groups = get_timestamp_group_count(static_cast<int>(node), false, true);
+
+           if (num_groups > 0) {
+               // Get min timestamp for this node's inbound groups
+               size_t first_group_start = inbound_timestamp_group_indices[inbound_timestamp_group_offsets[node]];
+               int64_t min_ts = edges.timestamps[inbound_indices[first_group_start]];
+
+               // Calculate weights and running sum
+               double backward_sum = 0.0;
+
+               for (size_t group = 0; group < num_groups; group++) {
+                   size_t group_pos = inbound_timestamp_group_offsets[node] + group;
+                   size_t edge_start = inbound_timestamp_group_indices[group_pos];
+                   int64_t group_ts = edges.timestamps[inbound_indices[edge_start]];
+
+                   // Backward weights
+                   double backward_weight = exp(static_cast<double>(group_ts - min_ts));
+                   backward_sum += backward_weight;
+                   inbound_backward_weights[group_pos] = backward_sum;
+               }
+
+               // Normalize
+               size_t start_pos = inbound_timestamp_group_offsets[node];
+               size_t end_pos = inbound_timestamp_group_offsets[node + 1];
+               for (size_t pos = start_pos; pos < end_pos; pos++) {
+                   inbound_backward_weights[pos] /= backward_sum;
+               }
+           }
+       }
+   }
 }
 
 std::pair<size_t, size_t> NodeEdgeIndex::get_edge_range(

@@ -32,6 +32,8 @@ public:
     // Edge addition
     void add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& new_edges);
 
+    void update_temporal_weights();
+
     // Timestamp group counting
     [[nodiscard]] size_t count_timestamps_less_than(int64_t timestamp) const;
     [[nodiscard]] size_t count_timestamps_greater_than(int64_t timestamp) const;
