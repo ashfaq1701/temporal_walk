@@ -54,12 +54,13 @@ WalkDirection walk_direction_from_string(const std::string& walk_direction_str)
 PYBIND11_MODULE(_temporal_walk, m)
 {
     py::class_<TemporalWalk>(m, "TemporalWalk")
-        .def(py::init([](const bool is_directed, const std::optional<int64_t> max_time_capacity)
+        .def(py::init([](const bool is_directed, const std::optional<int64_t> max_time_capacity, std::optional<bool> enable_weight_computation)
              {
-                 return std::make_unique<TemporalWalk>(is_directed, max_time_capacity.value_or(-1));
+                 return std::make_unique<TemporalWalk>(is_directed, max_time_capacity.value_or(-1), enable_weight_computation.value_or(false));
              }),
              py::arg("is_directed"),
-             py::arg("max_time_capacity") = py::none())
+             py::arg("max_time_capacity") = py::none(),
+             py::arg("enable_weight_computation") = false)
         .def("add_multiple_edges", [](TemporalWalk& tw, const std::vector<std::tuple<int, int, int64_t>>& edge_infos)
              {
                  tw.add_multiple_edges(edge_infos);

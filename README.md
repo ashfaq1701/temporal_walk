@@ -86,10 +86,10 @@ pip install temporal-walk
 ### Constructor
 
 ```cpp
-TemporalWalk(bool is_directed, int64_t max_time_capacity=-1);
+TemporalWalk(bool is_directed, int64_t max_time_capacity=-1, bool enable_weight_computation=false);
 ```
 
-Initializes a (Un)directed TemporalWalk object with the maximum time capacity of the graph. The is_directed parameter defines if the graph is directed or not. The default value of `max_time_capacity` is -1, which means unlimited capacity. If set then edges older than `max_time_capacity` from the latest timestamp are deleted automatically.
+Initializes a (Un)directed TemporalWalk object with the maximum time capacity of the graph. The is_directed parameter defines if the graph is directed or not. The default value of `max_time_capacity` is -1, which means unlimited capacity. If set then edges older than `max_time_capacity` from the latest timestamp are deleted automatically. `enable_weight_computation` defines if CTDNE weights will be computed or not. It must be true to use `ExponentialWeight` random picker. Default is false, which will only enable the index based random pickers. 
 
 ### add_multiple_edges
 
@@ -115,9 +115,9 @@ Generates temporal random walks for all nodes in the graph similar to get_random
 Parameters:
 
 * max_walk_len: Maximum length of each random walk
-* walk_bias: Type of bias for selecting next edges during walk (Uniform, Linear, or Exponential)
+* walk_bias: Type of bias for selecting next edges during walk (Uniform, Linear, Exponential or ExponentialWeight)
 * num_walks_per_node: Number of walks per node.
-* initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, or Exponential). If nullptr, uses walk_bias
+* initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, Exponential or ExponentialWeight). If nullptr, uses walk_bias
 * walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
 
 Returns:
@@ -140,9 +140,9 @@ Generates temporal random walks for all nodes in the graph where each step conta
 Parameters:
 
 * max_walk_len: Maximum length of each random walk
-* walk_bias: Type of bias for selecting next edges during walk (Uniform, Linear, or Exponential)
+* walk_bias: Type of bias for selecting next edges during walk (Uniform, Linear, Exponential or ExponentialWeight)
 * num_walks_per_node: Number of walks per node.
-* initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, or Exponential). If nullptr, uses walk_bias
+* initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, Exponential or ExponentialWeight). If nullptr, uses walk_bias
 * walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
 
 Returns:
@@ -165,9 +165,9 @@ Generates temporal random walks similar to get_random_walks_and_times but return
 Parameters:
 
 * max_walk_len: Maximum length of each random walk
-* walk_bias: Type of bias for selecting next edges during walk (Uniform, Linear, or Exponential)
+* walk_bias: Type of bias for selecting next edges during walk (Uniform, Linear, Exponential or ExponentialWeight)
 * num_walks_per_node: Number of walks per node.
-* initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, or Exponential). If nullptr, uses walk_bias
+* initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, Exponential or ExponentialWeight). If nullptr, uses walk_bias
 * walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
 
 Returns:
@@ -190,9 +190,9 @@ Generates temporal random walks where each step contains both node ID and timest
 Parameters:
 
 * max_walk_len: Maximum length of each random walk
-* walk_bias: Type of bias for selecting next edges during walk (Uniform, Linear, or Exponential)
+* walk_bias: Type of bias for selecting next edges during walk (Uniform, Linear, Exponential or ExponentialWeight)
 * num_walks_per_node: Number of walks per node.
-* initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, or Exponential). If nullptr, uses walk_bias
+* initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, Exponential or ExponentialWeight). If nullptr, uses walk_bias
 * walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
 
 Returns:
@@ -218,10 +218,10 @@ Generates temporal random walks similar to get_random_walks_and_times_with_speci
 Parameters:
 
 * max_walk_len: Maximum length of each random walk
-* walk_bias: Type of bias for selecting next edges during walk (Uniform, Linear, or Exponential)
+* walk_bias: Type of bias for selecting next edges during walk (Uniform, Linear, Exponential, ExponentialWeight or ExponentialWeight)
 * num_cw: Number of context windows to generate. If -1, calculated using num_walks_per_node
 * num_walks_per_node: Number of walks per node. Used only if num_cw is -1
-* initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, or Exponential). If nullptr, uses walk_bias
+* initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, Exponential, ExponentialWeight or ExponentialWeight). If nullptr, uses walk_bias
 * walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
 * context_window_len: Minimum length of walks. Default is 2 if -1 provided
 * p_walk_success_threshold: Minimum required success rate for walk generation (default 0.01)
@@ -249,10 +249,10 @@ Generates temporal random walks where each step contains both node ID and timest
 Parameters:
 
 * max_walk_len: Maximum length of each random walk
-* walk_bias: Type of bias for selecting next edges during walk (Uniform, Linear, or Exponential)
+* walk_bias: Type of bias for selecting next edges during walk (Uniform, Linear, Exponential or ExponentialWeight)
 * num_cw: Number of context windows to generate. If -1, calculated using num_walks_per_node
 * num_walks_per_node: Number of walks per node. Used only if num_cw is -1
-* initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, or Exponential). If nullptr, uses walk_bias
+* initial_edge_bias: Optional bias type for selecting initial edges (Uniform, Linear, Exponential or ExponentialWeight). If nullptr, uses walk_bias
 * walk_direction: Direction of temporal walks (Forward_In_Time or Backward_In_Time)
 * context_window_len: Minimum length of walks. Default is 2 if -1 provided
 * p_walk_success_threshold: Minimum required success rate for walk generation (default 0.01)
@@ -302,10 +302,10 @@ The Python bindings for the `TemporalWalk` class provide a seamless way to inter
 ### Constructor
 
 ```python
-TemporalWalk(bool is_directed, max_time_capacity: int=-1):
+TemporalWalk(bool is_directed, max_time_capacity: int=-1, enable_weight_computation: bool=False):
 ```
 
-Initializes a (Un)directed TemporalWalk object with the maximum time capacity of the graph. The is_directed parameter defines if the graph is directed or not.
+Initializes a (Un)directed TemporalWalk object with the maximum time capacity of the graph. The is_directed parameter defines if the graph is directed or not. `enable_weight_computation` defines if CTDNE weights will be computed or not. It must be true to use `ExponentialWeight` random picker. Default is false, which will only enable the index based random pickers.
 
 ### add_multiple_edges
 
@@ -335,7 +335,8 @@ Parameters
 * walk_bias - Type of bias for selecting next edges during walk:
   * "Uniform": Equal probability for all valid edges
   * "Linear": Linear decay based on time
-  * "Exponential": Exponential decay based on time
+  * "Exponential": Exponential decay based on time with discrete sorted indices
+  * "ExponentialWeight": Exponential decay based on time with actual timestamp based weights (CTDNE)
 
 * num_walks_per_node - Number of walks per node.
 * initial_edge_bias - Optional bias type for selecting initial edges. Uses walk_bias if None
@@ -368,7 +369,8 @@ Parameters
 * walk_bias - Type of bias for selecting next edges during walk:
   * "Uniform": Equal probability for all valid edges
   * "Linear": Linear decay based on time
-  * "Exponential": Exponential decay based on time
+  * "Exponential": Exponential decay based on time with discrete sorted indices
+  * "ExponentialWeight": Exponential decay based on time with actual timestamp based weights (CTDNE)
 
 * num_walks_per_node - Number of walks per node.
 * initial_edge_bias - Optional bias type for selecting initial edges. Uses walk_bias if None
@@ -400,7 +402,8 @@ Parameters
 * walk_bias - Type of bias for selecting next edges during walk:
   * "Uniform": Equal probability for all valid edges
   * "Linear": Linear decay based on time
-  * "Exponential": Exponential decay based on time
+  * "Exponential": Exponential decay based on time with discrete sorted indices
+  * "ExponentialWeight": Exponential decay based on time with actual timestamp based weights (CTDNE)
 
 * num_walks_per_node - Number of walks per node.
 * initial_edge_bias - Optional bias type for selecting initial edges. Uses walk_bias if None
@@ -433,7 +436,8 @@ Parameters
 * walk_bias - Type of bias for selecting next edges during walk:
   * "Uniform": Equal probability for all valid edges
   * "Linear": Linear decay based on time
-  * "Exponential": Exponential decay based on time
+  * "Exponential": Exponential decay based on time with discrete sorted indices
+  * "ExponentialWeight": Exponential decay based on time with actual timestamp based weights (CTDNE)
 
 * num_walks_per_node - Number of walks per node.
 * initial_edge_bias - Optional bias type for selecting initial edges. Uses walk_bias if None
@@ -468,7 +472,8 @@ Parameters
 * walk_bias - Type of bias for selecting next edges during walk:
   * "Uniform": Equal probability for all valid edges
   * "Linear": Linear decay based on time
-  * "Exponential": Exponential decay based on time
+  * "Exponential": Exponential decay based on time with discrete sorted indices
+  * "ExponentialWeight": Exponential decay based on time with actual timestamp based weights (CTDNE)
 
 * num_cw - Number of context windows to generate. If None, calculated using num_walks_per_node
 * num_walks_per_node - Number of walks per node. Used only if num_cw is None
@@ -508,7 +513,8 @@ Parameters
 * walk_bias - Type of bias for selecting next edges during walk:
   * "Uniform": Equal probability for all valid edges
   * "Linear": Linear decay based on time
-  * "Exponential": Exponential decay based on time
+  * "Exponential": Exponential decay based on time with discrete sorted indices
+  * "ExponentialWeight": Exponential decay based on time with actual timestamp based weights (CTDNE)
 
 * num_cw - Number of context windows to generate. If None, calculated using num_walks_per_node
 * num_walks_per_node - Number of walks per node. Used only if num_cw is None
