@@ -19,7 +19,7 @@ int ExponentialWeightRandomPicker::pick_random(
     if (end_sum <= start_sum) return -1;
 
     // Generate random value between [start_sum, end_sum]
-    double random_val = start_sum + get_random_double() * (end_sum - start_sum);
+    const double random_val = start_sum + get_random_double() * (end_sum - start_sum);
 
     // Find the group where random_val falls
     return static_cast<int>(std::lower_bound(
