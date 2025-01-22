@@ -440,6 +440,13 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
                   : (is_directed ? node_index.inbound_offsets[dense_idx + 1]
                                 : node_index.outbound_offsets[dense_idx + 1]));
 
+    // Validate range before random selection
+    if (edge_start >= edge_end || edge_start >= edge_indices.size() ||
+        edge_end > edge_indices.size()) {
+        return {-1, -1, -1};
+    }
+
+
     // Random selection from group
     const size_t edge_idx = edge_indices[edge_start + get_random_number(static_cast<int>(edge_end - edge_start))];
 

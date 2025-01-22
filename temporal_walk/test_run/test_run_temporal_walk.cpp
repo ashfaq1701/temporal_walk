@@ -1,7 +1,7 @@
 #include <vector>
 
 #include "../src/core/TemporalWalk.h"
-#include "print_walks.h"
+#include "test_utils.h"
 
 int main() {
     const std::vector<std::tuple<int, int, int64_t>> edges {

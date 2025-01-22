@@ -47,4 +47,18 @@ inline void print_temporal_walks_for_nodes_with_times(const std::unordered_map<i
     }
 }
 
+inline double get_average_walk_length(const std::vector<std::vector<NodeWithTime>>& walks_for_nodes) {
+    if (walks_for_nodes.empty()) return 0.0;
+
+    size_t total_length = 0;
+    size_t num_walks = 0;
+
+    for (const auto& walks : walks_for_nodes) {
+        total_length += walks.size();
+        num_walks++;
+    }
+
+    return static_cast<double>(total_length) / static_cast<double>(num_walks);
+}
+
 #endif //PRINT_WALKS_H
