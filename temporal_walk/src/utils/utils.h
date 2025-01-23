@@ -109,6 +109,12 @@ inline std::vector<int> divide_number(int n, int i) {
     return parts;
 }
 
+inline std::mt19937& get_random_generator() {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    return gen;
+}
+
 template <typename T>
 void shuffle_vector(std::vector<T>& vec) {
     std::random_device rd;

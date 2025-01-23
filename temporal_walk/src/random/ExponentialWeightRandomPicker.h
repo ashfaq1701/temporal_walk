@@ -8,7 +8,7 @@ class ExponentialWeightRandomPicker : public WeightBasedRandomPicker
 {
 public:
      int pick_random(
-        const std::vector<double>& cumulative_weights,
+        const std::vector<double>& weights,
         int group_start,
         int group_end) override;
 };

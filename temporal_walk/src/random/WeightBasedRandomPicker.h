@@ -7,7 +7,7 @@ class WeightBasedRandomPicker : public RandomPicker
 {
 public:
     [[nodiscard]] virtual int pick_random(
-        const std::vector<double>& cumulative_weights,
+        const std::vector<double>& weights,
         int group_start,
         int group_end) = 0;
 };

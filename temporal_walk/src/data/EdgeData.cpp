@@ -73,8 +73,8 @@ void EdgeData::update_timestamp_groups() {
 
 void EdgeData::update_temporal_weights(double timescale_bound) {
     if (timestamps.empty()) {
-        forward_cumulative_weights.clear();
-        backward_cumulative_weights.clear();
+        forward_weights.clear();
+        backward_weights.clear();
         return;
     }
 
@@ -85,8 +85,8 @@ void EdgeData::update_temporal_weights(double timescale_bound) {
         timescale_bound / time_diff : 1.0;
 
     const size_t num_groups = get_timestamp_group_count();
-    forward_cumulative_weights.resize(num_groups);
-    backward_cumulative_weights.resize(num_groups);
+    forward_weights.resize(num_groups);
+    backward_weights.resize(num_groups);
 
     double forward_sum = 0.0, backward_sum = 0.0;
     for (size_t group = 0; group < num_groups; group++) {
@@ -102,17 +102,17 @@ void EdgeData::update_temporal_weights(double timescale_bound) {
             time_diff_backward * time_scale : time_diff_backward;
 
         const double forward_weight = exp(forward_scaled);
+        forward_weights[group] = forward_weight;
         forward_sum += forward_weight;
-        forward_cumulative_weights[group] = forward_sum;
 
         const double backward_weight = exp(backward_scaled);
+        backward_weights[group] = backward_weight;
         backward_sum += backward_weight;
-        backward_cumulative_weights[group] = backward_sum;
     }
 
     for (size_t group = 0; group < num_groups; group++) {
-        forward_cumulative_weights[group] /= forward_sum;
-        backward_cumulative_weights[group] /= backward_sum;
+        forward_weights[group] /= forward_sum;
+        backward_weights[group] /= backward_sum;
     }
 }
 
