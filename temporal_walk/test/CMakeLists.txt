@@ -3,6 +3,7 @@ find_package(GTest CONFIG REQUIRED)
 add_executable(
         test_temporal_walk
         test_temporal_walk.cpp
+        test_random_picker.cpp
         test_edge_data.cpp
         test_edge_data_weights.cpp
         test_node_edge_index.cpp

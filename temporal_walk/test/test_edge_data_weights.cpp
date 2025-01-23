@@ -112,40 +112,41 @@ TEST_F(EdgeDataWeightTest, BackwardWeightBias) {
 
 TEST_F(EdgeDataWeightTest, WeightExponentialDecay) {
     EdgeData edges;
-    add_test_edges(edges);
+    edges.push_back(1, 2, 10);
+    edges.push_back(2, 3, 20);
+    edges.push_back(3, 4, 30);
+    edges.update_timestamp_groups();
     edges.update_temporal_weights(-1);
 
-    // Extract normalized group weights
-    auto get_group_weights = [](const std::vector<double>& cumulative_weights) {
-        std::vector<double> group_weights;
-        group_weights.push_back(cumulative_weights[0]);
-        for (size_t i = 1; i < cumulative_weights.size(); i++) {
-            group_weights.push_back(cumulative_weights[i] - cumulative_weights[i-1]);
+    auto get_weights = [](const std::vector<double>& cumulative) {
+        std::vector<double> weights;
+        weights.push_back(cumulative[0]);
+        for (size_t i = 1; i < cumulative.size(); i++) {
+            weights.push_back(cumulative[i] - cumulative[i-1]);
         }
-        return group_weights;
+        return weights;
     };
 
-    // Get log ratios of consecutive weights
-    const auto forward_weights = get_group_weights(edges.forward_cumulative_weights);
-    const auto backward_weights = get_group_weights(edges.backward_cumulative_weights);
+    const auto forward_weights = get_weights(edges.forward_cumulative_weights);
+    const auto backward_weights = get_weights(edges.backward_cumulative_weights);
 
-    const double epsilon = 1e-3;
-
-    // For forward weights, check that log ratios are proportional to time differences
+    // For forward weights: log(w[i+1]/w[i]) = -Δt
     for (size_t i = 0; i < forward_weights.size() - 1; i++) {
-        if (forward_weights[i] > 0 && forward_weights[i+1] > 0) {
-            const auto time_diff = static_cast<double>(edges.unique_timestamps[i+1] - edges.unique_timestamps[i]);
-            const double log_ratio = log(forward_weights[i] / forward_weights[i+1]);
-            EXPECT_NEAR(log_ratio, time_diff, epsilon);
+        const auto time_diff = edges.unique_timestamps[i+1] - edges.unique_timestamps[i];
+        if (forward_weights[i+1] > 0 && forward_weights[i] > 0) {
+            const double log_ratio = log(forward_weights[i+1]/forward_weights[i]);
+            EXPECT_NEAR(log_ratio, -time_diff, 1e-6)
+                << "Forward weight log ratio incorrect at index " << i;
         }
     }
 
-    // For backward weights, check that log ratios are proportional to negative time differences
+    // For backward weights: log(w[i+1]/w[i]) = Δt
     for (size_t i = 0; i < backward_weights.size() - 1; i++) {
-        if (backward_weights[i] > 0 && backward_weights[i+1] > 0) {
-            const auto time_diff = static_cast<double>(edges.unique_timestamps[i+1] - edges.unique_timestamps[i]);
-            const double log_ratio = log(backward_weights[i+1] / backward_weights[i]);
-            EXPECT_NEAR(log_ratio, time_diff, epsilon);
+        const auto time_diff = edges.unique_timestamps[i+1] - edges.unique_timestamps[i];
+        if (backward_weights[i+1] > 0 && backward_weights[i] > 0) {
+            const double log_ratio = log(backward_weights[i+1]/backward_weights[i]);
+            EXPECT_NEAR(log_ratio, time_diff, 1e-6)
+                << "Backward weight log ratio incorrect at index " << i;
         }
     }
 }
@@ -241,12 +242,15 @@ TEST_F(EdgeDataWeightTest, ScalingComparison) {
 
 TEST_F(EdgeDataWeightTest, ScaledWeightBounds) {
     EdgeData edges;
-    add_test_edges(edges);
-    const double timescale_bound = 10.0;
+    edges.push_back(1, 2, 100);
+    edges.push_back(2, 3, 300);
+    edges.push_back(3, 4, 700);
+    edges.update_timestamp_groups();
+
+    constexpr double timescale_bound = 2.0;
     edges.update_temporal_weights(timescale_bound);
 
-    // Extract individual weights
-    auto get_individual_weights = [](const std::vector<double>& cumulative) {
+    auto get_weights = [](const std::vector<double>& cumulative) {
         std::vector<double> weights;
         weights.push_back(cumulative[0]);
         for (size_t i = 1; i < cumulative.size(); i++) {
@@ -255,16 +259,22 @@ TEST_F(EdgeDataWeightTest, ScaledWeightBounds) {
         return weights;
     };
 
-    auto forward_weights = get_individual_weights(edges.forward_cumulative_weights);
-    auto backward_weights = get_individual_weights(edges.backward_cumulative_weights);
+    const auto forward_weights = get_weights(edges.forward_cumulative_weights);
+    const auto backward_weights = get_weights(edges.backward_cumulative_weights);
 
-    // Check scaled time differences don't exceed timescale_bound
+    // Maximum log ratio should not exceed timescale_bound
     for (size_t i = 0; i < forward_weights.size(); i++) {
-        EXPECT_LE(log(forward_weights[i]), timescale_bound);
+        for (size_t j = 0; j < forward_weights.size(); j++) {
+            const double log_ratio = log(forward_weights[i] / forward_weights[j]);
+            EXPECT_LE(abs(log_ratio), timescale_bound + 1e-6);
+        }
     }
 
     for (size_t i = 0; i < backward_weights.size(); i++) {
-        EXPECT_LE(log(backward_weights[i]), timescale_bound);
+        for (size_t j = 0; j < backward_weights.size(); j++) {
+            const double log_ratio = log(backward_weights[i] / backward_weights[j]);
+            EXPECT_LE(abs(log_ratio), timescale_bound + 1e-6);
+        }
     }
 }
 
@@ -348,5 +358,53 @@ TEST_F(EdgeDataWeightTest, WeightMonotonicity) {
             EXPECT_LE(prev_diff, weight_diff)
                 << "Backward weight differences should increase monotonically";
         }
+    }
+}
+
+TEST_F(EdgeDataWeightTest, TimescaleScalingPrecision) {
+    EdgeData edges;
+    // Use precise timestamps for exact validation
+    edges.push_back(1, 2, 100);
+    edges.push_back(2, 3, 300);
+    edges.push_back(3, 4, 700);
+    edges.update_timestamp_groups();
+
+    const double timescale_bound = 2.0;
+    edges.update_temporal_weights(timescale_bound);
+
+    // Extract individual weights
+    auto get_weights = [](const std::vector<double>& cumulative) {
+        std::vector<double> weights;
+        weights.push_back(cumulative[0]);
+        for (size_t i = 1; i < cumulative.size(); i++) {
+            weights.push_back(cumulative[i] - cumulative[i-1]);
+        }
+        return weights;
+    };
+
+    const auto forward_weights = get_weights(edges.forward_cumulative_weights);
+    const auto backward_weights = get_weights(edges.backward_cumulative_weights);
+
+    // Time range is 600, scale = 2.0/600
+    const double time_scale = timescale_bound / 600.0;
+
+    // Check forward weights
+    for (size_t i = 0; i < forward_weights.size() - 1; i++) {
+        const auto time_diff = static_cast<double>(
+            edges.unique_timestamps[i+1] - edges.unique_timestamps[i]);
+        const double expected_ratio = exp(-time_diff * time_scale);
+        const double actual_ratio = forward_weights[i+1] / forward_weights[i];
+        EXPECT_NEAR(actual_ratio, expected_ratio, 1e-6)
+            << "Forward weight ratio incorrect at index " << i;
+    }
+
+    // Check backward weights
+    for (size_t i = 0; i < backward_weights.size() - 1; i++) {
+        const auto time_diff = static_cast<double>(
+            edges.unique_timestamps[i+1] - edges.unique_timestamps[i]);
+        const double expected_ratio = exp(time_diff * time_scale);
+        const double actual_ratio = backward_weights[i+1] / backward_weights[i];
+        EXPECT_NEAR(actual_ratio, expected_ratio, 1e-6)
+            << "Backward weight ratio incorrect at index " << i;
     }
 }

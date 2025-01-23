@@ -207,7 +207,7 @@ TEST_F(TemporalGraphWeightTest, DifferentTimescaleBounds) {
 }
 
 TEST_F(TemporalGraphWeightTest, SingleTimestampWithBounds) {
-    std::vector<std::tuple<int, int, int64_t>> single_ts_edges = {
+    const std::vector<std::tuple<int, int, int64_t>> single_ts_edges = {
         {1, 2, 100},
         {2, 3, 100},
         {3, 4, 100}
@@ -222,5 +222,60 @@ TEST_F(TemporalGraphWeightTest, SingleTimestampWithBounds) {
         ASSERT_EQ(graph.edges.backward_cumulative_weights.size(), 1);
         EXPECT_NEAR(graph.edges.forward_cumulative_weights[0], 1.0, 1e-6);
         EXPECT_NEAR(graph.edges.backward_cumulative_weights[0], 1.0, 1e-6);
+    }
+}
+
+TEST_F(TemporalGraphWeightTest, WeightScalingPrecision) {
+    TemporalGraph graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, 2.0);
+
+    // Use exact timestamps for precise validation
+    graph.add_multiple_edges({
+        {1, 2, 100},
+        {1, 3, 200},
+        {1, 4, 300}
+    });
+
+    const auto& edge_weights = graph.edges.forward_cumulative_weights;
+    ASSERT_EQ(edge_weights.size(), 3);
+
+    // Extract individual weights
+    auto get_weights = [](const std::vector<double>& cumulative) {
+        std::vector<double> weights;
+        weights.push_back(cumulative[0]);
+        for (size_t i = 1; i < cumulative.size(); i++) {
+            weights.push_back(cumulative[i] - cumulative[i-1]);
+        }
+        return weights;
+    };
+
+    const auto weights = get_weights(edge_weights);
+
+    // Time range is 200, scale = 2.0/200 = 0.01
+    constexpr double time_scale = 2.0 / 200.0;
+
+    for (size_t i = 0; i < weights.size() - 1; i++) {
+        constexpr auto time_diff = 100.0;  // Fixed time difference
+        const double expected_ratio = exp(-time_diff * time_scale);
+        const double actual_ratio = weights[i+1] / weights[i];
+        EXPECT_NEAR(actual_ratio, expected_ratio, 1e-6)
+            << "Weight ratio incorrect at index " << i;
+    }
+
+    // Check node weights
+    constexpr int node_id = 1;
+    const int dense_idx = graph.node_mapping.to_dense(node_id);
+    ASSERT_GE(dense_idx, 0);
+
+    const auto& node_weights = graph.node_index.outbound_forward_weights;
+    const size_t start = graph.node_index.outbound_timestamp_group_offsets[dense_idx];
+    const size_t end = graph.node_index.outbound_timestamp_group_offsets[dense_idx + 1];
+
+    const auto node_individual_weights = get_weights(
+        std::vector<double>(node_weights.begin() + static_cast<int>(start),
+            node_weights.begin() + static_cast<int>(end)));
+
+    // Verify node weights match edge weights
+    for (size_t i = 0; i < weights.size(); i++) {
+        EXPECT_NEAR(node_individual_weights[i], weights[i], 1e-6);
     }
 }

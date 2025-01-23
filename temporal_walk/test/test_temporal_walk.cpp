@@ -3,43 +3,18 @@
 
 #include "test_utils.h"
 #include "../src/core/TemporalWalk.h"
-#include "../src/random/ExponentialIndexRandomPicker.h"
-#include "../src/random/ExponentialWeightRandomPicker.h"
-#include "../src/random/LinearRandomPicker.h"
 
 constexpr int TEST_NODE_ID = 42;
 constexpr int MAX_WALK_LEN = 20;
 constexpr int64_t MAX_TIME_CAPACITY = 5;
 
-constexpr int RANDOM_START = 0;
-constexpr int RANDOM_END = 10000;
-constexpr int RANDOM_NUM_SAMPLES = 1000000;
-
 constexpr RandomPickerType exponential_picker_type = RandomPickerType::ExponentialIndex;
 constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;
-
-class RandomPickerTest : public ::testing::Test {
-protected:
-
-    LinearRandomPicker linear_picker;
-    ExponentialIndexRandomPicker exp_picker;
-
-    double compute_average_picks(const bool use_exponential, const bool prioritize_end) {
-        double sum = 0;
-        for (int i = 0; i < RANDOM_NUM_SAMPLES; i++) {
-            const int pick = use_exponential ?
-                                 exp_picker.pick_random(RANDOM_START, RANDOM_END, prioritize_end) :
-                                 linear_picker.pick_random(RANDOM_START, RANDOM_END, prioritize_end);
-            sum += pick;
-        }
-        return sum / RANDOM_NUM_SAMPLES;
-    }
-};
 
 class EmptyTemporalWalkTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(true);
+        temporal_walk = std::make_unique<TemporalWalk>(true, -1, true, -1);
     }
 
     std::unique_ptr<TemporalWalk> temporal_walk;
@@ -48,7 +23,7 @@ protected:
 class EmptyTemporalWalkTestWithMaxCapacity : public ::testing::Test {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(true, MAX_TIME_CAPACITY);
+        temporal_walk = std::make_unique<TemporalWalk>(true, MAX_TIME_CAPACITY, true, -1);
     }
 
     std::unique_ptr<TemporalWalk> temporal_walk;
@@ -61,7 +36,7 @@ protected:
     }
 
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(true);
+        temporal_walk = std::make_unique<TemporalWalk>(true, -1, true, -1);
         temporal_walk->add_multiple_edges(sample_edges);
     }
 
@@ -76,7 +51,7 @@ protected:
     }
 
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(false);
+        temporal_walk = std::make_unique<TemporalWalk>(false, -1, true, -1);
         temporal_walk->add_multiple_edges(sample_edges);
     }
 
@@ -84,183 +59,25 @@ protected:
     std::unique_ptr<TemporalWalk> temporal_walk;
 };
 
-// Test that prioritize_end=true gives higher average than prioritize_end=false for both pickers
-TEST_F(RandomPickerTest, PrioritizeEndGivesHigherAverage) {
-    // For Linear Picker
-    const double linear_end_prioritized = compute_average_picks(false, true);
-    const double linear_start_prioritized = compute_average_picks(false, false);
-    EXPECT_GT(linear_end_prioritized, linear_start_prioritized)
-        << "Linear picker with prioritize_end=true should give higher average ("
-        << linear_end_prioritized << ") than prioritize_end=false ("
-        << linear_start_prioritized << ")";
-
-    // For Exponential Picker
-    const double exp_end_prioritized = compute_average_picks(true, true);
-    const double exp_start_prioritized = compute_average_picks(true, false);
-    EXPECT_GT(exp_end_prioritized, exp_start_prioritized)
-        << "Exponential picker with prioritize_end=true should give higher average ("
-        << exp_end_prioritized << ") than prioritize_end=false ("
-        << exp_start_prioritized << ")";
-}
-
-// Test that exponential picker is more extreme than linear picker when prioritizing end
-TEST_F(RandomPickerTest, ExponentialMoreExtremeForEnd) {
-    const double linear_end_prioritized = compute_average_picks(false, true);
-    const double exp_end_prioritized = compute_average_picks(true, true);
-
-    EXPECT_GT(exp_end_prioritized, linear_end_prioritized)
-        << "Exponential picker with prioritize_end=true should give higher average ("
-        << exp_end_prioritized << ") than Linear picker ("
-        << linear_end_prioritized << ")";
-}
-
-// Test that exponential picker is more extreme than linear picker when prioritizing start
-TEST_F(RandomPickerTest, ExponentialMoreExtremeForStart) {
-    const double linear_start_prioritized = compute_average_picks(false, false);
-    const double exp_start_prioritized = compute_average_picks(true, false);
-
-    EXPECT_LT(exp_start_prioritized, linear_start_prioritized)
-        << "Exponential picker with prioritize_end=false should give lower average ("
-        << exp_start_prioritized << ") than Linear picker ("
-        << linear_start_prioritized << ")";
-}
-
-// Test that output is always within bounds
-TEST_F(RandomPickerTest, BoundsTest) {
-    const int start = 5;
-    const int end = 10;
-    const int num_tests = 1000;
-
-    for (int i = 0; i < num_tests; i++) {
-        int linear_result = linear_picker.pick_random(start, end, true);
-        EXPECT_GE(linear_result, start);
-        EXPECT_LT(linear_result, end);
-
-        linear_result = linear_picker.pick_random(start, end, false);
-        EXPECT_GE(linear_result, start);
-        EXPECT_LT(linear_result, end);
-
-        int exp_result = exp_picker.pick_random(start, end, true);
-        EXPECT_GE(exp_result, start);
-        EXPECT_LT(exp_result, end);
-
-        exp_result = exp_picker.pick_random(start, end, false);
-        EXPECT_GE(exp_result, start);
-        EXPECT_LT(exp_result, end);
-    }
-}
-
-// Test single-element range always returns that element
-TEST_F(RandomPickerTest, SingleElementRangeTest) {
-    constexpr int start = 5;
-    constexpr int end = 6;  // Range of size 1
-
-    // Should always return start for both true and false prioritize_end
-    EXPECT_EQ(linear_picker.pick_random(start, end, true), start);
-    EXPECT_EQ(linear_picker.pick_random(start, end, false), start);
-    EXPECT_EQ(exp_picker.pick_random(start, end, true), start);
-    EXPECT_EQ(exp_picker.pick_random(start, end, false), start);
-}
-
-// Test probabilities more deterministically for linear random picker and two elements.
-TEST_F(RandomPickerTest, TwoElementRangeDistributionTestForLinearRandomPicker) {
-    const int start = 0;
-    const int end = 2;
-    int count_ones_end_prioritized = 0;
-    int count_ones_start_prioritized = 0;
-    const int num_trials = RANDOM_NUM_SAMPLES;
-
-    // Run trials
-    for (int i = 0; i < num_trials; i++) {
-        // Test prioritize_end=true
-        int result_end = linear_picker.pick_random(start, end, true);
-        if (result_end == 1) {
-            count_ones_end_prioritized++;
-        }
-
-        // Test prioritize_end=false (separate trial)
-        int result_start = linear_picker.pick_random(start, end, false);
-        if (result_start == 1) {
-            count_ones_start_prioritized++;
-        }
+class TimescaleBoundedTemporalWalkTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        temporal_walk = std::make_unique<TemporalWalk>(true, -1, true, 10.0);
+        temporal_walk->add_multiple_edges({
+            {1, 2, 100},  // Small-time differences
+            {2, 3, 101},
+            {3, 4, 103},
+            {4, 5, 110},  // Medium time differences
+            {5, 6, 130},
+            {6, 7, 160},
+            {7, 8, 200},  // Large time differences
+            {8, 9, 250},
+            {9, 10, 310}
+        });
     }
 
-    // For linear picker with size 2:
-    // When prioritize_end=true:
-    //   weight(0) = 1, weight(1) = 2, total_weight = 3
-    //   prob(0) = 1/3, prob(1) = 2/3
-    // When prioritize_end=false:
-    //   weight(0) = 2, weight(1) = 1, total_weight = 3
-    //   prob(0) = 2/3, prob(1) = 1/3
-
-    constexpr double expected_prob_end = 2.0 / 3.0;    // probability of getting 1 when prioritizing end
-    constexpr double expected_prob_start = 1.0 / 3.0;  // probability of getting 1 when prioritizing start
-
-    const double actual_prob_end = static_cast<double>(count_ones_end_prioritized) / num_trials;
-    const double actual_prob_start = static_cast<double>(count_ones_start_prioritized) / num_trials;
-
-    // Allow for some statistical variation
-    constexpr double tolerance = 0.02;  // 2% tolerance
-
-    EXPECT_NEAR(actual_prob_end, expected_prob_end, tolerance)
-        << "When prioritizing end, probability of picking 1 should be approximately "
-        << expected_prob_end << " but got " << actual_prob_end;
-
-    EXPECT_NEAR(actual_prob_start, expected_prob_start, tolerance)
-        << "When prioritizing start, probability of picking 1 should be approximately "
-        << expected_prob_start << " but got " << actual_prob_start;
-}
-
-// Test probabilities more deterministically for exponential random picker and two elements.
-TEST_F(RandomPickerTest, TwoElementRangeDistributionTestForExponentialRandomPicker) {
-    const int start = 0;
-    const int end = 2;
-    int count_ones_end_prioritized = 0;
-    int count_ones_start_prioritized = 0;
-    constexpr int num_trials = RANDOM_NUM_SAMPLES;
-
-    // Run trials
-    for (int i = 0; i < num_trials; i++) {
-        // Test prioritize_end=true
-        int result_end = exp_picker.pick_random(start, end, true);
-        if (result_end == 1) {
-            count_ones_end_prioritized++;
-        }
-
-        // Test prioritize_end=false (separate trial)
-        int result_start = exp_picker.pick_random(start, end, false);
-        if (result_start == 1) {
-            count_ones_start_prioritized++;
-        }
-    }
-
-    // For exponential picker with size 2:
-    // When prioritize_end=true:
-    //   P(0) = (e-1)/(e^2 - 1)
-    //   P(1) = (e-1)e/(e^2 - 1)
-    const double e = std::exp(1.0);
-    const double e_squared = e * e;
-    const double expected_prob_end = (e - 1.0) * e / (e_squared - 1.0);  // probability of getting 1
-
-    // When prioritize_end=false:
-    //   P(0) = (e-1)e/(e^2 - 1)
-    //   P(1) = (e-1)/(e^2 - 1)
-    const double expected_prob_start = (e - 1.0) / (e_squared - 1.0);  // probability of getting 1
-
-    const double actual_prob_end = static_cast<double>(count_ones_end_prioritized) / num_trials;
-    const double actual_prob_start = static_cast<double>(count_ones_start_prioritized) / num_trials;
-
-    // Allow for some statistical variation
-    constexpr double tolerance = 0.005;  // 0.5% tolerance
-
-    EXPECT_NEAR(actual_prob_end, expected_prob_end, tolerance)
-        << "When prioritizing end, probability of picking 1 should be approximately "
-        << expected_prob_end << " but got " << actual_prob_end;
-
-    EXPECT_NEAR(actual_prob_start, expected_prob_start, tolerance)
-        << "When prioritizing start, probability of picking 1 should be approximately "
-        << expected_prob_start << " but got " << actual_prob_start;
-}
+    std::unique_ptr<TemporalWalk> temporal_walk;
+};
 
 // Test the constructor of TemporalWalk to ensure it initializes correctly.
 TEST_F(EmptyTemporalWalkTest, ConstructorTest) {
@@ -524,70 +341,286 @@ TEST_F(FilledDirectedTemporalWalkTest, WalkTerminalEdgesTest) {
     }
 }
 
-TEST_F(RandomPickerTest, ExponentialWeightTimestepOrderingTest) {
-    // Create sample edges with timestamps
-    std::vector<std::tuple<int, int, int64_t>> test_edges = {
-        {1, 2, 10},
-        {1, 3, 20},
-        {2, 3, 30},
-        {3, 4, 40}
+// Test timestamps and valid edges with ExponentialWeightRandomPicker
+TEST_F(FilledDirectedTemporalWalkTest, WalkIncreasingTimestampWithExponentialWeightTest) {
+    constexpr RandomPickerType exponential_weight_picker = RandomPickerType::ExponentialWeight;
+    const auto walks = temporal_walk->get_random_walks_and_times_for_all_nodes(
+        MAX_WALK_LEN, &exponential_weight_picker, 10);
+
+    for (const auto& walk : walks) {
+        for (size_t i = 1; i < walk.size(); ++i) {
+            EXPECT_GT(walk[i].timestamp, walk[i - 1].timestamp)
+                << "Timestamps not increasing at index " << i
+                << " with node: " << walk[i].node
+                << ", previous node: " << walk[i - 1].node;
+        }
+    }
+
+    const auto walks_backward = temporal_walk->get_random_walks_and_times_for_all_nodes(
+        MAX_WALK_LEN, &exponential_weight_picker, 10, nullptr, WalkDirection::Backward_In_Time);
+
+    for (const auto& walk : walks_backward) {
+        for (size_t i = 1; i < walk.size(); ++i) {
+            EXPECT_GT(walk[i].timestamp, walk[i - 1].timestamp)
+                << "Timestamps not increasing in backward walk at index " << i
+                << " with node: " << walk[i].node
+                << ", previous node: " << walk[i - 1].node;
+        }
+    }
+}
+
+TEST_F(FilledDirectedTemporalWalkTest, WalkValidEdgesWithExponentialWeightTest) {
+    constexpr RandomPickerType exponential_weight_picker = RandomPickerType::ExponentialWeight;
+
+    // Create edge lookup map
+    std::map<std::tuple<int, int, int64_t>, bool> valid_edges;
+    for (const auto& edge : sample_edges) {
+        valid_edges[edge] = true;
+    }
+
+    // Test forward walks
+    const auto walks_forward = temporal_walk->get_random_walks_and_times_for_all_nodes(
+        MAX_WALK_LEN, &exponential_weight_picker, 10, nullptr, WalkDirection::Forward_In_Time);
+
+    for (const auto& walk : walks_forward) {
+        if (walk.size() <= 1) continue;
+
+        for (size_t i = 0; i < walk.size() - 1; i++) {
+            int src = walk[i].node;
+            int dst = walk[i+1].node;
+            int64_t ts = walk[i+1].timestamp;
+
+            bool edge_exists = valid_edges.count({src, dst, ts}) > 0;
+            EXPECT_TRUE(edge_exists)
+                << "Invalid forward edge in exponential weight walk: ("
+                << src << "," << dst << "," << ts << ")";
+        }
+    }
+
+    // Test backward walks
+    const auto walks_backward = temporal_walk->get_random_walks_and_times_for_all_nodes(
+        MAX_WALK_LEN, &exponential_weight_picker, 10, nullptr, WalkDirection::Backward_In_Time);
+
+    for (const auto& walk : walks_backward) {
+        if (walk.size() <= 1) continue;
+
+        for (size_t i = 1; i < walk.size(); i++) {
+            int src = walk[i - 1].node;
+            int dst = walk[i].node;
+            int64_t ts = walk[i - 1].timestamp;
+
+            bool edge_exists = valid_edges.count({src, dst, ts}) > 0;
+            EXPECT_TRUE(edge_exists)
+                << "Invalid backward edge in exponential weight walk: ("
+                << src << "," << dst << "," << ts << ")";
+        }
+    }
+}
+
+TEST_F(FilledDirectedTemporalWalkTest, WalkTerminalEdgesWithExponentialWeightTest) {
+    constexpr RandomPickerType exponential_weight_picker = RandomPickerType::ExponentialWeight;
+
+    std::map<int, std::vector<int64_t>> next_valid_timestamps;
+    std::map<int, std::vector<int64_t>> prev_valid_timestamps;
+
+    for (const auto& [src, dst, ts] : sample_edges) {
+        next_valid_timestamps[src].push_back(ts);
+        prev_valid_timestamps[dst].push_back(ts);
+    }
+
+    for (auto& [_, timestamps] : next_valid_timestamps) {
+        std::sort(timestamps.begin(), timestamps.end());
+    }
+    for (auto& [_, timestamps] : prev_valid_timestamps) {
+        std::sort(timestamps.begin(), timestamps.end());
+    }
+
+    // Test forward walks
+    const auto walks_forward = temporal_walk->get_random_walks_and_times_for_all_nodes(
+        MAX_WALK_LEN, &exponential_weight_picker, 10, nullptr, WalkDirection::Forward_In_Time);
+
+    for (const auto& walk : walks_forward) {
+        if (walk.empty() || walk.size() == MAX_WALK_LEN) continue;
+        if (walk[0].timestamp == INT64_MIN) continue;  // Skip first sentinel value
+
+        const int last_node = walk.back().node;
+        const int64_t last_ts = walk.back().timestamp;
+
+        auto it = next_valid_timestamps.find(last_node);
+        if (it == next_valid_timestamps.end()) continue;
+
+        const auto& timestamps = it->second;
+        auto next_ts_it = std::upper_bound(timestamps.begin(), timestamps.end(), last_ts);
+
+        EXPECT_EQ(next_ts_it, timestamps.end())
+            << "Forward walk terminated despite having valid edges from node "
+            << last_node << " after timestamp " << last_ts;
+    }
+
+    // Test backward walks
+    const auto walks_backward = temporal_walk->get_random_walks_and_times_for_all_nodes(
+        MAX_WALK_LEN, &exponential_weight_picker, 10, nullptr, WalkDirection::Backward_In_Time);
+
+    for (const auto& walk : walks_backward) {
+        if (walk.empty() || walk.size() == MAX_WALK_LEN) continue;
+        if (walk.back().timestamp == INT64_MAX) continue;  // Skip last sentinel value
+
+        const int first_node = walk.front().node;
+        const int64_t first_ts = walk.front().timestamp;
+
+        auto it = prev_valid_timestamps.find(first_node);
+        if (it == prev_valid_timestamps.end()) continue;
+
+        const auto& timestamps = it->second;
+        auto prev_ts_it = std::lower_bound(timestamps.begin(), timestamps.end(), first_ts);
+
+        EXPECT_GT(prev_ts_it, timestamps.begin())
+            << "Backward walk terminated despite having valid edges to node "
+            << first_node << " before timestamp " << first_ts;
+    }
+}
+
+TEST_F(TimescaleBoundedTemporalWalkTest, ExponentialWeightDistributionTest) {
+    constexpr RandomPickerType exponential_weight_picker = RandomPickerType::ExponentialWeight;
+    constexpr int NUM_WALKS = 1000;
+
+    std::map<std::pair<int, int>, int> edge_counts;
+
+    const auto walks = temporal_walk->get_random_walks_and_times_for_all_nodes(
+        3, &exponential_weight_picker, NUM_WALKS);
+
+    for (const auto& walk : walks) {
+        if (walk.size() < 2) continue;
+
+        for (size_t i = 0; i < walk.size() - 1; i++) {
+            edge_counts[{walk[i].node, walk[i+1].node}]++;
+        }
+    }
+
+    // Check that temporal edges with smaller time differences are chosen more frequently
+    for (const auto& [edge, count] : edge_counts) {
+        if (const auto [src, dst] = edge; src < dst - 1) {  // Check non-consecutive node pairs
+            const int next_count = edge_counts[{src, dst}];
+            if (const int prev_count = edge_counts[{src, dst-1}]; prev_count > 0) {  // Only compare if both edges were traversed
+                EXPECT_GE(prev_count, next_count)
+                    << "Edge (" << src << "," << dst-1 << ") with smaller time difference"
+                    << " was chosen less frequently than (" << src << "," << dst << ")";
+            }
+        }
+    }
+}
+
+TEST_F(TimescaleBoundedTemporalWalkTest, WeightBasedEdgeSelection) {
+    constexpr RandomPickerType exponential_weight_picker = RandomPickerType::ExponentialWeight;
+    constexpr int NUM_WALKS = 10000;
+
+    std::map<int64_t, int> timestamp_counts;
+    const auto walks = temporal_walk->get_random_walks_and_times_for_all_nodes(
+        3, &exponential_weight_picker, NUM_WALKS);
+
+    for (const auto& walk : walks) {
+        if (walk.size() < 2) continue;
+        for (size_t i = 1; i < walk.size(); i++) {
+            timestamp_counts[walk[i].timestamp]++;
+        }
+    }
+
+    // Compare consecutive timestamps (100,101,103 vs 110,130,160 vs 200,250,310)
+    const std::vector<std::vector<int64_t>> timestamp_groups = {
+        {100, 101, 103},      // Small differences
+        {110, 130, 160},      // Medium differences
+        {200, 250, 310}       // Large differences
     };
 
-    // Sample with no scaling
-    ExponentialWeightRandomPicker no_scale_picker;
-    TemporalGraph graph_no_scale(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, -1);
-    graph_no_scale.add_multiple_edges(test_edges);
-
-    constexpr int num_samples = 10000;
-    std::map<int64_t, int> no_scale_forward, no_scale_backward;
-
-    // Sample forward walks
-    for (int i = 0; i < num_samples; i++) {
-        auto [u1, i1, ts] = graph_no_scale.get_edge_at(no_scale_picker, -1, true);
-        no_scale_forward[ts]++;
+    // Within each group, closer timestamps should be selected more often
+    for (const auto& group : timestamp_groups) {
+        for (size_t i = 0; i < group.size() - 1; i++) {
+            EXPECT_GT(timestamp_counts[group[i]], timestamp_counts[group[i + 1]])
+                << "Timestamp " << group[i] << " selected less often than " << group[i + 1]
+                << " despite smaller time difference";
+        }
     }
 
-    // Print distribution for debugging
-    std::cout << "\nForward sampling distribution (unscaled):\n";
-    for (const auto& [ts, count] : no_scale_forward) {
-        std::cout << "Timestamp " << ts << ": " << count << " samples ("
-                 << (count * 100.0 / num_samples) << "%)\n";
+    // Time difference ratios should reflect timescale bound
+    for (const auto& group : timestamp_groups) {
+        for (size_t i = 0; i < group.size() - 1; i++) {
+            constexpr double bound = 10.0;
+            if (timestamp_counts[group[i]] == 0 || timestamp_counts[group[i + 1]] == 0) continue;
+
+            const double count_ratio = static_cast<double>(timestamp_counts[group[i + 1]]) /
+                                     timestamp_counts[group[i]];
+            const auto time_diff = static_cast<double>(group[i + 1] - group[i]);
+            const double scaled_diff = time_diff * (bound / (310.0 - 100.0));  // Full time range
+            const double expected_ratio = exp(-scaled_diff);
+
+            EXPECT_NEAR(count_ratio, expected_ratio, 0.1)
+                << "Selection ratio between timestamps " << group[i] << " and " << group[i + 1]
+                << " doesn't match expected scaled exponential decay";
+        }
+    }
+}
+
+
+TEST_F(TimescaleBoundedTemporalWalkTest, ValidEdgesWithScaling) {
+    constexpr RandomPickerType exponential_weight_picker = RandomPickerType::ExponentialWeight;
+
+    std::map<std::tuple<int, int, int64_t>, bool> valid_edges;
+    for (const auto& edge : temporal_walk->get_edges()) {
+        valid_edges[edge] = true;
     }
 
-    // Sample backward walks
-    for (int i = 0; i < num_samples; i++) {
-        auto [u1, i1, ts] = graph_no_scale.get_edge_at(no_scale_picker, -1, false);
-        no_scale_backward[ts]++;
+    const auto walks = temporal_walk->get_random_walks_and_times_for_all_nodes(
+        MAX_WALK_LEN, &exponential_weight_picker, 1000);
+
+    for (const auto& walk : walks) {
+        if (walk.size() <= 1) continue;
+
+        for (size_t i = 0; i < walk.size() - 1; i++) {
+            const auto edge = std::make_tuple(
+                walk[i].node,
+                walk[i+1].node,
+                walk[i+1].timestamp
+            );
+            EXPECT_TRUE(valid_edges[edge])
+                << "Invalid edge in timescale bounded walk: ("
+                << std::get<0>(edge) << ","
+                << std::get<1>(edge) << ","
+                << std::get<2>(edge) << ")";
+        }
+    }
+}
+
+TEST_F(TimescaleBoundedTemporalWalkTest, TerminalEdgeValidation) {
+    constexpr RandomPickerType exponential_weight_picker = RandomPickerType::ExponentialWeight;
+
+    // Track valid timestamps for each node
+    std::map<int, std::vector<int64_t>> next_valid_timestamps;
+    for (const auto& [src, dst, ts] : temporal_walk->get_edges()) {
+        next_valid_timestamps[src].push_back(ts);
     }
 
-    std::cout << "\nBackward sampling distribution (unscaled):\n";
-    for (const auto& [ts, count] : no_scale_backward) {
-        std::cout << "Timestamp " << ts << ": " << count << " samples ("
-                 << (count * 100.0 / num_samples) << "%)\n";
+    // Sort timestamps
+    for (auto& [_, timestamps] : next_valid_timestamps) {
+        std::sort(timestamps.begin(), timestamps.end());
     }
 
-    std::vector<int64_t> timestamps = {10, 20, 30, 40};
+    const auto walks = temporal_walk->get_random_walks_and_times_for_all_nodes(
+        MAX_WALK_LEN, &exponential_weight_picker, 100);
 
-    // Test relative differences instead of strict ordering
-    for (size_t i = 0; i < timestamps.size() - 1; i++) {
-        // Skip if either count is 0 to avoid division by zero
-        if (no_scale_forward[timestamps[i]] == 0 || no_scale_forward[timestamps[i + 1]] == 0) continue;
+    for (const auto& walk : walks) {
+        if (walk.empty() || walk.size() == MAX_WALK_LEN) continue;
 
-        double ratio = static_cast<double>(no_scale_forward[timestamps[i]]) /
-                      no_scale_forward[timestamps[i + 1]];
-        EXPECT_GT(ratio, 1.0)
-            << "Forward sampling ratio between " << timestamps[i] << " and " << timestamps[i + 1]
-            << " is " << ratio << " (should be > 1.0)";
-    }
+        const int last_node = walk.back().node;
+        const int64_t last_ts = walk.back().timestamp;
 
-    for (size_t i = 0; i < timestamps.size() - 1; i++) {
-        // Skip if either count is 0
-        if (no_scale_backward[timestamps[i]] == 0 || no_scale_backward[timestamps[i + 1]] == 0) continue;
+        auto it = next_valid_timestamps.find(last_node);
+        if (it == next_valid_timestamps.end()) continue;
 
-        double ratio = static_cast<double>(no_scale_backward[timestamps[i + 1]]) /
-                      no_scale_backward[timestamps[i]];
-        EXPECT_GT(ratio, 1.0)
-            << "Backward sampling ratio between " << timestamps[i + 1] << " and " << timestamps[i]
-            << " is " << ratio << " (should be > 1.0)";
+        const auto& timestamps = it->second;
+        auto next_ts_it = std::upper_bound(timestamps.begin(), timestamps.end(), last_ts);
+
+        EXPECT_EQ(next_ts_it, timestamps.end())
+            << "Timescale bounded walk terminated despite having valid edges from node "
+            << last_node << " after timestamp " << last_ts;
     }
 }

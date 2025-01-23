@@ -86,49 +86,50 @@ TEST_F(NodeEdgeIndexWeightTest, UndirectedWeightNormalization) {
 }
 
 TEST_F(NodeEdgeIndexWeightTest, WeightBiasPerNode) {
-   setup_test_graph(true);
+    EdgeData edges;
+    edges.push_back(1, 2, 100);  // Known timestamps for precise verification
+    edges.push_back(1, 3, 200);
+    edges.push_back(1, 4, 300);
+    edges.update_timestamp_groups();
 
-   // Helper to extract individual weights for a node's groups
-   auto get_node_group_weights = [](const std::vector<double>& cumulative_weights,
-                                  const std::vector<size_t>& group_offsets,
-                                  size_t node) {
-       std::vector<double> weights;
-       size_t start = group_offsets[node];
-       size_t end = group_offsets[node + 1];
+    NodeMapping mapping;
+    mapping.update(edges, 0, edges.size());
+    index.rebuild(edges, mapping, true);
+    index.update_temporal_weights(edges, -1); // No scaling
 
-       if (start < end) {
-           weights.push_back(cumulative_weights[start]);
-           for (size_t i = start + 1; i < end; i++) {
-               weights.push_back(cumulative_weights[i] - cumulative_weights[i-1]);
-           }
-       }
-       return weights;
-   };
+    auto get_individual_weights = [](const std::vector<double>& cumulative,
+                                   const std::vector<size_t>& offsets,
+                                   size_t node) {
+        std::vector<double> weights;
+        size_t start = offsets[node];
+        size_t end = offsets[node + 1];
 
-   // Check node 1 which has multiple timestamp groups
-   int node = 1;
+        weights.push_back(cumulative[start]);
+        for (size_t i = start + 1; i < end; i++) {
+            weights.push_back(cumulative[i] - cumulative[i-1]);
+        }
+        return weights;
+    };
 
-   // Forward weights should be higher for earlier timestamps
-   auto forward_weights = get_node_group_weights(
-       index.outbound_forward_weights,
-       index.outbound_timestamp_group_offsets,
-       node);
+    // Forward weights: exp(-(t - t_min))
+    auto forward = get_individual_weights(
+        index.outbound_forward_weights,
+        index.outbound_timestamp_group_offsets, 1);
 
-   for (size_t i = 0; i < forward_weights.size() - 1; i++) {
-       EXPECT_GT(forward_weights[i], forward_weights[i+1])
-           << "Forward weight at index " << i << " should be greater";
-   }
+    for (size_t i = 0; i < forward.size() - 1; i++) {
+        double expected_ratio = exp(-100); // Time diff between groups is 100
+        EXPECT_NEAR(forward[i+1]/forward[i], expected_ratio, 1e-6);
+    }
 
-   // Backward weights should be higher for later timestamps
-   auto backward_weights = get_node_group_weights(
-       index.outbound_backward_weights,
-       index.outbound_timestamp_group_offsets,
-       node);
+    // Backward weights: exp(t - t_min)
+    auto backward = get_individual_weights(
+        index.outbound_backward_weights,
+        index.outbound_timestamp_group_offsets, 1);
 
-   for (size_t i = 0; i < backward_weights.size() - 1; i++) {
-       EXPECT_LT(backward_weights[i], backward_weights[i+1])
-           << "Backward weight at index " << i << " should be smaller";
-   }
+    for (size_t i = 0; i < backward.size() - 1; i++) {
+        double expected_ratio = exp(100); // Time diff between groups is 100
+        EXPECT_NEAR(backward[i+1]/backward[i], expected_ratio, 1e-6);
+    }
 }
 
 TEST_F(NodeEdgeIndexWeightTest, WeightConsistencyAcrossUpdates) {
@@ -173,7 +174,7 @@ TEST_F(NodeEdgeIndexWeightTest, SingleTimestampGroupPerNode) {
 
    // Each node should have single weight of 1.0
    for (size_t node = 0; node < index.outbound_timestamp_group_offsets.size() - 1; node++) {
-       size_t start = index.outbound_timestamp_group_offsets[node];
+       const size_t start = index.outbound_timestamp_group_offsets[node];
        size_t end = index.outbound_timestamp_group_offsets[node + 1];
        if (start < end) {
            EXPECT_EQ(end - start, 1);
@@ -235,45 +236,54 @@ TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundWithSingleTimestamp) {
 
 TEST_F(NodeEdgeIndexWeightTest, ScaledWeightRatios) {
     EdgeData edges;
-    // Create node with evenly spaced timestamps
-    edges.push_back(1, 2, 10);
-    edges.push_back(1, 3, 20);
-    edges.push_back(1, 4, 30);
+    edges.push_back(1, 2, 100);
+    edges.push_back(1, 3, 300);
+    edges.push_back(1, 4, 500);
     edges.update_timestamp_groups();
 
     NodeMapping mapping;
     mapping.update(edges, 0, edges.size());
     index.rebuild(edges, mapping, true);
 
-    const double timescale_bound = 10.0;
+    constexpr double timescale_bound = 2.0;
     index.update_temporal_weights(edges, timescale_bound);
 
-    // Helper to get individual weights for a node
-    auto get_node_weights = [](const std::vector<double>& cumulative_weights,
-                             const std::vector<size_t>& group_offsets,
-                             size_t node) {
+    auto get_individual_weights = [](const std::vector<double>& cumulative,
+                                   const std::vector<size_t>& offsets,
+                                   size_t node) {
         std::vector<double> weights;
-        size_t start = group_offsets[node];
-        size_t end = group_offsets[node + 1];
+        size_t start = offsets[node];
+        size_t end = offsets[node + 1];
 
-        weights.push_back(cumulative_weights[start]);
+        weights.push_back(cumulative[start]);
         for (size_t i = start + 1; i < end; i++) {
-            weights.push_back(cumulative_weights[i] - cumulative_weights[i-1]);
+            weights.push_back(cumulative[i] - cumulative[i-1]);
         }
         return weights;
     };
 
-    // Check weights for node 1
-    auto forward_weights = get_node_weights(
+    const auto forward = get_individual_weights(
         index.outbound_forward_weights,
-        index.outbound_timestamp_group_offsets,
-        1);
+        index.outbound_timestamp_group_offsets, 1);
 
-    // Check that scaled weights don't exceed bound
-    for (size_t i = 0; i < forward_weights.size(); i++) {
-        if (forward_weights[i] > 0) {
-            EXPECT_LE(log(forward_weights[i]), timescale_bound);
-        }
+    // Time range is 400, scale = 2.0/400 = 0.005
+    constexpr double time_scale = timescale_bound / 400.0;
+
+    for (size_t i = 0; i < forward.size() - 1; i++) {
+        // Each step is 200 units
+        double scaled_diff = 200 * time_scale;
+        double expected_ratio = exp(-scaled_diff);
+        EXPECT_NEAR(forward[i+1]/forward[i], expected_ratio, 1e-6);
+    }
+
+    auto backward = get_individual_weights(
+        index.outbound_backward_weights,
+        index.outbound_timestamp_group_offsets, 1);
+
+    for (size_t i = 0; i < backward.size() - 1; i++) {
+        constexpr double scaled_diff = 200 * time_scale;
+        const double expected_ratio = exp(scaled_diff);
+        EXPECT_NEAR(backward[i+1]/backward[i], expected_ratio, 1e-6);
     }
 }
 
@@ -290,8 +300,8 @@ TEST_F(NodeEdgeIndexWeightTest, WeightOrderPreservation) {
 
     // Get unscaled weights
     index.update_temporal_weights(edges, -1);
-    auto unscaled_forward = index.outbound_forward_weights;
-    auto unscaled_backward = index.outbound_backward_weights;
+    const auto unscaled_forward = index.outbound_forward_weights;
+    const auto unscaled_backward = index.outbound_backward_weights;
 
     // Get scaled weights
     index.update_temporal_weights(edges, 10.0);
@@ -305,5 +315,59 @@ TEST_F(NodeEdgeIndexWeightTest, WeightOrderPreservation) {
                   index.outbound_forward_weights[i] > index.outbound_forward_weights[i-1]);
         EXPECT_EQ(unscaled_backward[i] > unscaled_backward[i-1],
                   index.outbound_backward_weights[i] > index.outbound_backward_weights[i-1]);
+    }
+}
+
+TEST_F(NodeEdgeIndexWeightTest, TimescaleNormalizationTest) {
+    EdgeData edges;
+    // Create edges with widely varying time differences
+    edges.push_back(1, 2, 100);       // Small gap
+    edges.push_back(1, 3, 200);       // 100 units
+    edges.push_back(1, 4, 1000);      // 800 units
+    edges.push_back(1, 5, 100000);    // Large gap
+    edges.update_timestamp_groups();
+
+    NodeMapping mapping;
+    mapping.update(edges, 0, edges.size());
+    index.rebuild(edges, mapping, true);
+
+    const double timescale_bound = 5.0;
+    index.update_temporal_weights(edges, timescale_bound);
+
+    // Helper to get individual weights from cumulative
+    auto get_weights = [](const std::vector<double>& cumulative, size_t start, size_t end) {
+        std::vector<double> weights;
+        weights.push_back(cumulative[start]);
+        for (size_t i = start + 1; i < end; i++) {
+            weights.push_back(cumulative[i] - cumulative[i-1]);
+        }
+        return weights;
+    };
+
+    // Get forward weights for node 1
+    const size_t start = index.outbound_timestamp_group_offsets[1];
+    const size_t end = index.outbound_timestamp_group_offsets[2];
+    const auto weights = get_weights(index.outbound_forward_weights, start, end);
+
+    // Check that max weight difference is bounded by timescale_bound
+    double max_weight_ratio = -std::numeric_limits<double>::infinity();
+    for (size_t i = 0; i < weights.size(); i++) {
+        for (size_t j = 0; j < weights.size(); j++) {
+            if (weights[j] > 0) {
+                max_weight_ratio = std::max(max_weight_ratio, log(weights[i] / weights[j]));
+            }
+        }
+    }
+    EXPECT_LE(max_weight_ratio, timescale_bound)
+        << "Maximum weight ratio exceeds timescale bound";
+
+    // Verify that relative ordering matches time differences
+    constexpr int64_t timestamps[] = {100, 200, 1000, 100000};
+    for (size_t i = 0; i < weights.size() - 1; i++) {
+        const double time_ratio = static_cast<double>(timestamps[i+1] - timestamps[i]) /
+                          static_cast<double>(timestamps[weights.size()-1] - timestamps[0]);
+        double weight_ratio = weights[i] / weights[i+1];
+        EXPECT_NEAR(log(weight_ratio), timescale_bound * time_ratio, 1e-6)
+            << "Weight ratio doesn't match expected scaled time difference at " << i;
     }
 }
