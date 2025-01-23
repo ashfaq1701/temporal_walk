@@ -16,7 +16,7 @@ int ExponentialWeightRandomPicker::pick_random(
     const double start_sum = (group_start > 0) ? cumulative_weights[group_start - 1] : 0.0;
     const double end_sum = cumulative_weights[group_end - 1];
 
-    if (end_sum <= start_sum) return -1;
+    if (end_sum < start_sum) return -1;
 
     // Generate random value between [start_sum, end_sum]
     const double random_val = start_sum + get_random_double() * (end_sum - start_sum);
