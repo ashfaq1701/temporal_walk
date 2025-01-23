@@ -5,7 +5,7 @@
 #include "../random/UniformRandomPicker.h"
 #include "../random/LinearRandomPicker.h"
 #include "../random/ExponentialIndexRandomPicker.h"
-#include "../random/ExponentialWeightRandomPicker.h"
+#include "../random/WeightBasedRandomPicker.h"
 
 
 constexpr int DEFAULT_CONTEXT_WINDOW_LEN = 2;
@@ -56,7 +56,7 @@ std::shared_ptr<RandomPicker> TemporalWalk::get_random_picker(const RandomPicker
         if (!enable_weight_computation) {
             throw std::invalid_argument("To enable weight based random pickers, set enable_weight_computation constructor argument to true.");
         }
-        return std::make_shared<ExponentialWeightRandomPicker>();
+        return std::make_shared<WeightBasedRandomPicker>();
     default:
         throw std::invalid_argument("Invalid picker type");
     }

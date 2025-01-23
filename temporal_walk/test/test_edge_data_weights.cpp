@@ -40,8 +40,8 @@ TEST_F(EdgeDataWeightTest, EmptyEdges)
     EdgeData edges;
     edges.update_temporal_weights(-1);
 
-    EXPECT_TRUE(edges.forward_weights.empty());
-    EXPECT_TRUE(edges.backward_weights.empty());
+    EXPECT_TRUE(edges.forward_weights_exponential.empty());
+    EXPECT_TRUE(edges.backward_weights_exponential.empty());
 }
 
 TEST_F(EdgeDataWeightTest, SingleTimestampGroup)
@@ -52,12 +52,12 @@ TEST_F(EdgeDataWeightTest, SingleTimestampGroup)
     edges.update_timestamp_groups();
     edges.update_temporal_weights(-1);
 
-    ASSERT_EQ(edges.forward_weights.size(), 1);
-    ASSERT_EQ(edges.backward_weights.size(), 1);
+    ASSERT_EQ(edges.forward_weights_exponential.size(), 1);
+    ASSERT_EQ(edges.backward_weights_exponential.size(), 1);
 
     // Single group should have normalized weight of 1.0
-    EXPECT_NEAR(edges.forward_weights[0], 1.0, 1e-6);
-    EXPECT_NEAR(edges.backward_weights[0], 1.0, 1e-6);
+    EXPECT_NEAR(edges.forward_weights_exponential[0], 1.0, 1e-6);
+    EXPECT_NEAR(edges.backward_weights_exponential[0], 1.0, 1e-6);
 }
 
 TEST_F(EdgeDataWeightTest, WeightNormalization)
@@ -67,11 +67,11 @@ TEST_F(EdgeDataWeightTest, WeightNormalization)
     edges.update_temporal_weights(-1);
 
     // Should have 4 timestamp groups (10,20,30,40)
-    ASSERT_EQ(edges.forward_weights.size(), 4);
-    ASSERT_EQ(edges.backward_weights.size(), 4);
+    ASSERT_EQ(edges.forward_weights_exponential.size(), 4);
+    ASSERT_EQ(edges.backward_weights_exponential.size(), 4);
 
-    verify_weights(edges.forward_weights, true);
-    verify_weights(edges.backward_weights, false);
+    verify_weights(edges.forward_weights_exponential, true);
+    verify_weights(edges.backward_weights_exponential, false);
 }
 
 TEST_F(EdgeDataWeightTest, ForwardWeightBias)
@@ -81,9 +81,9 @@ TEST_F(EdgeDataWeightTest, ForwardWeightBias)
     edges.update_temporal_weights(-1);
 
     // Earlier groups should have higher weights
-    for (size_t i = 0; i < edges.forward_weights.size() - 1; i++)
+    for (size_t i = 0; i < edges.forward_weights_exponential.size() - 1; i++)
     {
-        EXPECT_GT(edges.forward_weights[i], edges.forward_weights[i+1])
+        EXPECT_GT(edges.forward_weights_exponential[i], edges.forward_weights_exponential[i+1])
            << "Forward weight at index " << i << " should be greater than weight at " << i + 1;
     }
 }
@@ -95,9 +95,9 @@ TEST_F(EdgeDataWeightTest, BackwardWeightBias)
     edges.update_temporal_weights(-1);
 
     // Later groups should have higher weights
-    for (size_t i = 0; i < edges.backward_weights.size() - 1; i++)
+    for (size_t i = 0; i < edges.backward_weights_exponential.size() - 1; i++)
     {
-        EXPECT_LT(edges.backward_weights[i], edges.backward_weights[i+1])
+        EXPECT_LT(edges.backward_weights_exponential[i], edges.backward_weights_exponential[i+1])
            << "Backward weight at index " << i << " should be less than weight at " << i + 1;
     }
 }
@@ -112,24 +112,24 @@ TEST_F(EdgeDataWeightTest, WeightExponentialDecay)
     edges.update_temporal_weights(-1);
 
     // For forward weights: log(w[i+1]/w[i]) = -Δt
-    for (size_t i = 0; i < edges.forward_weights.size() - 1; i++)
+    for (size_t i = 0; i < edges.forward_weights_exponential.size() - 1; i++)
     {
         const auto time_diff = edges.unique_timestamps[i + 1] - edges.unique_timestamps[i];
-        if (edges.forward_weights[i + 1] > 0 && edges.forward_weights[i] > 0)
+        if (edges.forward_weights_exponential[i + 1] > 0 && edges.forward_weights_exponential[i] > 0)
         {
-            const double log_ratio = log(edges.forward_weights[i + 1] / edges.forward_weights[i]);
+            const double log_ratio = log(edges.forward_weights_exponential[i + 1] / edges.forward_weights_exponential[i]);
             EXPECT_NEAR(log_ratio, -time_diff, 1e-6)
                 << "Forward weight log ratio incorrect at index " << i;
         }
     }
 
     // For backward weights: log(w[i+1]/w[i]) = Δt
-    for (size_t i = 0; i < edges.backward_weights.size() - 1; i++)
+    for (size_t i = 0; i < edges.backward_weights_exponential.size() - 1; i++)
     {
         const auto time_diff = edges.unique_timestamps[i + 1] - edges.unique_timestamps[i];
-        if (edges.backward_weights[i + 1] > 0 && edges.backward_weights[i] > 0)
+        if (edges.backward_weights_exponential[i + 1] > 0 && edges.backward_weights_exponential[i] > 0)
         {
-            const double log_ratio = log(edges.backward_weights[i + 1] / edges.backward_weights[i]);
+            const double log_ratio = log(edges.backward_weights_exponential[i + 1] / edges.backward_weights_exponential[i]);
             EXPECT_NEAR(log_ratio, time_diff, 1e-6)
                 << "Backward weight log ratio incorrect at index " << i;
         }
@@ -143,8 +143,8 @@ TEST_F(EdgeDataWeightTest, UpdateWeights)
     edges.update_temporal_weights(-1);
 
     // Store original weights
-    auto original_forward = edges.forward_weights;
-    auto original_backward = edges.backward_weights;
+    auto original_forward = edges.forward_weights_exponential;
+    auto original_backward = edges.backward_weights_exponential;
 
     // Add new edge with different timestamp
     edges.push_back(1, 4, 50);
@@ -152,11 +152,11 @@ TEST_F(EdgeDataWeightTest, UpdateWeights)
     edges.update_temporal_weights(-1);
 
     // Weights should be different after update
-    EXPECT_NE(original_forward.size(), edges.forward_weights.size());
-    EXPECT_NE(original_backward.size(), edges.backward_weights.size());
+    EXPECT_NE(original_forward.size(), edges.forward_weights_exponential.size());
+    EXPECT_NE(original_backward.size(), edges.backward_weights_exponential.size());
 
-    verify_weights(edges.forward_weights, true);
-    verify_weights(edges.backward_weights, false);
+    verify_weights(edges.forward_weights_exponential, true);
+    verify_weights(edges.backward_weights_exponential, false);
 }
 
 TEST_F(EdgeDataWeightTest, TimescaleBoundZero)
@@ -165,8 +165,8 @@ TEST_F(EdgeDataWeightTest, TimescaleBoundZero)
     add_test_edges(edges);
     edges.update_temporal_weights(0); // Should behave like -1
 
-    verify_weights(edges.forward_weights, true);
-    verify_weights(edges.backward_weights, false);
+    verify_weights(edges.forward_weights_exponential, true);
+    verify_weights(edges.backward_weights_exponential, false);
 }
 
 TEST_F(EdgeDataWeightTest, TimescaleBoundPositive)
@@ -177,15 +177,15 @@ TEST_F(EdgeDataWeightTest, TimescaleBoundPositive)
     edges.update_temporal_weights(timescale_bound);
 
     // Earlier timestamps should have higher weights for forward
-    for (size_t i = 0; i < edges.forward_weights.size() - 1; i++)
+    for (size_t i = 0; i < edges.forward_weights_exponential.size() - 1; i++)
     {
-        EXPECT_GT(edges.forward_weights[i], edges.forward_weights[i+1]);
+        EXPECT_GT(edges.forward_weights_exponential[i], edges.forward_weights_exponential[i+1]);
     }
 
     // Later timestamps should have higher weights for backward
-    for (size_t i = 0; i < edges.backward_weights.size() - 1; i++)
+    for (size_t i = 0; i < edges.backward_weights_exponential.size() - 1; i++)
     {
-        EXPECT_LT(edges.backward_weights[i], edges.backward_weights[i+1]);
+        EXPECT_LT(edges.backward_weights_exponential[i], edges.backward_weights_exponential[i+1]);
     }
 }
 
@@ -198,17 +198,17 @@ TEST_F(EdgeDataWeightTest, ScalingComparison)
     std::vector<double> weights_unscaled, weights_scaled;
 
     edges.update_temporal_weights(-1);
-    for (size_t i = 1; i < edges.forward_weights.size(); i++)
+    for (size_t i = 1; i < edges.forward_weights_exponential.size(); i++)
     {
         weights_unscaled.push_back(
-            edges.forward_weights[i] / edges.forward_weights[i - 1]);
+            edges.forward_weights_exponential[i] / edges.forward_weights_exponential[i - 1]);
     }
 
     edges.update_temporal_weights(50.0);
-    for (size_t i = 1; i < edges.forward_weights.size(); i++)
+    for (size_t i = 1; i < edges.forward_weights_exponential.size(); i++)
     {
         weights_scaled.push_back(
-            edges.forward_weights[i] / edges.forward_weights[i - 1]);
+            edges.forward_weights_exponential[i] / edges.forward_weights_exponential[i - 1]);
     }
 
     // Compare ratios with some tolerance
@@ -230,20 +230,20 @@ TEST_F(EdgeDataWeightTest, ScaledWeightBounds)
     edges.update_temporal_weights(timescale_bound);
 
     // Maximum log ratio should not exceed timescale_bound
-    for (size_t i = 0; i < edges.forward_weights.size(); i++)
+    for (size_t i = 0; i < edges.forward_weights_exponential.size(); i++)
     {
-        for (size_t j = 0; j < edges.forward_weights.size(); j++)
+        for (size_t j = 0; j < edges.forward_weights_exponential.size(); j++)
         {
-            const double log_ratio = log(edges.forward_weights[i] / edges.forward_weights[j]);
+            const double log_ratio = log(edges.forward_weights_exponential[i] / edges.forward_weights_exponential[j]);
             EXPECT_LE(abs(log_ratio), timescale_bound + 1e-6);
         }
     }
 
-    for (size_t i = 0; i < edges.backward_weights.size(); i++)
+    for (size_t i = 0; i < edges.backward_weights_exponential.size(); i++)
     {
-        for (size_t j = 0; j < edges.backward_weights.size(); j++)
+        for (size_t j = 0; j < edges.backward_weights_exponential.size(); j++)
         {
-            const double log_ratio = log(edges.backward_weights[i] / edges.backward_weights[j]);
+            const double log_ratio = log(edges.backward_weights_exponential[i] / edges.backward_weights_exponential[j]);
             EXPECT_LE(abs(log_ratio), timescale_bound + 1e-6);
         }
     }
@@ -262,10 +262,10 @@ TEST_F(EdgeDataWeightTest, DifferentTimescaleBounds)
     {
         edges.update_temporal_weights(bound);
         std::vector<double> ratios;
-        for (size_t i = 1; i < edges.forward_weights.size(); i++)
+        for (size_t i = 1; i < edges.forward_weights_exponential.size(); i++)
         {
-            ratios.push_back(edges.forward_weights[i] /
-                edges.forward_weights[i - 1]);
+            ratios.push_back(edges.forward_weights_exponential[i] /
+                edges.forward_weights_exponential[i - 1]);
         }
         scaled_ratios.push_back(ratios);
     }
@@ -294,10 +294,10 @@ TEST_F(EdgeDataWeightTest, SingleTimestampWithBounds)
     for (double bound : {-1.0, 0.0, 10.0, 50.0})
     {
         edges.update_temporal_weights(bound);
-        ASSERT_EQ(edges.forward_weights.size(), 1);
-        ASSERT_EQ(edges.backward_weights.size(), 1);
-        EXPECT_NEAR(edges.forward_weights[0], 1.0, 1e-6);
-        EXPECT_NEAR(edges.backward_weights[0], 1.0, 1e-6);
+        ASSERT_EQ(edges.forward_weights_exponential.size(), 1);
+        ASSERT_EQ(edges.backward_weights_exponential.size(), 1);
+        EXPECT_NEAR(edges.forward_weights_exponential[0], 1.0, 1e-6);
+        EXPECT_NEAR(edges.backward_weights_exponential[0], 1.0, 1e-6);
     }
 }
 
@@ -310,16 +310,16 @@ TEST_F(EdgeDataWeightTest, WeightMonotonicity)
     edges.update_temporal_weights(timescale_bound);
 
     // Forward weights should decrease monotonically
-    for (size_t i = 1; i < edges.forward_weights.size(); i++)
+    for (size_t i = 1; i < edges.forward_weights_exponential.size(); i++)
     {
-        EXPECT_GE(edges.forward_weights[i - 1], edges.forward_weights[i])
+        EXPECT_GE(edges.forward_weights_exponential[i - 1], edges.forward_weights_exponential[i])
                 << "Forward weight differences should decrease monotonically";
     }
 
     // Backward weights should increase monotonically
-    for (size_t i = 1; i < edges.backward_weights.size(); i++)
+    for (size_t i = 1; i < edges.backward_weights_exponential.size(); i++)
     {
-        EXPECT_LE(edges.backward_weights[i - 1], edges.backward_weights[i]);
+        EXPECT_LE(edges.backward_weights_exponential[i - 1], edges.backward_weights_exponential[i]);
     }
 }
 
@@ -339,23 +339,23 @@ TEST_F(EdgeDataWeightTest, TimescaleScalingPrecision)
     constexpr double time_scale = timescale_bound / 600.0;
 
     // Check forward weights
-    for (size_t i = 0; i < edges.forward_weights.size() - 1; i++)
+    for (size_t i = 0; i < edges.forward_weights_exponential.size() - 1; i++)
     {
         const auto time_diff = static_cast<double>(
             edges.unique_timestamps[i + 1] - edges.unique_timestamps[i]);
         const double expected_ratio = exp(-time_diff * time_scale);
-        const double actual_ratio = edges.forward_weights[i + 1] / edges.forward_weights[i];
+        const double actual_ratio = edges.forward_weights_exponential[i + 1] / edges.forward_weights_exponential[i];
         EXPECT_NEAR(actual_ratio, expected_ratio, 1e-6)
             << "Forward weight ratio incorrect at index " << i;
     }
 
     // Check backward weights
-    for (size_t i = 0; i < edges.backward_weights.size() - 1; i++)
+    for (size_t i = 0; i < edges.backward_weights_exponential.size() - 1; i++)
     {
         const auto time_diff = static_cast<double>(
             edges.unique_timestamps[i + 1] - edges.unique_timestamps[i]);
         const double expected_ratio = exp(time_diff * time_scale);
-        const double actual_ratio = edges.backward_weights[i + 1] / edges.backward_weights[i];
+        const double actual_ratio = edges.backward_weights_exponential[i + 1] / edges.backward_weights_exponential[i];
         EXPECT_NEAR(actual_ratio, expected_ratio, 1e-6)
             << "Backward weight ratio incorrect at index " << i;
     }

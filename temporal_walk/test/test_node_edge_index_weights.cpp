@@ -63,9 +63,9 @@ TEST_F(NodeEdgeIndexWeightTest, EmptyGraph)
     index.rebuild(empty_edges, empty_mapping, true);
     index.update_temporal_weights(empty_edges, -1);
 
-    EXPECT_TRUE(index.outbound_forward_weights.empty());
-    EXPECT_TRUE(index.outbound_backward_weights.empty());
-    EXPECT_TRUE(index.inbound_backward_weights.empty());
+    EXPECT_TRUE(index.outbound_forward_weights_exponential.empty());
+    EXPECT_TRUE(index.outbound_backward_weights_exponential.empty());
+    EXPECT_TRUE(index.inbound_backward_weights_exponential.empty());
 }
 
 TEST_F(NodeEdgeIndexWeightTest, DirectedWeightNormalization)
@@ -74,11 +74,11 @@ TEST_F(NodeEdgeIndexWeightTest, DirectedWeightNormalization)
 
     // Verify per-node weight normalization
     verify_node_weights(index.outbound_timestamp_group_offsets,
-                        index.outbound_forward_weights, true);
+                        index.outbound_forward_weights_exponential, true);
     verify_node_weights(index.outbound_timestamp_group_offsets,
-                        index.outbound_backward_weights, false);
+                        index.outbound_backward_weights_exponential, false);
     verify_node_weights(index.inbound_timestamp_group_offsets,
-                        index.inbound_backward_weights, false);
+                        index.inbound_backward_weights_exponential, false);
 }
 
 TEST_F(NodeEdgeIndexWeightTest, UndirectedWeightNormalization)
@@ -87,10 +87,10 @@ TEST_F(NodeEdgeIndexWeightTest, UndirectedWeightNormalization)
 
     // For undirected, should only have outbound weights
     verify_node_weights(index.outbound_timestamp_group_offsets,
-                        index.outbound_forward_weights, true);
+                        index.outbound_forward_weights_exponential, true);
     verify_node_weights(index.outbound_timestamp_group_offsets,
-                        index.outbound_backward_weights, false);
-    EXPECT_TRUE(index.inbound_backward_weights.empty());
+                        index.outbound_backward_weights_exponential, false);
+    EXPECT_TRUE(index.inbound_backward_weights_exponential.empty());
 }
 
 TEST_F(NodeEdgeIndexWeightTest, WeightBiasPerNode)
@@ -120,7 +120,7 @@ TEST_F(NodeEdgeIndexWeightTest, WeightBiasPerNode)
 
     // Forward weights: exp(-(t - t_min))
     const auto forward = get_individual_weights(
-        index.outbound_forward_weights,
+        index.outbound_forward_weights_exponential,
         index.outbound_timestamp_group_offsets, 1);
 
     for (size_t i = 0; i < forward.size() - 1; i++)
@@ -131,7 +131,7 @@ TEST_F(NodeEdgeIndexWeightTest, WeightBiasPerNode)
 
     // Backward weights: exp(t - t_min)
     const auto backward = get_individual_weights(
-        index.outbound_backward_weights,
+        index.outbound_backward_weights_exponential,
         index.outbound_timestamp_group_offsets, 1);
 
     for (size_t i = 0; i < backward.size() - 1; i++)
@@ -146,9 +146,9 @@ TEST_F(NodeEdgeIndexWeightTest, WeightConsistencyAcrossUpdates)
     setup_test_graph(true);
 
     // Store original weights
-    auto original_out_forward = index.outbound_forward_weights;
-    auto original_out_backward = index.outbound_backward_weights;
-    auto original_in_backward = index.inbound_backward_weights;
+    auto original_out_forward = index.outbound_forward_weights_exponential;
+    auto original_out_backward = index.outbound_backward_weights_exponential;
+    auto original_in_backward = index.inbound_backward_weights_exponential;
 
     // Rebuild and update weights again
     EdgeData edges;
@@ -163,9 +163,9 @@ TEST_F(NodeEdgeIndexWeightTest, WeightConsistencyAcrossUpdates)
     index.update_temporal_weights(edges, -1);
 
     // Weights should be different but still normalized
-    EXPECT_NE(original_out_forward.size(), index.outbound_forward_weights.size());
+    EXPECT_NE(original_out_forward.size(), index.outbound_forward_weights_exponential.size());
     verify_node_weights(index.outbound_timestamp_group_offsets,
-                        index.outbound_forward_weights, true);
+                        index.outbound_forward_weights_exponential, true);
 }
 
 TEST_F(NodeEdgeIndexWeightTest, SingleTimestampGroupPerNode)
@@ -190,8 +190,8 @@ TEST_F(NodeEdgeIndexWeightTest, SingleTimestampGroupPerNode)
         if (const size_t end = index.outbound_timestamp_group_offsets[node + 1]; start < end)
         {
             EXPECT_EQ(end - start, 1);
-            EXPECT_NEAR(index.outbound_forward_weights[start], 1.0, 1e-6);
-            EXPECT_NEAR(index.outbound_backward_weights[start], 1.0, 1e-6);
+            EXPECT_NEAR(index.outbound_forward_weights_exponential[start], 1.0, 1e-6);
+            EXPECT_NEAR(index.outbound_backward_weights_exponential[start], 1.0, 1e-6);
         }
     }
 }
@@ -211,9 +211,9 @@ TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundZero)
     index.update_temporal_weights(edges, 0); // Should behave like -1
 
     verify_node_weights(index.outbound_timestamp_group_offsets,
-                        index.outbound_forward_weights, true);
+                        index.outbound_forward_weights_exponential, true);
     verify_node_weights(index.outbound_timestamp_group_offsets,
-                        index.outbound_backward_weights, false);
+                        index.outbound_backward_weights_exponential, false);
 }
 
 TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundWithSingleTimestamp)
@@ -244,8 +244,8 @@ TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundWithSingleTimestamp)
         const size_t start = index.outbound_timestamp_group_offsets[dense_idx];
         const size_t end = index.outbound_timestamp_group_offsets[dense_idx + 1];
         ASSERT_EQ(end - start, 1) << "Node should have exactly one timestamp group";
-        EXPECT_NEAR(index.outbound_forward_weights[start], 1.0, 1e-6);
-        EXPECT_NEAR(index.outbound_backward_weights[start], 1.0, 1e-6);
+        EXPECT_NEAR(index.outbound_forward_weights_exponential[start], 1.0, 1e-6);
+        EXPECT_NEAR(index.outbound_backward_weights_exponential[start], 1.0, 1e-6);
     }
 }
 
@@ -277,7 +277,7 @@ TEST_F(NodeEdgeIndexWeightTest, ScaledWeightRatios)
     };
 
     const auto forward = get_individual_weights(
-        index.outbound_forward_weights,
+        index.outbound_forward_weights_exponential,
         index.outbound_timestamp_group_offsets, 1);
 
     // Time range is 400, scale = 2.0/400 = 0.005
@@ -292,7 +292,7 @@ TEST_F(NodeEdgeIndexWeightTest, ScaledWeightRatios)
     }
 
     auto backward = get_individual_weights(
-        index.outbound_backward_weights,
+        index.outbound_backward_weights_exponential,
         index.outbound_timestamp_group_offsets, 1);
 
     for (size_t i = 0; i < backward.size() - 1; i++)
@@ -317,8 +317,8 @@ TEST_F(NodeEdgeIndexWeightTest, WeightOrderPreservation)
 
     // Get unscaled weights
     index.update_temporal_weights(edges, -1);
-    const auto unscaled_forward = index.outbound_forward_weights;
-    const auto unscaled_backward = index.outbound_backward_weights;
+    const auto unscaled_forward = index.outbound_forward_weights_exponential;
+    const auto unscaled_backward = index.outbound_backward_weights_exponential;
 
     // Get scaled weights
     index.update_temporal_weights(edges, 10.0);
@@ -330,9 +330,9 @@ TEST_F(NodeEdgeIndexWeightTest, WeightOrderPreservation)
     {
         // If unscaled weights were increasing/decreasing, scaled weights should follow
         EXPECT_EQ(unscaled_forward[i] > unscaled_forward[i-1],
-                  index.outbound_forward_weights[i] > index.outbound_forward_weights[i-1]);
+                  index.outbound_forward_weights_exponential[i] > index.outbound_forward_weights_exponential[i-1]);
         EXPECT_EQ(unscaled_backward[i] > unscaled_backward[i-1],
-                  index.outbound_backward_weights[i] > index.outbound_backward_weights[i-1]);
+                  index.outbound_backward_weights_exponential[i] > index.outbound_backward_weights_exponential[i-1]);
     }
 }
 
@@ -368,7 +368,7 @@ TEST_F(NodeEdgeIndexWeightTest, TimescaleNormalizationTest)
     // Get forward weights for node 1
     const size_t start = index.outbound_timestamp_group_offsets[1];
     const size_t end = index.outbound_timestamp_group_offsets[2];
-    const auto weights = get_weights(index.outbound_forward_weights, start, end);
+    const auto weights = get_weights(index.outbound_forward_weights_exponential, start, end);
 
     // Check that max weight difference is bounded by timescale_bound
     double max_weight_ratio = -std::numeric_limits<double>::infinity();

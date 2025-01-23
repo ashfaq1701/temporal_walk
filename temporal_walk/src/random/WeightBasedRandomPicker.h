@@ -6,10 +6,10 @@
 class WeightBasedRandomPicker : public RandomPicker
 {
 public:
-    [[nodiscard]] virtual int pick_random(
+    [[nodiscard]] int pick_random(
         const std::vector<double>& weights,
         int group_start,
-        int group_end) = 0;
+        int group_end);
 };
 
 #endif //WEIGHTBASEDRANDOMPICKER_H

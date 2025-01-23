@@ -1,6 +1,6 @@
-#include "ExponentialWeightRandomPicker.h"
+#include "WeightBasedRandomPicker.h"
 
-int ExponentialWeightRandomPicker::pick_random(
+int WeightBasedRandomPicker::pick_random(
     const std::vector<double>& weights,
     int group_start,
     int group_end)

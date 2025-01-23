@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "../src/random/ExponentialIndexRandomPicker.h"
-#include "../src/random/ExponentialWeightRandomPicker.h"
+#include "../src/random/WeightBasedRandomPicker.h"
 #include "../src/random/LinearRandomPicker.h"
 
 constexpr int RANDOM_START = 0;

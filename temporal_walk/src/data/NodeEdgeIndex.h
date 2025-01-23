@@ -22,9 +22,9 @@ struct NodeEdgeIndex
     std::vector<size_t> inbound_timestamp_group_offsets;
     std::vector<size_t> inbound_timestamp_group_indices;
 
-    std::vector<double> outbound_forward_weights;   // For all forward walks
-    std::vector<double> outbound_backward_weights;  // For undirected backward walks
-    std::vector<double> inbound_backward_weights;   // For directed backward walks
+    std::vector<double> outbound_forward_weights_exponential;   // For all forward walks
+    std::vector<double> outbound_backward_weights_exponential;  // For undirected backward walks
+    std::vector<double> inbound_backward_weights_exponential;   // For directed backward walks
 
     void clear();
     void rebuild(const EdgeData& edges, const NodeMapping& mapping, bool is_directed);

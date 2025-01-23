@@ -1,10 +1,10 @@
 #include <gtest/gtest.h>
-#include "../src/random/ExponentialWeightRandomPicker.h"
+#include "../src/random/WeightBasedRandomPicker.h"
 
-class ExponentialWeightRandomPickerTest : public ::testing::Test
+class WeightBasedRandomPickerTest : public ::testing::Test
 {
 protected:
-    ExponentialWeightRandomPicker picker;
+    WeightBasedRandomPicker picker;
 
     // Helper to verify sampling is within correct range
     void verify_sampling_range(const std::vector<double>& weights,
@@ -30,7 +30,7 @@ protected:
     }
 };
 
-TEST_F(ExponentialWeightRandomPickerTest, ValidationChecks)
+TEST_F(WeightBasedRandomPickerTest, ValidationChecks)
 {
     const std::vector<double> weights = {0.2, 0.5, 0.7, 1.0};
 
@@ -45,13 +45,13 @@ TEST_F(ExponentialWeightRandomPickerTest, ValidationChecks)
     EXPECT_EQ(picker.pick_random(weights, 0, 5), -1);
 }
 
-TEST_F(ExponentialWeightRandomPickerTest, FullRangeSampling)
+TEST_F(WeightBasedRandomPickerTest, FullRangeSampling)
 {
     const std::vector<double> weights = {0.2, 0.5, 0.7, 1.0};
     verify_sampling_range(weights, 0, 4);
 }
 
-TEST_F(ExponentialWeightRandomPickerTest, SubrangeSampling)
+TEST_F(WeightBasedRandomPickerTest, SubrangeSampling)
 {
     const std::vector<double> weights = {0.2, 0.5, 0.7, 1.0};
 
@@ -65,7 +65,7 @@ TEST_F(ExponentialWeightRandomPickerTest, SubrangeSampling)
     verify_sampling_range(weights, 2, 4);
 }
 
-TEST_F(ExponentialWeightRandomPickerTest, SingleElementRange)
+TEST_F(WeightBasedRandomPickerTest, SingleElementRange)
 {
     const std::vector<double> weights = {0.2, 0.5, 0.7, 1.0};
 
@@ -76,7 +76,7 @@ TEST_F(ExponentialWeightRandomPickerTest, SingleElementRange)
     }
 }
 
-TEST_F(ExponentialWeightRandomPickerTest, WeightDistributionTest)
+TEST_F(WeightBasedRandomPickerTest, WeightDistributionTest)
 {
     // Create weights with known distribution
     const std::vector<double> weights = {0.25, 0.25, 0.25, 0.25}; // Equal increments
@@ -99,7 +99,7 @@ TEST_F(ExponentialWeightRandomPickerTest, WeightDistributionTest)
     }
 }
 
-TEST_F(ExponentialWeightRandomPickerTest, EdgeCaseWeights)
+TEST_F(WeightBasedRandomPickerTest, EdgeCaseWeights)
 {
     // Test with very small weight differences
     const std::vector<double> small_diffs = {0.1, 0.100001, 0.100002, 0.100003};

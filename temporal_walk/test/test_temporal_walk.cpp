@@ -347,7 +347,7 @@ TEST_F(FilledDirectedTemporalWalkTest, WalkTerminalEdgesTest) {
     }
 }
 
-// Test timestamps and valid edges with ExponentialWeightRandomPicker
+// Test timestamps and valid edges with WeightBasedRandomPicker
 TEST_F(FilledDirectedTemporalWalkTest, WalkIncreasingTimestampWithExponentialWeightTest) {
     constexpr RandomPickerType exponential_weight_picker = RandomPickerType::ExponentialWeight;
     const auto walks = temporal_walk->get_random_walks_and_times_for_all_nodes(

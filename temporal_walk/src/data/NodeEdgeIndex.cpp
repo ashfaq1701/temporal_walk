@@ -170,10 +170,10 @@ void NodeEdgeIndex::rebuild(
 void NodeEdgeIndex::update_temporal_weights(const EdgeData& edges, double timescale_bound) {
   const size_t num_nodes = outbound_offsets.size() - 1;
 
-  outbound_forward_weights.resize(outbound_timestamp_group_indices.size());
-  outbound_backward_weights.resize(outbound_timestamp_group_indices.size());
+  outbound_forward_weights_exponential.resize(outbound_timestamp_group_indices.size());
+  outbound_backward_weights_exponential.resize(outbound_timestamp_group_indices.size());
   if (!inbound_offsets.empty()) {
-      inbound_backward_weights.resize(inbound_timestamp_group_indices.size());
+      inbound_backward_weights_exponential.resize(inbound_timestamp_group_indices.size());
   }
 
   for (size_t node = 0; node < num_nodes; node++) {
@@ -205,19 +205,19 @@ void NodeEdgeIndex::update_temporal_weights(const EdgeData& edges, double timesc
                   time_diff_backward * time_scale : time_diff_backward;
 
               const double forward_weight = exp(forward_scaled);
-              outbound_forward_weights[group_pos] = forward_weight;
+              outbound_forward_weights_exponential[group_pos] = forward_weight;
               forward_sum += forward_weight;
 
               const double backward_weight = exp(backward_scaled);
-              outbound_backward_weights[group_pos] = backward_weight;
+              outbound_backward_weights_exponential[group_pos] = backward_weight;
               backward_sum += backward_weight;
           }
 
           const size_t start_pos = outbound_timestamp_group_offsets[node];
           const size_t end_pos = outbound_timestamp_group_offsets[node + 1];
           for (size_t pos = start_pos; pos < end_pos; pos++) {
-              outbound_forward_weights[pos] /= forward_sum;
-              outbound_backward_weights[pos] /= backward_sum;
+              outbound_forward_weights_exponential[pos] /= forward_sum;
+              outbound_backward_weights_exponential[pos] /= backward_sum;
           }
       }
 
@@ -245,14 +245,14 @@ void NodeEdgeIndex::update_temporal_weights(const EdgeData& edges, double timesc
                       time_diff_backward * time_scale : time_diff_backward;
 
                   const double backward_weight = exp(backward_scaled);
-                  inbound_backward_weights[group_pos] = backward_weight;
+                  inbound_backward_weights_exponential[group_pos] = backward_weight;
                   backward_sum += backward_weight;
               }
 
               const size_t start_pos = inbound_timestamp_group_offsets[node];
               const size_t end_pos = inbound_timestamp_group_offsets[node + 1];
               for (size_t pos = start_pos; pos < end_pos; pos++) {
-                  inbound_backward_weights[pos] /= backward_sum;
+                  inbound_backward_weights_exponential[pos] /= backward_sum;
               }
           }
       }
