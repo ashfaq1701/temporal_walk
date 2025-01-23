@@ -33,7 +33,7 @@ public:
         bool directed,
         int64_t window = -1,
         bool enable_weight_computation = false,
-        double timescale_bound=DEFAULT_TIMESCALE_BOUND);
+        double timescale_bound=-1);
 
     // Edge addition
     void add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& new_edges);

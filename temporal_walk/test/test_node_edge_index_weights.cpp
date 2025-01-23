@@ -182,3 +182,128 @@ TEST_F(NodeEdgeIndexWeightTest, SingleTimestampGroupPerNode) {
        }
    }
 }
+
+TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundZero) {
+    EdgeData edges;
+    edges.push_back(1, 2, 10);
+    edges.push_back(1, 3, 20);
+    edges.push_back(1, 4, 30);
+    edges.update_timestamp_groups();
+
+    NodeMapping mapping;
+    mapping.update(edges, 0, edges.size());
+
+    index.rebuild(edges, mapping, true);
+    index.update_temporal_weights(edges, 0);  // Should behave like -1
+
+    verify_node_weights(index.outbound_timestamp_group_offsets,
+                       index.outbound_forward_weights);
+    verify_node_weights(index.outbound_timestamp_group_offsets,
+                       index.outbound_backward_weights);
+}
+
+TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundWithSingleTimestamp) {
+    EdgeData edges;
+    // All edges for node 1 have same timestamp
+    constexpr int node_id = 1;  // Original node ID
+    edges.push_back(node_id, 2, 10);
+    edges.push_back(node_id, 3, 10);
+    edges.push_back(node_id, 4, 10);
+    edges.update_timestamp_groups();
+
+    NodeMapping mapping;
+    mapping.update(edges, 0, edges.size());
+
+    // Get the dense index for node_id
+    const int dense_idx = mapping.to_dense(node_id);
+    ASSERT_GE(dense_idx, 0) << "Node " << node_id << " not found in mapping";
+
+    index.rebuild(edges, mapping, true);
+
+    // Test with different bounds
+    for (const double bound : {-1.0, 0.0, 10.0, 50.0}) {
+        index.update_temporal_weights(edges, bound);
+
+        // Node should have single group with weight 1.0
+        const size_t start = index.outbound_timestamp_group_offsets[dense_idx];
+        const size_t end = index.outbound_timestamp_group_offsets[dense_idx + 1];
+        ASSERT_EQ(end - start, 1) << "Node should have exactly one timestamp group";
+        EXPECT_NEAR(index.outbound_forward_weights[start], 1.0, 1e-6);
+        EXPECT_NEAR(index.outbound_backward_weights[start], 1.0, 1e-6);
+    }
+}
+
+TEST_F(NodeEdgeIndexWeightTest, ScaledWeightRatios) {
+    EdgeData edges;
+    // Create node with evenly spaced timestamps
+    edges.push_back(1, 2, 10);
+    edges.push_back(1, 3, 20);
+    edges.push_back(1, 4, 30);
+    edges.update_timestamp_groups();
+
+    NodeMapping mapping;
+    mapping.update(edges, 0, edges.size());
+    index.rebuild(edges, mapping, true);
+
+    const double timescale_bound = 10.0;
+    index.update_temporal_weights(edges, timescale_bound);
+
+    // Helper to get individual weights for a node
+    auto get_node_weights = [](const std::vector<double>& cumulative_weights,
+                             const std::vector<size_t>& group_offsets,
+                             size_t node) {
+        std::vector<double> weights;
+        size_t start = group_offsets[node];
+        size_t end = group_offsets[node + 1];
+
+        weights.push_back(cumulative_weights[start]);
+        for (size_t i = start + 1; i < end; i++) {
+            weights.push_back(cumulative_weights[i] - cumulative_weights[i-1]);
+        }
+        return weights;
+    };
+
+    // Check weights for node 1
+    auto forward_weights = get_node_weights(
+        index.outbound_forward_weights,
+        index.outbound_timestamp_group_offsets,
+        1);
+
+    // Check that scaled weights don't exceed bound
+    for (size_t i = 0; i < forward_weights.size(); i++) {
+        if (forward_weights[i] > 0) {
+            EXPECT_LE(log(forward_weights[i]), timescale_bound);
+        }
+    }
+}
+
+TEST_F(NodeEdgeIndexWeightTest, WeightOrderPreservation) {
+    EdgeData edges;
+    edges.push_back(1, 2, 10);
+    edges.push_back(1, 3, 20);
+    edges.push_back(1, 4, 30);
+    edges.update_timestamp_groups();
+
+    NodeMapping mapping;
+    mapping.update(edges, 0, edges.size());
+    index.rebuild(edges, mapping, true);
+
+    // Get unscaled weights
+    index.update_temporal_weights(edges, -1);
+    auto unscaled_forward = index.outbound_forward_weights;
+    auto unscaled_backward = index.outbound_backward_weights;
+
+    // Get scaled weights
+    index.update_temporal_weights(edges, 10.0);
+
+    // Check relative ordering is preserved for node 1
+    const size_t start = index.outbound_timestamp_group_offsets[1];
+    const size_t end = index.outbound_timestamp_group_offsets[2];
+    for (size_t i = start + 1; i < end; i++) {
+        // If unscaled weights were increasing/decreasing, scaled weights should follow
+        EXPECT_EQ(unscaled_forward[i] > unscaled_forward[i-1],
+                  index.outbound_forward_weights[i] > index.outbound_forward_weights[i-1]);
+        EXPECT_EQ(unscaled_backward[i] > unscaled_backward[i-1],
+                  index.outbound_backward_weights[i] > index.outbound_backward_weights[i-1]);
+    }
+}

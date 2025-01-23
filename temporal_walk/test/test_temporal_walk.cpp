@@ -4,6 +4,7 @@
 #include "test_utils.h"
 #include "../src/core/TemporalWalk.h"
 #include "../src/random/ExponentialIndexRandomPicker.h"
+#include "../src/random/ExponentialWeightRandomPicker.h"
 #include "../src/random/LinearRandomPicker.h"
 
 constexpr int TEST_NODE_ID = 42;
@@ -520,5 +521,73 @@ TEST_F(FilledDirectedTemporalWalkTest, WalkTerminalEdgesTest) {
                 }
             }
         }
+    }
+}
+
+TEST_F(RandomPickerTest, ExponentialWeightTimestepOrderingTest) {
+    // Create sample edges with timestamps
+    std::vector<std::tuple<int, int, int64_t>> test_edges = {
+        {1, 2, 10},
+        {1, 3, 20},
+        {2, 3, 30},
+        {3, 4, 40}
+    };
+
+    // Sample with no scaling
+    ExponentialWeightRandomPicker no_scale_picker;
+    TemporalGraph graph_no_scale(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, -1);
+    graph_no_scale.add_multiple_edges(test_edges);
+
+    constexpr int num_samples = 10000;
+    std::map<int64_t, int> no_scale_forward, no_scale_backward;
+
+    // Sample forward walks
+    for (int i = 0; i < num_samples; i++) {
+        auto [u1, i1, ts] = graph_no_scale.get_edge_at(no_scale_picker, -1, true);
+        no_scale_forward[ts]++;
+    }
+
+    // Print distribution for debugging
+    std::cout << "\nForward sampling distribution (unscaled):\n";
+    for (const auto& [ts, count] : no_scale_forward) {
+        std::cout << "Timestamp " << ts << ": " << count << " samples ("
+                 << (count * 100.0 / num_samples) << "%)\n";
+    }
+
+    // Sample backward walks
+    for (int i = 0; i < num_samples; i++) {
+        auto [u1, i1, ts] = graph_no_scale.get_edge_at(no_scale_picker, -1, false);
+        no_scale_backward[ts]++;
+    }
+
+    std::cout << "\nBackward sampling distribution (unscaled):\n";
+    for (const auto& [ts, count] : no_scale_backward) {
+        std::cout << "Timestamp " << ts << ": " << count << " samples ("
+                 << (count * 100.0 / num_samples) << "%)\n";
+    }
+
+    std::vector<int64_t> timestamps = {10, 20, 30, 40};
+
+    // Test relative differences instead of strict ordering
+    for (size_t i = 0; i < timestamps.size() - 1; i++) {
+        // Skip if either count is 0 to avoid division by zero
+        if (no_scale_forward[timestamps[i]] == 0 || no_scale_forward[timestamps[i + 1]] == 0) continue;
+
+        double ratio = static_cast<double>(no_scale_forward[timestamps[i]]) /
+                      no_scale_forward[timestamps[i + 1]];
+        EXPECT_GT(ratio, 1.0)
+            << "Forward sampling ratio between " << timestamps[i] << " and " << timestamps[i + 1]
+            << " is " << ratio << " (should be > 1.0)";
+    }
+
+    for (size_t i = 0; i < timestamps.size() - 1; i++) {
+        // Skip if either count is 0
+        if (no_scale_backward[timestamps[i]] == 0 || no_scale_backward[timestamps[i + 1]] == 0) continue;
+
+        double ratio = static_cast<double>(no_scale_backward[timestamps[i + 1]]) /
+                      no_scale_backward[timestamps[i]];
+        EXPECT_GT(ratio, 1.0)
+            << "Backward sampling ratio between " << timestamps[i + 1] << " and " << timestamps[i]
+            << " is " << ratio << " (should be > 1.0)";
     }
 }

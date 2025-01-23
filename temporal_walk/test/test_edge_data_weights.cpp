@@ -238,3 +238,115 @@ TEST_F(EdgeDataWeightTest, ScalingComparison) {
         EXPECT_NEAR(weights_scaled[i], weights_unscaled[i], 1e-2);
     }
 }
+
+TEST_F(EdgeDataWeightTest, ScaledWeightBounds) {
+    EdgeData edges;
+    add_test_edges(edges);
+    const double timescale_bound = 10.0;
+    edges.update_temporal_weights(timescale_bound);
+
+    // Extract individual weights
+    auto get_individual_weights = [](const std::vector<double>& cumulative) {
+        std::vector<double> weights;
+        weights.push_back(cumulative[0]);
+        for (size_t i = 1; i < cumulative.size(); i++) {
+            weights.push_back(cumulative[i] - cumulative[i-1]);
+        }
+        return weights;
+    };
+
+    auto forward_weights = get_individual_weights(edges.forward_cumulative_weights);
+    auto backward_weights = get_individual_weights(edges.backward_cumulative_weights);
+
+    // Check scaled time differences don't exceed timescale_bound
+    for (size_t i = 0; i < forward_weights.size(); i++) {
+        EXPECT_LE(log(forward_weights[i]), timescale_bound);
+    }
+
+    for (size_t i = 0; i < backward_weights.size(); i++) {
+        EXPECT_LE(log(backward_weights[i]), timescale_bound);
+    }
+}
+
+TEST_F(EdgeDataWeightTest, DifferentTimescaleBounds) {
+    EdgeData edges;
+    add_test_edges(edges);
+
+    std::vector<double> bounds = {5.0, 10.0, 20.0};
+    std::vector<std::vector<double>> scaled_ratios;
+
+    // Collect weight ratios for different bounds
+    for (double bound : bounds) {
+        edges.update_temporal_weights(bound);
+        std::vector<double> ratios;
+        for (size_t i = 1; i < edges.forward_cumulative_weights.size(); i++) {
+            ratios.push_back(edges.forward_cumulative_weights[i] /
+                           edges.forward_cumulative_weights[i-1]);
+        }
+        scaled_ratios.push_back(ratios);
+    }
+
+    // Relative ordering should be preserved across different bounds
+    for (size_t i = 0; i < scaled_ratios[0].size(); i++) {
+        for (size_t j = 1; j < scaled_ratios.size(); j++) {
+            EXPECT_EQ(scaled_ratios[0][i] > 1.0, scaled_ratios[j][i] > 1.0)
+                << "Weight ratio ordering should be consistent across different bounds";
+        }
+    }
+}
+
+TEST_F(EdgeDataWeightTest, SingleTimestampWithBounds) {
+    EdgeData edges;
+    // All edges have same timestamp
+    edges.push_back(1, 2, 100);
+    edges.push_back(2, 3, 100);
+    edges.push_back(3, 4, 100);
+    edges.update_timestamp_groups();
+
+    // Test with different bounds
+    for (double bound : {-1.0, 0.0, 10.0, 50.0}) {
+        edges.update_temporal_weights(bound);
+        ASSERT_EQ(edges.forward_cumulative_weights.size(), 1);
+        ASSERT_EQ(edges.backward_cumulative_weights.size(), 1);
+        EXPECT_NEAR(edges.forward_cumulative_weights[0], 1.0, 1e-6);
+        EXPECT_NEAR(edges.backward_cumulative_weights[0], 1.0, 1e-6);
+    }
+}
+
+TEST_F(EdgeDataWeightTest, WeightMonotonicity) {
+    EdgeData edges;
+    add_test_edges(edges);
+
+    const double timescale_bound = 20.0;
+    edges.update_temporal_weights(timescale_bound);
+
+    // Forward weights should decrease monotonically
+    for (size_t i = 1; i < edges.forward_cumulative_weights.size(); i++) {
+        double prev_weight = i == 1 ? edges.forward_cumulative_weights[0]
+                                  : edges.forward_cumulative_weights[i-1];
+        double curr_weight = edges.forward_cumulative_weights[i];
+        double weight_diff = curr_weight - prev_weight;
+
+        if (i > 1) {
+            double prev_diff = edges.forward_cumulative_weights[i-1] -
+                             edges.forward_cumulative_weights[i-2];
+            EXPECT_GE(prev_diff, weight_diff)
+                << "Forward weight differences should decrease monotonically";
+        }
+    }
+
+    // Backward weights should increase monotonically
+    for (size_t i = 1; i < edges.backward_cumulative_weights.size(); i++) {
+        double prev_weight = i == 1 ? edges.backward_cumulative_weights[0]
+                                  : edges.backward_cumulative_weights[i-1];
+        double curr_weight = edges.backward_cumulative_weights[i];
+        double weight_diff = curr_weight - prev_weight;
+
+        if (i > 1) {
+            double prev_diff = edges.backward_cumulative_weights[i-1] -
+                             edges.backward_cumulative_weights[i-2];
+            EXPECT_LE(prev_diff, weight_diff)
+                << "Backward weight differences should increase monotonically";
+        }
+    }
+}
