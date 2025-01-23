@@ -29,7 +29,7 @@ struct EdgeData {
 
     // Group management
     void update_timestamp_groups();  // Call after sorting
-    void update_temporal_weights();
+    void update_temporal_weights(double timescale_bound);
 
     [[nodiscard]] std::pair<size_t, size_t> get_timestamp_group_range(size_t group_idx) const;
     [[nodiscard]] size_t get_timestamp_group_count() const;

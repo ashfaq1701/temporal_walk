@@ -1,4 +1,6 @@
 #include <gtest/gtest.h>
+
+#include "../src/config/constants.h"
 #include "../src/data/NodeEdgeIndex.h"
 #include "../src/data/NodeMapping.h"
 #include "../src/data/EdgeData.h"
@@ -43,7 +45,7 @@ protected:
        mapping.update(edges, 0, edges.size());
 
        index.rebuild(edges, mapping, directed);
-       index.update_temporal_weights(edges);
+       index.update_temporal_weights(edges, -1);
    }
 
    NodeEdgeIndex index;
@@ -53,7 +55,7 @@ TEST_F(NodeEdgeIndexWeightTest, EmptyGraph) {
    EdgeData empty_edges;
    NodeMapping empty_mapping;
    index.rebuild(empty_edges, empty_mapping, true);
-   index.update_temporal_weights(empty_edges);
+   index.update_temporal_weights(empty_edges, -1);
 
    EXPECT_TRUE(index.outbound_forward_weights.empty());
    EXPECT_TRUE(index.outbound_backward_weights.empty());
@@ -147,7 +149,7 @@ TEST_F(NodeEdgeIndexWeightTest, WeightConsistencyAcrossUpdates) {
    mapping.update(edges, 0, edges.size());
 
    index.rebuild(edges, mapping, true);
-   index.update_temporal_weights(edges);
+   index.update_temporal_weights(edges, -1);
 
    // Weights should be different but still normalized
    EXPECT_NE(original_out_forward.size(), index.outbound_forward_weights.size());
@@ -167,7 +169,7 @@ TEST_F(NodeEdgeIndexWeightTest, SingleTimestampGroupPerNode) {
    mapping.update(edges, 0, edges.size());
 
    index.rebuild(edges, mapping, true);
-   index.update_temporal_weights(edges);
+   index.update_temporal_weights(edges, -1);
 
    // Each node should have single weight of 1.0
    for (size_t node = 0; node < index.outbound_timestamp_group_offsets.size() - 1; node++) {

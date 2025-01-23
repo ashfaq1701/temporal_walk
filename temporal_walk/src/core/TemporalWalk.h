@@ -34,6 +34,8 @@ class TemporalWalk {
 
     bool enable_weight_computation;
 
+    double timescale_bound;
+
     int64_t max_edge_time = 0;
 
     std::unique_ptr<TemporalGraph> temporal_graph;
@@ -57,6 +59,7 @@ public:
         bool is_directed,
         int64_t max_time_capacity=-1,
         bool enable_weight_computation=false,
+        double timescale_bound=DEFAULT_TIMESCALE_BOUND,
         size_t n_threads=std::thread::hardware_concurrency());
 
     [[nodiscard]] std::vector<std::vector<NodeWithTime>> get_random_walks_and_times_for_all_nodes(

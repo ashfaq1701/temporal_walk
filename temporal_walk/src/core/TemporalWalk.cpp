@@ -15,12 +15,17 @@ TemporalWalk::TemporalWalk(
     bool is_directed,
     int64_t max_time_capacity,
     bool enable_weight_computation,
+    double timescale_bound,
     size_t n_threads):
     is_directed(is_directed), max_time_capacity(max_time_capacity),
     n_threads(static_cast<int>(n_threads)), enable_weight_computation(enable_weight_computation),
-    thread_pool(n_threads)
+    timescale_bound(timescale_bound), thread_pool(n_threads)
 {
-    temporal_graph = std::make_unique<TemporalGraph>(is_directed, max_time_capacity, enable_weight_computation);
+    temporal_graph = std::make_unique<TemporalGraph>(
+        is_directed,
+        max_time_capacity,
+        enable_weight_computation,
+        timescale_bound);
 }
 
 bool get_should_walk_forward(WalkDirection walk_direction) {

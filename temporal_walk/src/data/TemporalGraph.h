@@ -8,6 +8,7 @@
 #include "NodeMapping.h"
 #include "NodeEdgeIndex.h"
 #include "../utils/utils.h"
+#include "../config/constants.h"
 
 class RandomPicker;
 
@@ -17,6 +18,7 @@ private:
     bool is_directed;
     int64_t time_window; // Time duration to keep edges (-1 means keep all)
     bool enable_weight_computation;
+    double timescale_bound;
     int64_t latest_timestamp; // Track latest edge timestamp
 
     void sort_and_merge_edges(size_t start_idx);
@@ -27,7 +29,11 @@ public:
     EdgeData edges; // Main edge storage
     NodeMapping node_mapping; // Sparse to dense node ID mapping
 
-    explicit TemporalGraph(bool directed, int64_t window = -1, bool enable_weight_computation = false);
+    explicit TemporalGraph(
+        bool directed,
+        int64_t window = -1,
+        bool enable_weight_computation = false,
+        double timescale_bound=DEFAULT_TIMESCALE_BOUND);
 
     // Edge addition
     void add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& new_edges);

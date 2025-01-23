@@ -35,7 +35,7 @@ struct NodeEdgeIndex
                                                                       bool is_directed) const;
     [[nodiscard]] size_t get_timestamp_group_count(int dense_node_id, bool forward, bool is_directed) const;
 
-    void update_temporal_weights(const EdgeData& edges);
+    void update_temporal_weights(const EdgeData& edges, double timescale_bound);
 };
 
 #endif //NODEEDGEINDEX_H

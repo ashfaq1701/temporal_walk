@@ -7,8 +7,9 @@
 #include "../random/RandomPicker.h"
 
 
-TemporalGraph::TemporalGraph(bool directed, int64_t window, bool enable_weight_computation)
-    : is_directed(directed), time_window(window), enable_weight_computation(enable_weight_computation), latest_timestamp(0) {}
+TemporalGraph::TemporalGraph(bool directed, int64_t window, bool enable_weight_computation, double timescale_bound)
+    : is_directed(directed), time_window(window), enable_weight_computation(enable_weight_computation),
+      timescale_bound(timescale_bound), latest_timestamp(0) {}
 
 void TemporalGraph::add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& new_edges) {
     if (new_edges.empty()) return;
@@ -49,8 +50,8 @@ void TemporalGraph::add_multiple_edges(const std::vector<std::tuple<int, int, in
 }
 
 void TemporalGraph::update_temporal_weights() {
-    edges.update_temporal_weights();
-    node_index.update_temporal_weights(edges);
+    edges.update_temporal_weights(timescale_bound);
+    node_index.update_temporal_weights(edges, timescale_bound);
 }
 
 void TemporalGraph::sort_and_merge_edges(size_t start_idx) {
@@ -441,11 +442,9 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
                                 : node_index.outbound_offsets[dense_idx + 1]));
 
     // Validate range before random selection
-    if (edge_start >= edge_end || edge_start >= edge_indices.size() ||
-        edge_end > edge_indices.size()) {
+    if (edge_start >= edge_end || edge_start >= edge_indices.size() || edge_end > edge_indices.size()) {
         return {-1, -1, -1};
     }
-
 
     // Random selection from group
     const size_t edge_idx = edge_indices[edge_start + get_random_number(static_cast<int>(edge_end - edge_start))];

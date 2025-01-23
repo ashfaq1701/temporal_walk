@@ -71,7 +71,7 @@ void EdgeData::update_timestamp_groups() {
     timestamp_group_offsets.push_back(timestamps.size());
 }
 
-void EdgeData::update_temporal_weights() {
+void EdgeData::update_temporal_weights(double timescale_bound) {
     if (timestamps.empty()) {
         forward_cumulative_weights.clear();
         backward_cumulative_weights.clear();
@@ -79,26 +79,33 @@ void EdgeData::update_temporal_weights() {
     }
 
     const int64_t min_timestamp = timestamps[0];
-    const int64_t max_timestamp = timestamps.back();  // Timestamps are sorted
+    const int64_t max_timestamp = timestamps.back();
+    const auto time_diff = static_cast<double>(max_timestamp - min_timestamp);
+    const double time_scale = (timescale_bound > 0 && time_diff > 0) ?
+        timescale_bound / time_diff : 1.0;
 
     const size_t num_groups = get_timestamp_group_count();
     forward_cumulative_weights.resize(num_groups);
     backward_cumulative_weights.resize(num_groups);
 
-    double forward_sum = 0.0;
-    double backward_sum = 0.0;
-
+    double forward_sum = 0.0, backward_sum = 0.0;
     for (size_t group = 0; group < num_groups; group++) {
         const size_t start = timestamp_group_offsets[group];
         const int64_t group_timestamp = timestamps[start];
 
-        // Forward weight relative to max timestamp
-        const double forward_weight = exp(static_cast<double>(max_timestamp - group_timestamp));
+        const auto time_diff_forward = static_cast<double>(max_timestamp - group_timestamp);
+        const auto time_diff_backward = static_cast<double>(group_timestamp - min_timestamp);
+
+        const double forward_scaled = timescale_bound > 0 ?
+            time_diff_forward * time_scale : time_diff_forward;
+        const double backward_scaled = timescale_bound > 0 ?
+            time_diff_backward * time_scale : time_diff_backward;
+
+        const double forward_weight = exp(forward_scaled);
         forward_sum += forward_weight;
         forward_cumulative_weights[group] = forward_sum;
 
-        // Backward weight relative to min timestamp
-        const double backward_weight = exp(static_cast<double>(group_timestamp - min_timestamp));
+        const double backward_weight = exp(backward_scaled);
         backward_sum += backward_weight;
         backward_cumulative_weights[group] = backward_sum;
     }

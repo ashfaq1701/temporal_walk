@@ -34,7 +34,7 @@ int main() {
         10,
         &uniform_picker_type,
         WalkDirection::Backward_In_Time,
-        5);
+        3);
     std::cout << "Walks backward (with specific number of contexts): " << walks_backward_with_specific_number_of_contexts.size() << ", average length " << get_average_walk_length(walks_backward_with_specific_number_of_contexts) << std::endl;
 
     auto end = std::chrono::high_resolution_clock::now();

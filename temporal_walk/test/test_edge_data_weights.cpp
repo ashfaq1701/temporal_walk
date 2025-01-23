@@ -2,6 +2,8 @@
 #include "../src/data/EdgeData.h"
 #include <cmath>
 
+#include "../src/config/constants.h"
+
 class EdgeDataWeightTest : public ::testing::Test {
 protected:
    static void verify_cumulative_weights(const std::vector<double>& weights) {
@@ -32,7 +34,7 @@ protected:
 
 TEST_F(EdgeDataWeightTest, EmptyEdges) {
    EdgeData edges;
-   edges.update_temporal_weights();
+   edges.update_temporal_weights(-1);
 
    EXPECT_TRUE(edges.forward_cumulative_weights.empty());
    EXPECT_TRUE(edges.backward_cumulative_weights.empty());
@@ -43,7 +45,7 @@ TEST_F(EdgeDataWeightTest, SingleTimestampGroup) {
    edges.push_back(1, 2, 10);
    edges.push_back(2, 3, 10);
    edges.update_timestamp_groups();
-   edges.update_temporal_weights();
+   edges.update_temporal_weights(-1);
 
    ASSERT_EQ(edges.forward_cumulative_weights.size(), 1);
    ASSERT_EQ(edges.backward_cumulative_weights.size(), 1);
@@ -56,7 +58,7 @@ TEST_F(EdgeDataWeightTest, SingleTimestampGroup) {
 TEST_F(EdgeDataWeightTest, WeightNormalization) {
    EdgeData edges;
    add_test_edges(edges);
-   edges.update_temporal_weights();
+   edges.update_temporal_weights(-1);
 
    // Should have 4 timestamp groups (10,20,30,40)
    ASSERT_EQ(edges.forward_cumulative_weights.size(), 4);
@@ -69,7 +71,7 @@ TEST_F(EdgeDataWeightTest, WeightNormalization) {
 TEST_F(EdgeDataWeightTest, ForwardWeightBias) {
    EdgeData edges;
    add_test_edges(edges);
-   edges.update_temporal_weights();
+   edges.update_temporal_weights(-1);
 
    // Forward weights should be higher for earlier timestamps
    // Calculate individual group weights from cumulative
@@ -90,7 +92,7 @@ TEST_F(EdgeDataWeightTest, ForwardWeightBias) {
 TEST_F(EdgeDataWeightTest, BackwardWeightBias) {
    EdgeData edges;
    add_test_edges(edges);
-   edges.update_temporal_weights();
+   edges.update_temporal_weights(-1);
 
    // Backward weights should be higher for later timestamps
    // Calculate individual group weights from cumulative
@@ -111,7 +113,7 @@ TEST_F(EdgeDataWeightTest, BackwardWeightBias) {
 TEST_F(EdgeDataWeightTest, WeightExponentialDecay) {
     EdgeData edges;
     add_test_edges(edges);
-    edges.update_temporal_weights();
+    edges.update_temporal_weights(-1);
 
     // Extract normalized group weights
     auto get_group_weights = [](const std::vector<double>& cumulative_weights) {
@@ -151,7 +153,7 @@ TEST_F(EdgeDataWeightTest, WeightExponentialDecay) {
 TEST_F(EdgeDataWeightTest, UpdateWeights) {
    EdgeData edges;
    add_test_edges(edges);
-   edges.update_temporal_weights();
+   edges.update_temporal_weights(-1);
 
    // Store original weights
    auto original_forward = edges.forward_cumulative_weights;
@@ -160,7 +162,7 @@ TEST_F(EdgeDataWeightTest, UpdateWeights) {
    // Add new edge with different timestamp
    edges.push_back(1, 4, 50);
    edges.update_timestamp_groups();
-   edges.update_temporal_weights();
+   edges.update_temporal_weights(-1);
 
    // Weights should be different after update
    EXPECT_NE(original_forward.size(), edges.forward_cumulative_weights.size());
@@ -169,4 +171,70 @@ TEST_F(EdgeDataWeightTest, UpdateWeights) {
    // But should still maintain normalization
    verify_cumulative_weights(edges.forward_cumulative_weights);
    verify_cumulative_weights(edges.backward_cumulative_weights);
+}
+
+TEST_F(EdgeDataWeightTest, TimescaleBoundZero) {
+    EdgeData edges;
+    add_test_edges(edges);
+    edges.update_temporal_weights(0);  // Should behave like -1
+
+    verify_cumulative_weights(edges.forward_cumulative_weights);
+    verify_cumulative_weights(edges.backward_cumulative_weights);
+}
+
+TEST_F(EdgeDataWeightTest, TimescaleBoundPositive) {
+    EdgeData edges;
+    add_test_edges(edges);
+    constexpr double timescale_bound = 30.0;
+    edges.update_temporal_weights(timescale_bound);
+
+    // Check relative weights instead of absolute values
+    std::vector<double> forward_weights;
+    forward_weights.push_back(edges.forward_cumulative_weights[0]);
+    for (size_t i = 1; i < edges.forward_cumulative_weights.size(); i++) {
+        forward_weights.push_back(
+            edges.forward_cumulative_weights[i] - edges.forward_cumulative_weights[i-1]);
+    }
+
+    // Earlier timestamps should have higher weights for forward
+    for (size_t i = 0; i < forward_weights.size() - 1; i++) {
+        EXPECT_GT(forward_weights[i], forward_weights[i+1]);
+    }
+
+    // Later timestamps should have higher weights for backward
+    std::vector<double> backward_weights;
+    backward_weights.push_back(edges.backward_cumulative_weights[0]);
+    for (size_t i = 1; i < edges.backward_cumulative_weights.size(); i++) {
+        backward_weights.push_back(
+            edges.backward_cumulative_weights[i] - edges.backward_cumulative_weights[i-1]);
+    }
+
+    for (size_t i = 0; i < backward_weights.size() - 1; i++) {
+        EXPECT_LT(backward_weights[i], backward_weights[i+1]);
+    }
+}
+
+TEST_F(EdgeDataWeightTest, ScalingComparison) {
+    EdgeData edges;
+    add_test_edges(edges);
+
+    // Test relative weight proportions are preserved
+    std::vector<double> weights_unscaled, weights_scaled;
+
+    edges.update_temporal_weights(-1);
+    for (size_t i = 1; i < edges.forward_cumulative_weights.size(); i++) {
+        weights_unscaled.push_back(
+            edges.forward_cumulative_weights[i] / edges.forward_cumulative_weights[i-1]);
+    }
+
+    edges.update_temporal_weights(50.0);
+    for (size_t i = 1; i < edges.forward_cumulative_weights.size(); i++) {
+        weights_scaled.push_back(
+            edges.forward_cumulative_weights[i] / edges.forward_cumulative_weights[i-1]);
+    }
+
+    // Compare ratios with some tolerance
+    for (size_t i = 0; i < weights_unscaled.size(); i++) {
+        EXPECT_NEAR(weights_scaled[i], weights_unscaled[i], 1e-2);
+    }
 }
