@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdint>
 #include <tuple>
+#include <cmath>
 
 struct EdgeData {
     // Core edge data
