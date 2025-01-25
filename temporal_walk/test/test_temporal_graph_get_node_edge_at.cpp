@@ -84,19 +84,32 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, BackwardWalkTest) {
 
     // Test no timestamp constraint
     auto edge = graph->get_node_edge_at(10, *first_picker, -1, false);
-    verify_edge(edge, 50, 10, 103); // Should select from latest group with first_picker
+    verify_edge(edge, 20, 10, 100); // Should select from first group with first_picker
 
     edge = graph->get_node_edge_at(10, *last_picker, -1, false);
-    verify_edge(edge, 20, 10, 100); // Should select from earliest group with last_picker
+    verify_edge(edge, 50, 10, 103); // Should select from last group with last_picker
 
     // Test with timestamp constraints
     edge = graph->get_node_edge_at(10, *first_picker, 104, false);
-    verify_edge(edge, 50, 10, 103); // Should select 103 as highest timestamp < 104
+    verify_edge(edge, 20, 10, 100); // Should select 100 as lowest timestamp < 104
 
     edge = graph->get_node_edge_at(10, *first_picker, 103, false);
-    verify_edge(edge, 40, 10, 102); // Should select 102 as highest timestamp < 103
+    verify_edge(edge, 20, 10, 100); // Should select 100 as lowest timestamp < 103
 
     edge = graph->get_node_edge_at(10, *first_picker, 102, false);
+    verify_edge(edge, 20, 10, 100); // Should select 100 as lowest timestamp < 102
+
+    edge = graph->get_node_edge_at(10, *first_picker, 101, false);
+    verify_edge(edge, 20, 10, 100); // Should select 100 as lowest timestamp < 101
+
+    // Test with timestamp constraints
+    edge = graph->get_node_edge_at(10, *last_picker, 104, false);
+    verify_edge(edge, 50, 10, 103); // Should select 103 as highest timestamp < 104
+
+    edge = graph->get_node_edge_at(10, *last_picker, 103, false);
+    verify_edge(edge, 40, 10, 102); // Should select 102 as highest timestamp < 103
+
+    edge = graph->get_node_edge_at(10, *last_picker, 102, false);
     verify_edge(edge, 30, 10, 101); // Should select 101 as highest timestamp < 102
 
     edge = graph->get_node_edge_at(10, *first_picker, 101, false);

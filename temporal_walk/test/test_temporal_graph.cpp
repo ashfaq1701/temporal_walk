@@ -372,10 +372,10 @@ TEST_F(TemporalGraphTest, GetEdgeAtTest) {
 
     // Test backward direction (looking for timestamps < given)
     auto [src5, tgt5, ts5] = graph->get_edge_at(*first_picker, 400, false);
-    EXPECT_EQ(ts5, 300);  // Should select last group before 400
+    EXPECT_EQ(ts5, 100);  // Should select first group before 400
 
     auto [src6, tgt6, ts6] = graph->get_edge_at(*last_picker, 250, false);
-    EXPECT_EQ(ts6, 100);  // Should select earliest group before 250
+    EXPECT_EQ(ts6, 200);  // Should select latest group before 250
 
     // Test edge cases
     // No groups after timestamp
@@ -413,9 +413,10 @@ TEST_F(TemporalGraphTest, GetEdgeAtDuplicateTimestampsTest) {
 
     // Test backward selection
     auto [src2, tgt2, ts2] = graph->get_edge_at(*first_picker, 250, false);
-    EXPECT_EQ(ts2, 200);
-    EXPECT_TRUE((src2 == 70 && tgt2 == 80) ||
-                (src2 == 90 && tgt2 == 100));  // Should be one of the t=200 edges
+    EXPECT_EQ(ts2, 100);
+    EXPECT_TRUE((src2 == 10 && tgt2 == 20) ||
+                (src2 == 30 && tgt2 == 40) ||
+                (src2 == 50 && tgt2 == 60));  // Should be one of the t=100 edges
 }
 
 TEST_F(TemporalGraphTest, GetEdgeAtBoundaryConditionsTest) {
