@@ -302,7 +302,7 @@ The Python bindings for the `TemporalWalk` class provide a seamless way to inter
 ### Constructor
 
 ```python
-TemporalWalk(bool is_directed, max_time_capacity: int=-1, enable_weight_computation: bool=False, timescale_bound: float=20):
+TemporalWalk(bool is_directed, max_time_capacity: int=-1, enable_weight_computation: bool=False, timescale_bound: float=100):
 ```
 
 Initializes a (Un)directed TemporalWalk object with the maximum time capacity of the graph. The is_directed parameter defines if the graph is directed or not. `enable_weight_computation` defines if CTDNE weights will be computed or not. It must be true to use `ExponentialWeight` random picker. Default is false, which will only enable the index based random pickers. For very large time differences `timescale_bound` is used to scale the time differences between 0 and the given value.
