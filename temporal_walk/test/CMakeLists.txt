@@ -23,3 +23,10 @@ target_link_libraries(test_temporal_walk PRIVATE
         GTest::gmock_main
         Boost::math
 )
+
+if(USE_CUDA AND CMAKE_CUDA_COMPILER)
+    target_link_libraries(test_temporal_walk PRIVATE CUDA::cudart)
+    set_target_properties(test_temporal_walk PROPERTIES
+            CUDA_SEPARABLE_COMPILATION ON
+    )
+endif()
