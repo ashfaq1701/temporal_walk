@@ -7,9 +7,16 @@
 #include "../random/RandomPicker.h"
 
 
-TemporalGraph::TemporalGraph(bool directed, int64_t window, bool enable_weight_computation, double timescale_bound)
-    : is_directed(directed), time_window(window), enable_weight_computation(enable_weight_computation),
-      timescale_bound(timescale_bound), latest_timestamp(0) {}
+TemporalGraph::TemporalGraph(
+    const bool directed,
+    const bool use_gpu,
+    const int64_t window,
+    const bool enable_weight_computation,
+    const double timescale_bound)
+    : is_directed(directed), use_gpu(use_gpu), time_window(window),
+        enable_weight_computation(enable_weight_computation),
+        timescale_bound(timescale_bound), latest_timestamp(0),
+        node_index(use_gpu), edges(use_gpu), node_mapping(use_gpu) {}
 
 void TemporalGraph::add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& new_edges) {
     if (new_edges.empty()) return;
@@ -69,7 +76,7 @@ void TemporalGraph::sort_and_merge_edges(size_t start_idx) {
               });
 
     // Apply permutation to new edges
-    EdgeData temp;
+    EdgeData temp(use_gpu);
     temp.reserve(edges.size() - start_idx);
     for (size_t idx : indices) {
         temp.push_back(
@@ -88,7 +95,7 @@ void TemporalGraph::sort_and_merge_edges(size_t start_idx) {
 
     // Merge with existing edges
     if (start_idx > 0) {
-        EdgeData merged;
+        EdgeData merged(use_gpu);
         merged.reserve(edges.size());
 
         size_t i = 0; // Index for existing edges

@@ -36,7 +36,7 @@ protected:
 
     void setup_test_graph(bool directed = true)
     {
-        EdgeData edges;
+        EdgeData edges(false);
         // Add edges that create multiple timestamp groups per node
         edges.push_back(1, 2, 10);
         edges.push_back(1, 3, 10); // Same timestamp group for node 1
@@ -46,7 +46,7 @@ protected:
         edges.push_back(3, 4, 40);
         edges.update_timestamp_groups();
 
-        NodeMapping mapping;
+        NodeMapping mapping(false);
         mapping.update(edges, 0, edges.size());
 
         index.rebuild(edges, mapping, directed);
@@ -54,12 +54,14 @@ protected:
     }
 
     NodeEdgeIndex index;
+
+    NodeEdgeIndexWeightTest(): index(false) {}
 };
 
 TEST_F(NodeEdgeIndexWeightTest, EmptyGraph)
 {
-    const EdgeData empty_edges;
-    const NodeMapping empty_mapping;
+    const EdgeData empty_edges(false);
+    const NodeMapping empty_mapping(false);
     index.rebuild(empty_edges, empty_mapping, true);
     index.update_temporal_weights(empty_edges, -1);
 
@@ -95,13 +97,13 @@ TEST_F(NodeEdgeIndexWeightTest, UndirectedWeightNormalization)
 
 TEST_F(NodeEdgeIndexWeightTest, WeightBiasPerNode)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     edges.push_back(1, 2, 100); // Known timestamps for precise verification
     edges.push_back(1, 3, 200);
     edges.push_back(1, 4, 300);
     edges.update_timestamp_groups();
 
-    NodeMapping mapping;
+    NodeMapping mapping(false);
     mapping.update(edges, 0, edges.size());
     index.rebuild(edges, mapping, true);
     index.update_temporal_weights(edges, -1); // No scaling
@@ -151,12 +153,12 @@ TEST_F(NodeEdgeIndexWeightTest, WeightConsistencyAcrossUpdates)
     auto original_in_backward = index.inbound_backward_weights_exponential;
 
     // Rebuild and update weights again
-    EdgeData edges;
+    EdgeData edges(false);
     edges.push_back(1, 2, 10);
     edges.push_back(1, 3, 10);
     edges.update_timestamp_groups();
 
-    NodeMapping mapping;
+    NodeMapping mapping(false);
     mapping.update(edges, 0, edges.size());
 
     index.rebuild(edges, mapping, true);
@@ -170,14 +172,14 @@ TEST_F(NodeEdgeIndexWeightTest, WeightConsistencyAcrossUpdates)
 
 TEST_F(NodeEdgeIndexWeightTest, SingleTimestampGroupPerNode)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     // All edges in same timestamp group
     edges.push_back(1, 2, 10);
     edges.push_back(1, 3, 10);
     edges.push_back(2, 3, 10);
     edges.update_timestamp_groups();
 
-    NodeMapping mapping;
+    NodeMapping mapping(false);
     mapping.update(edges, 0, edges.size());
 
     index.rebuild(edges, mapping, true);
@@ -198,13 +200,13 @@ TEST_F(NodeEdgeIndexWeightTest, SingleTimestampGroupPerNode)
 
 TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundZero)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     edges.push_back(1, 2, 10);
     edges.push_back(1, 3, 20);
     edges.push_back(1, 4, 30);
     edges.update_timestamp_groups();
 
-    NodeMapping mapping;
+    NodeMapping mapping(false);
     mapping.update(edges, 0, edges.size());
 
     index.rebuild(edges, mapping, true);
@@ -218,7 +220,7 @@ TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundZero)
 
 TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundWithSingleTimestamp)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     // All edges for node 1 have same timestamp
     constexpr int node_id = 1; // Original node ID
     edges.push_back(node_id, 2, 10);
@@ -226,7 +228,7 @@ TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundWithSingleTimestamp)
     edges.push_back(node_id, 4, 10);
     edges.update_timestamp_groups();
 
-    NodeMapping mapping;
+    NodeMapping mapping(false);
     mapping.update(edges, 0, edges.size());
 
     // Get the dense index for node_id
@@ -251,13 +253,13 @@ TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundWithSingleTimestamp)
 
 TEST_F(NodeEdgeIndexWeightTest, ScaledWeightRatios)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     edges.push_back(1, 2, 100);
     edges.push_back(1, 3, 300);
     edges.push_back(1, 4, 500);
     edges.update_timestamp_groups();
 
-    NodeMapping mapping;
+    NodeMapping mapping(false);
     mapping.update(edges, 0, edges.size());
     index.rebuild(edges, mapping, true);
 
@@ -305,13 +307,13 @@ TEST_F(NodeEdgeIndexWeightTest, ScaledWeightRatios)
 
 TEST_F(NodeEdgeIndexWeightTest, WeightOrderPreservation)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     edges.push_back(1, 2, 10);
     edges.push_back(1, 3, 20);
     edges.push_back(1, 4, 30);
     edges.update_timestamp_groups();
 
-    NodeMapping mapping;
+    NodeMapping mapping(false);
     mapping.update(edges, 0, edges.size());
     index.rebuild(edges, mapping, true);
 
@@ -338,7 +340,7 @@ TEST_F(NodeEdgeIndexWeightTest, WeightOrderPreservation)
 
 TEST_F(NodeEdgeIndexWeightTest, TimescaleNormalizationTest)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     // Create edges with widely varying time differences
     edges.push_back(1, 2, 100); // Small gap
     edges.push_back(1, 3, 200); // 100 units
@@ -346,7 +348,7 @@ TEST_F(NodeEdgeIndexWeightTest, TimescaleNormalizationTest)
     edges.push_back(1, 5, 100000); // Large gap
     edges.update_timestamp_groups();
 
-    NodeMapping mapping;
+    NodeMapping mapping(false);
     mapping.update(edges, 0, edges.size());
     index.rebuild(edges, mapping, true);
 

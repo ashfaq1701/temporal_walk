@@ -26,7 +26,7 @@ protected:
 
     void SetUp() override {
         // Create directed graph by default
-        graph = std::make_unique<TemporalGraph>(true);
+        graph = std::make_unique<TemporalGraph>(true, false);
         first_picker = std::make_unique<FirstIndexPicker>();
         last_picker = std::make_unique<LastIndexPicker>();
     }
@@ -115,7 +115,7 @@ TEST_F(TemporalGraphTest, MaintainSortedOrderTest) {
 // Test time window functionality
 TEST_F(TemporalGraphTest, TimeWindowTest) {
     // Create graph with 100 time unit window
-    graph = std::make_unique<TemporalGraph>(true, 100);
+    graph = std::make_unique<TemporalGraph>(true, false, 100);
 
     // Add edges spanning the time window
     auto edges = create_edges({
@@ -162,7 +162,7 @@ TEST_F(TemporalGraphTest, EdgeAdditionEdgeCasesTest) {
 
 // Test deletion of nodes when all their edges are removed
 TEST_F(TemporalGraphTest, NodeDeletionTest) {
-    graph = std::make_unique<TemporalGraph>(true, 100);  // 100 time unit window
+    graph = std::make_unique<TemporalGraph>(true, false, 100);  // 100 time unit window
 
     // Add initial edges
     auto edges1 = create_edges({
@@ -187,7 +187,7 @@ TEST_F(TemporalGraphTest, NodeDeletionTest) {
 
 // Test undirected graph behavior
 TEST_F(TemporalGraphTest, UndirectedGraphEdgeAdditionTest) {
-    graph = std::make_unique<TemporalGraph>(false);  // Undirected
+    graph = std::make_unique<TemporalGraph>(false, false);  // Undirected
 
     auto edges = create_edges({
         {2, 1, 100},  // Should be stored as (1,2,100)
@@ -235,7 +235,7 @@ TEST_F(TemporalGraphTest, CountTimestampsTest) {
    EXPECT_EQ(graph->count_timestamps_greater_than(500), 0);  // After last timestamp
 
    // Test empty graph
-   graph = std::make_unique<TemporalGraph>(true);
+   graph = std::make_unique<TemporalGraph>(true, false);
    EXPECT_EQ(graph->count_timestamps_less_than(100), 0);
    EXPECT_EQ(graph->count_timestamps_greater_than(100), 0);
 }
@@ -287,7 +287,7 @@ TEST_F(TemporalGraphTest, CountNodeTimestampsDirectedTest) {
 
 TEST_F(TemporalGraphTest, CountNodeTimestampsUndirectedTest) {
    // Create undirected graph
-   graph = std::make_unique<TemporalGraph>(false);
+   graph = std::make_unique<TemporalGraph>(false, false);
 
    // Add edges - note that order will be normalized (smaller ID becomes source)
    auto edges = create_edges({
@@ -387,7 +387,7 @@ TEST_F(TemporalGraphTest, GetEdgeAtTest) {
     EXPECT_EQ(ts8, -1);
 
     // Test with empty graph
-    graph = std::make_unique<TemporalGraph>(true);
+    graph = std::make_unique<TemporalGraph>(true, false);
     auto [src9, tgt9, ts9] = graph->get_edge_at(*first_picker, 100, true);
     EXPECT_EQ(ts9, -1);
 }

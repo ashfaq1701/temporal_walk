@@ -2,6 +2,9 @@
 
 #include <iostream>
 
+NodeEdgeIndex::NodeEdgeIndex(bool use_gpu): use_gpu(use_gpu) {}
+
+
 void NodeEdgeIndex::clear() {
    // Clear edge CSR structures
    outbound_offsets.clear();

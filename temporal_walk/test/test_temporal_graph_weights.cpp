@@ -40,7 +40,7 @@ protected:
 
 TEST_F(TemporalGraphWeightTest, EdgeWeightComputation)
 {
-    TemporalGraph graph(/*directed=*/false, /*window=*/-1, /*enable_weight_computation=*/true, -1);
+    TemporalGraph graph(/*directed=*/false, /*use_gpu=*/false, /*window=*/-1, /*enable_weight_computation=*/true, -1);
     graph.add_multiple_edges(test_edges);
 
     // Should have 4 timestamp groups (10,20,30,40)
@@ -69,7 +69,7 @@ TEST_F(TemporalGraphWeightTest, EdgeWeightComputation)
 
 TEST_F(TemporalGraphWeightTest, NodeWeightComputation)
 {
-    TemporalGraph graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true);
+    TemporalGraph graph(/*directed=*/true, /*use_gpu=*/false, /*window=*/-1, /*enable_weight_computation=*/true);
     graph.add_multiple_edges(test_edges);
 
     const auto& node_index = graph.node_index;
@@ -95,7 +95,7 @@ TEST_F(TemporalGraphWeightTest, NodeWeightComputation)
 
 TEST_F(TemporalGraphWeightTest, WeightBasedSampling)
 {
-    TemporalGraph graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, -1);
+    TemporalGraph graph(/*directed=*/true, /*use_gpu=*/false, /*window=*/-1, /*enable_weight_computation=*/true, -1);
     graph.add_multiple_edges(test_edges);
 
     WeightBasedRandomPicker picker;
@@ -127,7 +127,7 @@ TEST_F(TemporalGraphWeightTest, EdgeCases)
 {
     // Empty graph test
     {
-        TemporalGraph empty_graph(false, -1, true);
+        TemporalGraph empty_graph(false, /*use_gpu=*/false, -1, true);
         WeightBasedRandomPicker picker;
 
         // Initially empty - no need to call update_temporal_weights explicitly
@@ -138,7 +138,7 @@ TEST_F(TemporalGraphWeightTest, EdgeCases)
 
     // Single edge graph test
     {
-        TemporalGraph single_edge_graph(false, -1, true);
+        TemporalGraph single_edge_graph(false, /*use_gpu=*/false, -1, true);
         WeightBasedRandomPicker picker;
 
         // Add single edge (weights are updated in add_multiple_edges)
@@ -153,7 +153,7 @@ TEST_F(TemporalGraphWeightTest, EdgeCases)
 
 TEST_F(TemporalGraphWeightTest, TimescaleBoundZero)
 {
-    TemporalGraph graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, 0);
+    TemporalGraph graph(/*directed=*/true, /*use_gpu=*/false, /*window=*/-1, /*enable_weight_computation=*/true, 0);
     graph.add_multiple_edges(test_edges);
 
     verify_weights(graph.edges.forward_weights_exponential, true);
@@ -162,8 +162,8 @@ TEST_F(TemporalGraphWeightTest, TimescaleBoundZero)
 
 TEST_F(TemporalGraphWeightTest, TimescaleBoundSampling)
 {
-    TemporalGraph scaled_graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, 10.0);
-    TemporalGraph unscaled_graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, -1);
+    TemporalGraph scaled_graph(/*directed=*/true, /*use_gpu=*/false, /*window=*/-1, /*enable_weight_computation=*/true, 10.0);
+    TemporalGraph unscaled_graph(/*directed=*/true, /*use_gpu=*/false, /*window=*/-1, /*enable_weight_computation=*/true, -1);
 
     scaled_graph.add_multiple_edges(test_edges);
     unscaled_graph.add_multiple_edges(test_edges);
@@ -197,7 +197,7 @@ TEST_F(TemporalGraphWeightTest, DifferentTimescaleBounds)
     {
         constexpr int num_samples = 10000;
 
-        TemporalGraph graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, bound);
+        TemporalGraph graph(/*directed=*/true, /*use_gpu=*/false, /*window=*/-1, /*enable_weight_computation=*/true, bound);
         graph.add_multiple_edges(test_edges);
 
         std::map<int64_t, int> samples;
@@ -233,7 +233,7 @@ TEST_F(TemporalGraphWeightTest, SingleTimestampWithBounds)
     // Test with different bounds
     for (double bound : {-1.0, 0.0, 10.0, 50.0})
     {
-        TemporalGraph graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, bound);
+        TemporalGraph graph(/*directed=*/true, /*use_gpu=*/false, /*window=*/-1, /*enable_weight_computation=*/true, bound);
         graph.add_multiple_edges(single_ts_edges);
 
         ASSERT_EQ(graph.edges.forward_weights_exponential.size(), 1);
@@ -245,7 +245,7 @@ TEST_F(TemporalGraphWeightTest, SingleTimestampWithBounds)
 
 TEST_F(TemporalGraphWeightTest, WeightScalingPrecision)
 {
-    TemporalGraph graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, 2.0);
+    TemporalGraph graph(/*directed=*/true, /*use_gpu=*/false, /*window=*/-1, /*enable_weight_computation=*/true, 2.0);
 
     // Use exact timestamps for precise validation
     graph.add_multiple_edges({

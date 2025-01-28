@@ -37,7 +37,7 @@ protected:
 
 TEST_F(EdgeDataWeightTest, EmptyEdges)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     edges.update_temporal_weights(-1);
 
     EXPECT_TRUE(edges.forward_weights_exponential.empty());
@@ -46,7 +46,7 @@ TEST_F(EdgeDataWeightTest, EmptyEdges)
 
 TEST_F(EdgeDataWeightTest, SingleTimestampGroup)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     edges.push_back(1, 2, 10);
     edges.push_back(2, 3, 10);
     edges.update_timestamp_groups();
@@ -62,7 +62,7 @@ TEST_F(EdgeDataWeightTest, SingleTimestampGroup)
 
 TEST_F(EdgeDataWeightTest, WeightNormalization)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     add_test_edges(edges);
     edges.update_temporal_weights(-1);
 
@@ -76,7 +76,7 @@ TEST_F(EdgeDataWeightTest, WeightNormalization)
 
 TEST_F(EdgeDataWeightTest, ForwardWeightBias)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     add_test_edges(edges);
     edges.update_temporal_weights(-1);
 
@@ -90,7 +90,7 @@ TEST_F(EdgeDataWeightTest, ForwardWeightBias)
 
 TEST_F(EdgeDataWeightTest, BackwardWeightBias)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     add_test_edges(edges);
     edges.update_temporal_weights(-1);
 
@@ -104,7 +104,7 @@ TEST_F(EdgeDataWeightTest, BackwardWeightBias)
 
 TEST_F(EdgeDataWeightTest, WeightExponentialDecay)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     edges.push_back(1, 2, 10);
     edges.push_back(2, 3, 20);
     edges.push_back(3, 4, 30);
@@ -138,7 +138,7 @@ TEST_F(EdgeDataWeightTest, WeightExponentialDecay)
 
 TEST_F(EdgeDataWeightTest, UpdateWeights)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     add_test_edges(edges);
     edges.update_temporal_weights(-1);
 
@@ -161,7 +161,7 @@ TEST_F(EdgeDataWeightTest, UpdateWeights)
 
 TEST_F(EdgeDataWeightTest, TimescaleBoundZero)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     add_test_edges(edges);
     edges.update_temporal_weights(0); // Should behave like -1
 
@@ -171,7 +171,7 @@ TEST_F(EdgeDataWeightTest, TimescaleBoundZero)
 
 TEST_F(EdgeDataWeightTest, TimescaleBoundPositive)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     add_test_edges(edges);
     constexpr double timescale_bound = 30.0;
     edges.update_temporal_weights(timescale_bound);
@@ -191,7 +191,7 @@ TEST_F(EdgeDataWeightTest, TimescaleBoundPositive)
 
 TEST_F(EdgeDataWeightTest, ScalingComparison)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     add_test_edges(edges);
 
     // Test relative weight proportions are preserved
@@ -220,7 +220,7 @@ TEST_F(EdgeDataWeightTest, ScalingComparison)
 
 TEST_F(EdgeDataWeightTest, ScaledWeightBounds)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     edges.push_back(1, 2, 100);
     edges.push_back(2, 3, 300);
     edges.push_back(3, 4, 700);
@@ -251,7 +251,7 @@ TEST_F(EdgeDataWeightTest, ScaledWeightBounds)
 
 TEST_F(EdgeDataWeightTest, DifferentTimescaleBounds)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     add_test_edges(edges);
 
     std::vector<double> bounds = {5.0, 10.0, 20.0};
@@ -283,7 +283,7 @@ TEST_F(EdgeDataWeightTest, DifferentTimescaleBounds)
 
 TEST_F(EdgeDataWeightTest, SingleTimestampWithBounds)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     // All edges have same timestamp
     edges.push_back(1, 2, 100);
     edges.push_back(2, 3, 100);
@@ -303,7 +303,7 @@ TEST_F(EdgeDataWeightTest, SingleTimestampWithBounds)
 
 TEST_F(EdgeDataWeightTest, WeightMonotonicity)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     add_test_edges(edges);
 
     constexpr double timescale_bound = 20.0;
@@ -325,7 +325,7 @@ TEST_F(EdgeDataWeightTest, WeightMonotonicity)
 
 TEST_F(EdgeDataWeightTest, TimescaleScalingPrecision)
 {
-    EdgeData edges;
+    EdgeData edges(false);
     // Use precise timestamps for exact validation
     edges.push_back(1, 2, 100);
     edges.push_back(2, 3, 300);

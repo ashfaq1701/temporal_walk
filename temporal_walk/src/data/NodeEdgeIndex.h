@@ -8,6 +8,8 @@
 
 struct NodeEdgeIndex
 {
+    bool use_gpu;
+
     // Base CSR format for edges
     std::vector<size_t> outbound_offsets; // Size: num_nodes + 1
     std::vector<size_t> outbound_indices; // Size: num_edges
@@ -25,6 +27,8 @@ struct NodeEdgeIndex
     std::vector<double> outbound_forward_weights_exponential;   // For all forward walks
     std::vector<double> outbound_backward_weights_exponential;  // For undirected backward walks
     std::vector<double> inbound_backward_weights_exponential;   // For directed backward walks
+
+    explicit NodeEdgeIndex(bool use_gpu);
 
     void clear();
     void rebuild(const EdgeData& edges, const NodeMapping& mapping, bool is_directed);

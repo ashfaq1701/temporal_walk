@@ -28,6 +28,8 @@ struct NodeWithTime {
 class TemporalWalk {
     bool is_directed;
 
+    bool use_gpu;
+
     int64_t max_time_capacity;
 
     int n_threads;
@@ -57,6 +59,7 @@ class TemporalWalk {
 public:
     explicit TemporalWalk(
         bool is_directed,
+        bool use_gpu=false,
         int64_t max_time_capacity=-1,
         bool enable_weight_computation=false,
         double timescale_bound=DEFAULT_TIMESCALE_BOUND,

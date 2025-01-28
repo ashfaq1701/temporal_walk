@@ -7,6 +7,8 @@
 #include <cmath>
 
 struct EdgeData {
+    bool use_gpu;
+
     // Core edge data
     std::vector<int> sources;
     std::vector<int> targets;
@@ -27,6 +29,8 @@ struct EdgeData {
     void push_back(int src, int tgt, int64_t ts);
 
     std::vector<std::tuple<int, int, int64_t>> get_edges();
+
+    explicit EdgeData(bool use_gpu);
 
     // Group management
     void update_timestamp_groups();  // Call after sorting

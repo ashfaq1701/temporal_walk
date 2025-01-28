@@ -15,6 +15,7 @@ class RandomPicker;
 class TemporalGraph
 {
 private:
+    bool use_gpu;
     bool is_directed;
     int64_t time_window; // Time duration to keep edges (-1 means keep all)
     bool enable_weight_computation;
@@ -31,6 +32,7 @@ public:
 
     explicit TemporalGraph(
         bool directed,
+        bool use_gpu,
         int64_t window = -1,
         bool enable_weight_computation = false,
         double timescale_bound=-1);

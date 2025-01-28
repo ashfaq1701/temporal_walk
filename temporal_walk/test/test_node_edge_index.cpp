@@ -7,6 +7,8 @@ protected:
     EdgeData edges;
     NodeMapping mapping;
 
+    NodeEdgeIndexTest(): index(false), edges(false), mapping(false){}
+
     // Helper function to set up a simple directed graph
     void setup_simple_directed_graph() {
         // Add edges with timestamps

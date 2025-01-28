@@ -6,6 +6,8 @@ protected:
     NodeMapping mapping;
     EdgeData edges;
 
+    NodeMappingTest(): mapping(false), edges(false){}
+
     // Helper to verify bidirectional mapping
     void verify_mapping(int sparse_id, int expected_dense_idx) const {
         EXPECT_EQ(mapping.to_dense(sparse_id), expected_dense_idx);

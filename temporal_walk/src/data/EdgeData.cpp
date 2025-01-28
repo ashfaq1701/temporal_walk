@@ -2,6 +2,8 @@
 #include <algorithm>
 #include <iostream>
 
+EdgeData::EdgeData(const bool use_gpu): use_gpu(use_gpu) {}
+
 void EdgeData::reserve(size_t size) {
     sources.reserve(size);
     targets.reserve(size);
@@ -71,7 +73,7 @@ void EdgeData::update_timestamp_groups() {
     timestamp_group_offsets.push_back(timestamps.size());
 }
 
-void EdgeData::update_temporal_weights(double timescale_bound) {
+void EdgeData::update_temporal_weights(const double timescale_bound) {
     if (timestamps.empty()) {
         forward_weights_exponential.clear();
         backward_weights_exponential.clear();

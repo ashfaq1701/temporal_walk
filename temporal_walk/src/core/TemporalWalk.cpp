@@ -13,16 +13,18 @@ constexpr int DEFAULT_NUM_WALKS_PER_THREAD = 500;
 
 TemporalWalk::TemporalWalk(
     bool is_directed,
+    bool use_gpu,
     int64_t max_time_capacity,
     bool enable_weight_computation,
     double timescale_bound,
     size_t n_threads):
-    is_directed(is_directed), max_time_capacity(max_time_capacity),
+    is_directed(is_directed), use_gpu(use_gpu), max_time_capacity(max_time_capacity),
     n_threads(static_cast<int>(n_threads)), enable_weight_computation(enable_weight_computation),
     timescale_bound(timescale_bound), thread_pool(n_threads)
 {
     temporal_graph = std::make_unique<TemporalGraph>(
         is_directed,
+        use_gpu,
         max_time_capacity,
         enable_weight_computation,
         timescale_bound);
@@ -511,5 +513,7 @@ bool TemporalWalk::get_is_directed() const {
 }
 
 void TemporalWalk::clear() {
-    temporal_graph = std::make_unique<TemporalGraph>(is_directed);
+    temporal_graph = std::make_unique<TemporalGraph>(
+        is_directed, use_gpu, max_time_capacity, enable_weight_computation,
+        timescale_bound);
 }

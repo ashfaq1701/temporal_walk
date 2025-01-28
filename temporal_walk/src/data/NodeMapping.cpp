@@ -1,6 +1,9 @@
 #include "NodeMapping.h"
 #include <algorithm>
 
+NodeMapping::NodeMapping(const bool use_gpu): use_gpu(use_gpu) {}
+
+
 void NodeMapping::clear() {
     sparse_to_dense.clear();
     dense_to_sparse.clear();

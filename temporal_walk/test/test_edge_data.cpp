@@ -5,6 +5,8 @@ class EdgeDataTest : public ::testing::Test {
 protected:
     EdgeData edges;
 
+    EdgeDataTest(): edges(false) {}
+
     // Helper function to verify edge content
     void verify_edge(size_t index, int expected_src, int expected_tgt, int64_t expected_ts) const {
         ASSERT_LT(index, edges.size());

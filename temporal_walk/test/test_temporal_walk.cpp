@@ -14,7 +14,7 @@ constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;
 class EmptyTemporalWalkTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(true, -1, true, -1);
+        temporal_walk = std::make_unique<TemporalWalk>(true, false, -1, true, -1);
     }
 
     std::unique_ptr<TemporalWalk> temporal_walk;
@@ -23,7 +23,7 @@ protected:
 class EmptyTemporalWalkTestWithMaxCapacity : public ::testing::Test {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(true, MAX_TIME_CAPACITY, true, -1);
+        temporal_walk = std::make_unique<TemporalWalk>(true, false, MAX_TIME_CAPACITY, true, -1);
     }
 
     std::unique_ptr<TemporalWalk> temporal_walk;
@@ -36,7 +36,7 @@ protected:
     }
 
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(true, -1, true, -1);
+        temporal_walk = std::make_unique<TemporalWalk>(true, false, -1, true, -1);
         temporal_walk->add_multiple_edges(sample_edges);
     }
 

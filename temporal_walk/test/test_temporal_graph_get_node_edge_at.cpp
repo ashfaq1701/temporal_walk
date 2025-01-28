@@ -24,7 +24,7 @@ protected:
     std::unique_ptr<LastIndexPicker> last_picker;
 
     void SetUp() override {
-        graph = std::make_unique<TemporalGraph>(true); // directed graph
+        graph = std::make_unique<TemporalGraph>(true, false); // directed graph
         first_picker = std::make_unique<FirstIndexPicker>();
         last_picker = std::make_unique<LastIndexPicker>();
     }
@@ -148,7 +148,7 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, EdgeCasesTest) {
     verify_edge(edge, -1, -1, -1);
 
     // Test empty graph
-    graph = std::make_unique<TemporalGraph>(true);
+    graph = std::make_unique<TemporalGraph>(true, false);
     edge = graph->get_node_edge_at(10, *first_picker, -1, true);
     verify_edge(edge, -1, -1, -1);
 }
@@ -203,7 +203,7 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, ExactTimestampTest) {
 // Test exact timestamp matching for undirected graphs
 TEST_F(TemporalGraphGetNodeEdgeAtTest, ExactTimestampUndirectedTest) {
     // Create undirected graph
-    graph = std::make_unique<TemporalGraph>(false);
+    graph = std::make_unique<TemporalGraph>(false, false);
 
     auto edges = std::vector<std::tuple<int, int, int64_t>>{
         // Edges connecting to node 10
