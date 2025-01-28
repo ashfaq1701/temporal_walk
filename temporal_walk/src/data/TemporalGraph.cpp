@@ -34,14 +34,14 @@ void TemporalGraph::add_multiple_edges(const std::vector<std::tuple<int, int, in
         latest_timestamp = std::max(latest_timestamp, ts);
     }
 
+    // Update node mappings
+    node_mapping.update(edges, start_idx, edges.size());
+
     // Sort and merge new edges
     sort_and_merge_edges(start_idx);
 
     // Update timestamp groups after sorting
     edges.update_timestamp_groups();
-
-    // Update node mappings
-    node_mapping.update(edges, start_idx, edges.size());
 
     // Handle time window
     if (time_window > 0) {
