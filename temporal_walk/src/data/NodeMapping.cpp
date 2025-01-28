@@ -10,19 +10,19 @@ void NodeMapping::clear() {
     is_deleted.clear();
 }
 
-void NodeMapping::reserve(size_t size) {
+void NodeMapping::reserve(const size_t size) {
     sparse_to_dense.reserve(size);
     dense_to_sparse.reserve(size);
     is_deleted.reserve(size);
 }
 
-void NodeMapping::mark_node_deleted(int sparse_id) {
+void NodeMapping::mark_node_deleted(const int sparse_id) {
     if (sparse_id < is_deleted.size()) {
         is_deleted[sparse_id] = true;
     }
 }
 
-void NodeMapping::update(const EdgeData& edges, size_t start_idx, size_t end_idx) {
+void NodeMapping::update(const EdgeData& edges, const size_t start_idx, const size_t end_idx) {
     // First pass: find max node ID
     int max_node_id = 0;
     for (size_t i = start_idx; i < end_idx; i++) {
@@ -51,11 +51,11 @@ void NodeMapping::update(const EdgeData& edges, size_t start_idx, size_t end_idx
     }
 }
 
-int NodeMapping::to_dense(int sparse_id) const {
+int NodeMapping::to_dense(const int sparse_id) const {
     return sparse_id < sparse_to_dense.size() ? sparse_to_dense[sparse_id] : -1;
 }
 
-int NodeMapping::to_sparse(int dense_idx) const {
+int NodeMapping::to_sparse(const int dense_idx) const {
     return dense_idx < dense_to_sparse.size() ? dense_to_sparse[dense_idx] : -1;
 }
 

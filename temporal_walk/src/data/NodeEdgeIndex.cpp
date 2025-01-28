@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-NodeEdgeIndex::NodeEdgeIndex(bool use_gpu): use_gpu(use_gpu) {}
+NodeEdgeIndex::NodeEdgeIndex(const bool use_gpu): use_gpu(use_gpu) {}
 
 
 void NodeEdgeIndex::clear() {
@@ -22,7 +22,7 @@ void NodeEdgeIndex::clear() {
 void NodeEdgeIndex::rebuild(
    const EdgeData& edges,
    const NodeMapping& mapping,
-   bool is_directed) {
+   const bool is_directed) {
 
    const size_t num_nodes = mapping.size();
 
