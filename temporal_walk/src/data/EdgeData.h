@@ -5,21 +5,22 @@
 #include <cstdint>
 #include <tuple>
 #include <cmath>
+#include "../cuda/DualVector.h"
 
 struct EdgeData {
     bool use_gpu;
 
     // Core edge data
-    std::vector<int> sources;
-    std::vector<int> targets;
-    std::vector<int64_t> timestamps;
+    DualVector<int> sources;
+    DualVector<int> targets;
+    DualVector<int64_t> timestamps;
 
     // Timestamp grouping
-    std::vector<size_t> timestamp_group_offsets;     // Start of each timestamp group
-    std::vector<int64_t> unique_timestamps;          // Corresponding unique timestamps
+    DualVector<size_t> timestamp_group_offsets;     // Start of each timestamp group
+    DualVector<int64_t> unique_timestamps;          // Corresponding unique timestamps
 
-    std::vector<double> forward_weights_exponential;  // For forward temporal sampling
-    std::vector<double> backward_weights_exponential; // For backward temporal sampling
+    DualVector<double> forward_weights_exponential;  // For forward temporal sampling
+    DualVector<double> backward_weights_exponential; // For backward temporal sampling
 
     void reserve(size_t size);
     void clear();

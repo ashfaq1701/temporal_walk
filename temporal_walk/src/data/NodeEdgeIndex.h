@@ -5,28 +5,29 @@
 #include <cstdint>
 #include <tuple>
 #include "NodeMapping.h"
+#include "../cuda/DualVector.h"
 
 struct NodeEdgeIndex
 {
     bool use_gpu;
 
     // Base CSR format for edges
-    std::vector<size_t> outbound_offsets; // Size: num_nodes + 1
-    std::vector<size_t> outbound_indices; // Size: num_edges
+    DualVector<size_t> outbound_offsets; // Size: num_nodes + 1
+    DualVector<size_t> outbound_indices; // Size: num_edges
 
     // CSR format for timestamp groups
-    std::vector<size_t> outbound_timestamp_group_offsets; // Size: num_nodes + 1
-    std::vector<size_t> outbound_timestamp_group_indices; // Each group's start position in outbound_indices
+    DualVector<size_t> outbound_timestamp_group_offsets; // Size: num_nodes + 1
+    DualVector<size_t> outbound_timestamp_group_indices; // Each group's start position in outbound_indices
 
     // Mirror structures for directed graphs
-    std::vector<size_t> inbound_offsets;
-    std::vector<size_t> inbound_indices;
-    std::vector<size_t> inbound_timestamp_group_offsets;
-    std::vector<size_t> inbound_timestamp_group_indices;
+    DualVector<size_t> inbound_offsets;
+    DualVector<size_t> inbound_indices;
+    DualVector<size_t> inbound_timestamp_group_offsets;
+    DualVector<size_t> inbound_timestamp_group_indices;
 
-    std::vector<double> outbound_forward_weights_exponential;   // For all forward walks
-    std::vector<double> outbound_backward_weights_exponential;  // For undirected backward walks
-    std::vector<double> inbound_backward_weights_exponential;   // For directed backward walks
+    DualVector<double> outbound_forward_weights_exponential;   // For all forward walks
+    DualVector<double> outbound_backward_weights_exponential;  // For undirected backward walks
+    DualVector<double> inbound_backward_weights_exponential;   // For directed backward walks
 
     explicit NodeEdgeIndex(bool use_gpu);
 

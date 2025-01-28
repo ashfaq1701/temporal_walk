@@ -2,9 +2,12 @@
 #include <algorithm>
 #include <iostream>
 
-EdgeData::EdgeData(const bool use_gpu): use_gpu(use_gpu) {}
+EdgeData::EdgeData(const bool use_gpu):
+    use_gpu(use_gpu), sources(use_gpu), targets(use_gpu), timestamps(use_gpu),
+    timestamp_group_offsets(use_gpu), unique_timestamps(use_gpu),
+    forward_weights_exponential(use_gpu), backward_weights_exponential(use_gpu) {}
 
-void EdgeData::reserve(size_t size) {
+void EdgeData::reserve(const size_t size) {
     sources.reserve(size);
     targets.reserve(size);
     timestamps.reserve(size);
@@ -28,13 +31,13 @@ bool EdgeData::empty() const {
     return timestamps.empty();
 }
 
-void EdgeData::resize(size_t new_size) {
+void EdgeData::resize(const size_t new_size) {
     sources.resize(new_size);
     targets.resize(new_size);
     timestamps.resize(new_size);
 }
 
-void EdgeData::push_back(int src, int tgt, int64_t ts) {
+void EdgeData::push_back(const int src, const int tgt, const int64_t ts) {
     sources.push_back(src);
     targets.push_back(tgt);
     timestamps.push_back(ts);
@@ -118,7 +121,7 @@ void EdgeData::update_temporal_weights(const double timescale_bound) {
     }
 }
 
-std::pair<size_t, size_t> EdgeData::get_timestamp_group_range(size_t group_idx) const {
+std::pair<size_t, size_t> EdgeData::get_timestamp_group_range(const size_t group_idx) const {
     if (group_idx >= unique_timestamps.size()) {
         return {0, 0};
     }
@@ -129,14 +132,14 @@ size_t EdgeData::get_timestamp_group_count() const {
     return unique_timestamps.size();
 }
 
-size_t EdgeData::find_group_after_timestamp(int64_t timestamp) const {
+size_t EdgeData::find_group_after_timestamp(const int64_t timestamp) const {
     if (unique_timestamps.empty()) return 0;
 
     auto it = std::upper_bound(unique_timestamps.begin(), unique_timestamps.end(), timestamp);
     return it - unique_timestamps.begin();
 }
 
-size_t EdgeData::find_group_before_timestamp(int64_t timestamp) const {
+size_t EdgeData::find_group_before_timestamp(const int64_t timestamp) const {
     if (unique_timestamps.empty()) return 0;
 
     auto it = std::lower_bound(unique_timestamps.begin(), unique_timestamps.end(), timestamp);

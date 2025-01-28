@@ -44,6 +44,7 @@ endif()
 find_package(Boost REQUIRED COMPONENTS math)
 
 set(SRC_FILES
+        ${CMAKE_SOURCE_DIR}/temporal_walk/src/cuda/DualVector.cpp
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/EdgeData.cpp
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/NodeEdgeIndex.cpp
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/NodeMapping.cpp

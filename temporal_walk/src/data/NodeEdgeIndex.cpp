@@ -2,7 +2,12 @@
 
 #include <iostream>
 
-NodeEdgeIndex::NodeEdgeIndex(const bool use_gpu): use_gpu(use_gpu) {}
+NodeEdgeIndex::NodeEdgeIndex(const bool use_gpu):
+    use_gpu(use_gpu), outbound_offsets(use_gpu), outbound_indices(use_gpu), outbound_timestamp_group_offsets(use_gpu),
+    outbound_timestamp_group_indices(use_gpu), inbound_offsets(use_gpu), inbound_indices(use_gpu),
+    inbound_timestamp_group_offsets(use_gpu), inbound_timestamp_group_indices(use_gpu),
+    outbound_forward_weights_exponential(use_gpu), outbound_backward_weights_exponential(use_gpu),
+    inbound_backward_weights_exponential(use_gpu) {}
 
 
 void NodeEdgeIndex::clear() {

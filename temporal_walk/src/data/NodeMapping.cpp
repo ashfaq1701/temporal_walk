@@ -1,7 +1,8 @@
 #include "NodeMapping.h"
 #include <algorithm>
 
-NodeMapping::NodeMapping(const bool use_gpu): use_gpu(use_gpu) {}
+NodeMapping::NodeMapping(const bool use_gpu):
+    use_gpu(use_gpu), sparse_to_dense(use_gpu), dense_to_sparse(use_gpu), is_deleted(use_gpu) {}
 
 
 void NodeMapping::clear() {
@@ -83,5 +84,5 @@ bool NodeMapping::has_node(int sparse_id) const {
 }
 
 std::vector<int> NodeMapping::get_all_sparse_ids() const {
-    return dense_to_sparse;
+    return dense_to_sparse.to_vector();
 }
