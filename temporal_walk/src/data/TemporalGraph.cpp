@@ -61,7 +61,7 @@ void TemporalGraph::update_temporal_weights() {
     node_index.update_temporal_weights(edges, timescale_bound);
 }
 
-void TemporalGraph::sort_and_merge_edges(size_t start_idx) {
+void TemporalGraph::sort_and_merge_edges(const size_t start_idx) {
     if (start_idx >= edges.size()) return;
 
     // Sort new edges first
@@ -71,60 +71,77 @@ void TemporalGraph::sort_and_merge_edges(size_t start_idx) {
     }
 
     std::sort(indices.begin(), indices.end(),
-              [this](size_t i, size_t j) {
+              [this](const size_t i, const size_t j) {
                   return edges.timestamps[i] < edges.timestamps[j];
               });
 
-    // Apply permutation to new edges
-    EdgeData temp(use_gpu);
-    temp.reserve(edges.size() - start_idx);
-    for (size_t idx : indices) {
-        temp.push_back(
-            edges.sources[idx],
-            edges.targets[idx],
-            edges.timestamps[idx]
-        );
+    // Apply permutation in-place using temporary vectors
+    std::vector<int> sorted_sources(edges.size() - start_idx);
+    std::vector<int> sorted_targets(edges.size() - start_idx);
+    std::vector<int64_t> sorted_timestamps(edges.size() - start_idx);
+
+    for (size_t i = 0; i < indices.size(); i++) {
+        const size_t idx = indices[i];
+        sorted_sources[i] = edges.sources[idx];
+        sorted_targets[i] = edges.targets[idx];
+        sorted_timestamps[i] = edges.timestamps[idx];
     }
 
     // Copy back sorted edges
-    for (size_t i = 0; i < temp.size(); i++) {
-        edges.sources[start_idx + i] = temp.sources[i];
-        edges.targets[start_idx + i] = temp.targets[i];
-        edges.timestamps[start_idx + i] = temp.timestamps[i];
+    for (size_t i = 0; i < indices.size(); i++) {
+        edges.sources[start_idx + i] = sorted_sources[i];
+        edges.targets[start_idx + i] = sorted_targets[i];
+        edges.timestamps[start_idx + i] = sorted_timestamps[i];
     }
 
     // Merge with existing edges
     if (start_idx > 0) {
-        EdgeData merged(use_gpu);
-        merged.reserve(edges.size());
+        // Create buffer vectors
+        std::vector<int> merged_sources(edges.size());
+        std::vector<int> merged_targets(edges.size());
+        std::vector<int64_t> merged_timestamps(edges.size());
 
-        size_t i = 0; // Index for existing edges
-        size_t j = start_idx; // Index for new edges
+        size_t i = 0;  // Index for existing edges
+        size_t j = start_idx;  // Index for new edges
+        size_t k = 0;  // Index for merged result
 
-        // Merge while keeping source/target/timestamp together
+        // Merge while keeping arrays aligned
         while (i < start_idx && j < edges.size()) {
             if (edges.timestamps[i] <= edges.timestamps[j]) {
-                merged.push_back(edges.sources[i], edges.targets[i], edges.timestamps[i]);
+                merged_sources[k] = edges.sources[i];
+                merged_targets[k] = edges.targets[i];
+                merged_timestamps[k] = edges.timestamps[i];
                 i++;
             } else {
-                merged.push_back(edges.sources[j], edges.targets[j], edges.timestamps[j]);
+                merged_sources[k] = edges.sources[j];
+                merged_targets[k] = edges.targets[j];
+                merged_timestamps[k] = edges.timestamps[j];
                 j++;
             }
+            k++;
         }
 
-        // Add remaining existing edges
+        // Copy remaining entries
         while (i < start_idx) {
-            merged.push_back(edges.sources[i], edges.targets[i], edges.timestamps[i]);
+            merged_sources[k] = edges.sources[i];
+            merged_targets[k] = edges.targets[i];
+            merged_timestamps[k] = edges.timestamps[i];
             i++;
+            k++;
         }
 
-        // Add remaining new edges
         while (j < edges.size()) {
-            merged.push_back(edges.sources[j], edges.targets[j], edges.timestamps[j]);
+            merged_sources[k] = edges.sources[j];
+            merged_targets[k] = edges.targets[j];
+            merged_timestamps[k] = edges.timestamps[j];
             j++;
+            k++;
         }
 
-        edges = std::move(merged);
+        // Copy merged data back to edges
+        edges.sources = std::move(merged_sources);
+        edges.targets = std::move(merged_targets);
+        edges.timestamps = std::move(merged_timestamps);
     }
 }
 
