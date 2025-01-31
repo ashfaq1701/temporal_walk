@@ -4,15 +4,24 @@
 #include <vector>
 #include <cstdint>
 #include <tuple>
-#include "EdgeData.h"
-#include "../cuda/DualVector.h"
+#include "EdgeData.cuh"
+#include "../cuda/DualVector.cuh"
+
+#ifdef HAS_CUDA
+#include <thrust/reduce.h>
+#include <thrust/execution_policy.h>
+#include <thrust/copy.h>
+#include <thrust/transform.h>
+#include <thrust/remove.h>
+#include <thrust/copy.h>
+#endif
 
 struct NodeMapping {
    bool use_gpu;
 
    DualVector<int> sparse_to_dense;    // Maps sparse ID to dense index
    DualVector<int> dense_to_sparse;    // Maps dense index back to sparse ID
-   DualVector<bool> is_deleted;        // Tracks deleted status of nodes
+   DualVector<short> is_deleted;        // Tracks deleted status of nodes
 
    explicit NodeMapping(bool use_gpu);
 

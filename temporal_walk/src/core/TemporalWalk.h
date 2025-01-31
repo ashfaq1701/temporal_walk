@@ -4,7 +4,7 @@
 #include<vector>
 #include "../../libs/thread-pool/ThreadPool.h"
 #include "../random/RandomPicker.h"
-#include "../data/TemporalGraph.h"
+#include "../data/TemporalGraph.cuh"
 
 constexpr float DEFAULT_SUCCESS_THRESHOLD = 0.01;
 

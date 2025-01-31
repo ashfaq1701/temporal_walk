@@ -5,7 +5,13 @@
 #include <cstdint>
 #include <tuple>
 #include <cmath>
-#include "../cuda/DualVector.h"
+#include "../cuda/DualVector.cuh"
+
+#ifdef HAS_CUDA
+#include <thrust/binary_search.h>
+#include <thrust/execution_policy.h>
+#include <thrust/iterator/iterator_traits.h>
+#endif
 
 struct EdgeData {
     bool use_gpu;

@@ -4,8 +4,8 @@
 #include <vector>
 #include <cstdint>
 #include <tuple>
-#include "NodeMapping.h"
-#include "../cuda/DualVector.h"
+#include "NodeMapping.cuh"
+#include "../cuda/DualVector.cuh"
 
 struct NodeEdgeIndex
 {

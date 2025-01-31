@@ -1,4 +1,4 @@
-#include "EdgeData.h"
+#include "EdgeData.cuh"
 #include <algorithm>
 #include <iostream>
 
@@ -135,13 +135,41 @@ size_t EdgeData::get_timestamp_group_count() const {
 size_t EdgeData::find_group_after_timestamp(const int64_t timestamp) const {
     if (unique_timestamps.empty()) return 0;
 
-    auto it = std::upper_bound(unique_timestamps.begin(), unique_timestamps.end(), timestamp);
-    return it - unique_timestamps.begin();
+    if (use_gpu) {
+        #ifdef HAS_CUDA
+        auto it = thrust::upper_bound(thrust::device,
+                                    unique_timestamps.device_begin(),
+                                    unique_timestamps.device_end(),
+                                    timestamp);
+        return thrust::distance(unique_timestamps.device_begin(), it);
+        #else
+        throw std::runtime_error("GPU support not compiled in");
+        #endif
+    } else {
+        auto it = std::upper_bound(unique_timestamps.host_begin(),
+                                 unique_timestamps.host_end(),
+                                 timestamp);
+        return std::distance(unique_timestamps.host_begin(), it);
+    }
 }
 
 size_t EdgeData::find_group_before_timestamp(const int64_t timestamp) const {
     if (unique_timestamps.empty()) return 0;
 
-    auto it = std::lower_bound(unique_timestamps.begin(), unique_timestamps.end(), timestamp);
-    return (it - unique_timestamps.begin()) - 1;
+    if (use_gpu) {
+        #ifdef HAS_CUDA
+        auto it = thrust::lower_bound(thrust::device,
+                                    unique_timestamps.device_begin(),
+                                    unique_timestamps.device_end(),
+                                    timestamp);
+        return thrust::distance(unique_timestamps.device_begin(), it) - 1;
+        #else
+        throw std::runtime_error("GPU support not compiled in");
+        #endif
+    } else {
+        auto it = std::lower_bound(unique_timestamps.host_begin(),
+                                 unique_timestamps.host_end(),
+                                 timestamp);
+        return std::distance(unique_timestamps.host_begin(), it) - 1;
+    }
 }

@@ -1,7 +1,9 @@
-#include "DualVector.h"
+#include "DualVector.cuh"
+
+#include <stdexcept>
 
 template<typename T>
-DualVector<T>::DualVector(bool use_gpu_param) : use_gpu(use_gpu_param) {
+DualVector<T>::DualVector(const bool use_gpu_param) : use_gpu(use_gpu_param) {
     #ifndef HAS_CUDA
     if (use_gpu) throw std::runtime_error("GPU support not compiled in");
     #endif
@@ -21,6 +23,49 @@ DualVector<T>::DualVector(const DualVector& other) : use_gpu(other.use_gpu) {
     } else {
         h_vec = other.h_vec;
     }
+}
+
+template<typename T>
+DualVector<T>::DualVector(DualVector&& other) noexcept
+    : use_gpu(other.use_gpu), h_vec(std::move(other.h_vec))
+{
+    #ifdef HAS_CUDA
+    if (use_gpu) {
+        d_vec = std::move(other.d_vec);
+    }
+    #endif
+    other.use_gpu = false;  // Reset other to CPU mode
+}
+
+template<typename T>
+DualVector<T>& DualVector<T>::operator=(const DualVector& other) {
+    if (this != &other) {
+        use_gpu = other.use_gpu;
+        if (use_gpu) {
+            #ifdef HAS_CUDA
+            d_vec = other.d_vec;
+            #endif
+        } else {
+            h_vec = other.h_vec;
+        }
+    }
+    return *this;
+}
+
+template<typename T>
+DualVector<T>& DualVector<T>::operator=(DualVector&& other) noexcept {
+    if (this != &other) {
+        use_gpu = other.use_gpu;
+        h_vec = std::move(other.h_vec);
+
+        #ifdef HAS_CUDA
+        if (use_gpu) {
+            d_vec = std::move(other.d_vec);
+        }
+        #endif
+        other.use_gpu = false;  // Reset other to CPU mode
+    }
+    return *this;
 }
 
 // Unified operations
@@ -199,7 +244,56 @@ const T& DualVector<T>::device_back() const {
     if (!use_gpu) throw std::runtime_error("Using device access in host mode");
     return thrust::raw_reference_cast(d_vec.back());
 }
+
+template<typename T>
+thrust::device_vector<T>& DualVector<T>::get_device_vector() {
+    if (!use_gpu) throw std::runtime_error("Using device vector in host mode");
+    return d_vec;
+}
+
+template<typename T>
+const thrust::device_vector<T>& DualVector<T>::get_device_vector() const {
+    if (!use_gpu) throw std::runtime_error("Using device vector in host mode");
+    return d_vec;
+}
+
+// Get raw device pointer
+template<typename T>
+thrust::device_ptr<T> DualVector<T>::device_data() {
+    if (!use_gpu) throw std::runtime_error("Using device pointer in host mode");
+    return d_vec.data();
+}
+
+template<typename T>
+thrust::device_ptr<const T> DualVector<T>::device_data() const {
+    if (!use_gpu) throw std::runtime_error("Using device pointer in host mode");
+    return d_vec.data();
+}
 #endif
+
+template<typename T>
+T& DualVector<T>::back() {
+    if (use_gpu) {
+        #ifdef HAS_CUDA
+        return device_back();
+        #else
+        throw std::runtime_error("GPU support not compiled in");
+        #endif
+    }
+    return host_back();
+}
+
+template<typename T>
+const T& DualVector<T>::back() const {
+    if (use_gpu) {
+        #ifdef HAS_CUDA
+        return device_back();
+        #else
+        throw std::runtime_error("GPU support not compiled in");
+        #endif
+    }
+    return host_back();
+}
 
 // Default access operators
 template<typename T>

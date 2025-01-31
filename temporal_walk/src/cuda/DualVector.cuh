@@ -24,8 +24,10 @@ public:
     DualVector(const DualVector& other);
 
     // Move semantics
-    DualVector(DualVector&& other) noexcept = default;
-    DualVector& operator=(DualVector&& other) noexcept = default;
+    DualVector(DualVector&& other) noexcept;
+    DualVector& operator=(DualVector&& other) noexcept;
+
+    DualVector& operator=(const DualVector& other);
 
     // Unified operations
     [[nodiscard]] size_t size() const;
@@ -58,11 +60,21 @@ public:
     const T& device_at(size_t i) const;
     T& device_back();
     const T& device_back() const;
+
+    thrust::device_vector<T>& get_device_vector();
+    const thrust::device_vector<T>& get_device_vector() const;
+
+    thrust::device_ptr<T> device_data();
+    thrust::device_ptr<const T> device_data() const;
     #endif
+
+    T& back();
+    const T& back() const;
 
     // Default access operators
     T& operator[](size_t i);
     const T& operator[](size_t i) const;
+
 
     // Data movement
     void move(size_t dest_pos, size_t src_pos, size_t count);

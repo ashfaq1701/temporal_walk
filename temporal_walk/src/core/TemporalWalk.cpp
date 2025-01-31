@@ -5,7 +5,7 @@
 #include "../random/UniformRandomPicker.h"
 #include "../random/LinearRandomPicker.h"
 #include "../random/ExponentialIndexRandomPicker.h"
-#include "../random/WeightBasedRandomPicker.h"
+#include "../random/WeightBasedRandomPicker.cuh"
 
 
 constexpr int DEFAULT_CONTEXT_WINDOW_LEN = 2;

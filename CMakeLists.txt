@@ -29,9 +29,9 @@ if(USE_CUDA)
         find_package(CUDAToolkit)
 
         # Set CUDA specific flags
-        set(CMAKE_CUDA_STANDARD 14)
+        set(CMAKE_CUDA_STANDARD 17)
         set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-        set(CMAKE_CUDA_ARCHITECTURES 60 70 75)
+        set(CMAKE_CUDA_ARCHITECTURES 89)
 
         # Define that we have CUDA
         add_definitions(-DHAS_CUDA)
@@ -43,20 +43,38 @@ endif()
 
 find_package(Boost REQUIRED COMPONENTS math)
 
-set(SRC_FILES
-        ${CMAKE_SOURCE_DIR}/temporal_walk/src/cuda/DualVector.cpp
-        ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/EdgeData.cpp
-        ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/NodeEdgeIndex.cpp
-        ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/NodeMapping.cpp
-        ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/TemporalGraph.cpp
-        ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/ExponentialIndexRandomPicker.cpp
-        ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/LinearRandomPicker.cpp
-        ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/UniformRandomPicker.cpp
-        ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/WeightBasedRandomPicker.cpp
-        ${CMAKE_SOURCE_DIR}/temporal_walk/src/core/TemporalWalk.cpp
-)
+if(USE_CUDA AND CMAKE_CUDA_COMPILER)
+    set(CUDA_SRC_FILES
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/cuda/DualVector.cu
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/EdgeData.cu
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/NodeEdgeIndex.cu
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/NodeMapping.cu
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/TemporalGraph.cu
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/WeightBasedRandomPicker.cu
+    )
+    set(CPU_SRC_FILES
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/ExponentialIndexRandomPicker.cpp
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/LinearRandomPicker.cpp
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/UniformRandomPicker.cpp
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/core/TemporalWalk.cpp
+    )
+    set(SRC_FILES ${CUDA_SRC_FILES} ${CPU_SRC_FILES})
+else()
+    # Original CPU files
+    set(SRC_FILES
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/cuda/DualVector.cpp
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/EdgeData.cpp
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/NodeEdgeIndex.cpp
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/NodeMapping.cpp
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/TemporalGraph.cpp
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/ExponentialIndexRandomPicker.cpp
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/LinearRandomPicker.cpp
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/UniformRandomPicker.cpp
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/WeightBasedRandomPicker.cpp
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/core/TemporalWalk.cpp
+    )
+endif()
 
 # Include subdirectories for Python bindings, testing, and execution targets
 add_subdirectory(temporal_walk/py_interface)
 add_subdirectory(temporal_walk/test)
-add_subdirectory(temporal_walk/test_run)

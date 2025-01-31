@@ -1,9 +1,9 @@
-#include "WeightBasedRandomPicker.h"
+#include "WeightBasedRandomPicker.cuh"
 
 int WeightBasedRandomPicker::pick_random(
     const std::vector<double>& weights,
-    int group_start,
-    int group_end)
+    const int group_start,
+    const int group_end)
 {
     // Validate inputs
     if (group_start < 0 || group_end <= group_start ||

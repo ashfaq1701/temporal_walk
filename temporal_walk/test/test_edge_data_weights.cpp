@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/data/EdgeData.h"
+#include "../src/data/EdgeData.cuh"
 #include <cmath>
 
 #include "../src/config/constants.h"
