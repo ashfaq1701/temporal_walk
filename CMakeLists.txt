@@ -78,3 +78,4 @@ endif()
 # Include subdirectories for Python bindings, testing, and execution targets
 add_subdirectory(temporal_walk/py_interface)
 add_subdirectory(temporal_walk/test)
+add_subdirectory(temporal_walk/test_run)

@@ -71,60 +71,57 @@ size_t NodeMapping::size() const {
 size_t NodeMapping::active_size() const {
     if (is_deleted.is_gpu()) {
         #ifdef HAS_CUDA
-        return is_deleted.size() - thrust::reduce(
-            thrust::cuda::par,
+        // Count the number of non-deleted items (zeros)
+        return thrust::count(
+            thrust::device,
             is_deleted.device_begin(),
             is_deleted.device_end(),
-            0,                    // initial value
-            thrust::plus<short>() // sum operation
+            ITEM_NOT_DELETED
         );
         #else
         throw std::runtime_error("GPU support not compiled in");
         #endif
     }
-    return std::count(is_deleted.host_begin(), is_deleted.host_end(), 0);
+    return std::count(is_deleted.host_begin(), is_deleted.host_end(), ITEM_NOT_DELETED);
 }
 
 std::vector<int> NodeMapping::get_active_node_ids() const {
     if (dense_to_sparse.is_gpu()) {
         #ifdef HAS_CUDA
+        // Create device vector for results
         thrust::device_vector<int> d_result(dense_to_sparse.size());
 
-        // Get raw pointers for device access
-        const short* d_deleted = thrust::raw_pointer_cast(is_deleted.get_device_vector().data());
-
-        // Copy non-deleted IDs to result vector
+        // Use copy_if directly with device vectors
         const auto end = thrust::copy_if(
-            thrust::cuda::par,
+            thrust::device,
             dense_to_sparse.device_begin(),
             dense_to_sparse.device_end(),
             d_result.begin(),
-            [d_deleted] __device__ (const int sparse_id) {
-                return d_deleted[sparse_id] == ITEM_NOT_DELETED;
+            [is_deleted = is_deleted.get_device_vector().data()] __device__ (int sparse_id) {
+                return is_deleted[sparse_id] == ITEM_NOT_DELETED;
             }
         );
 
-        // Copy only the valid results back to host
-        const size_t valid_size = end - d_result.begin();
-        std::vector<int> active_ids(valid_size);
-        thrust::copy_n(d_result.begin(), valid_size, active_ids.begin());
+        // Copy results back to host
+        std::vector<int> active_ids(thrust::distance(d_result.begin(), end));
+        thrust::copy(d_result.begin(), end, active_ids.begin());
         return active_ids;
         #else
         throw std::runtime_error("GPU support not compiled in");
         #endif
-    } else {
-        // CPU mode remains the same
-        std::vector<int> active_ids;
-        active_ids.reserve(dense_to_sparse.size());
-        const auto begin = dense_to_sparse.host_begin();
-        const auto end = dense_to_sparse.host_end();
-        for (auto it = begin; it != end; ++it) {
-            if (int sparse_id = *it; is_deleted[sparse_id] == ITEM_NOT_DELETED) {
-                active_ids.push_back(sparse_id);
-            }
-        }
-        return active_ids;
     }
+
+    // CPU version using explicit iterators
+    std::vector<int> active_ids;
+    active_ids.reserve(dense_to_sparse.size());
+    const auto begin = dense_to_sparse.host_begin();
+    const auto end = dense_to_sparse.host_end();
+    for (auto it = begin; it != end; ++it) {
+        if (int sparse_id = *it; is_deleted[sparse_id] == ITEM_NOT_DELETED) {
+            active_ids.push_back(sparse_id);
+        }
+    }
+    return active_ids;
 }
 
 bool NodeMapping::has_node(const int sparse_id) const {

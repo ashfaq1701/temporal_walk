@@ -8,12 +8,10 @@
 #include "../cuda/DualVector.cuh"
 
 #ifdef HAS_CUDA
-#include <thrust/reduce.h>
+#include <thrust/copy.h>
+#include <thrust/count.h>
+#include <thrust/device_vector.h>
 #include <thrust/execution_policy.h>
-#include <thrust/copy.h>
-#include <thrust/transform.h>
-#include <thrust/remove.h>
-#include <thrust/copy.h>
 #endif
 
 struct NodeMapping {
