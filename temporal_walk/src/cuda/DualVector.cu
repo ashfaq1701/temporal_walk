@@ -195,6 +195,33 @@ const T& DualVector<T>::host_back() const {
     return h_vec.back();
 }
 
+// In DualVector.cu
+template<typename T>
+void DualVector<T>::set_host_vector(const std::vector<T>& vec) {
+    if (use_gpu) {
+        #ifdef HAS_CUDA
+        d_vec = vec;  // thrust::device_vector has constructor from std::vector
+        #else
+        throw std::runtime_error("GPU support not compiled in");
+        #endif
+    } else {
+        h_vec = vec;
+    }
+}
+
+template<typename T>
+void DualVector<T>::set_host_vector(std::vector<T>&& vec) {
+    if (use_gpu) {
+        #ifdef HAS_CUDA
+        d_vec = vec;  // thrust::device_vector will copy from the moved vector
+        #else
+        throw std::runtime_error("GPU support not compiled in");
+        #endif
+    } else {
+        h_vec = std::move(vec);
+    }
+}
+
 // Device operations
 #ifdef HAS_CUDA
 template<typename T>
@@ -268,6 +295,18 @@ template<typename T>
 thrust::device_ptr<const T> DualVector<T>::device_data() const {
     if (!use_gpu) throw std::runtime_error("Using device pointer in host mode");
     return d_vec.data();
+}
+
+template<typename T>
+void DualVector<T>::set_device_vector(const thrust::device_vector<T>& vec) {
+    if (!use_gpu) throw std::runtime_error("Using device vector in host mode");
+    d_vec = vec;
+}
+
+template<typename T>
+void DualVector<T>::set_device_vector(thrust::device_vector<T>&& vec) {
+    if (!use_gpu) throw std::runtime_error("Using device vector in host mode");
+    d_vec = std::move(vec);
 }
 #endif
 

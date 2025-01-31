@@ -50,6 +50,10 @@ public:
     T& host_back();
     const T& host_back() const;
 
+    // Setters for vector assignment
+    void set_host_vector(const std::vector<T>& vec);
+    void set_host_vector(std::vector<T>&& vec);  // Move version
+
     // Device operations
     #ifdef HAS_CUDA
     device_iterator device_begin();
@@ -66,6 +70,9 @@ public:
 
     thrust::device_ptr<T> device_data();
     thrust::device_ptr<const T> device_data() const;
+
+    void set_device_vector(const thrust::device_vector<T>& vec);
+    void set_device_vector(thrust::device_vector<T>&& vec);  // Move version
     #endif
 
     T& back();
