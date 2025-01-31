@@ -10,6 +10,12 @@
 #include "../utils/utils.h"
 #include "../config/constants.h"
 
+#ifdef HAS_CUDA
+#include <thrust/gather.h>
+#include <thrust/sequence.h>
+#include <thrust/sort.h>
+#endif
+
 class RandomPicker;
 
 class TemporalGraph

@@ -49,6 +49,8 @@ struct EdgeData {
     // Group lookup
     [[nodiscard]] size_t find_group_after_timestamp(int64_t timestamp) const;  // For forward walks
     [[nodiscard]] size_t find_group_before_timestamp(int64_t timestamp) const; // For backward walks
+
+    bool should_use_gpu() const;
 };
 
 #endif //EDGEDATA_H

@@ -175,3 +175,8 @@ size_t EdgeData::find_group_before_timestamp(const int64_t timestamp) const {
         return std::distance(unique_timestamps.host_begin(), it) - 1;
     }
 }
+
+bool EdgeData::should_use_gpu() const {
+    return use_gpu;
+}
+
