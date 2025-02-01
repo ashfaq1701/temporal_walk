@@ -65,7 +65,7 @@ inline float compute_beta_95th_percentile(size_t successes, size_t failures) {
         return 1.0f; // No walks processed yet, assume full success
     }
 
-    boost::math::beta_distribution<float> beta_dist(1.0f + successes, 1.0f + failures);
+    const boost::math::beta_distribution<float> beta_dist(1.0f + static_cast<float>(successes), 1.0f + static_cast<float>(failures));
     return boost::math::quantile(beta_dist, 0.95f); // 95th percentile
 }
 
@@ -98,7 +98,7 @@ inline std::vector<std::vector<int>> divide_vector(const std::vector<int>& input
     return result;
 }
 
-inline std::vector<int> divide_number(int n, int i) {
+inline std::vector<int> divide_number(const int n, const int i) {
     std::vector<int> parts(i, n / i);
     const int remainder = n % i;
 
