@@ -12,6 +12,9 @@
 #include <thrust/count.h>
 #include <thrust/device_vector.h>
 #include <thrust/execution_policy.h>
+#define HOST_DEVICE __host__ __device__
+#else
+#define HOST_DEVICE
 #endif
 
 struct NodeMapping {
@@ -33,9 +36,17 @@ struct NodeMapping {
    [[nodiscard]] std::vector<int> get_active_node_ids() const;
    void clear();
    void reserve(size_t size);
-   void mark_node_deleted(int sparse_id);
+
+   static __device__ void device_mark_node_deleted(int sparse_id, short* deleted_ptr, size_t vector_size);  // Device-specific version
+
+   #if HAS_CUDA
+   void host_mark_node_deleted(int sparse_id);               // Host-specific version
+   #endif
+
    [[nodiscard]] bool has_node(int sparse_id) const;
    [[nodiscard]] std::vector<int> get_all_sparse_ids() const;
 };
+
+#undef HOST_DEVICE
 
 #endif //NODEMAPPING_H

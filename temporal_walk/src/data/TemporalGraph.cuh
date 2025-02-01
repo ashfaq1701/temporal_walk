@@ -28,8 +28,14 @@ private:
     double timescale_bound;
     int64_t latest_timestamp; // Track latest edge timestamp
 
-    void sort_and_merge_edges(size_t start_idx);
-    void delete_old_edges();
+
+    [[nodiscard]] bool is_valid_edge_range(size_t edge_start, size_t edge_end, size_t edge_indices_size) const;
+    [[nodiscard]] size_t get_edge_end(
+        size_t group_pos,
+        size_t group_end_offset,
+        const DualVector<size_t>& timestamp_group_indices,
+        int dense_idx,
+        bool forward) const;
 
 public:
     NodeEdgeIndex node_index; // Node to edge mappings
@@ -70,6 +76,9 @@ public:
     [[nodiscard]] int64_t get_latest_timestamp() const { return latest_timestamp; }
     [[nodiscard]] std::vector<int> get_node_ids() const;
     [[nodiscard]] std::vector<std::tuple<int, int, int64_t>> get_edges();
+
+    void sort_and_merge_edges(size_t start_idx);
+    void delete_old_edges();
 };
 
 #endif //TEMPORALGRAPH_H

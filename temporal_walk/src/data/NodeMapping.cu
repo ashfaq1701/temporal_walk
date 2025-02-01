@@ -21,11 +21,22 @@ void NodeMapping::reserve(const size_t size) {
     is_deleted.reserve(size);
 }
 
-void NodeMapping::mark_node_deleted(const int sparse_id) {
+void NodeMapping::host_mark_node_deleted(const int sparse_id) {
     if (sparse_id < is_deleted.size()) {
         is_deleted[sparse_id] = ITEM_DELETED;
     }
 }
+
+#ifdef HAS_CUDA
+__device__ void NodeMapping::device_mark_node_deleted(
+    const int sparse_id,
+    short* deleted_ptr,
+    const size_t vector_size) {
+    if (sparse_id < vector_size) {
+        deleted_ptr[sparse_id] = ITEM_DELETED;
+    }
+}
+#endif
 
 void NodeMapping::update(const EdgeData& edges, const size_t start_idx, const size_t end_idx) {
     // First pass: find max node ID

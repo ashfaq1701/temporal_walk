@@ -74,10 +74,11 @@ void TemporalGraph::sort_and_merge_edges(const size_t start_idx) {
         thrust::sort(thrust::device,
             indices.begin(),
             indices.end(),
-            [ts = edges.timestamps.device_data()] __device__ (size_t i, size_t j) {
-                return ts[static_cast<int>(i)] < ts[static_cast<int>(j)];
+            [timestamps = edges.timestamps.device_data()] __device__ (const size_t i, const size_t j) {
+                return timestamps[static_cast<int>(i)] < timestamps[static_cast<int>(j)];
             }
         );
+
 
         // Create temporary device vectors
         thrust::device_vector<int> sorted_sources(edges.size() - start_idx);
@@ -287,24 +288,27 @@ void TemporalGraph::delete_old_edges() {
             auto d_has_edges_ptr = thrust::raw_pointer_cast(d_has_edges.data());
 
             thrust::for_each(thrust::device,
-                thrust::counting_iterator<size_t>(0),
-                thrust::counting_iterator<size_t>(remaining),
-                [d_sources, d_targets, d_has_edges_ptr] __device__ (const size_t i) {
-                    d_has_edges_ptr[d_sources[static_cast<int>(i)]] = 1;
-                    d_has_edges_ptr[d_targets[static_cast<int>(i)]] = 1;
-                });
+            thrust::counting_iterator<size_t>(0),
+            thrust::counting_iterator<size_t>(remaining),
+            [sources = d_sources, targets = d_targets, has_edges = d_has_edges_ptr] __device__ (const size_t i) {
+                has_edges[sources[static_cast<int>(i)]] = 1;
+                has_edges[targets[static_cast<int>(i)]] = 1;
+            });
         }
 
         edges.resize(remaining);
 
         // Mark deleted nodes
         auto d_has_edges_ptr = thrust::raw_pointer_cast(d_has_edges.data());
+        const size_t is_deleted_size = node_mapping.is_deleted.size();  // Get size before lambda
         thrust::for_each(thrust::device,
             thrust::counting_iterator<size_t>(0),
             thrust::counting_iterator<size_t>(d_has_edges.size()),
-            [d_has_edges_ptr, this] __device__ (const size_t i) {
-                if (!d_has_edges_ptr[i]) {
-                    node_mapping.mark_node_deleted(static_cast<int>(i));
+            [has_edges = d_has_edges_ptr,
+             deleted_ptr = node_mapping.is_deleted.device_data(),
+             size = is_deleted_size] __device__ (const size_t i) {
+                if (!has_edges[i]) {
+                    NodeMapping::device_mark_node_deleted(static_cast<int>(i), deleted_ptr.get(), size);
                 }
             });
         #endif
@@ -344,7 +348,7 @@ void TemporalGraph::delete_old_edges() {
         // Mark nodes with no edges as deleted
         for (size_t i = 0; i < has_edges.size(); i++) {
             if (!has_edges[i]) {
-                node_mapping.mark_node_deleted(static_cast<int>(i));
+                node_mapping.host_mark_node_deleted(static_cast<int>(i));
             }
         }
     }
@@ -438,7 +442,7 @@ size_t TemporalGraph::count_node_timestamps_less_than(const int node_id, const i
            timestamp_group_indices.host_begin() + static_cast<int>(group_start),
            timestamp_group_indices.host_begin() + static_cast<int>(group_end),
            timestamp,
-           [this, &edge_indices](const size_t group_pos, const int64_t ts) {
+           [this, edge_indices](const size_t group_pos, const int64_t ts) {
                return edges.timestamps[edge_indices[group_pos]] < ts;
            });
 
@@ -481,7 +485,7 @@ size_t TemporalGraph::count_node_timestamps_greater_than(const int node_id, cons
            timestamp_group_indices.host_begin() + static_cast<int>(group_start),
            timestamp_group_indices.host_begin() + static_cast<int>(group_end),
            timestamp,
-           [this, &edge_indices](const int64_t ts, const size_t group_pos) {
+           [this, edge_indices](const int64_t ts, const size_t group_pos) {
                return ts < edges.timestamps[edge_indices[group_pos]];
            });
 
@@ -618,63 +622,123 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
     size_t group_pos;
     if (timestamp != -1) {
         if (forward) {
-            // Find first group after timestamp
-            auto it = std::upper_bound(
-                timestamp_group_indices.begin() + static_cast<int>(group_start_offset),
-                timestamp_group_indices.begin() + static_cast<int>(group_end_offset),
-                timestamp,
-                [this, &edge_indices](int64_t ts, size_t pos) {
-                    return ts < edges.timestamps[edge_indices[pos]];
+            if (timestamp_group_indices.is_gpu()) {
+                #ifdef HAS_CUDA
+                // Find first group after timestamp using GPU
+                const auto it = thrust::upper_bound(
+                    thrust::device,
+                    timestamp_group_indices.device_begin() + static_cast<int>(group_start_offset),
+                    timestamp_group_indices.device_begin() + static_cast<int>(group_end_offset),
+                    timestamp,
+                    [ts = edges.timestamps.device_data(), edge_idx = edge_indices.device_data()] __device__ (const int64_t ts_val, const size_t pos) {
+                    return ts_val < ts[static_cast<int>(edge_idx[static_cast<int>(pos)])];
                 });
 
-            // Count available groups after timestamp
-            const size_t available = timestamp_group_indices.begin() +
-                static_cast<int>(group_end_offset) - it;
-            if (available == 0) return {-1, -1, -1};
+                const size_t available = timestamp_group_indices.device_begin() +
+                    static_cast<int>(group_end_offset) - it;
+                if (available == 0) return {-1, -1, -1};
 
-            const size_t start_pos = it - timestamp_group_indices.begin();
-            if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
-                const size_t index = index_picker->pick_random(0, static_cast<int>(available), false);
-                if (index >= available) return {-1, -1, -1};
-                group_pos = start_pos + index;
-            }
-            else
-            {
-                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
-                group_pos = weight_picker->pick_random(
-                    node_index.outbound_forward_cumulative_weights_exponential,
-                    static_cast<int>(start_pos),
-                    static_cast<int>(group_end_offset));
+                const size_t start_pos = it - timestamp_group_indices.device_begin();
+
+                if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+                    const size_t index = index_picker->pick_random(0, static_cast<int>(available), false);
+                    if (index >= available) return {-1, -1, -1};
+                    group_pos = start_pos + index;
+                } else {
+                    auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
+                    group_pos = weight_picker->pick_random(
+                        node_index.outbound_forward_cumulative_weights_exponential,
+                        static_cast<int>(start_pos),
+                        static_cast<int>(group_end_offset));
+                }
+                #else
+                throw std::runtime_error("GPU support not compiled in");
+                #endif
+            } else {
+                const auto it = std::upper_bound(
+                    timestamp_group_indices.host_begin() + static_cast<int>(group_start_offset),
+                    timestamp_group_indices.host_begin() + static_cast<int>(group_end_offset),
+                    timestamp,
+                    [this, edge_indices](const int64_t ts, const size_t pos) {
+                        return ts < edges.timestamps[edge_indices[pos]];
+                    });
+
+                const size_t available = timestamp_group_indices.host_begin() +
+                    static_cast<int>(group_end_offset) - it;
+                if (available == 0) return {-1, -1, -1};
+
+                const size_t start_pos = it - timestamp_group_indices.host_begin();
+
+                if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+                    const size_t index = index_picker->pick_random(0, static_cast<int>(available), false);
+                    if (index >= available) return {-1, -1, -1};
+                    group_pos = start_pos + index;
+                } else {
+                    auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
+                    group_pos = weight_picker->pick_random(
+                        node_index.outbound_forward_cumulative_weights_exponential,
+                        static_cast<int>(start_pos),
+                        static_cast<int>(group_end_offset));
+                }
             }
         } else {
-            // Find first group >= timestamp
-            auto it = std::lower_bound(
-                timestamp_group_indices.begin() + static_cast<int>(group_start_offset),
-                timestamp_group_indices.begin() + static_cast<int>(group_end_offset),
-                timestamp,
-                [this, &edge_indices](size_t pos, int64_t ts) {
-                    return edges.timestamps[edge_indices[pos]] < ts;
+            if (timestamp_group_indices.is_gpu()) {
+                #ifdef HAS_CUDA
+                const auto it = thrust::lower_bound(
+                    thrust::device,
+                    timestamp_group_indices.device_begin() + static_cast<int>(group_start_offset),
+                    timestamp_group_indices.device_begin() + static_cast<int>(group_end_offset),
+                    timestamp,
+                    [ts = edges.timestamps.device_data(), edge_idx = edge_indices.device_data()] __device__ (const size_t pos, const int64_t ts_val) {
+                    return ts[static_cast<int>(edge_idx[static_cast<int>(pos)])] < ts_val;
                 });
 
-            const size_t available = it - (timestamp_group_indices.begin() +
-                static_cast<int>(group_start_offset));
-            if (available == 0) return {-1, -1, -1};
+                const size_t available = it - (timestamp_group_indices.device_begin() +
+                    static_cast<int>(group_start_offset));
+                if (available == 0) return {-1, -1, -1};
 
-            if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
-                const size_t index = index_picker->pick_random(0, static_cast<int>(available), true);
-                if (index >= available) return {-1, -1, -1};
-                group_pos = (it - timestamp_group_indices.begin()) - 1 - (available - index - 1);
-            }
-            else
-            {
-                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
-                group_pos = weight_picker->pick_random(
-                    is_directed
-                        ? node_index.inbound_backward_cumulative_weights_exponential
-                        : node_index.outbound_backward_cumulative_weights_exponential,
-                    static_cast<int>(group_start_offset), // start from node's first group
-                    static_cast<int>(it - timestamp_group_indices.begin()) // up to and excluding first group >= timestamp
-                );
+                if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+                    const size_t index = index_picker->pick_random(0, static_cast<int>(available), true);
+                    if (index >= available) return {-1, -1, -1};
+                    group_pos = (it - timestamp_group_indices.device_begin()) - 1 - (available - index - 1);
+                } else {
+                    auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
+                    group_pos = weight_picker->pick_random(
+                        is_directed
+                            ? node_index.inbound_backward_cumulative_weights_exponential
+                            : node_index.outbound_backward_cumulative_weights_exponential,
+                        static_cast<int>(group_start_offset),
+                        static_cast<int>(it - timestamp_group_indices.device_begin()));
+                }
+                #else
+                throw std::runtime_error("GPU support not compiled in");
+                #endif
+            } else {
+                const auto it = std::lower_bound(
+                    timestamp_group_indices.host_begin() + static_cast<int>(group_start_offset),
+                    timestamp_group_indices.host_begin() + static_cast<int>(group_end_offset),
+                    timestamp,
+                    [this, edge_indices](const size_t pos, const int64_t ts) {
+                        return edges.timestamps[edge_indices[pos]] < ts;
+                    });
+
+                const size_t available = it - (timestamp_group_indices.host_begin() +
+                    static_cast<int>(group_start_offset));
+                if (available == 0) return {-1, -1, -1};
+
+                if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+                    const size_t index = index_picker->pick_random(0, static_cast<int>(available), true);
+                    if (index >= available) return {-1, -1, -1};
+                    group_pos = (it - timestamp_group_indices.host_begin()) - 1 - (available - index - 1);
+                } else {
+                    auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
+                    group_pos = weight_picker->pick_random(
+                        is_directed
+                            ? node_index.inbound_backward_cumulative_weights_exponential
+                            : node_index.outbound_backward_cumulative_weights_exponential,
+                        static_cast<int>(group_start_offset),
+                        static_cast<int>(it - timestamp_group_indices.host_begin()));
+                }
             }
         }
     } else {
@@ -688,19 +752,14 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
             group_pos = forward
                 ? group_start_offset + index
                 : group_end_offset - 1 - (num_groups - index - 1);
-        }
-        else
-        {
+        } else {
             auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
-            if (forward)
-            {
+            if (forward) {
                 group_pos = weight_picker->pick_random(
                     node_index.outbound_forward_cumulative_weights_exponential,
                     static_cast<int>(group_start_offset),
                     static_cast<int>(group_end_offset));
-            }
-            else
-            {
+            } else {
                 group_pos = weight_picker->pick_random(
                     is_directed
                         ? node_index.inbound_backward_cumulative_weights_exponential
