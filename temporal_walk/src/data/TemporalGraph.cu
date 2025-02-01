@@ -514,9 +514,8 @@ std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(
             else {
                 auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
                 // Create std::vector from DualVector for weight picker
-                const std::vector<double> weights = edges.forward_weights_exponential.to_vector();
                 group_idx = weight_picker->pick_random(
-                    weights,
+                    edges.forward_cumulative_weights_exponential,
                     static_cast<int>(first_group),
                     static_cast<int>(num_groups));
             }
@@ -532,9 +531,8 @@ std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(
             }
             else {
                 auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
-                const std::vector<double> weights = edges.backward_weights_exponential.to_vector();
                 group_idx = weight_picker->pick_random(
-                    weights,
+                    edges.backward_cumulative_weights_exponential,
                     0,
                     static_cast<int>(last_group + 1));
             }
@@ -548,16 +546,14 @@ std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(
         } else {
             auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
             if (forward) {
-                const std::vector<double> weights = edges.forward_weights_exponential.to_vector();
                 group_idx = weight_picker->pick_random(
-                    weights,
+                    edges.forward_cumulative_weights_exponential,
                     0,
                     static_cast<int>(num_groups));
             }
             else {
-                const std::vector<double> weights = edges.backward_weights_exponential.to_vector();
                 group_idx = weight_picker->pick_random(
-                    weights,
+                    edges.backward_cumulative_weights_exponential,
                     0,
                     static_cast<int>(num_groups));
             }
@@ -646,7 +642,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
             {
                 auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
                 group_pos = weight_picker->pick_random(
-                    node_index.outbound_forward_weights_exponential,
+                    node_index.outbound_forward_cumulative_weights_exponential,
                     static_cast<int>(start_pos),
                     static_cast<int>(group_end_offset));
             }
@@ -674,8 +670,8 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
                 auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
                 group_pos = weight_picker->pick_random(
                     is_directed
-                        ? node_index.inbound_backward_weights_exponential
-                        : node_index.outbound_backward_weights_exponential,
+                        ? node_index.inbound_backward_cumulative_weights_exponential
+                        : node_index.outbound_backward_cumulative_weights_exponential,
                     static_cast<int>(group_start_offset), // start from node's first group
                     static_cast<int>(it - timestamp_group_indices.begin()) // up to and excluding first group >= timestamp
                 );
@@ -699,7 +695,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
             if (forward)
             {
                 group_pos = weight_picker->pick_random(
-                    node_index.outbound_forward_weights_exponential,
+                    node_index.outbound_forward_cumulative_weights_exponential,
                     static_cast<int>(group_start_offset),
                     static_cast<int>(group_end_offset));
             }
@@ -707,8 +703,8 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
             {
                 group_pos = weight_picker->pick_random(
                     is_directed
-                        ? node_index.inbound_backward_weights_exponential
-                        : node_index.outbound_backward_weights_exponential,
+                        ? node_index.inbound_backward_cumulative_weights_exponential
+                        : node_index.outbound_backward_cumulative_weights_exponential,
                     static_cast<int>(group_start_offset),
                     static_cast<int>(group_end_offset));
             }

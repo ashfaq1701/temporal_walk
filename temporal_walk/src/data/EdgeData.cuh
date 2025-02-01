@@ -25,8 +25,8 @@ struct EdgeData {
     DualVector<size_t> timestamp_group_offsets;     // Start of each timestamp group
     DualVector<int64_t> unique_timestamps;          // Corresponding unique timestamps
 
-    DualVector<double> forward_weights_exponential;  // For forward temporal sampling
-    DualVector<double> backward_weights_exponential; // For backward temporal sampling
+    DualVector<double> forward_cumulative_weights_exponential;  // For forward temporal sampling
+    DualVector<double> backward_cumulative_weights_exponential; // For backward temporal sampling
 
     void reserve(size_t size);
     void clear();
