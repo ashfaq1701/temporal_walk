@@ -22,15 +22,17 @@ class RandomPicker;
 namespace cuda_functions {
     // Platform-specific upper_bound and distance calculation
     inline size_t find_upper_bound_position(const DualVector<int64_t>& vec, const int64_t value, const bool use_gpu) {
-        #ifdef HAS_CUDA
         if (use_gpu) {
+            #ifdef HAS_CUDA
             const auto it = thrust::upper_bound(thrust::device,
                 vec.device_begin(),
                 vec.device_end(),
                 value);
             return thrust::distance(vec.device_begin(), it);
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
         }
-        #endif
         const auto it = std::upper_bound(
             vec.host_begin(),
             vec.host_end(),
@@ -40,15 +42,18 @@ namespace cuda_functions {
 
     // Platform-specific lower_bound and distance calculation
     inline size_t find_lower_bound_position(const DualVector<int64_t>& vec, const int64_t value, const bool use_gpu) {
-        #ifdef HAS_CUDA
         if (use_gpu) {
+            #ifdef HAS_CUDA
             const auto it = thrust::lower_bound(thrust::device,
                 vec.device_begin(),
                 vec.device_end(),
                 value);
             return thrust::distance(vec.device_begin(), it);
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
         }
-        #endif
+
         const auto it = std::lower_bound(
             vec.host_begin(),
             vec.host_end(),
@@ -59,15 +64,17 @@ namespace cuda_functions {
     // For computing prefix sums/cumulative sums
     template<typename T>
     void compute_prefix_sum(DualVector<T>& values, const bool use_gpu) {
-        #ifdef HAS_CUDA
         if (use_gpu) {
+            #ifdef HAS_CUDA
             thrust::inclusive_scan(thrust::device,
                 values.device_begin(),
                 values.device_end(),
                 values.device_begin());
             return;
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
         }
-        #endif
 
         for (size_t i = 1; i < values.size(); i++) {
             values[i] += values[i-1];
@@ -83,8 +90,8 @@ namespace cuda_functions {
         size_t end_pos,
         const bool use_gpu) {
 
-        #ifdef HAS_CUDA
         if (use_gpu) {
+            #ifdef HAS_CUDA
             auto weight_data = weights.device_data().get();
             const double inv_sum = 1.0 / total_sum;
 
@@ -99,8 +106,10 @@ namespace cuda_functions {
                 weights.device_begin() + end_pos,
                 weights.device_begin() + start_pos);
             return;
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
         }
-        #endif
 
         double cumsum = 0.0;
         for (size_t pos = start_pos; pos < end_pos; pos++) {
@@ -112,16 +121,18 @@ namespace cuda_functions {
 
     template<typename T>
     size_t count_matching(const DualVector<T>& vec, const T target_value, const bool use_gpu) {
-        #ifdef HAS_CUDA
         if (use_gpu) {
+            #ifdef HAS_CUDA
             return thrust::count(
                 thrust::device,
                 vec.device_begin(),
                 vec.device_end(),
                 target_value
             );
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
         }
-        #endif
         return std::count(vec.host_begin(), vec.host_end(), target_value);
     }
 
@@ -132,8 +143,8 @@ namespace cuda_functions {
         short target_value,
         const bool use_gpu) {
 
-        #ifdef HAS_CUDA
         if (use_gpu) {
+            #ifdef HAS_CUDA
             // Create device vector for results
             thrust::device_vector<T> d_result(nodes.size());
 
@@ -153,8 +164,10 @@ namespace cuda_functions {
             std::vector<T> result(thrust::distance(d_result.begin(), end));
             thrust::copy(d_result.begin(), end, result.begin());
             return result;
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
         }
-        #endif
 
         // CPU version
         std::vector<T> result;
@@ -175,8 +188,8 @@ namespace cuda_functions {
         const size_t start_idx,
         const bool use_gpu) {
 
-        #ifdef HAS_CUDA
         if (use_gpu) {
+            #ifdef HAS_CUDA
             thrust::device_vector<size_t> d_indices(indices.size());
             thrust::sequence(thrust::device, d_indices.begin(), d_indices.end(), start_idx);
 
@@ -189,8 +202,10 @@ namespace cuda_functions {
 
             thrust::copy(d_indices.begin(), d_indices.end(), indices.begin());
             return;
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
         }
-        #endif
 
         std::iota(indices.begin(), indices.end(), start_idx);
         std::sort(indices.begin(), indices.end(),
@@ -208,8 +223,8 @@ namespace cuda_functions {
         const size_t start_idx,
         const bool use_gpu) {
 
-        #ifdef HAS_CUDA
         if (use_gpu) {
+            #ifdef HAS_CUDA
             thrust::device_vector<size_t> d_indices = indices;
             thrust::device_vector<T> d_result(indices.size());
 
@@ -222,8 +237,10 @@ namespace cuda_functions {
                 d_result.begin(), d_result.end(),
                 dest.device_begin() + static_cast<int>(start_idx));
             return;
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
         }
-        #endif
 
         std::vector<T> result(indices.size());
         for (size_t i = 0; i < indices.size(); i++) {
@@ -243,8 +260,8 @@ namespace cuda_functions {
         const size_t start_idx,
         const bool use_gpu) {
 
-        #ifdef HAS_CUDA
         if (use_gpu) {
+            #ifdef HAS_CUDA
             thrust::device_vector<T> merged_timestamps(timestamps.size());
             thrust::device_vector<T> merged_sources(sources.size());
             thrust::device_vector<T> merged_targets(targets.size());
@@ -274,8 +291,10 @@ namespace cuda_functions {
             sources.set_device_vector(std::move(merged_sources));
             targets.set_device_vector(std::move(merged_targets));
             return;
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
         }
-        #endif
 
         // Original CPU merge implementation remains the same
         std::vector<T> merged_timestamps(timestamps.size());
@@ -329,8 +348,8 @@ namespace cuda_functions {
         T cutoff_time,
         const bool use_gpu) {
 
-        #ifdef HAS_CUDA
         if (use_gpu) {
+            #ifdef HAS_CUDA
             auto it = thrust::upper_bound(thrust::device,
                 timestamps.device_begin(),
                 timestamps.device_end(),
@@ -338,8 +357,10 @@ namespace cuda_functions {
 
             size_t delete_count = thrust::distance(timestamps.device_begin(), it);
             return {delete_count, timestamps.size() - delete_count};
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
         }
-        #endif
 
         auto it = std::upper_bound(
             timestamps.host_begin(),
@@ -357,15 +378,17 @@ namespace cuda_functions {
         size_t delete_count,
         const bool use_gpu) {
 
-        #ifdef HAS_CUDA
         if (use_gpu) {
+            #ifdef HAS_CUDA
             thrust::copy(thrust::device,
                 vec.device_begin() + delete_count,
                 vec.device_end(),
                 vec.device_begin());
             return;
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
         }
-        #endif
 
         std::move(vec.host_begin() + delete_count,
                  vec.host_end(),
@@ -381,8 +404,8 @@ namespace cuda_functions {
         const size_t remaining,
         const bool use_gpu) {
 
-        #ifdef HAS_CUDA
         if (use_gpu) {
+            #ifdef HAS_CUDA
             auto src_data = sources.device_data().get();
             auto tgt_data = targets.device_data().get();
             auto has_edges_data = has_edges.device_data().get();
@@ -395,8 +418,10 @@ namespace cuda_functions {
                     has_edges_data[tgt_data[static_cast<int>(i)]] = 1;
                 });
             return;
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
         }
-        #endif
 
         for (size_t i = 0; i < remaining; i++) {
             has_edges[sources[i]] = 1;
@@ -412,15 +437,17 @@ namespace cuda_functions {
 
         if (vec.empty()) return 0;
 
-        #ifdef HAS_CUDA
         if (use_gpu) {
+            #ifdef HAS_CUDA
             auto it = thrust::lower_bound(thrust::device,
                 vec.device_begin(),
                 vec.device_end(),
                 value);
             return thrust::distance(vec.device_begin(), it);
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
         }
-        #endif
 
         auto it = std::lower_bound(
             vec.host_begin(),
@@ -437,15 +464,17 @@ namespace cuda_functions {
 
         if (vec.empty()) return 0;
 
-        #ifdef HAS_CUDA
         if (use_gpu) {
+            #ifdef HAS_CUDA
             auto it = thrust::upper_bound(thrust::device,
                 vec.device_begin(),
                 vec.device_end(),
                 value);
             return thrust::distance(it, vec.device_end());
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
         }
-        #endif
 
         auto it = std::upper_bound(
             vec.host_begin(),
@@ -465,8 +494,8 @@ namespace cuda_functions {
         V timestamp,
         const bool use_gpu) {
 
-        #ifdef HAS_CUDA
         if (use_gpu) {
+            #ifdef HAS_CUDA
             auto timestamps_data = timestamps.device_data().get();
             auto edge_indices_data = edge_indices.device_data().get();
 
@@ -482,8 +511,10 @@ namespace cuda_functions {
             return thrust::distance(
                 timestamp_group_indices.device_begin() + static_cast<int>(group_start),
                 it);
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
         }
-        #endif
 
         auto it = std::lower_bound(
             timestamp_group_indices.host_begin() + static_cast<int>(group_start),
@@ -508,8 +539,8 @@ namespace cuda_functions {
         V timestamp,
         const bool use_gpu) {
 
-        #ifdef HAS_CUDA
         if (use_gpu) {
+            #ifdef HAS_CUDA
             auto timestamps_data = timestamps.device_data().get();
             auto edge_indices_data = edge_indices.device_data().get();
 
@@ -524,8 +555,10 @@ namespace cuda_functions {
 
             return thrust::distance(it,
                 timestamp_group_indices.device_begin() + static_cast<int>(group_end));
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
         }
-        #endif
 
         auto it = std::upper_bound(
             timestamp_group_indices.host_begin() + static_cast<int>(group_start),
@@ -548,15 +581,17 @@ namespace cuda_functions {
         size_t idx,
         const bool use_gpu) {
 
-        #ifdef HAS_CUDA
         if (use_gpu) {
+            #ifdef HAS_CUDA
             return {
                 sources.device_at(idx),
                 targets.device_at(idx),
                 timestamps.device_at(idx)
             };
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
         }
-        #endif
 
         return {
             sources.host_at(idx),
