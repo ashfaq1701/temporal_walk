@@ -4,15 +4,10 @@
 #include <vector>
 #include <cstdint>
 #include <tuple>
-#include <functional>
 #include "NodeMapping.cuh"
 #include "NodeEdgeIndex.cuh"
-#include "../utils/utils.h"
-#include "../config/constants.h"
 
 #ifdef HAS_CUDA
-#include <thrust/gather.h>
-#include <thrust/sequence.h>
 #include <thrust/sort.h>
 #endif
 
@@ -36,6 +31,22 @@ private:
         const DualVector<size_t>& timestamp_group_indices,
         int dense_idx,
         bool forward) const;
+
+    static size_t get_timestamped_group_idx(
+        const EdgeData &edges,
+        RandomPicker &picker,
+        size_t num_groups,
+        int64_t timestamp,
+        bool forward,
+        const DualVector<double> &forward_weights,
+        const DualVector<double> &backward_weights);
+
+    static size_t get_untimed_group_idx(
+        RandomPicker &picker,
+        size_t num_groups,
+        bool forward,
+        const DualVector<double> &forward_weights,
+        const DualVector<double> &backward_weights);
 
 public:
     NodeEdgeIndex node_index; // Node to edge mappings

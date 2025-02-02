@@ -2,16 +2,11 @@
 #define NODEMAPPING_H
 
 #include <vector>
-#include <cstdint>
-#include <tuple>
 #include "EdgeData.cuh"
 #include "../cuda/DualVector.cuh"
 
 #ifdef HAS_CUDA
-#include <thrust/copy.h>
-#include <thrust/count.h>
 #include <thrust/device_vector.h>
-#include <thrust/execution_policy.h>
 #define HOST_DEVICE __host__ __device__
 #else
 #define HOST_DEVICE

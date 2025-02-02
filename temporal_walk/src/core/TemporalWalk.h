@@ -3,6 +3,7 @@
 
 #include<vector>
 #include "../../libs/thread-pool/ThreadPool.h"
+#include "../config/constants.h"
 #include "../random/RandomPicker.h"
 #include "../data/TemporalGraph.cuh"
 

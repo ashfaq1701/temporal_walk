@@ -1,4 +1,5 @@
 #include "NodeEdgeIndex.cuh"
+#include "../cuda/cuda_functions.cuh"
 
 #include <iostream>
 
@@ -25,43 +26,41 @@ void NodeEdgeIndex::clear() {
 }
 
 void NodeEdgeIndex::rebuild(
-   const EdgeData& edges,
-   const NodeMapping& mapping,
-   const bool is_directed) {
+    const EdgeData& edges,
+    const NodeMapping& mapping,
+    const bool is_directed) {
 
-   const size_t num_nodes = mapping.size();
+    const size_t num_nodes = mapping.size();
 
-   // Initialize base CSR structures
-   outbound_offsets.assign(num_nodes + 1, 0);
-   outbound_timestamp_group_offsets.assign(num_nodes + 1, 0);
+    // Initialize base CSR structures
+    outbound_offsets.assign(num_nodes + 1, 0);
+    outbound_timestamp_group_offsets.assign(num_nodes + 1, 0);
 
-   if (is_directed) {
-       inbound_offsets.assign(num_nodes + 1, 0);
-       inbound_timestamp_group_offsets.assign(num_nodes + 1, 0);
-   }
+    if (is_directed) {
+        inbound_offsets.assign(num_nodes + 1, 0);
+        inbound_timestamp_group_offsets.assign(num_nodes + 1, 0);
+    }
 
-   // First pass: count edges per node
-   for (size_t i = 0; i < edges.size(); i++) {
-       const int src_idx = mapping.to_dense(edges.sources[i]);
-       const int tgt_idx = mapping.to_dense(edges.targets[i]);
+    // First pass: count edges per node
+    for (size_t i = 0; i < edges.size(); i++) {
+        const int src_idx = mapping.to_dense(edges.sources[i]);
+        const int tgt_idx = mapping.to_dense(edges.targets[i]);
 
-       outbound_offsets[src_idx + 1]++;
-       if (is_directed) {
-           inbound_offsets[tgt_idx + 1]++;
-       } else {
-           outbound_offsets[tgt_idx + 1]++;
-       }
-   }
+        outbound_offsets[src_idx + 1]++;
+        if (is_directed) {
+            inbound_offsets[tgt_idx + 1]++;
+        } else {
+            outbound_offsets[tgt_idx + 1]++;
+        }
+    }
 
-   // Calculate prefix sums for edge offsets
-   for (size_t i = 1; i <= num_nodes; i++) {
-       outbound_offsets[i] += outbound_offsets[i-1];
-       if (is_directed) {
-           inbound_offsets[i] += inbound_offsets[i-1];
-       }
-   }
+    // Calculate prefix sums for edge offsets using cuda_functions
+    cuda_functions::compute_prefix_sum(outbound_offsets, use_gpu);
+    if (is_directed) {
+        cuda_functions::compute_prefix_sum(inbound_offsets, use_gpu);
+    }
 
-   // Allocate edge index arrays
+    // Allocate edge index arrays
    outbound_indices.resize(outbound_offsets.back());
    if (is_directed) {
        inbound_indices.resize(inbound_offsets.back());
@@ -127,55 +126,47 @@ void NodeEdgeIndex::rebuild(
        }
    }
 
-   // Calculate prefix sums for group offsets
-   for (size_t i = 0; i < num_nodes; i++) {
-       outbound_timestamp_group_offsets[i + 1] = outbound_timestamp_group_offsets[i] + outbound_group_count[i];
-       if (is_directed) {
-           inbound_timestamp_group_offsets[i + 1] = inbound_timestamp_group_offsets[i] + inbound_group_count[i];
-       }
-   }
+    // Calculate prefix sums for group offsets using cuda_functions
+    cuda_functions::compute_prefix_sum(outbound_timestamp_group_offsets, use_gpu);
+    if (is_directed) {
+        cuda_functions::compute_prefix_sum(inbound_timestamp_group_offsets, use_gpu);
+    }
 
-   // Allocate and fill group indices
-   outbound_timestamp_group_indices.resize(outbound_timestamp_group_offsets.back());
-   if (is_directed) {
-       inbound_timestamp_group_indices.resize(inbound_timestamp_group_offsets.back());
-   }
+    // Final pass: fill group indices
+    for (size_t node = 0; node < num_nodes; node++) {
+        size_t start = outbound_offsets[node];
+        size_t end = outbound_offsets[node + 1];
+        size_t group_pos = outbound_timestamp_group_offsets[node];
 
-   // Final pass: fill group indices
-   for (size_t node = 0; node < num_nodes; node++) {
-       size_t start = outbound_offsets[node];
-       size_t end = outbound_offsets[node + 1];
-       size_t group_pos = outbound_timestamp_group_offsets[node];
+        if (start < end) {
+            outbound_timestamp_group_indices[group_pos++] = start;
+            for (size_t i = start + 1; i < end; i++) {
+                if (edges.timestamps[outbound_indices[i]] !=
+                    edges.timestamps[outbound_indices[i-1]]) {
+                    outbound_timestamp_group_indices[group_pos++] = i;
+                    }
+            }
+        }
 
-       if (start < end) {
-           outbound_timestamp_group_indices[group_pos++] = start;
-           for (size_t i = start + 1; i < end; i++) {
-               if (edges.timestamps[outbound_indices[i]] !=
-                   edges.timestamps[outbound_indices[i-1]]) {
-                   outbound_timestamp_group_indices[group_pos++] = i;
-               }
-           }
-       }
+        if (is_directed) {
+            start = inbound_offsets[node];
+            end = inbound_offsets[node + 1];
+            group_pos = inbound_timestamp_group_offsets[node];
 
-       if (is_directed) {
-           start = inbound_offsets[node];
-           end = inbound_offsets[node + 1];
-           group_pos = inbound_timestamp_group_offsets[node];
-
-           if (start < end) {
-               inbound_timestamp_group_indices[group_pos++] = start;
-               for (size_t i = start + 1; i < end; i++) {
-                   if (edges.timestamps[inbound_indices[i]] !=
-                       edges.timestamps[inbound_indices[i-1]]) {
-                       inbound_timestamp_group_indices[group_pos++] = i;
-                   }
-               }
-           }
-       }
-   }
+            if (start < end) {
+                inbound_timestamp_group_indices[group_pos++] = start;
+                for (size_t i = start + 1; i < end; i++) {
+                    if (edges.timestamps[inbound_indices[i]] !=
+                        edges.timestamps[inbound_indices[i-1]]) {
+                        inbound_timestamp_group_indices[group_pos++] = i;
+                        }
+                }
+            }
+        }
+    }
 }
 
-void NodeEdgeIndex::update_temporal_weights(const EdgeData& edges, double timescale_bound) {
+void NodeEdgeIndex::update_temporal_weights(const EdgeData& edges, const double timescale_bound) {
     const size_t num_nodes = outbound_offsets.size() - 1;
 
     outbound_forward_cumulative_weights_exponential.resize(outbound_timestamp_group_indices.size());
@@ -222,20 +213,23 @@ void NodeEdgeIndex::update_temporal_weights(const EdgeData& edges, double timesc
                 backward_sum += backward_weight;
             }
 
-            // Then normalize and compute cumulative sums
+            // Use cuda_functions for normalizing and computing cumulative sums
             const size_t start_pos = outbound_timestamp_group_offsets[node];
             const size_t end_pos = outbound_timestamp_group_offsets[node + 1];
-            double forward_cumsum = 0.0, backward_cumsum = 0.0;
-            for (size_t pos = start_pos; pos < end_pos; pos++) {
-                outbound_forward_cumulative_weights_exponential[pos] /= forward_sum;
-                outbound_backward_cumulative_weights_exponential[pos] /= backward_sum;
 
-                forward_cumsum += outbound_forward_cumulative_weights_exponential[pos];
-                backward_cumsum += outbound_backward_cumulative_weights_exponential[pos];
+            cuda_functions::compute_cumulative_weights(
+                outbound_forward_cumulative_weights_exponential,
+                forward_sum,
+                start_pos,
+                end_pos,
+                use_gpu);
 
-                outbound_forward_cumulative_weights_exponential[pos] = forward_cumsum;
-                outbound_backward_cumulative_weights_exponential[pos] = backward_cumsum;
-            }
+            cuda_functions::compute_cumulative_weights(
+                outbound_backward_cumulative_weights_exponential,
+                backward_sum,
+                start_pos,
+                end_pos,
+                use_gpu);
         }
 
         if (!inbound_offsets.empty()) {
@@ -267,24 +261,25 @@ void NodeEdgeIndex::update_temporal_weights(const EdgeData& edges, double timesc
                     backward_sum += backward_weight;
                 }
 
-                // Then normalize and compute cumulative sum
+                // Use cuda_functions for inbound weights
                 const size_t start_pos = inbound_timestamp_group_offsets[node];
                 const size_t end_pos = inbound_timestamp_group_offsets[node + 1];
-                double backward_cumsum = 0.0;
-                for (size_t pos = start_pos; pos < end_pos; pos++) {
-                    inbound_backward_cumulative_weights_exponential[pos] /= backward_sum;
-                    backward_cumsum += inbound_backward_cumulative_weights_exponential[pos];
-                    inbound_backward_cumulative_weights_exponential[pos] = backward_cumsum;
-                }
+
+                cuda_functions::compute_cumulative_weights(
+                    inbound_backward_cumulative_weights_exponential,
+                    backward_sum,
+                    start_pos,
+                    end_pos,
+                    use_gpu);
             }
         }
     }
 }
 
 std::pair<size_t, size_t> NodeEdgeIndex::get_edge_range(
-   int dense_node_id,
-   bool forward,
-   bool is_directed) const {
+    const int dense_node_id,
+    const bool forward,
+    const bool is_directed) const {
 
    if (is_directed) {
        const auto& offsets = forward ? outbound_offsets : inbound_offsets;
@@ -301,10 +296,10 @@ std::pair<size_t, size_t> NodeEdgeIndex::get_edge_range(
 }
 
 std::pair<size_t, size_t> NodeEdgeIndex::get_timestamp_group_range(
-   int dense_node_id,
-   size_t group_idx,
-   bool forward,
-   bool is_directed) const {
+    const int dense_node_id,
+    const size_t group_idx,
+    const bool forward,
+    const bool is_directed) const {
 
    const auto& group_offsets = (is_directed && !forward) ?
        inbound_timestamp_group_offsets : outbound_timestamp_group_offsets;
@@ -317,12 +312,12 @@ std::pair<size_t, size_t> NodeEdgeIndex::get_timestamp_group_range(
        return {0, 0};
    }
 
-   size_t num_groups = group_offsets[dense_node_id + 1] - group_offsets[dense_node_id];
+   const size_t num_groups = group_offsets[dense_node_id + 1] - group_offsets[dense_node_id];
    if (group_idx >= num_groups) {
        return {0, 0};
    }
 
-   size_t group_start_idx = group_offsets[dense_node_id] + group_idx;
+   const size_t group_start_idx = group_offsets[dense_node_id] + group_idx;
    size_t group_start = group_indices[group_start_idx];
 
    // Group end is either next group's start or node's edge range end
@@ -337,9 +332,9 @@ std::pair<size_t, size_t> NodeEdgeIndex::get_timestamp_group_range(
 }
 
 size_t NodeEdgeIndex::get_timestamp_group_count(
-   int dense_node_id,
-   bool forward,
-   bool is_directed) const {
+    const int dense_node_id,
+    const bool forward,
+    const bool is_directed) const {
 
    const auto& offsets = (is_directed && !forward) ?
        inbound_timestamp_group_offsets : outbound_timestamp_group_offsets;

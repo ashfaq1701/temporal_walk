@@ -1,4 +1,5 @@
 #include "EdgeData.cuh"
+#include "../cuda/cuda_functions.cuh"
 #include <algorithm>
 #include <iostream>
 
@@ -118,19 +119,20 @@ void EdgeData::update_temporal_weights(const double timescale_bound) {
         backward_cumulative_weights_exponential[group] = backward_weight;
     }
 
-    // Then normalize and compute cumulative sums
-    double forward_cumsum = 0.0, backward_cumsum = 0.0;
-    for (size_t group = 0; group < num_groups; group++) {
-        forward_cumulative_weights_exponential[group] /= forward_sum;
-        backward_cumulative_weights_exponential[group] /= backward_sum;
+    // Use cuda_functions for normalization and cumulative sums
+    cuda_functions::compute_cumulative_weights(
+        forward_cumulative_weights_exponential,
+        forward_sum,
+        0,
+        num_groups,
+        use_gpu);
 
-        // Update with cumulative sums
-        forward_cumsum += forward_cumulative_weights_exponential[group];
-        backward_cumsum += backward_cumulative_weights_exponential[group];
-
-        forward_cumulative_weights_exponential[group] = forward_cumsum;
-        backward_cumulative_weights_exponential[group] = backward_cumsum;
-    }
+    cuda_functions::compute_cumulative_weights(
+        backward_cumulative_weights_exponential,
+        backward_sum,
+        0,
+        num_groups,
+        use_gpu);
 }
 
 std::pair<size_t, size_t> EdgeData::get_timestamp_group_range(const size_t group_idx) const {
@@ -146,46 +148,12 @@ size_t EdgeData::get_timestamp_group_count() const {
 
 size_t EdgeData::find_group_after_timestamp(const int64_t timestamp) const {
     if (unique_timestamps.empty()) return 0;
-
-    if (use_gpu) {
-        #ifdef HAS_CUDA
-        const auto it = thrust::upper_bound(thrust::device,
-                                            unique_timestamps.device_begin(),
-                                            unique_timestamps.device_end(),
-                                            timestamp);
-        return thrust::distance(unique_timestamps.device_begin(), it);
-        #else
-        throw std::runtime_error("GPU support not compiled in");
-        #endif
-    } else {
-        const auto it = std::upper_bound(
-            unique_timestamps.host_begin(),
-            unique_timestamps.host_end(),
-            timestamp);
-        return std::distance(unique_timestamps.host_begin(), it);
-    }
+    return cuda_functions::find_upper_bound_position(unique_timestamps, timestamp, use_gpu);
 }
 
 size_t EdgeData::find_group_before_timestamp(const int64_t timestamp) const {
     if (unique_timestamps.empty()) return 0;
-
-    if (use_gpu) {
-        #ifdef HAS_CUDA
-        const auto it = thrust::lower_bound(thrust::device,
-                                            unique_timestamps.device_begin(),
-                                            unique_timestamps.device_end(),
-                                            timestamp);
-        return thrust::distance(unique_timestamps.device_begin(), it) - 1;
-        #else
-        throw std::runtime_error("GPU support not compiled in");
-        #endif
-    } else {
-        const auto it = std::lower_bound(
-            unique_timestamps.host_begin(),
-            unique_timestamps.host_end(),
-            timestamp);
-        return std::distance(unique_timestamps.host_begin(), it) - 1;
-    }
+    return cuda_functions::find_lower_bound_position(unique_timestamps, timestamp, use_gpu) - 1;
 }
 
 bool EdgeData::should_use_gpu() const {

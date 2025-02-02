@@ -1,6 +1,7 @@
 #include "NodeMapping.cuh"
 #include <algorithm>
 #include <stdexcept>
+#include "../cuda/cuda_functions.cuh"
 
 constexpr short ITEM_DELETED = 1;
 constexpr short ITEM_NOT_DELETED = 1;
@@ -80,59 +81,15 @@ size_t NodeMapping::size() const {
 }
 
 size_t NodeMapping::active_size() const {
-    if (is_deleted.is_gpu()) {
-        #ifdef HAS_CUDA
-        // Count the number of non-deleted items (zeros)
-        return thrust::count(
-            thrust::device,
-            is_deleted.device_begin(),
-            is_deleted.device_end(),
-            ITEM_NOT_DELETED
-        );
-        #else
-        throw std::runtime_error("GPU support not compiled in");
-        #endif
-    }
-    return std::count(is_deleted.host_begin(), is_deleted.host_end(), ITEM_NOT_DELETED);
+    return cuda_functions::count_matching(is_deleted, ITEM_NOT_DELETED, use_gpu);
 }
 
 std::vector<int> NodeMapping::get_active_node_ids() const {
-    if (dense_to_sparse.is_gpu()) {
-        #ifdef HAS_CUDA
-        // Create device vector for results
-        thrust::device_vector<int> d_result(dense_to_sparse.size());
-
-        // Use copy_if directly with device vectors
-        const auto end = thrust::copy_if(
-            thrust::device,
-            dense_to_sparse.device_begin(),
-            dense_to_sparse.device_end(),
-            d_result.begin(),
-            [is_deleted = is_deleted.get_device_vector().data()] __device__ (int sparse_id) {
-                return is_deleted[sparse_id] == ITEM_NOT_DELETED;
-            }
-        );
-
-        // Copy results back to host
-        std::vector<int> active_ids(thrust::distance(d_result.begin(), end));
-        thrust::copy(d_result.begin(), end, active_ids.begin());
-        return active_ids;
-        #else
-        throw std::runtime_error("GPU support not compiled in");
-        #endif
-    }
-
-    // CPU version using explicit iterators
-    std::vector<int> active_ids;
-    active_ids.reserve(dense_to_sparse.size());
-    const auto begin = dense_to_sparse.host_begin();
-    const auto end = dense_to_sparse.host_end();
-    for (auto it = begin; it != end; ++it) {
-        if (int sparse_id = *it; is_deleted[sparse_id] == ITEM_NOT_DELETED) {
-            active_ids.push_back(sparse_id);
-        }
-    }
-    return active_ids;
+    return cuda_functions::filter_active_nodes(
+        dense_to_sparse,
+        is_deleted,
+        ITEM_NOT_DELETED,
+        use_gpu);
 }
 
 bool NodeMapping::has_node(const int sparse_id) const {
