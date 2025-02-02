@@ -4,14 +4,15 @@
 #include <vector>
 #include <cstdint>
 #include <tuple>
+#include <random/IndexBasedRandomPicker.h>
+#include <random/WeightBasedRandomPicker.cuh>
+
 #include "NodeMapping.cuh"
 #include "NodeEdgeIndex.cuh"
 
 #ifdef HAS_CUDA
 #include <thrust/sort.h>
 #endif
-
-class RandomPicker;
 
 class TemporalGraph
 {
@@ -24,7 +25,7 @@ private:
     int64_t latest_timestamp; // Track latest edge timestamp
 
 
-    [[nodiscard]] bool is_valid_edge_range(size_t edge_start, size_t edge_end, size_t edge_indices_size) const;
+    [[nodiscard]] static bool is_valid_edge_range(size_t edge_start, size_t edge_end, size_t max_edge_index);
     [[nodiscard]] size_t get_edge_end(
         size_t group_pos,
         size_t group_end_offset,
@@ -47,6 +48,32 @@ private:
         bool forward,
         const DualVector<double> &forward_weights,
         const DualVector<double> &backward_weights);
+
+    size_t pick_group_with_index_picker(
+        IndexBasedRandomPicker* picker,
+        size_t available_groups,
+        size_t base_pos,
+        bool forward,
+        bool use_backward_mode) const;
+
+    size_t pick_group_with_weight_picker(
+        WeightBasedRandomPicker* picker,
+        const DualVector<double>& weights,
+        size_t start,
+        size_t end) const;
+
+    size_t get_forward_group_index(
+        size_t first_possible_group,
+        size_t num_groups,
+        RandomPicker& picker,
+        const DualVector<double>& weights,
+        size_t group_end_offset) const;
+
+    size_t get_backward_group_index(
+        size_t last_possible_group,
+        RandomPicker& picker,
+        const DualVector<double>& weights,
+        bool use_inbound_weights) const;
 
 public:
     NodeEdgeIndex node_index; // Node to edge mappings

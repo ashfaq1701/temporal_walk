@@ -599,6 +599,100 @@ namespace cuda_functions {
             timestamps.host_at(idx)
         };
     }
+
+    template<typename T, typename V>
+    std::pair<size_t, size_t> timestamped_node_group_search_forward(
+        const DualVector<T>& timestamp_group_indices,
+        const size_t group_start,
+        const size_t group_end,
+        const DualVector<T>& edge_indices,
+        const DualVector<V>& timestamps,
+        const V timestamp,
+        const bool use_gpu) {
+
+        if (use_gpu) {
+            #ifdef HAS_CUDA
+            auto ts_data = timestamps.device_data().get();
+            auto edge_idx_data = edge_indices.device_data().get();
+
+            auto it = thrust::upper_bound(
+                thrust::device,
+                timestamp_group_indices.device_begin() + static_cast<int>(group_start),
+                timestamp_group_indices.device_begin() + static_cast<int>(group_end),
+                timestamp,
+                [ts_data, edge_idx_data] __device__ (const V ts_val, const size_t pos) {
+                    return ts_val < ts_data[static_cast<int>(edge_idx_data[static_cast<int>(pos)])];
+                });
+
+            const size_t available = timestamp_group_indices.device_begin() +
+                static_cast<int>(group_end) - it;
+            const size_t start_pos = it - timestamp_group_indices.device_begin();
+            return {start_pos, available};
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
+        }
+
+        auto it = std::upper_bound(
+            timestamp_group_indices.host_begin() + static_cast<int>(group_start),
+            timestamp_group_indices.host_begin() + static_cast<int>(group_end),
+            timestamp,
+            [&timestamps, &edge_indices](const V ts, const size_t pos) {
+                return ts < timestamps[edge_indices[pos]];
+            });
+
+        const size_t available = timestamp_group_indices.host_begin() +
+            static_cast<int>(group_end) - it;
+        const size_t start_pos = it - timestamp_group_indices.host_begin();
+        return {start_pos, available};
+    }
+
+    template<typename T, typename V>
+    std::pair<size_t, size_t> timestamped_node_group_search_backward(
+        const DualVector<T>& timestamp_group_indices,
+        const size_t group_start,
+        const size_t group_end,
+        const DualVector<T>& edge_indices,
+        const DualVector<V>& timestamps,
+        const V timestamp,
+        const bool use_gpu) {
+
+        if (use_gpu) {
+            #ifdef HAS_CUDA
+            auto ts_data = timestamps.device_data().get();
+            auto edge_idx_data = edge_indices.device_data().get();
+
+            auto it = thrust::lower_bound(
+                thrust::device,
+                timestamp_group_indices.device_begin() + static_cast<int>(group_start),
+                timestamp_group_indices.device_begin() + static_cast<int>(group_end),
+                timestamp,
+                [ts_data, edge_idx_data] __device__ (const size_t pos, const V ts_val) {
+                    return ts_data[static_cast<int>(edge_idx_data[static_cast<int>(pos)])] < ts_val;
+                });
+
+            const size_t available = it - (timestamp_group_indices.device_begin() +
+                static_cast<int>(group_start));
+            const size_t end_pos = it - timestamp_group_indices.device_begin();
+            return {end_pos, available};
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
+        }
+
+        auto it = std::lower_bound(
+            timestamp_group_indices.host_begin() + static_cast<int>(group_start),
+            timestamp_group_indices.host_begin() + static_cast<int>(group_end),
+            timestamp,
+            [&timestamps, &edge_indices](const size_t pos, const V ts) {
+                return timestamps[edge_indices[pos]] < ts;
+            });
+
+        const size_t available = it - (timestamp_group_indices.host_begin() +
+            static_cast<int>(group_start));
+        const size_t end_pos = it - timestamp_group_indices.host_begin();
+        return {end_pos, available};
+    }
 }
 
 #endif //CUDA_FUNCTIONS_CUH
