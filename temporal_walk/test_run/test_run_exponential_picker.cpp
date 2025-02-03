@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../src/random/ExponentialIndexRandomPicker.h"
+#include "../src/random/ExponentialIndexRandomPicker.cuh"
 
 constexpr int TOTAL_TIMESTEPS = 100000000;
 
@@ -11,7 +11,7 @@ int main()
     std::cout << "---------------------------------------" << std::endl;
     for (int i = 0; i < 1000; i++)
     {
-        std::cout << random_picker.pick_random(0, TOTAL_TIMESTEPS, true) << std::endl;
+        std::cout << random_picker.pick_random(0, TOTAL_TIMESTEPS, true, false) << std::endl;
     }
 
     std::cout << std::endl << std::endl;
