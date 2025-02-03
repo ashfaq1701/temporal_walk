@@ -45,7 +45,6 @@ find_package(Boost REQUIRED COMPONENTS math)
 
 if(USE_CUDA AND CMAKE_CUDA_COMPILER)
     set(CUDA_SRC_FILES
-            ${CMAKE_SOURCE_DIR}/temporal_walk/src/cuda/DualVector.cu
             ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/EdgeData.cu
             ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/NodeEdgeIndex.cu
             ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/NodeMapping.cu
@@ -62,15 +61,14 @@ if(USE_CUDA AND CMAKE_CUDA_COMPILER)
 else()
     # Original CPU files
     set(SRC_FILES
-            ${CMAKE_SOURCE_DIR}/temporal_walk/src/cuda/DualVector.cpp
-            ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/EdgeData.cpp
-            ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/NodeEdgeIndex.cpp
-            ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/NodeMapping.cpp
-            ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/TemporalGraph.cpp
-            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/ExponentialIndexRandomPicker.cpp
-            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/LinearRandomPicker.cpp
-            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/UniformRandomPicker.cpp
-            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/WeightBasedRandomPicker.cpp
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/EdgeData.cu
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/NodeEdgeIndex.cu
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/NodeMapping.cu
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/TemporalGraph.cu
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/ExponentialIndexRandomPicker.cu
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/LinearRandomPicker.cu
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/UniformRandomPicker.cu
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/WeightBasedRandomPicker.cu
             ${CMAKE_SOURCE_DIR}/temporal_walk/src/core/TemporalWalk.cpp
     )
 endif()

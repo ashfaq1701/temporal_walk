@@ -8,11 +8,22 @@ protected:
     WeightBasedRandomPicker picker;
 
     // Helper to create a DualVector with weights
-    static DualVector<double> create_weight_vector(const std::vector<double>& weights) {
-        DualVector<double> weight_vec(false);  // CPU mode
-        for (double w : weights) {
-            weight_vec.push_back(w);
+    static DualVector<double> create_weight_vector(const std::vector<double>& weights, bool use_gpu = false) {
+        DualVector<double> weight_vec(use_gpu);
+
+        if (use_gpu) {
+            #ifdef HAS_CUDA
+            // Use thrust::copy for GPU
+            const thrust::device_vector<double> d_vec(weights.begin(), weights.end());
+            weight_vec.set_device_vector(d_vec);
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
+        } else {
+            // Direct vector assignment for CPU
+            weight_vec.set_host_vector(weights);
         }
+
         return weight_vec;
     }
 

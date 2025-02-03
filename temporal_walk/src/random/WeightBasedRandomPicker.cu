@@ -24,3 +24,6 @@ int WeightBasedRandomPicker::pick_random(
 
     return static_cast<int>(index);
 }
+
+template int WeightBasedRandomPicker::pick_random<double>(
+    const DualVector<double>&, const int, const int);

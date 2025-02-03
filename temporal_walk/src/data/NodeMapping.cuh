@@ -12,6 +12,9 @@
 #define HOST_DEVICE
 #endif
 
+constexpr short ITEM_DELETED = 1;
+constexpr short ITEM_NOT_DELETED = 1;
+
 struct NodeMapping {
    bool use_gpu;
 
@@ -32,7 +35,17 @@ struct NodeMapping {
    void clear();
    void reserve(size_t size);
 
-   static __device__ void device_mark_node_deleted(int sparse_id, short* deleted_ptr, size_t vector_size);  // Device-specific version
+   #ifdef HAS_CUDA
+   static __device__ void device_mark_node_deleted(
+       const int sparse_id,
+       short* deleted_ptr,
+       const size_t vector_size)
+   {
+      if (sparse_id < vector_size) {
+         deleted_ptr[sparse_id] = ITEM_DELETED;
+      }
+   }
+   #endif
 
    #if HAS_CUDA
    void host_mark_node_deleted(int sparse_id);               // Host-specific version

@@ -22,14 +22,16 @@ add_executable(test_temporal_walk
 target_compile_features(test_temporal_walk PRIVATE cxx_std_17)
 
 if(USE_CUDA AND CMAKE_CUDA_COMPILER)
-    # Set CUDA source properties for SRC_FILES only
+    # Set CUDA source properties for all source and test files
     set_source_files_properties(
             ${CUDA_SRC_FILES}
+            ${TEST_FILES}
             PROPERTIES
             LANGUAGE CUDA
+            CUDA_SOURCE_PROPERTY_FORMAT OBJ
     )
 
-    # Add CUDA compile options including extended lambda
+    # Add CUDA compile options
     target_compile_options(test_temporal_walk PRIVATE
             $<$<COMPILE_LANGUAGE:CUDA>:
             --extended-lambda
@@ -38,24 +40,13 @@ if(USE_CUDA AND CMAKE_CUDA_COMPILER)
             >
     )
 
-    # CUDA-specific settings
+    # Add CUDA-specific definitions
     target_compile_definitions(test_temporal_walk PRIVATE
             HAS_CUDA
             THRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CUDA
     )
-
-    target_link_libraries(test_temporal_walk PRIVATE
-            CUDA::cudart
-            CUDA::cuda_driver
-    )
-
-    set_target_properties(test_temporal_walk PROPERTIES
-            CUDA_SEPARABLE_COMPILATION ON
-            CUDA_ARCHITECTURES 89
-    )
 endif()
 
-# Common libraries and includes
 target_link_libraries(test_temporal_walk PRIVATE
         GTest::gtest
         GTest::gtest_main
