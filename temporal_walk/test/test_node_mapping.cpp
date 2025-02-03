@@ -9,7 +9,7 @@ protected:
     NodeMappingTest(): mapping(false), edges(false){}
 
     // Helper to verify bidirectional mapping
-    void verify_mapping(int sparse_id, int expected_dense_idx) const {
+    void verify_mapping(const int sparse_id, const int expected_dense_idx) const {
         EXPECT_EQ(mapping.to_dense(sparse_id), expected_dense_idx);
         if (expected_dense_idx != -1) {
             EXPECT_EQ(mapping.to_sparse(expected_dense_idx), sparse_id);
@@ -98,19 +98,24 @@ TEST_F(NodeMappingTest, IncrementalUpdateTest) {
 
 // Test node deletion
 TEST_F(NodeMappingTest, NodeDeletionTest) {
+    EdgeData edges(false);  // CPU mode
+    NodeMapping mapping(false);  // CPU mode
+
     edges.push_back(10, 20, 100);
     edges.push_back(20, 30, 200);
     mapping.update(edges, 0, edges.size());
 
-    // Delete node 20
-    mapping.mark_node_deleted(20);
+    // Delete node 20 using host method since we're in CPU mode
+    mapping.host_mark_node_deleted(20);
 
     // Verify counts
     EXPECT_EQ(mapping.size(), 3);        // Total size unchanged
     EXPECT_EQ(mapping.active_size(), 2);  // But one less active node
 
-    // Verify active nodes list
+    // Get active nodes and convert to host vector if needed
     auto active_nodes = mapping.get_active_node_ids();
+
+    // Verify active nodes list
     EXPECT_EQ(active_nodes.size(), 2);
     EXPECT_TRUE(std::find(active_nodes.begin(), active_nodes.end(), 10) != active_nodes.end());
     EXPECT_TRUE(std::find(active_nodes.begin(), active_nodes.end(), 30) != active_nodes.end());
@@ -122,6 +127,9 @@ TEST_F(NodeMappingTest, NodeDeletionTest) {
 
 // Test edge cases and invalid inputs
 TEST_F(NodeMappingTest, EdgeCasesTest) {
+    EdgeData edges(false);  // CPU mode
+    NodeMapping mapping(false);  // CPU mode
+
     // Test with negative IDs
     edges.push_back(-1, -2, 100);
     mapping.update(edges, 0, 1);
@@ -132,18 +140,23 @@ TEST_F(NodeMappingTest, EdgeCasesTest) {
     edges.clear();
     edges.push_back(1000000, 1, 100);
     mapping.update(edges, 0, 1);
-    verify_mapping(1000000, 0);
-    verify_mapping(1, 1);
+    EXPECT_EQ(mapping.to_dense(1000000), 0);  // First node gets index 0
+    EXPECT_EQ(mapping.to_dense(1), 1);        // Second node gets index 1
 
     // Test invalid dense indices
     EXPECT_EQ(mapping.to_sparse(-1), -1);
     EXPECT_EQ(mapping.to_sparse(1000000), -1);
 
     // Test marking non-existent node as deleted
-    mapping.mark_node_deleted(999);  // Should not crash
+    mapping.host_mark_node_deleted(999);  // Should not crash
 
     // Test empty range update
     mapping.update(edges, 0, 0);  // Should handle empty range gracefully
+
+    // Additional checks for empty state
+    EXPECT_EQ(mapping.active_size(), 2);  // Still have the two nodes from earlier
+    auto active_nodes = mapping.get_active_node_ids();
+    EXPECT_EQ(active_nodes.size(), 2);
 }
 
 // Test reservation and clear

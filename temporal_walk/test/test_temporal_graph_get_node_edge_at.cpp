@@ -3,16 +3,16 @@
 #include "../src/random/IndexBasedRandomPicker.h"
 
 // Test-specific picker implementations
-class FirstIndexPicker : public IndexBasedRandomPicker {
+class FirstIndexPicker final : public IndexBasedRandomPicker {
 public:
-    [[nodiscard]] int pick_random(int start, int end, bool prioritize_end) override {
+    [[nodiscard]] int pick_random(const int start, const int end, const bool prioritize_end, const bool use_gpu) override {
         return start;
     }
 };
 
-class LastIndexPicker : public IndexBasedRandomPicker {
+class LastIndexPicker final : public IndexBasedRandomPicker {
 public:
-    [[nodiscard]] int pick_random(int start, int end, bool prioritize_end) override {
+    [[nodiscard]] int pick_random(const int start, const int end, const bool prioritize_end, const bool use_gpu) override {
         return end - 1;
     }
 };
@@ -40,7 +40,7 @@ protected:
 
 // Test forward walks from a node
 TEST_F(TemporalGraphGetNodeEdgeAtTest, ForwardWalkTest) {
-    auto edges = std::vector<std::tuple<int, int, int64_t>>{
+    const auto edges = std::vector<std::tuple<int, int, int64_t>>{
         {10, 20, 100}, // Node 10 outbound group 1
         {10, 30, 100},
         {10, 40, 102}, // Node 10 outbound group 2
@@ -72,7 +72,7 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, ForwardWalkTest) {
 }
 
 TEST_F(TemporalGraphGetNodeEdgeAtTest, BackwardWalkTest) {
-    auto edges = std::vector<std::tuple<int, int, int64_t>>{
+    const auto edges = std::vector<std::tuple<int, int, int64_t>>{
         {20, 10, 100}, // Node 10 inbound: ts 100 -> 103
         {30, 10, 101}, // From upstream (source) nodes: 20,30,40,50
         {40, 10, 102}, // To downstream node: 10
@@ -125,7 +125,7 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, BackwardWalkTest) {
 
 // Test edge cases and invalid inputs
 TEST_F(TemporalGraphGetNodeEdgeAtTest, EdgeCasesTest) {
-    auto edges = std::vector<std::tuple<int, int, int64_t>>{
+    const auto edges = std::vector<std::tuple<int, int, int64_t>>{
         {10, 20, 100}, // Node 10 outbound: ts 100,101
         {10, 30, 101}, // Node 10 -> Nodes 20,30
     };
@@ -155,7 +155,7 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, EdgeCasesTest) {
 
 // Test random selection within timestamp groups
 TEST_F(TemporalGraphGetNodeEdgeAtTest, RandomSelectionTest) {
-    auto edges = std::vector<std::tuple<int, int, int64_t>>{
+    const auto edges = std::vector<std::tuple<int, int, int64_t>>{
         {10, 20, 100}, // Group 1: ts 100
         {10, 30, 100},
         {10, 40, 100},
@@ -179,7 +179,7 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, RandomSelectionTest) {
 
 // Test exact timestamp matching
 TEST_F(TemporalGraphGetNodeEdgeAtTest, ExactTimestampTest) {
-    auto edges = std::vector<std::tuple<int, int, int64_t>>{
+    const auto edges = std::vector<std::tuple<int, int, int64_t>>{
         // Edges for backward walks (upstream -> node 10)
         {20, 10, 100}, // Upstream nodes 20,30,40 -> downstream node 10
         {30, 10, 101},
@@ -205,7 +205,7 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, ExactTimestampUndirectedTest) {
     // Create undirected graph
     graph = std::make_unique<TemporalGraph>(false, false);
 
-    auto edges = std::vector<std::tuple<int, int, int64_t>>{
+    const auto edges = std::vector<std::tuple<int, int, int64_t>>{
         // Edges connecting to node 10
         {10, 20, 100}, // Will be normalized (stored as min source, max target)
         {30, 10, 101}, // These edges connect node 10 with 20,30,40,50,60,70

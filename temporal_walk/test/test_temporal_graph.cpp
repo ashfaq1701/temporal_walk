@@ -3,17 +3,17 @@
 #include "../src/random/IndexBasedRandomPicker.h"
 
 // Test-specific picker that always selects first element
-class FirstIndexPicker : public IndexBasedRandomPicker {
+class FirstIndexPicker final : public IndexBasedRandomPicker {
 public:
-    [[nodiscard]] int pick_random(int start, int end, bool prioritize_end) override {
+    [[nodiscard]] int pick_random(const int start, const int end, const bool prioritize_end, const bool use_gpu) override {
         return start;
     }
 };
 
 // Test-specific picker that always selects last element
-class LastIndexPicker : public IndexBasedRandomPicker {
+class LastIndexPicker final : public IndexBasedRandomPicker {
 public:
-    [[nodiscard]] int pick_random(int start, int end, bool prioritize_end) override {
+    [[nodiscard]] int pick_random(const int start, const int end, const bool prioritize_end, const bool use_gpu) override {
         return end - 1;
     }
 };
@@ -46,7 +46,7 @@ TEST_F(TemporalGraphTest, EmptyStateTest) {
 
 // Test basic edge addition
 TEST_F(TemporalGraphTest, BasicEdgeAdditionTest) {
-    auto edges = create_edges({
+    const auto edges = create_edges({
         {1, 2, 100},
         {2, 3, 200},
         {3, 1, 300}
@@ -118,7 +118,7 @@ TEST_F(TemporalGraphTest, TimeWindowTest) {
     graph = std::make_unique<TemporalGraph>(true, false, 100);
 
     // Add edges spanning the time window
-    auto edges = create_edges({
+    const auto edges = create_edges({
         {1, 2, 100},
         {2, 3, 150},
         {3, 4, 249}  // This should cause deletion of first edge
@@ -139,7 +139,7 @@ TEST_F(TemporalGraphTest, EdgeAdditionEdgeCasesTest) {
     EXPECT_TRUE(graph->get_edges().empty());
 
     // Test single edge
-    auto single_edge = create_edges({{1, 2, 100}});
+    const auto single_edge = create_edges({{1, 2, 100}});
     graph->add_multiple_edges(single_edge);
     EXPECT_EQ(graph->get_edges().size(), 1);
 
@@ -165,7 +165,7 @@ TEST_F(TemporalGraphTest, NodeDeletionTest) {
     graph = std::make_unique<TemporalGraph>(true, false, 100);  // 100 time unit window
 
     // Add initial edges
-    auto edges1 = create_edges({
+    const auto edges1 = create_edges({
         {1, 2, 100},
         {2, 3, 100},
         {3, 1, 100}
@@ -189,7 +189,7 @@ TEST_F(TemporalGraphTest, NodeDeletionTest) {
 TEST_F(TemporalGraphTest, UndirectedGraphEdgeAdditionTest) {
     graph = std::make_unique<TemporalGraph>(false, false);  // Undirected
 
-    auto edges = create_edges({
+    const auto edges = create_edges({
         {2, 1, 100},  // Should be stored as (1,2,100)
         {3, 1, 200},  // Should be stored as (1,3,200)
     });
@@ -290,7 +290,7 @@ TEST_F(TemporalGraphTest, CountNodeTimestampsUndirectedTest) {
    graph = std::make_unique<TemporalGraph>(false, false);
 
    // Add edges - note that order will be normalized (smaller ID becomes source)
-   auto edges = create_edges({
+   const auto edges = create_edges({
        {2, 1, 100},  // Will be stored as (1,2,100)
        {3, 1, 100},  // Will be stored as (1,3,100)
        {1, 2, 200},  // Will be stored as (1,2,200)
@@ -318,7 +318,7 @@ TEST_F(TemporalGraphTest, CountNodeTimestampsUndirectedTest) {
 
 TEST_F(TemporalGraphTest, CountNodeTimestampsDuplicatesTest) {
     // Test handling of duplicate timestamps for a node
-    auto edges = create_edges({
+    const auto edges = create_edges({
         {1, 2, 100},  // t0 outbound from node 1
         {1, 3, 100},  // t0 duplicate outbound from node 1
         {1, 4, 100},  // t0 triplicate outbound from node 1
@@ -394,7 +394,7 @@ TEST_F(TemporalGraphTest, GetEdgeAtTest) {
 
 TEST_F(TemporalGraphTest, GetEdgeAtDuplicateTimestampsTest) {
     // Setup graph with multiple edges in same timestamp groups
-    auto edges = create_edges({
+    const auto edges = create_edges({
         {10, 20, 100},  // Group 0: three edges at 100
         {30, 40, 100},
         {50, 60, 100},
@@ -421,7 +421,7 @@ TEST_F(TemporalGraphTest, GetEdgeAtDuplicateTimestampsTest) {
 
 TEST_F(TemporalGraphTest, GetEdgeAtBoundaryConditionsTest) {
     // Test exact timestamp boundaries
-    auto edges = create_edges({
+    const auto edges = create_edges({
         {10, 20, 100},
         {30, 40, 200},
         {50, 60, 300}
