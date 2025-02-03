@@ -1,10 +1,12 @@
 #include <random>
 #include <cmath>
 #include <stdexcept>
-#include "LinearRandomPicker.h"
+#include "LinearRandomPicker.cuh"
+
+#include <cuda/cuda_random_functions.cuh>
 
 // Derivation available in derivations folder
-int LinearRandomPicker::pick_random(const int start, const int end, const bool prioritize_end) {
+int LinearRandomPicker::pick_random(const int start, const int end, const bool prioritize_end, const bool use_gpu) {
     if (start >= end) {
         throw std::invalid_argument("Start must be less than end.");
     }
@@ -19,8 +21,7 @@ int LinearRandomPicker::pick_random(const int start, const int end, const bool p
                                    (static_cast<long double>(len_seq) + 1.0L) / 2.0L;
 
     // Generate random value in [0, total_weight)
-    std::uniform_real_distribution<long double> dist(0.0L, total_weight);
-    const long double random_value = dist(thread_local_gen);
+    const double random_value = cuda_random_functions::generate_uniform_random(0.0L, total_weight, use_gpu);
 
     // For both cases, we solve quadratic equation i² + i - 2r = 0
     // where r is our random value (or transformed random value)

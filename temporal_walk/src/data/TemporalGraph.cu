@@ -245,14 +245,14 @@ size_t TemporalGraph::get_timestamped_group_idx(
     const int64_t timestamp,
     const bool forward,
     const DualVector<double> &forward_weights,
-    const DualVector<double> &backward_weights) {
+    const DualVector<double> &backward_weights) const {
     if (forward) {
         const size_t first_group = edges.find_group_after_timestamp(timestamp);
         const size_t available_groups = num_groups - first_group;
         if (available_groups == 0) return static_cast<size_t>(-1);
 
         if (auto *index_picker = dynamic_cast<IndexBasedRandomPicker *>(&picker)) {
-            const size_t index = index_picker->pick_random(0, static_cast<int>(available_groups), false);
+            const size_t index = index_picker->pick_random(0, static_cast<int>(available_groups), false, use_gpu);
             if (index >= available_groups) return static_cast<size_t>(-1);
             return first_group + index;
         } else {
@@ -268,7 +268,7 @@ size_t TemporalGraph::get_timestamped_group_idx(
 
         const size_t available_groups = last_group + 1;
         if (auto *index_picker = dynamic_cast<IndexBasedRandomPicker *>(&picker)) {
-            const size_t index = index_picker->pick_random(0, static_cast<int>(available_groups), true);
+            const size_t index = index_picker->pick_random(0, static_cast<int>(available_groups), true, use_gpu);
             if (index >= available_groups) return static_cast<size_t>(-1);
             return last_group - (available_groups - index - 1);
         } else {
@@ -286,10 +286,10 @@ size_t TemporalGraph::get_untimed_group_idx(
    const size_t num_groups,
    const bool forward,
    const DualVector<double>& forward_weights,
-   const DualVector<double>& backward_weights) {
+   const DualVector<double>& backward_weights) const {
 
     if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
-        const size_t index = index_picker->pick_random(0, static_cast<int>(num_groups), !forward);
+        const size_t index = index_picker->pick_random(0, static_cast<int>(num_groups), !forward, use_gpu);
         if (index >= num_groups) return static_cast<size_t>(-1);
         return index;
     } else {
@@ -311,7 +311,7 @@ size_t TemporalGraph::get_untimed_group_idx(
 std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(
    RandomPicker& picker,
    const int64_t timestamp,
-   const bool forward) const {
+   const bool forward) {
 
     if (edges.empty()) return {-1, -1, -1};
 
@@ -403,7 +403,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
             if (available == 0) return {-1, -1, -1};
 
             if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
-                const size_t index = index_picker->pick_random(0, static_cast<int>(available), false);
+                const size_t index = index_picker->pick_random(0, static_cast<int>(available), false, use_gpu);
                 if (index >= available) return {-1, -1, -1};
                 group_pos = start_pos + index;
             } else {
@@ -427,7 +427,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
             if (available == 0) return {-1, -1, -1};
 
             if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
-                const size_t index = index_picker->pick_random(0, static_cast<int>(available), true);
+                const size_t index = index_picker->pick_random(0, static_cast<int>(available), true, use_gpu);
                 if (index >= available) return {-1, -1, -1};
                 group_pos = end_pos - 1 - (available - index - 1);
             } else {
@@ -446,7 +446,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
         if (num_groups == 0) return {-1, -1, -1};
 
         if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
-            const size_t index = index_picker->pick_random(0, static_cast<int>(num_groups), !forward);
+            const size_t index = index_picker->pick_random(0, static_cast<int>(num_groups), !forward, use_gpu);
             if (index >= num_groups) return {-1, -1, -1};
             group_pos = forward
                 ? group_start_offset + index

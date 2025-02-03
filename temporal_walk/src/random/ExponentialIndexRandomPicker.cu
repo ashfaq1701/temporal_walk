@@ -1,11 +1,12 @@
-#include "ExponentialIndexRandomPicker.h"
+#include "ExponentialIndexRandomPicker.cuh"
 #include <random>
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
+#include <cuda/cuda_random_functions.cuh>
 
 // Derivation available in derivations folder
-int ExponentialIndexRandomPicker::pick_random(const int start, const int end, const bool prioritize_end) {
+int ExponentialIndexRandomPicker::pick_random(const int start, const int end, const bool prioritize_end, const bool use_gpu) {
     if (start >= end) {
         throw std::invalid_argument("Start must be less than end.");
     }
@@ -13,8 +14,7 @@ int ExponentialIndexRandomPicker::pick_random(const int start, const int end, co
     const int len_seq = end - start;
 
     // Generate uniform random number between 0 and 1
-    std::uniform_real_distribution<double> dist(0.0, 1.0);
-    const double u = dist(thread_local_gen);
+    const double u = cuda_random_functions::generate_uniform_random(0.0, 1.0, use_gpu);
 
     double k;
     if (len_seq < 710) {

@@ -3,9 +3,9 @@
 #include <pybind11/numpy.h>
 #include <optional>
 #include "../src/core/TemporalWalk.h"
-#include "../src/random/LinearRandomPicker.h"
-#include "../src/random/ExponentialIndexRandomPicker.h"
-#include "../src/random/UniformRandomPicker.h"
+#include "../src/random/LinearRandomPicker.cuh"
+#include "../src/random/ExponentialIndexRandomPicker.cuh"
+#include "../src/random/UniformRandomPicker.cuh"
 #include <stdexcept>
 
 

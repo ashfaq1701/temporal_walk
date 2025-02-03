@@ -1,4 +1,5 @@
 #include "WeightBasedRandomPicker.cuh"
+#include "../cuda/cuda_random_functions.cuh"
 
 template<typename T>
 int WeightBasedRandomPicker::pick_random(
@@ -13,42 +14,13 @@ int WeightBasedRandomPicker::pick_random(
         return -1;
     }
 
-    if (cumulative_weights.is_gpu()) {
-        #ifdef HAS_CUDA
-        // Use CUDA random generator
-        thrust::default_random_engine rng;
-        thrust::uniform_real_distribution<T> dist(0.0, cumulative_weights.device_at(group_end - 1));
-        const T rand_val = dist(rng);
+    // Call the platform-specific implementation
+    auto [rand_val, index] = cuda_random_functions::pick_random_with_weights(
+        cumulative_weights,
+        static_cast<size_t>(group_start),
+        static_cast<size_t>(group_end),
+        cumulative_weights.is_gpu()
+    );
 
-        auto it = thrust::upper_bound(
-            thrust::device,
-            cumulative_weights.device_begin() + group_start,
-            cumulative_weights.device_begin() + group_end,
-            rand_val
-        );
-
-        return group_start + thrust::distance(
-            cumulative_weights.device_begin() + group_start,
-            it
-        );
-        #else
-        throw std::runtime_error("GPU support not compiled in");
-        #endif
-    } else {
-        // Use CPU random generator
-        thread_local std::mt19937 rng(std::random_device{}());
-        std::uniform_real_distribution<T> dist(0.0, cumulative_weights.host_at(group_end - 1));
-        const T rand_val = dist(rng);
-
-        auto it = std::upper_bound(
-            cumulative_weights.host_begin() + group_start,
-            cumulative_weights.host_begin() + group_end,
-            rand_val
-        );
-
-        return group_start + std::distance(
-            cumulative_weights.host_begin() + group_start,
-            it
-        );
-    }
+    return static_cast<int>(index);
 }

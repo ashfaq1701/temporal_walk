@@ -2,9 +2,9 @@
 
 #include <iostream>
 #include "../utils/utils.h"
-#include "../random/UniformRandomPicker.h"
-#include "../random/LinearRandomPicker.h"
-#include "../random/ExponentialIndexRandomPicker.h"
+#include "../random/UniformRandomPicker.cuh"
+#include "../random/LinearRandomPicker.cuh"
+#include "../random/ExponentialIndexRandomPicker.cuh"
 #include "../random/WeightBasedRandomPicker.cuh"
 
 

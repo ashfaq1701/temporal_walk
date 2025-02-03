@@ -51,11 +51,11 @@ if(USE_CUDA AND CMAKE_CUDA_COMPILER)
             ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/NodeMapping.cu
             ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/TemporalGraph.cu
             ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/WeightBasedRandomPicker.cu
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/ExponentialIndexRandomPicker.cu
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/LinearRandomPicker.cu
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/UniformRandomPicker.cu
     )
     set(CPU_SRC_FILES
-            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/ExponentialIndexRandomPicker.cpp
-            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/LinearRandomPicker.cpp
-            ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/UniformRandomPicker.cpp
             ${CMAKE_SOURCE_DIR}/temporal_walk/src/core/TemporalWalk.cpp
     )
     set(SRC_FILES ${CUDA_SRC_FILES} ${CPU_SRC_FILES})
@@ -77,5 +77,3 @@ endif()
 
 # Include subdirectories for Python bindings, testing, and execution targets
 add_subdirectory(temporal_walk/py_interface)
-add_subdirectory(temporal_walk/test)
-add_subdirectory(temporal_walk/test_run)

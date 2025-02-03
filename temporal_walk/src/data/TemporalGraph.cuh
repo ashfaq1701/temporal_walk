@@ -33,21 +33,21 @@ private:
         int dense_idx,
         bool forward) const;
 
-    static size_t get_timestamped_group_idx(
+    size_t get_timestamped_group_idx(
         const EdgeData &edges,
         RandomPicker &picker,
         size_t num_groups,
         int64_t timestamp,
         bool forward,
         const DualVector<double> &forward_weights,
-        const DualVector<double> &backward_weights);
+        const DualVector<double> &backward_weights) const;
 
-    static size_t get_untimed_group_idx(
+    size_t get_untimed_group_idx(
         RandomPicker &picker,
         size_t num_groups,
         bool forward,
         const DualVector<double> &forward_weights,
-        const DualVector<double> &backward_weights);
+        const DualVector<double> &backward_weights) const;
 
     size_t pick_group_with_index_picker(
         IndexBasedRandomPicker* picker,
@@ -101,7 +101,7 @@ public:
     // Edge selection
     [[nodiscard]] std::tuple<int, int, int64_t> get_edge_at(
         RandomPicker& picker, int64_t timestamp = -1,
-        bool forward = true) const;
+        bool forward = true);
 
     [[nodiscard]] std::tuple<int, int, int64_t> get_node_edge_at(int node_id,
                                                                  RandomPicker& picker,
