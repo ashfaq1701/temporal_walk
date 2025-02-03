@@ -19,7 +19,7 @@ int main()
     std::cout << "---------------------------------------" << std::endl;
     for (int i = 0; i < 1000; i++)
     {
-        std::cout << random_picker.pick_random(0, TOTAL_TIMESTEPS, false) << std::endl;
+        std::cout << random_picker.pick_random(0, TOTAL_TIMESTEPS, false, false) << std::endl;
     }
 
     return 0;
