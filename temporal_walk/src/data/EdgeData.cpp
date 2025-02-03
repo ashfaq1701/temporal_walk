@@ -1,6 +1,7 @@
 #include "EdgeData.h"
 #include <algorithm>
 #include <iostream>
+#include <cmath>
 
 void EdgeData::reserve(size_t size) {
     sources.reserve(size);

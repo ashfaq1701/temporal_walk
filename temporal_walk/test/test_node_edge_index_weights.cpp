@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include <cmath>
 #include "../src/config/constants.h"
 #include "../src/data/NodeEdgeIndex.h"
 #include "../src/data/NodeMapping.h"

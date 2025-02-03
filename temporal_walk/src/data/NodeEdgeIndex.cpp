@@ -1,6 +1,7 @@
 #include "NodeEdgeIndex.h"
 
 #include <iostream>
+#include <cmath>
 
 void NodeEdgeIndex::clear() {
    // Clear edge CSR structures
