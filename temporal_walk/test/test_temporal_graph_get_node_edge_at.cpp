@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/data/TemporalGraph.h"
+#include "../src/data/TemporalGraph.cuh"
 #include "../src/random/IndexBasedRandomPicker.h"
 
 // Test-specific picker implementations
