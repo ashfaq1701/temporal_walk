@@ -14,15 +14,45 @@ int WeightBasedRandomPicker::pick_random(
         return -1;
     }
 
-    // Call the platform-specific implementation
-    auto [rand_val, index] = cuda_random_functions::pick_random_with_weights(
-        cumulative_weights,
-        static_cast<size_t>(group_start),
-        static_cast<size_t>(group_end),
-        cumulative_weights.is_gpu()
-    );
+    const bool use_gpu = cumulative_weights.is_gpu();
 
-    return static_cast<int>(index);
+    // Get start and end sums
+    const T start_sum = (group_start > 0) ?
+        (use_gpu ? cumulative_weights.device_at(group_start - 1)
+                 : cumulative_weights.host_at(group_start - 1))
+        : T{0};
+    const T end_sum = use_gpu ? cumulative_weights.device_at(group_end - 1)
+                             : cumulative_weights.host_at(group_end - 1);
+
+    if (end_sum <= start_sum) {
+        return -1;
+    }
+
+    // Generate random value between [start_sum, end_sum]
+    const T random_val = start_sum +
+        cuda_random_functions::generate_uniform_random(T{0}, end_sum - start_sum, use_gpu);
+
+    // Find the index where random_val falls using the appropriate search
+    if (use_gpu) {
+        #ifdef HAS_CUDA
+        auto it = thrust::lower_bound(
+            thrust::device,
+            cumulative_weights.device_begin() + group_start,
+            cumulative_weights.device_begin() + group_end,
+            random_val
+        );
+        return static_cast<int>(thrust::distance(cumulative_weights.device_begin(), it));
+        #else
+        throw std::runtime_error("GPU support not compiled in");
+        #endif
+    } else {
+        auto it = std::lower_bound(
+            cumulative_weights.host_begin() + group_start,
+            cumulative_weights.host_begin() + group_end,
+            random_val
+        );
+        return static_cast<int>(std::distance(cumulative_weights.host_begin(), it));
+    }
 }
 
 template int WeightBasedRandomPicker::pick_random<double>(
