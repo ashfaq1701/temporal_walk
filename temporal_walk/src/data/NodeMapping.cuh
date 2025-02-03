@@ -13,7 +13,7 @@
 #endif
 
 constexpr short ITEM_DELETED = 1;
-constexpr short ITEM_NOT_DELETED = 1;
+constexpr short ITEM_NOT_DELETED = 0;
 
 struct NodeMapping {
    bool use_gpu;
