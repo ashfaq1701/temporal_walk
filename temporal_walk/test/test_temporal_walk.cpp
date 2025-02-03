@@ -51,7 +51,7 @@ protected:
     }
 
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(false, -1, true, -1);
+        temporal_walk = std::make_unique<TemporalWalk>(false, false, -1, true, -1);
         temporal_walk->add_multiple_edges(sample_edges);
     }
 
@@ -62,7 +62,7 @@ protected:
 class TimescaleBoundedTemporalWalkTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(true, -1, true, 10.0);
+        temporal_walk = std::make_unique<TemporalWalk>(true, false, -1, true, 10.0);
         temporal_walk->add_multiple_edges({
             // Node 1's outgoing edges
             {1, 2, 100},

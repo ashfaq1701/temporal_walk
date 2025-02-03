@@ -36,23 +36,24 @@ protected:
 
     // Helper to get individual weights for a node
     static std::vector<double> get_individual_weights(
-        const DualVector<double>& cumulative,
-        const DualVector<size_t>& offsets,
-        const size_t node)
-    {
+        const DualVector<double> &cumulative,
+        const DualVector<size_t> &offsets,
+        const size_t node) {
+        // First get host data
         const auto host_cumulative = cumulative.to_vector();
         const auto host_offsets = offsets.to_vector();
 
-        std::vector<double> weights;
-        size_t start = host_offsets[node];
-        size_t end = host_offsets[node + 1];
+        // Get node's range
+        const size_t start = host_offsets[node];
+        const size_t end = host_offsets[node + 1];
 
-        if (start < end) {
-            weights.push_back(host_cumulative[start]);
-            for (size_t i = start + 1; i < end; i++) {
-                weights.push_back(host_cumulative[i] - host_cumulative[i-1]);
-            }
+        // Calculate individual weights
+        std::vector<double> weights;
+        weights.push_back(host_cumulative[start]);
+        for (size_t i = start; i < end; i++) {
+            weights.push_back(host_cumulative[i] - host_cumulative[i - 1]);
         }
+
         return weights;
     }
 

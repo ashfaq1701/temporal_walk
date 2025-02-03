@@ -81,41 +81,45 @@ namespace cuda_functions {
         }
     }
 
-    // For computing normalized cumulative weights
     template<typename T>
-    void compute_cumulative_weights(
-        DualVector<T>& weights,
-        double total_sum,
-        size_t start_pos,
-        size_t end_pos,
-        const bool use_gpu) {
+    void compute_cumulative_weights(DualVector<T>& weights, double total_sum, size_t start, size_t end, bool use_gpu) {
+        if (start >= end || end > weights.size()) {
+            return;
+        }
 
         if (use_gpu) {
             #ifdef HAS_CUDA
+            // First normalize weights
             auto weight_data = weights.device_data().get();
-            const double inv_sum = 1.0 / total_sum;
-
+            const T inv_sum = static_cast<T>(1.0 / total_sum);
             thrust::for_each(thrust::device,
-                thrust::counting_iterator<size_t>(start_pos),
-                thrust::counting_iterator<size_t>(end_pos),
+                thrust::counting_iterator<size_t>(start),
+                thrust::counting_iterator<size_t>(end),
                 [=] __device__ (size_t i) {
                     weight_data[i] *= inv_sum;
-                });
+                }
+            );
+
+            // Then compute prefix sum
             thrust::inclusive_scan(thrust::device,
-                weights.device_begin() + start_pos,
-                weights.device_begin() + end_pos,
-                weights.device_begin() + start_pos);
-            return;
+                weights.device_begin() + start,
+                weights.device_begin() + end,
+                weights.device_begin() + start
+            );
             #else
             throw std::runtime_error("GPU support not compiled in");
             #endif
-        }
+        } else {
+            // First normalize
+            const T inv_sum = static_cast<T>(1.0 / total_sum);
+            for (size_t i = start; i < end; i++) {
+                weights[i] *= inv_sum;
+            }
 
-        double cumsum = 0.0;
-        for (size_t pos = start_pos; pos < end_pos; pos++) {
-            weights[pos] /= total_sum;
-            cumsum += weights[pos];
-            weights[pos] = cumsum;
+            // Then compute prefix sum
+            for (size_t i = start + 1; i < end; i++) {
+                weights[i] += weights[i-1];
+            }
         }
     }
 
