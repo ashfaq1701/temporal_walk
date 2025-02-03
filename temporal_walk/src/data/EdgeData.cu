@@ -46,6 +46,8 @@ void EdgeData::push_back(const int src, const int tgt, const int64_t ts) {
 
 std::vector<std::tuple<int, int, int64_t>> EdgeData::get_edges() {
     std::vector<std::tuple<int, int, int64_t>> edges;
+
+    if (timestamps.empty()) return edges;
     edges.reserve(sources.size());
 
     for (int i = 0; i < sources.size(); i++) {
