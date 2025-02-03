@@ -311,7 +311,7 @@ size_t TemporalGraph::get_untimed_group_idx(
 std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(
    RandomPicker& picker,
    const int64_t timestamp,
-   const bool forward) {
+   const bool forward) const {
 
     if (edges.empty()) return {-1, -1, -1};
 
