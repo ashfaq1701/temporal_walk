@@ -47,7 +47,7 @@ struct NodeMapping {
    }
    #endif
 
-   #if HAS_CUDA
+   #ifndef  HAS_CUDA
    void host_mark_node_deleted(int sparse_id);               // Host-specific version
    #endif
 
