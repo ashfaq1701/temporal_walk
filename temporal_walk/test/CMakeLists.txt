@@ -15,18 +15,39 @@ set(TEST_FILES
 )
 
 if(USE_CUDA AND CMAKE_CUDA_COMPILER)
+    find_package(CUDAToolkit REQUIRED)
+    set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
+
     set(CUDA_OPTIONS
             $<$<COMPILE_LANGUAGE:CUDA>:
             --extended-lambda
             --expt-relaxed-constexpr
             -Xcompiler=-fPIC
+            --relocatable-device-code=true
+            -rdc=true
             >
     )
-    set(CUDA_LIBS CUDA::cudart CUDA::cuda_driver)
+    set(CUDA_LIBS
+            CUDA::cudart
+            CUDA::cuda_driver
+            CUDA::cublas
+            CUDA::nvrtc
+            cuda
+            cudart
+    )
+
+    # Mark all source files as CUDA
     set_source_files_properties(
             ${CUDA_SRC_FILES}
+            ${TEST_FILES}
             PROPERTIES
             LANGUAGE CUDA
+    )
+
+    add_executable(test_temporal_walk ${TEST_FILES} ${SRC_FILES})
+    set_target_properties(test_temporal_walk PROPERTIES
+            CUDA_SEPARABLE_COMPILATION ON
+            CUDA_RESOLVE_DEVICE_SYMBOLS ON
     )
 else()
     set(CUDA_OPTIONS "")
@@ -36,9 +57,8 @@ else()
             PROPERTIES
             LANGUAGE CXX
     )
+    add_executable(test_temporal_walk ${TEST_FILES} ${SRC_FILES})
 endif()
-
-add_executable(test_temporal_walk ${TEST_FILES} ${SRC_FILES})
 
 target_compile_features(test_temporal_walk PRIVATE cxx_std_17)
 target_compile_options(test_temporal_walk PRIVATE ${CUDA_OPTIONS})
