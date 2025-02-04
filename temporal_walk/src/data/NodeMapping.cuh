@@ -47,9 +47,7 @@ struct NodeMapping {
    }
    #endif
 
-   #ifndef  HAS_CUDA
    void host_mark_node_deleted(int sparse_id);               // Host-specific version
-   #endif
 
    [[nodiscard]] bool has_node(int sparse_id) const;
    [[nodiscard]] std::vector<int> get_all_sparse_ids() const;
