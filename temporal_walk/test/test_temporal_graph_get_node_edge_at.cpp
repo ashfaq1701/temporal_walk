@@ -17,14 +17,14 @@ public:
     }
 };
 
-class TemporalGraphGetNodeEdgeAtTest : public ::testing::Test {
+class TemporalGraphGetNodeEdgeAtTest : public ::testing::TestWithParam<bool> {
 protected:
     std::unique_ptr<TemporalGraph> graph;
     std::unique_ptr<FirstIndexPicker> first_picker;
     std::unique_ptr<LastIndexPicker> last_picker;
 
     void SetUp() override {
-        graph = std::make_unique<TemporalGraph>(true, false); // directed graph
+        graph = std::make_unique<TemporalGraph>(true, GetParam()); // directed graph
         first_picker = std::make_unique<FirstIndexPicker>();
         last_picker = std::make_unique<LastIndexPicker>();
     }
@@ -203,7 +203,7 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, ExactTimestampTest) {
 // Test exact timestamp matching for undirected graphs
 TEST_F(TemporalGraphGetNodeEdgeAtTest, ExactTimestampUndirectedTest) {
     // Create undirected graph
-    graph = std::make_unique<TemporalGraph>(false, false);
+    graph = std::make_unique<TemporalGraph>(false, GetParam());
 
     const auto edges = std::vector<std::tuple<int, int, int64_t>>{
         // Edges connecting to node 10
@@ -231,3 +231,23 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, ExactTimestampUndirectedTest) {
     edge = graph->get_node_edge_at(20, *first_picker, 100, true);
     verify_edge(edge, 20, 30, 104);
 }
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    TemporalGraphGetNodeEdgeAtTest,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    TemporalGraphGetNodeEdgeAtTest,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif

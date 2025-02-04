@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
 #include "../src/data/NodeMapping.cuh"
 
-class NodeMappingTest : public ::testing::Test {
+class NodeMappingTest : public ::testing::TestWithParam<bool> {
 protected:
     NodeMapping mapping;
     EdgeData edges;
 
-    NodeMappingTest(): mapping(false), edges(false){}
+    NodeMappingTest(): mapping(GetParam()), edges(GetParam()){}
 
     // Helper to verify bidirectional mapping
     void verify_mapping(const int sparse_id, const int expected_dense_idx) const {
@@ -98,8 +98,8 @@ TEST_F(NodeMappingTest, IncrementalUpdateTest) {
 
 // Test node deletion
 TEST_F(NodeMappingTest, NodeDeletionTest) {
-    EdgeData edges(false);  // CPU mode
-    NodeMapping mapping(false);  // CPU mode
+    EdgeData edges(GetParam());  // CPU mode
+    NodeMapping mapping(GetParam());  // CPU mode
 
     edges.push_back(10, 20, 100);
     edges.push_back(20, 30, 200);
@@ -127,8 +127,8 @@ TEST_F(NodeMappingTest, NodeDeletionTest) {
 
 // Test edge cases and invalid inputs
 TEST_F(NodeMappingTest, EdgeCasesTest) {
-    EdgeData edges(false);  // CPU mode
-    NodeMapping mapping(false);  // CPU mode
+    EdgeData edges(GetParam());  // CPU mode
+    NodeMapping mapping(GetParam());  // CPU mode
 
     // Test with negative IDs
     edges.push_back(-1, -2, 100);
@@ -171,3 +171,23 @@ TEST_F(NodeMappingTest, ReservationAndClearTest) {
     EXPECT_EQ(mapping.active_size(), 0);
     EXPECT_FALSE(mapping.has_node(10));
 }
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    NodeMappingTest,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    NodeMappingTest,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif

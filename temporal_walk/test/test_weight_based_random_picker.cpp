@@ -2,13 +2,13 @@
 #include "../src/random/WeightBasedRandomPicker.cuh"
 #include "../src/cuda/DualVector.cuh"
 
-class WeightBasedRandomPickerTest : public ::testing::Test
+class WeightBasedRandomPickerTest : public ::testing::TestWithParam<bool>
 {
 protected:
     WeightBasedRandomPicker picker;
 
     // Helper to create a DualVector with weights
-    static DualVector<double> create_weight_vector(const std::vector<double>& weights, bool use_gpu = false) {
+    static DualVector<double> create_weight_vector(const std::vector<double>& weights, bool use_gpu) {
         DualVector<double> weight_vec(use_gpu);
 
         if (use_gpu) {
@@ -33,7 +33,7 @@ protected:
                                const int end,
                                const int num_samples = 1000)
     {
-        auto weights = create_weight_vector(init_weights);
+        auto weights = create_weight_vector(init_weights, GetParam());
         std::map<int, int> sample_counts;
         for (int i = 0; i < num_samples; i++)
         {
@@ -54,7 +54,7 @@ protected:
 
 TEST_F(WeightBasedRandomPickerTest, ValidationChecks)
 {
-    const auto weights = create_weight_vector({0.2, 0.5, 0.7, 1.0});
+    const auto weights = create_weight_vector({0.2, 0.5, 0.7, 1.0}, GetParam());
 
     // Invalid start index
     EXPECT_EQ(picker.pick_random(weights, -1, 2), -1);
@@ -82,7 +82,7 @@ TEST_F(WeightBasedRandomPickerTest, SubrangeSampling)
 
 TEST_F(WeightBasedRandomPickerTest, SingleElementRange)
 {
-    const auto weights = create_weight_vector({0.2, 0.5, 0.7, 1.0});
+    const auto weights = create_weight_vector({0.2, 0.5, 0.7, 1.0}, GetParam());
 
     // When sampling single element, should always return that index
     for (int i = 0; i < 100; i++)
@@ -94,7 +94,7 @@ TEST_F(WeightBasedRandomPickerTest, SingleElementRange)
 TEST_F(WeightBasedRandomPickerTest, WeightDistributionTest)
 {
     // Create weights with known distribution
-    const auto weights = create_weight_vector({0.25, 0.5, 0.75, 1.0}); // Equal increments
+    const auto weights = create_weight_vector({0.25, 0.5, 0.75, 1.0}, GetParam()); // Equal increments
 
     std::map<int, int> sample_counts;
     constexpr int num_samples = 10000;
@@ -118,10 +118,30 @@ TEST_F(WeightBasedRandomPickerTest, WeightDistributionTest)
 TEST_F(WeightBasedRandomPickerTest, EdgeCaseWeights)
 {
     // Test with very small weight differences
-    const auto small_diffs = create_weight_vector({0.1, 0.100001, 0.100002, 0.100003});
+    const auto small_diffs = create_weight_vector({0.1, 0.100001, 0.100002, 0.100003}, GetParam());
     EXPECT_NE(picker.pick_random(small_diffs, 0, 4), -1);
 
     // Test with very large weight differences
-    const auto large_diffs = create_weight_vector({0.1, 0.5, 0.9, 1000.0});
+    const auto large_diffs = create_weight_vector({0.1, 0.5, 0.9, 1000.0}, GetParam());
     EXPECT_NE(picker.pick_random(large_diffs, 0, 4), -1);
 }
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    WeightBasedRandomPickerTest,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    WeightBasedRandomPickerTest,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif

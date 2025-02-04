@@ -1,13 +1,13 @@
 #include <gtest/gtest.h>
 #include "../src/data/NodeEdgeIndex.cuh"
 
-class NodeEdgeIndexTest : public ::testing::Test {
+class NodeEdgeIndexTest : public ::testing::TestWithParam<bool> {
 protected:
     NodeEdgeIndex index;
     EdgeData edges;
     NodeMapping mapping;
 
-    NodeEdgeIndexTest(): index(false), edges(false), mapping(false){}
+    NodeEdgeIndexTest(): index(GetParam()), edges(GetParam()), mapping(GetParam()){}
 
     // Helper function to set up a simple directed graph
     void setup_simple_directed_graph() {
@@ -201,3 +201,23 @@ TEST_F(NodeEdgeIndexTest, EdgeCasesTest) {
     int isolated_node = mapping.to_dense(4);
     EXPECT_EQ(index.get_timestamp_group_count(isolated_node, false, true), 0);
 }
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    NodeEdgeIndexTest,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    NodeEdgeIndexTest,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif

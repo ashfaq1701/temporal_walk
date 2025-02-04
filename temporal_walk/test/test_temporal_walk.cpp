@@ -11,32 +11,32 @@ constexpr int64_t MAX_TIME_CAPACITY = 5;
 constexpr RandomPickerType exponential_picker_type = RandomPickerType::ExponentialIndex;
 constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;
 
-class EmptyTemporalWalkTest : public ::testing::Test {
+class EmptyTemporalWalkTest : public ::testing::TestWithParam<bool> {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(true, false, -1, true, -1);
+        temporal_walk = std::make_unique<TemporalWalk>(true, GetParam(), -1, true, -1);
     }
 
     std::unique_ptr<TemporalWalk> temporal_walk;
 };
 
-class EmptyTemporalWalkTestWithMaxCapacity : public ::testing::Test {
+class EmptyTemporalWalkTestWithMaxCapacity : public ::testing::TestWithParam<bool> {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(true, false, MAX_TIME_CAPACITY, true, -1);
+        temporal_walk = std::make_unique<TemporalWalk>(true, GetParam(), MAX_TIME_CAPACITY, true, -1);
     }
 
     std::unique_ptr<TemporalWalk> temporal_walk;
 };
 
-class FilledDirectedTemporalWalkTest : public ::testing::Test {
+class FilledDirectedTemporalWalkTest : public ::testing::TestWithParam<bool> {
 protected:
     FilledDirectedTemporalWalkTest() {
         sample_edges = read_edges_from_csv("../../../data/sample_data.csv");
     }
 
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(true, false, -1, true, -1);
+        temporal_walk = std::make_unique<TemporalWalk>(true, GetParam(), -1, true, -1);
         temporal_walk->add_multiple_edges(sample_edges);
     }
 
@@ -44,14 +44,14 @@ protected:
     std::unique_ptr<TemporalWalk> temporal_walk;
 };
 
-class FilledUndirectedTemporalWalkTest : public ::testing::Test {
+class FilledUndirectedTemporalWalkTest : public ::testing::TestWithParam<bool> {
 protected:
     FilledUndirectedTemporalWalkTest() {
         sample_edges = read_edges_from_csv("../../../data/sample_data.csv");
     }
 
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(false, false, -1, true, -1);
+        temporal_walk = std::make_unique<TemporalWalk>(false, GetParam(), -1, true, -1);
         temporal_walk->add_multiple_edges(sample_edges);
     }
 
@@ -59,10 +59,10 @@ protected:
     std::unique_ptr<TemporalWalk> temporal_walk;
 };
 
-class TimescaleBoundedTemporalWalkTest : public ::testing::Test {
+class TimescaleBoundedTemporalWalkTest : public ::testing::TestWithParam<bool> {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(true, false, -1, true, 10.0);
+        temporal_walk = std::make_unique<TemporalWalk>(true, GetParam(), -1, true, 10.0);
         temporal_walk->add_multiple_edges({
             // Node 1's outgoing edges
             {1, 2, 100},
@@ -87,7 +87,7 @@ protected:
 
 // Test the constructor of TemporalWalk to ensure it initializes correctly.
 TEST_F(EmptyTemporalWalkTest, ConstructorTest) {
-    EXPECT_NO_THROW(temporal_walk = std::make_unique<TemporalWalk>(true));
+    EXPECT_NO_THROW(temporal_walk = std::make_unique<TemporalWalk>(true, GetParam()));
     EXPECT_EQ(temporal_walk->get_node_count(), 0); // Assuming initial node count is 0
 }
 
@@ -575,3 +575,107 @@ TEST_F(TimescaleBoundedTemporalWalkTest, TerminalEdgeValidation) {
             << first_node << " before timestamp " << first_ts;
     }
 }
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    EmptyTemporalWalkTest,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    EmptyTemporalWalkTest,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif
+
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    EmptyTemporalWalkTestWithMaxCapacity,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    EmptyTemporalWalkTestWithMaxCapacity,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif
+
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    FilledDirectedTemporalWalkTest,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    FilledDirectedTemporalWalkTest,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif
+
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    FilledUndirectedTemporalWalkTest,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    FilledUndirectedTemporalWalkTest,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif
+
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    TimescaleBoundedTemporalWalkTest,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    TimescaleBoundedTemporalWalkTest,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif

@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 #include "../src/data/EdgeData.cuh"
 
-class EdgeDataTest : public ::testing::Test {
+class EdgeDataTest : public ::testing::TestWithParam<bool> {
 protected:
     EdgeData edges;
 
-    EdgeDataTest(): edges(false) {}
+    EdgeDataTest(): edges(GetParam()) {}
 
     // Helper function to verify edge content
     void verify_edge(const size_t index, const int expected_src, const int expected_tgt, const int64_t expected_ts) const {
@@ -129,3 +129,23 @@ TEST_F(EdgeDataTest, ResizeTest) {
     EXPECT_EQ(edges.size(), 3);
     verify_edge(0, 100, 200, 100);
 }
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    EdgeDataTest,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    EdgeDataTest,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif

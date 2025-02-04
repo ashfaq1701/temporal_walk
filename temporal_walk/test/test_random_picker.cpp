@@ -7,9 +7,7 @@ constexpr int RANDOM_START = 0;
 constexpr int RANDOM_END = 10000;
 constexpr int RANDOM_NUM_SAMPLES = 1000000;
 
-constexpr bool USE_GPU = false;
-
-class RandomPickerTest : public ::testing::Test {
+class RandomPickerTest : public ::testing::TestWithParam<bool> {
 protected:
 
     LinearRandomPicker linear_picker;
@@ -30,16 +28,16 @@ protected:
 // Test that prioritize_end=true gives higher average than prioritize_end=false for both pickers
 TEST_F(RandomPickerTest, PrioritizeEndGivesHigherAverage) {
     // For Linear Picker
-    const double linear_end_prioritized = compute_average_picks(false, true, USE_GPU);
-    const double linear_start_prioritized = compute_average_picks(false, false, USE_GPU);
+    const double linear_end_prioritized = compute_average_picks(false, true, GetParam());
+    const double linear_start_prioritized = compute_average_picks(false, false, GetParam());
     EXPECT_GT(linear_end_prioritized, linear_start_prioritized)
         << "Linear picker with prioritize_end=true should give higher average ("
         << linear_end_prioritized << ") than prioritize_end=false ("
         << linear_start_prioritized << ")";
 
     // For Exponential Picker
-    const double exp_end_prioritized = compute_average_picks(true, true, USE_GPU);
-    const double exp_start_prioritized = compute_average_picks(true, false, USE_GPU);
+    const double exp_end_prioritized = compute_average_picks(true, true, GetParam());
+    const double exp_start_prioritized = compute_average_picks(true, false, GetParam());
     EXPECT_GT(exp_end_prioritized, exp_start_prioritized)
         << "Exponential picker with prioritize_end=true should give higher average ("
         << exp_end_prioritized << ") than prioritize_end=false ("
@@ -48,8 +46,8 @@ TEST_F(RandomPickerTest, PrioritizeEndGivesHigherAverage) {
 
 // Test that exponential picker is more extreme than linear picker when prioritizing end
 TEST_F(RandomPickerTest, ExponentialMoreExtremeForEnd) {
-    const double linear_end_prioritized = compute_average_picks(false, true, USE_GPU);
-    const double exp_end_prioritized = compute_average_picks(true, true, USE_GPU);
+    const double linear_end_prioritized = compute_average_picks(false, true, GetParam());
+    const double exp_end_prioritized = compute_average_picks(true, true, GetParam());
 
     EXPECT_GT(exp_end_prioritized, linear_end_prioritized)
         << "Exponential picker with prioritize_end=true should give higher average ("
@@ -59,8 +57,8 @@ TEST_F(RandomPickerTest, ExponentialMoreExtremeForEnd) {
 
 // Test that exponential picker is more extreme than linear picker when prioritizing start
 TEST_F(RandomPickerTest, ExponentialMoreExtremeForStart) {
-    const double linear_start_prioritized = compute_average_picks(false, false, USE_GPU);
-    const double exp_start_prioritized = compute_average_picks(true, false, USE_GPU);
+    const double linear_start_prioritized = compute_average_picks(false, false, GetParam());
+    const double exp_start_prioritized = compute_average_picks(true, false, GetParam());
 
     EXPECT_LT(exp_start_prioritized, linear_start_prioritized)
         << "Exponential picker with prioritize_end=false should give lower average ("
@@ -75,19 +73,19 @@ TEST_F(RandomPickerTest, BoundsTest) {
     const int num_tests = 1000;
 
     for (int i = 0; i < num_tests; i++) {
-        int linear_result = linear_picker.pick_random(start, end, true, USE_GPU);
+        int linear_result = linear_picker.pick_random(start, end, true, GetParam());
         EXPECT_GE(linear_result, start);
         EXPECT_LT(linear_result, end);
 
-        linear_result = linear_picker.pick_random(start, end, false, USE_GPU);
+        linear_result = linear_picker.pick_random(start, end, false, GetParam());
         EXPECT_GE(linear_result, start);
         EXPECT_LT(linear_result, end);
 
-        int exp_result = exp_picker.pick_random(start, end, true, USE_GPU);
+        int exp_result = exp_picker.pick_random(start, end, true, GetParam());
         EXPECT_GE(exp_result, start);
         EXPECT_LT(exp_result, end);
 
-        exp_result = exp_picker.pick_random(start, end, false, USE_GPU);
+        exp_result = exp_picker.pick_random(start, end, false, GetParam());
         EXPECT_GE(exp_result, start);
         EXPECT_LT(exp_result, end);
     }
@@ -99,10 +97,10 @@ TEST_F(RandomPickerTest, SingleElementRangeTest) {
     constexpr int end = 6;  // Range of size 1
 
     // Should always return start for both true and false prioritize_end
-    EXPECT_EQ(linear_picker.pick_random(start, end, true, USE_GPU), start);
-    EXPECT_EQ(linear_picker.pick_random(start, end, false, USE_GPU), start);
-    EXPECT_EQ(exp_picker.pick_random(start, end, true, USE_GPU), start);
-    EXPECT_EQ(exp_picker.pick_random(start, end, false, USE_GPU), start);
+    EXPECT_EQ(linear_picker.pick_random(start, end, true, GetParam()), start);
+    EXPECT_EQ(linear_picker.pick_random(start, end, false, GetParam()), start);
+    EXPECT_EQ(exp_picker.pick_random(start, end, true, GetParam()), start);
+    EXPECT_EQ(exp_picker.pick_random(start, end, false, GetParam()), start);
 }
 
 // Test probabilities more deterministically for linear random picker and two elements.
@@ -116,13 +114,13 @@ TEST_F(RandomPickerTest, TwoElementRangeDistributionTestForLinearRandomPicker) {
     // Run trials
     for (int i = 0; i < num_trials; i++) {
         // Test prioritize_end=true
-        int result_end = linear_picker.pick_random(start, end, true, USE_GPU);
+        int result_end = linear_picker.pick_random(start, end, true, GetParam());
         if (result_end == 1) {
             count_ones_end_prioritized++;
         }
 
         // Test prioritize_end=false (separate trial)
-        int result_start = linear_picker.pick_random(start, end, false, USE_GPU);
+        int result_start = linear_picker.pick_random(start, end, false, GetParam());
         if (result_start == 1) {
             count_ones_start_prioritized++;
         }
@@ -165,13 +163,13 @@ TEST_F(RandomPickerTest, TwoElementRangeDistributionTestForExponentialRandomPick
     // Run trials
     for (int i = 0; i < num_trials; i++) {
         // Test prioritize_end=true
-        int result_end = exp_picker.pick_random(start, end, true, USE_GPU);
+        int result_end = exp_picker.pick_random(start, end, true, GetParam());
         if (result_end == 1) {
             count_ones_end_prioritized++;
         }
 
         // Test prioritize_end=false (separate trial)
-        int result_start = exp_picker.pick_random(start, end, false, USE_GPU);
+        int result_start = exp_picker.pick_random(start, end, false, GetParam());
         if (result_start == 1) {
             count_ones_start_prioritized++;
         }
@@ -204,3 +202,23 @@ TEST_F(RandomPickerTest, TwoElementRangeDistributionTestForExponentialRandomPick
         << "When prioritizing start, probability of picking 1 should be approximately "
         << expected_prob_start << " but got " << actual_prob_start;
 }
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    RandomPickerTest,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    RandomPickerTest,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif
