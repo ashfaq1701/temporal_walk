@@ -27,32 +27,21 @@ void NodeMapping::host_mark_node_deleted(const int sparse_id) {
 }
 
 void NodeMapping::update(const EdgeData& edges, const size_t start_idx, const size_t end_idx) {
-    // First pass: find max node ID
-    int max_node_id = 0;
-    for (size_t i = start_idx; i < end_idx; i++) {
-        max_node_id = std::max({max_node_id, edges.sources[i], edges.targets[i]});
-    }
-
+    int max_node_id = cuda_functions::find_max_node_id(edges.sources, edges.targets, start_idx, end_idx, use_gpu);
     // Extend sparse_to_dense if needed
     if (max_node_id >= sparse_to_dense.size()) {
         sparse_to_dense.resize(max_node_id + 1, -1);
         is_deleted.resize(max_node_id + 1, ITEM_DELETED);
     }
 
-    // Map unmapped nodes
-    for (size_t i = start_idx; i < end_idx; i++) {
-        is_deleted[edges.sources[i]] = ITEM_NOT_DELETED;
-        is_deleted[edges.targets[i]] = ITEM_NOT_DELETED;
-
-        if (sparse_to_dense[edges.sources[i]] == -1) {
-            sparse_to_dense[edges.sources[i]] = static_cast<int>(dense_to_sparse.size());
-            dense_to_sparse.push_back(edges.sources[i]);
-        }
-        if (sparse_to_dense[edges.targets[i]] == -1) {
-            sparse_to_dense[edges.targets[i]] = static_cast<int>(dense_to_sparse.size());
-            dense_to_sparse.push_back(edges.targets[i]);
-        }
-    }
+    cuda_functions::mark_nodes_not_deleted(
+        edges.sources,
+        edges.targets,
+        is_deleted,
+        start_idx,
+        end_idx,
+        use_gpu,
+        ITEM_NOT_DELETED);
 }
 
 int NodeMapping::to_dense(const int sparse_id) const {

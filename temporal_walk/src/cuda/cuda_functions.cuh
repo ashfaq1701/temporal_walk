@@ -32,6 +32,78 @@ namespace cuda_functions {
         #endif
     }
 
+    // In cuda_functions.cuh
+    template<typename T>
+    int find_max_node_id(
+        const DualVector<T> &sources,
+        const DualVector<T> &targets,
+        const size_t start_idx,
+        const size_t end_idx,
+        const bool use_gpu) {
+        if (use_gpu) {
+            #ifdef HAS_CUDA
+            // Find max in sources
+            const int max_sources = thrust::reduce(
+                thrust::device,
+                sources.device_begin() + start_idx,
+                sources.device_begin() + end_idx,
+                0,
+                thrust::maximum<int>());
+
+            // Find max in targets
+            const int max_targets = thrust::reduce(
+                thrust::device,
+                targets.device_begin() + start_idx,
+                targets.device_begin() + end_idx,
+                0,
+                thrust::maximum<int>());
+
+            return std::max(max_sources, max_targets);
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
+        }
+
+        // CPU version
+        int max_id = 0;
+        for (size_t i = start_idx; i < end_idx; i++) {
+            max_id = std::max({max_id, sources[i], targets[i]});
+        }
+        return max_id;
+    }
+
+    template<typename T>
+   void mark_nodes_not_deleted(
+       const DualVector<T>& sources,
+       const DualVector<T>& targets,
+       DualVector<short>& is_deleted,
+       const size_t start_idx,
+       const size_t end_idx,
+       const bool use_gpu,
+       short not_deleted_value) {
+
+        if (use_gpu) {
+            #ifdef HAS_CUDA
+            auto sources_ptr = sources.device_data().get();
+            auto targets_ptr = targets.device_data().get();
+            auto is_deleted_ptr = is_deleted.device_data().get();
+
+            thrust::for_each(thrust::device,
+                thrust::counting_iterator<size_t>(start_idx),
+                thrust::counting_iterator<size_t>(end_idx),
+                [sources_ptr, targets_ptr, is_deleted_ptr, not_deleted_value] __device__ (size_t i) {
+                    is_deleted_ptr[sources_ptr[i]] = not_deleted_value;
+                    is_deleted_ptr[targets_ptr[i]] = not_deleted_value;
+                });
+            #endif
+        } else {
+            for (size_t i = start_idx; i < end_idx; i++) {
+                is_deleted[sources[i]] = not_deleted_value;
+                is_deleted[targets[i]] = not_deleted_value;
+            }
+        }
+    }
+
     // Platform-specific upper_bound and distance calculation
     inline size_t find_upper_bound_position(const DualVector<int64_t>& vec, const int64_t value, const bool use_gpu) {
         if (use_gpu) {
