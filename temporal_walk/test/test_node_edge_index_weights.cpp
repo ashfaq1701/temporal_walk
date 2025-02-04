@@ -79,7 +79,7 @@ protected:
     NodeEdgeIndex index;
 };
 
-TEST_F(NodeEdgeIndexWeightTest, EmptyGraph) {
+TEST_P(NodeEdgeIndexWeightTest, EmptyGraph) {
     EdgeData empty_edges(GetParam());
     NodeMapping empty_mapping(GetParam());
     index = NodeEdgeIndex(GetParam());
@@ -91,7 +91,7 @@ TEST_F(NodeEdgeIndexWeightTest, EmptyGraph) {
     EXPECT_TRUE(index.inbound_backward_cumulative_weights_exponential.empty());
 }
 
-TEST_F(NodeEdgeIndexWeightTest, DirectedWeightNormalization) {
+TEST_P(NodeEdgeIndexWeightTest, DirectedWeightNormalization) {
     setup_test_graph(true);
 
     // Verify per-node weight normalization
@@ -103,7 +103,7 @@ TEST_F(NodeEdgeIndexWeightTest, DirectedWeightNormalization) {
                        index.inbound_backward_cumulative_weights_exponential);
 }
 
-TEST_F(NodeEdgeIndexWeightTest, WeightBiasPerNode) {
+TEST_P(NodeEdgeIndexWeightTest, WeightBiasPerNode) {
     EdgeData edges(GetParam());
     edges.push_back(1, 2, 100);  // Known timestamps for precise verification
     edges.push_back(1, 3, 200);
@@ -138,7 +138,7 @@ TEST_F(NodeEdgeIndexWeightTest, WeightBiasPerNode) {
     }
 }
 
-TEST_F(NodeEdgeIndexWeightTest, ScaledWeightRatios) {
+TEST_P(NodeEdgeIndexWeightTest, ScaledWeightRatios) {
     EdgeData edges(GetParam());
     edges.push_back(1, 2, 100);
     edges.push_back(1, 3, 300);
@@ -181,7 +181,7 @@ TEST_F(NodeEdgeIndexWeightTest, ScaledWeightRatios) {
     }
 }
 
-TEST_F(NodeEdgeIndexWeightTest, UndirectedWeightNormalization) {
+TEST_P(NodeEdgeIndexWeightTest, UndirectedWeightNormalization) {
    setup_test_graph(false);
 
    // For undirected, should only have outbound weights
@@ -192,7 +192,7 @@ TEST_F(NodeEdgeIndexWeightTest, UndirectedWeightNormalization) {
    EXPECT_TRUE(index.inbound_backward_cumulative_weights_exponential.empty());
 }
 
-TEST_F(NodeEdgeIndexWeightTest, WeightConsistencyAcrossUpdates) {
+TEST_P(NodeEdgeIndexWeightTest, WeightConsistencyAcrossUpdates) {
    setup_test_graph(true);
 
    // Store original weights
@@ -218,7 +218,7 @@ TEST_F(NodeEdgeIndexWeightTest, WeightConsistencyAcrossUpdates) {
                       index.outbound_forward_cumulative_weights_exponential);
 }
 
-TEST_F(NodeEdgeIndexWeightTest, SingleTimestampGroupPerNode) {
+TEST_P(NodeEdgeIndexWeightTest, SingleTimestampGroupPerNode) {
    EdgeData edges(GetParam());
    // All edges in same timestamp group
    edges.push_back(1, 2, 10);
@@ -244,7 +244,7 @@ TEST_F(NodeEdgeIndexWeightTest, SingleTimestampGroupPerNode) {
    }
 }
 
-TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundZero) {
+TEST_P(NodeEdgeIndexWeightTest, TimescaleBoundZero) {
     EdgeData edges(GetParam());
     edges.push_back(1, 2, 10);
     edges.push_back(1, 3, 20);
@@ -263,7 +263,7 @@ TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundZero) {
                        index.outbound_backward_cumulative_weights_exponential);
 }
 
-TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundWithSingleTimestamp) {
+TEST_P(NodeEdgeIndexWeightTest, TimescaleBoundWithSingleTimestamp) {
     EdgeData edges(GetParam());
     // All edges for node 1 have same timestamp
     constexpr int node_id = 1;  // Original node ID
@@ -294,7 +294,7 @@ TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundWithSingleTimestamp) {
     }
 }
 
-TEST_F(NodeEdgeIndexWeightTest, WeightOrderPreservation) {
+TEST_P(NodeEdgeIndexWeightTest, WeightOrderPreservation) {
     EdgeData edges(GetParam());
     edges.push_back(1, 2, 10);
     edges.push_back(1, 3, 20);
@@ -325,7 +325,7 @@ TEST_F(NodeEdgeIndexWeightTest, WeightOrderPreservation) {
     }
 }
 
-TEST_F(NodeEdgeIndexWeightTest, TimescaleNormalizationTest) {
+TEST_P(NodeEdgeIndexWeightTest, TimescaleNormalizationTest) {
     EdgeData edges(GetParam());  // CPU mode
     // Create edges with widely varying time differences
     edges.push_back(1, 2, 100);       // Small gap

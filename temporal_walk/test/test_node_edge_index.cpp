@@ -44,7 +44,7 @@ protected:
 };
 
 // Test empty state
-TEST_F(NodeEdgeIndexTest, EmptyStateTest) {
+TEST_P(NodeEdgeIndexTest, EmptyStateTest) {
     EXPECT_TRUE(index.outbound_offsets.empty());
     EXPECT_TRUE(index.outbound_indices.empty());
     EXPECT_TRUE(index.outbound_timestamp_group_offsets.empty());
@@ -56,7 +56,7 @@ TEST_F(NodeEdgeIndexTest, EmptyStateTest) {
 }
 
 // Test edge ranges in directed graph
-TEST_F(NodeEdgeIndexTest, DirectedEdgeRangeTest) {
+TEST_P(NodeEdgeIndexTest, DirectedEdgeRangeTest) {
     setup_simple_directed_graph();
 
     // Check outbound edges for node 10
@@ -88,7 +88,7 @@ TEST_F(NodeEdgeIndexTest, DirectedEdgeRangeTest) {
 }
 
 // Test timestamp groups in directed graph
-TEST_F(NodeEdgeIndexTest, DirectedTimestampGroupTest) {
+TEST_P(NodeEdgeIndexTest, DirectedTimestampGroupTest) {
     setup_simple_directed_graph();
 
     const int dense_node10 = mapping.to_dense(10);
@@ -120,7 +120,7 @@ TEST_F(NodeEdgeIndexTest, DirectedTimestampGroupTest) {
 }
 
 // Test edge ranges in undirected graph
-TEST_F(NodeEdgeIndexTest, UndirectedEdgeRangeTest) {
+TEST_P(NodeEdgeIndexTest, UndirectedEdgeRangeTest) {
     setup_simple_undirected_graph();
 
     // In undirected graph, all edges are stored as outbound
@@ -143,7 +143,7 @@ TEST_F(NodeEdgeIndexTest, UndirectedEdgeRangeTest) {
 }
 
 // Test timestamp groups in undirected graph
-TEST_F(NodeEdgeIndexTest, UndirectedTimestampGroupTest) {
+TEST_P(NodeEdgeIndexTest, UndirectedTimestampGroupTest) {
     setup_simple_undirected_graph();
 
     const int dense_node100 = mapping.to_dense(100);
@@ -181,7 +181,7 @@ TEST_F(NodeEdgeIndexTest, UndirectedTimestampGroupTest) {
 }
 
 // Test edge cases and invalid inputs
-TEST_F(NodeEdgeIndexTest, EdgeCasesTest) {
+TEST_P(NodeEdgeIndexTest, EdgeCasesTest) {
     setup_simple_directed_graph();
 
     // Test invalid node ID

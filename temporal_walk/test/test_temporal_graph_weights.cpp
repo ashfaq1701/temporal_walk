@@ -43,7 +43,7 @@ protected:
     std::vector<std::tuple<int, int, int64_t>> test_edges;
 };
 
-TEST_F(TemporalGraphWeightTest, EdgeWeightComputation) {
+TEST_P(TemporalGraphWeightTest, EdgeWeightComputation) {
     TemporalGraph graph(/*directed=*/false, /*use_gpu=*/GetParam(), /*window=*/-1, /*enable_weight_computation=*/true, -1);
     graph.add_multiple_edges(test_edges);
 
@@ -72,7 +72,7 @@ TEST_F(TemporalGraphWeightTest, EdgeWeightComputation) {
     }
 }
 
-TEST_F(TemporalGraphWeightTest, NodeWeightComputation) {
+TEST_P(TemporalGraphWeightTest, NodeWeightComputation) {
     TemporalGraph graph(/*directed=*/true, /*use_gpu=*/GetParam(), /*window=*/-1, /*enable_weight_computation=*/true);
     graph.add_multiple_edges(test_edges);
 
@@ -109,7 +109,7 @@ TEST_F(TemporalGraphWeightTest, NodeWeightComputation) {
     EXPECT_NEAR(node_out_weights.back(), 1.0, 1e-6);
 }
 
-TEST_F(TemporalGraphWeightTest, WeightBasedSampling) {
+TEST_P(TemporalGraphWeightTest, WeightBasedSampling) {
     TemporalGraph graph(/*directed=*/true, /*use_gpu=*/GetParam(), /*window=*/-1, /*enable_weight_computation=*/true, -1);
     graph.add_multiple_edges(test_edges);
 
@@ -136,7 +136,7 @@ TEST_F(TemporalGraphWeightTest, WeightBasedSampling) {
         << "Later timestamp 20 should be sampled more than 10";
 }
 
-TEST_F(TemporalGraphWeightTest, EdgeCases) {
+TEST_P(TemporalGraphWeightTest, EdgeCases) {
     // Empty graph test
     {
         const TemporalGraph empty_graph(false, /*use_gpu=*/GetParam(), -1, true);
@@ -156,7 +156,7 @@ TEST_F(TemporalGraphWeightTest, EdgeCases) {
     }
 }
 
-TEST_F(TemporalGraphWeightTest, TimescaleBoundZero) {
+TEST_P(TemporalGraphWeightTest, TimescaleBoundZero) {
     TemporalGraph graph(/*directed=*/true, /*use_gpu=*/GetParam(), /*window=*/-1, /*enable_weight_computation=*/true, 0);
     graph.add_multiple_edges(test_edges);
 
@@ -165,7 +165,7 @@ TEST_F(TemporalGraphWeightTest, TimescaleBoundZero) {
     verify_cumulative_weights(graph.edges.backward_cumulative_weights_exponential);
 }
 
-TEST_F(TemporalGraphWeightTest, TimescaleBoundSampling) {
+TEST_P(TemporalGraphWeightTest, TimescaleBoundSampling) {
     TemporalGraph scaled_graph(/*directed=*/true, /*use_gpu=*/GetParam(), /*window=*/-1, /*enable_weight_computation=*/true, 10.0);
     TemporalGraph unscaled_graph(/*directed=*/true, /*use_gpu=*/GetParam(), /*window=*/-1, /*enable_weight_computation=*/true, -1);
 
@@ -193,7 +193,7 @@ TEST_F(TemporalGraphWeightTest, TimescaleBoundSampling) {
         << "Unscaled sampling should prefer earlier timestamp";
 }
 
-TEST_F(TemporalGraphWeightTest, WeightScalingPrecision) {
+TEST_P(TemporalGraphWeightTest, WeightScalingPrecision) {
     TemporalGraph graph(/*directed=*/true, /*use_gpu=*/GetParam(), /*window=*/-1, /*enable_weight_computation=*/true, 2.0);
 
     // Use exact timestamps for precise validation
@@ -239,7 +239,7 @@ TEST_F(TemporalGraphWeightTest, WeightScalingPrecision) {
     }
 }
 
-TEST_F(TemporalGraphWeightTest, DifferentTimescaleBounds) {
+TEST_P(TemporalGraphWeightTest, DifferentTimescaleBounds) {
     const std::vector<double> bounds = {2.0, 5.0, 10.};
     WeightBasedRandomPicker picker;
 
@@ -269,7 +269,7 @@ TEST_F(TemporalGraphWeightTest, DifferentTimescaleBounds) {
     }
 }
 
-TEST_F(TemporalGraphWeightTest, SingleTimestampWithBounds) {
+TEST_P(TemporalGraphWeightTest, SingleTimestampWithBounds) {
     const std::vector<std::tuple<int, int, int64_t>> single_ts_edges = {
         {1, 2, 100},
         {2, 3, 100},

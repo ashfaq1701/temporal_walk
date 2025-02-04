@@ -18,7 +18,7 @@ protected:
 };
 
 // Test empty state
-TEST_F(NodeMappingTest, EmptyStateTest) {
+TEST_P(NodeMappingTest, EmptyStateTest) {
     EXPECT_EQ(mapping.size(), 0);
     EXPECT_EQ(mapping.active_size(), 0);
     EXPECT_TRUE(mapping.get_active_node_ids().empty());
@@ -32,7 +32,7 @@ TEST_F(NodeMappingTest, EmptyStateTest) {
 }
 
 // Test basic update functionality
-TEST_F(NodeMappingTest, BasicUpdateTest) {
+TEST_P(NodeMappingTest, BasicUpdateTest) {
     edges.push_back(10, 20, 100);
     edges.push_back(20, 30, 200);
     mapping.update(edges, 0, edges.size());
@@ -54,7 +54,7 @@ TEST_F(NodeMappingTest, BasicUpdateTest) {
 }
 
 // Test handling of gaps in sparse IDs
-TEST_F(NodeMappingTest, SparseGapsTest) {
+TEST_P(NodeMappingTest, SparseGapsTest) {
     edges.push_back(10, 50, 100);  // Gap between 10 and 50
     mapping.update(edges, 0, edges.size());
 
@@ -74,7 +74,7 @@ TEST_F(NodeMappingTest, SparseGapsTest) {
 }
 
 // Test incremental updates
-TEST_F(NodeMappingTest, IncrementalUpdateTest) {
+TEST_P(NodeMappingTest, IncrementalUpdateTest) {
     // First update
     edges.push_back(10, 20, 100);
     mapping.update(edges, 0, 1);
@@ -97,7 +97,7 @@ TEST_F(NodeMappingTest, IncrementalUpdateTest) {
 }
 
 // Test node deletion
-TEST_F(NodeMappingTest, NodeDeletionTest) {
+TEST_P(NodeMappingTest, NodeDeletionTest) {
     EdgeData edges(GetParam());  // CPU mode
     NodeMapping mapping(GetParam());  // CPU mode
 
@@ -126,7 +126,7 @@ TEST_F(NodeMappingTest, NodeDeletionTest) {
 }
 
 // Test edge cases and invalid inputs
-TEST_F(NodeMappingTest, EdgeCasesTest) {
+TEST_P(NodeMappingTest, EdgeCasesTest) {
     EdgeData edges(GetParam());  // CPU mode
     NodeMapping mapping(GetParam());  // CPU mode
 
@@ -160,7 +160,7 @@ TEST_F(NodeMappingTest, EdgeCasesTest) {
 }
 
 // Test reservation and clear
-TEST_F(NodeMappingTest, ReservationAndClearTest) {
+TEST_P(NodeMappingTest, ReservationAndClearTest) {
     mapping.reserve(100);
 
     edges.push_back(10, 20, 100);

@@ -26,7 +26,7 @@ protected:
 };
 
 // Test that prioritize_end=true gives higher average than prioritize_end=false for both pickers
-TEST_F(RandomPickerTest, PrioritizeEndGivesHigherAverage) {
+TEST_P(RandomPickerTest, PrioritizeEndGivesHigherAverage) {
     // For Linear Picker
     const double linear_end_prioritized = compute_average_picks(false, true, GetParam());
     const double linear_start_prioritized = compute_average_picks(false, false, GetParam());
@@ -45,7 +45,7 @@ TEST_F(RandomPickerTest, PrioritizeEndGivesHigherAverage) {
 }
 
 // Test that exponential picker is more extreme than linear picker when prioritizing end
-TEST_F(RandomPickerTest, ExponentialMoreExtremeForEnd) {
+TEST_P(RandomPickerTest, ExponentialMoreExtremeForEnd) {
     const double linear_end_prioritized = compute_average_picks(false, true, GetParam());
     const double exp_end_prioritized = compute_average_picks(true, true, GetParam());
 
@@ -56,7 +56,7 @@ TEST_F(RandomPickerTest, ExponentialMoreExtremeForEnd) {
 }
 
 // Test that exponential picker is more extreme than linear picker when prioritizing start
-TEST_F(RandomPickerTest, ExponentialMoreExtremeForStart) {
+TEST_P(RandomPickerTest, ExponentialMoreExtremeForStart) {
     const double linear_start_prioritized = compute_average_picks(false, false, GetParam());
     const double exp_start_prioritized = compute_average_picks(true, false, GetParam());
 
@@ -67,7 +67,7 @@ TEST_F(RandomPickerTest, ExponentialMoreExtremeForStart) {
 }
 
 // Test that output is always within bounds
-TEST_F(RandomPickerTest, BoundsTest) {
+TEST_P(RandomPickerTest, BoundsTest) {
     const int start = 5;
     const int end = 10;
     const int num_tests = 1000;
@@ -92,7 +92,7 @@ TEST_F(RandomPickerTest, BoundsTest) {
 }
 
 // Test single-element range always returns that element
-TEST_F(RandomPickerTest, SingleElementRangeTest) {
+TEST_P(RandomPickerTest, SingleElementRangeTest) {
     constexpr int start = 5;
     constexpr int end = 6;  // Range of size 1
 
@@ -104,7 +104,7 @@ TEST_F(RandomPickerTest, SingleElementRangeTest) {
 }
 
 // Test probabilities more deterministically for linear random picker and two elements.
-TEST_F(RandomPickerTest, TwoElementRangeDistributionTestForLinearRandomPicker) {
+TEST_P(RandomPickerTest, TwoElementRangeDistributionTestForLinearRandomPicker) {
     const int start = 0;
     const int end = 2;
     int count_ones_end_prioritized = 0;
@@ -153,7 +153,7 @@ TEST_F(RandomPickerTest, TwoElementRangeDistributionTestForLinearRandomPicker) {
 }
 
 // Test probabilities more deterministically for exponential random picker and two elements.
-TEST_F(RandomPickerTest, TwoElementRangeDistributionTestForExponentialRandomPicker) {
+TEST_P(RandomPickerTest, TwoElementRangeDistributionTestForExponentialRandomPicker) {
     const int start = 0;
     const int end = 2;
     int count_ones_end_prioritized = 0;

@@ -52,7 +52,7 @@ protected:
     }
 };
 
-TEST_F(WeightBasedRandomPickerTest, ValidationChecks)
+TEST_P(WeightBasedRandomPickerTest, ValidationChecks)
 {
     const auto weights = create_weight_vector({0.2, 0.5, 0.7, 1.0}, GetParam());
 
@@ -67,12 +67,12 @@ TEST_F(WeightBasedRandomPickerTest, ValidationChecks)
     EXPECT_EQ(picker.pick_random(weights, 0, 5), -1);
 }
 
-TEST_F(WeightBasedRandomPickerTest, FullRangeSampling)
+TEST_P(WeightBasedRandomPickerTest, FullRangeSampling)
 {
     verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 0, 4);
 }
 
-TEST_F(WeightBasedRandomPickerTest, SubrangeSampling)
+TEST_P(WeightBasedRandomPickerTest, SubrangeSampling)
 {
     // Test all subranges with the same weight vector
     verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 1, 3);  // middle range
@@ -80,7 +80,7 @@ TEST_F(WeightBasedRandomPickerTest, SubrangeSampling)
     verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 2, 4);  // end range
 }
 
-TEST_F(WeightBasedRandomPickerTest, SingleElementRange)
+TEST_P(WeightBasedRandomPickerTest, SingleElementRange)
 {
     const auto weights = create_weight_vector({0.2, 0.5, 0.7, 1.0}, GetParam());
 
@@ -91,7 +91,7 @@ TEST_F(WeightBasedRandomPickerTest, SingleElementRange)
     }
 }
 
-TEST_F(WeightBasedRandomPickerTest, WeightDistributionTest)
+TEST_P(WeightBasedRandomPickerTest, WeightDistributionTest)
 {
     // Create weights with known distribution
     const auto weights = create_weight_vector({0.25, 0.5, 0.75, 1.0}, GetParam()); // Equal increments
@@ -115,7 +115,7 @@ TEST_F(WeightBasedRandomPickerTest, WeightDistributionTest)
     }
 }
 
-TEST_F(WeightBasedRandomPickerTest, EdgeCaseWeights)
+TEST_P(WeightBasedRandomPickerTest, EdgeCaseWeights)
 {
     // Test with very small weight differences
     const auto small_diffs = create_weight_vector({0.1, 0.100001, 0.100002, 0.100003}, GetParam());

@@ -43,7 +43,7 @@ protected:
    }
 };
 
-TEST_F(EdgeDataWeightTest, EmptyEdges) {
+TEST_P(EdgeDataWeightTest, EmptyEdges) {
    EdgeData edges(GetParam());  // CPU mode
    edges.update_temporal_weights(-1);
 
@@ -51,7 +51,7 @@ TEST_F(EdgeDataWeightTest, EmptyEdges) {
    EXPECT_TRUE(edges.backward_cumulative_weights_exponential.empty());
 }
 
-TEST_F(EdgeDataWeightTest, SingleTimestampGroup) {
+TEST_P(EdgeDataWeightTest, SingleTimestampGroup) {
    EdgeData edges(GetParam());  // CPU mode
    edges.push_back(1, 2, 10);
    edges.push_back(2, 3, 10);
@@ -66,7 +66,7 @@ TEST_F(EdgeDataWeightTest, SingleTimestampGroup) {
    EXPECT_NEAR(edges.backward_cumulative_weights_exponential[0], 1.0, 1e-6);
 }
 
-TEST_F(EdgeDataWeightTest, WeightNormalization) {
+TEST_P(EdgeDataWeightTest, WeightNormalization) {
    EdgeData edges(GetParam());  // CPU mode
    add_test_edges(edges);
    edges.update_temporal_weights(-1);
@@ -79,7 +79,7 @@ TEST_F(EdgeDataWeightTest, WeightNormalization) {
    verify_cumulative_weights(edges.backward_cumulative_weights_exponential);
 }
 
-TEST_F(EdgeDataWeightTest, ForwardWeightBias) {
+TEST_P(EdgeDataWeightTest, ForwardWeightBias) {
    EdgeData edges(GetParam());  // CPU mode
    add_test_edges(edges);
    edges.update_temporal_weights(-1);
@@ -94,7 +94,7 @@ TEST_F(EdgeDataWeightTest, ForwardWeightBias) {
    }
 }
 
-TEST_F(EdgeDataWeightTest, BackwardWeightBias) {
+TEST_P(EdgeDataWeightTest, BackwardWeightBias) {
    EdgeData edges(GetParam());  // CPU mode
    add_test_edges(edges);
    edges.update_temporal_weights(-1);
@@ -109,7 +109,7 @@ TEST_F(EdgeDataWeightTest, BackwardWeightBias) {
    }
 }
 
-TEST_F(EdgeDataWeightTest, WeightExponentialDecay) {
+TEST_P(EdgeDataWeightTest, WeightExponentialDecay) {
     EdgeData edges(GetParam());  // CPU mode
     edges.push_back(1, 2, 10);
     edges.push_back(2, 3, 20);
@@ -141,7 +141,7 @@ TEST_F(EdgeDataWeightTest, WeightExponentialDecay) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, UpdateWeights) {
+TEST_P(EdgeDataWeightTest, UpdateWeights) {
    EdgeData edges(GetParam());
    add_test_edges(edges);
    edges.update_temporal_weights(-1);
@@ -164,7 +164,7 @@ TEST_F(EdgeDataWeightTest, UpdateWeights) {
    verify_cumulative_weights(edges.backward_cumulative_weights_exponential);
 }
 
-TEST_F(EdgeDataWeightTest, TimescaleBoundZero) {
+TEST_P(EdgeDataWeightTest, TimescaleBoundZero) {
     EdgeData edges(GetParam());
     add_test_edges(edges);
     edges.update_temporal_weights(0);  // Should behave like -1
@@ -173,7 +173,7 @@ TEST_F(EdgeDataWeightTest, TimescaleBoundZero) {
     verify_cumulative_weights(edges.backward_cumulative_weights_exponential);
 }
 
-TEST_F(EdgeDataWeightTest, TimescaleBoundPositive) {
+TEST_P(EdgeDataWeightTest, TimescaleBoundPositive) {
     EdgeData edges(GetParam());
     add_test_edges(edges);
     constexpr double timescale_bound = 30.0;
@@ -205,7 +205,7 @@ TEST_F(EdgeDataWeightTest, TimescaleBoundPositive) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, ScalingComparison) {
+TEST_P(EdgeDataWeightTest, ScalingComparison) {
     EdgeData edges(GetParam());
     add_test_edges(edges);
 
@@ -230,7 +230,7 @@ TEST_F(EdgeDataWeightTest, ScalingComparison) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, ScaledWeightBounds) {
+TEST_P(EdgeDataWeightTest, ScaledWeightBounds) {
     EdgeData edges(GetParam());  // CPU mode
     edges.push_back(1, 2, 100);
     edges.push_back(2, 3, 300);
@@ -266,7 +266,7 @@ TEST_F(EdgeDataWeightTest, ScaledWeightBounds) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, DifferentTimescaleBounds) {
+TEST_P(EdgeDataWeightTest, DifferentTimescaleBounds) {
     EdgeData edges(GetParam());
     add_test_edges(edges);
 
@@ -293,7 +293,7 @@ TEST_F(EdgeDataWeightTest, DifferentTimescaleBounds) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, SingleTimestampWithBounds) {
+TEST_P(EdgeDataWeightTest, SingleTimestampWithBounds) {
     EdgeData edges(GetParam());
     // All edges have same timestamp
     edges.push_back(1, 2, 100);
@@ -311,7 +311,7 @@ TEST_F(EdgeDataWeightTest, SingleTimestampWithBounds) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, WeightMonotonicity) {
+TEST_P(EdgeDataWeightTest, WeightMonotonicity) {
     EdgeData edges(GetParam());
     add_test_edges(edges);
 
@@ -349,7 +349,7 @@ TEST_F(EdgeDataWeightTest, WeightMonotonicity) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, TimescaleScalingPrecision) {
+TEST_P(EdgeDataWeightTest, TimescaleScalingPrecision) {
     EdgeData edges(GetParam());
     // Use precise timestamps for exact validation
     edges.push_back(1, 2, 100);

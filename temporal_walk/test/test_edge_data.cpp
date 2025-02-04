@@ -17,7 +17,7 @@ protected:
 };
 
 // Test empty state
-TEST_F(EdgeDataTest, EmptyStateTest) {
+TEST_P(EdgeDataTest, EmptyStateTest) {
     EXPECT_TRUE(edges.empty());
     EXPECT_EQ(edges.size(), 0);
     EXPECT_TRUE(edges.timestamp_group_offsets.empty());
@@ -25,7 +25,7 @@ TEST_F(EdgeDataTest, EmptyStateTest) {
 }
 
 // Test single edge
-TEST_F(EdgeDataTest, SingleEdgeTest) {
+TEST_P(EdgeDataTest, SingleEdgeTest) {
     edges.push_back(100, 200, 100);
     EXPECT_FALSE(edges.empty());
     EXPECT_EQ(edges.size(), 1);
@@ -39,7 +39,7 @@ TEST_F(EdgeDataTest, SingleEdgeTest) {
 }
 
 // Test multiple edges with same timestamp
-TEST_F(EdgeDataTest, SameTimestampEdgesTest) {
+TEST_P(EdgeDataTest, SameTimestampEdgesTest) {
     edges.push_back(100, 200, 100);
     edges.push_back(200, 300, 100);
     edges.push_back(300, 400, 100);
@@ -52,7 +52,7 @@ TEST_F(EdgeDataTest, SameTimestampEdgesTest) {
 }
 
 // Test edges with different timestamps
-TEST_F(EdgeDataTest, DifferentTimestampEdgesTest) {
+TEST_P(EdgeDataTest, DifferentTimestampEdgesTest) {
     edges.push_back(1, 2, 100);
     edges.push_back(2, 3, 200);
     edges.push_back(3, 4, 300);
@@ -67,7 +67,7 @@ TEST_F(EdgeDataTest, DifferentTimestampEdgesTest) {
 }
 
 // Test find_group functions
-TEST_F(EdgeDataTest, FindGroupTest) {
+TEST_P(EdgeDataTest, FindGroupTest) {
     edges.push_back(100, 200, 100);
     edges.push_back(200, 300, 200);
     edges.push_back(300, 400, 300);
@@ -90,7 +90,7 @@ TEST_F(EdgeDataTest, FindGroupTest) {
 }
 
 // Test timestamp group ranges
-TEST_F(EdgeDataTest, TimestampGroupRangeTest) {
+TEST_P(EdgeDataTest, TimestampGroupRangeTest) {
     edges.push_back(100, 200, 100);  // Group 0
     edges.push_back(200, 300, 100);
     edges.push_back(300, 400, 200);  // Group 1
@@ -117,7 +117,7 @@ TEST_F(EdgeDataTest, TimestampGroupRangeTest) {
 }
 
 // Test resize
-TEST_F(EdgeDataTest, ResizeTest) {
+TEST_P(EdgeDataTest, ResizeTest) {
     edges.push_back(100, 200, 100);
     edges.push_back(200, 300, 200);
 

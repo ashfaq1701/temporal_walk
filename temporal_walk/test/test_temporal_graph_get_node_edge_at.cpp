@@ -39,7 +39,7 @@ protected:
 };
 
 // Test forward walks from a node
-TEST_F(TemporalGraphGetNodeEdgeAtTest, ForwardWalkTest) {
+TEST_P(TemporalGraphGetNodeEdgeAtTest, ForwardWalkTest) {
     const auto edges = std::vector<std::tuple<int, int, int64_t>>{
         {10, 20, 100}, // Node 10 outbound group 1
         {10, 30, 100},
@@ -71,7 +71,7 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, ForwardWalkTest) {
     verify_edge(edge, -1, -1, -1); // No groups after 104
 }
 
-TEST_F(TemporalGraphGetNodeEdgeAtTest, BackwardWalkTest) {
+TEST_P(TemporalGraphGetNodeEdgeAtTest, BackwardWalkTest) {
     const auto edges = std::vector<std::tuple<int, int, int64_t>>{
         {20, 10, 100}, // Node 10 inbound: ts 100 -> 103
         {30, 10, 101}, // From upstream (source) nodes: 20,30,40,50
@@ -124,7 +124,7 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, BackwardWalkTest) {
 }
 
 // Test edge cases and invalid inputs
-TEST_F(TemporalGraphGetNodeEdgeAtTest, EdgeCasesTest) {
+TEST_P(TemporalGraphGetNodeEdgeAtTest, EdgeCasesTest) {
     const auto edges = std::vector<std::tuple<int, int, int64_t>>{
         {10, 20, 100}, // Node 10 outbound: ts 100,101
         {10, 30, 101}, // Node 10 -> Nodes 20,30
@@ -154,7 +154,7 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, EdgeCasesTest) {
 }
 
 // Test random selection within timestamp groups
-TEST_F(TemporalGraphGetNodeEdgeAtTest, RandomSelectionTest) {
+TEST_P(TemporalGraphGetNodeEdgeAtTest, RandomSelectionTest) {
     const auto edges = std::vector<std::tuple<int, int, int64_t>>{
         {10, 20, 100}, // Group 1: ts 100
         {10, 30, 100},
@@ -178,7 +178,7 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, RandomSelectionTest) {
 }
 
 // Test exact timestamp matching
-TEST_F(TemporalGraphGetNodeEdgeAtTest, ExactTimestampTest) {
+TEST_P(TemporalGraphGetNodeEdgeAtTest, ExactTimestampTest) {
     const auto edges = std::vector<std::tuple<int, int, int64_t>>{
         // Edges for backward walks (upstream -> node 10)
         {20, 10, 100}, // Upstream nodes 20,30,40 -> downstream node 10
@@ -201,7 +201,7 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, ExactTimestampTest) {
 }
 
 // Test exact timestamp matching for undirected graphs
-TEST_F(TemporalGraphGetNodeEdgeAtTest, ExactTimestampUndirectedTest) {
+TEST_P(TemporalGraphGetNodeEdgeAtTest, ExactTimestampUndirectedTest) {
     // Create undirected graph
     graph = std::make_unique<TemporalGraph>(false, GetParam());
 
