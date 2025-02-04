@@ -4,8 +4,8 @@
 #include <algorithm>
 #include <numeric>
 #include <random/IndexBasedRandomPicker.h>
+
 #include <random/WeightBasedRandomPicker.cuh>
-#include <thrust/detail/gather.inl>
 
 #include "DualVector.cuh"
 
@@ -15,11 +15,23 @@
 #include <thrust/execution_policy.h>
 #include <thrust/iterator/counting_iterator.h>
 #include <thrust/sort.h>
+#include <thrust/detail/gather.inl>
 #endif
 
 class RandomPicker;
 
 namespace cuda_functions {
+
+    template<typename T>
+    double get_value_at(
+        const DualVector<T>& vec, int index, bool use_gpu) {
+        #ifdef HAS_CUDA
+        return use_gpu ? vec.device_at(index) : vec.host_at(index);
+        #else
+        return vec.host_at(index);
+        #endif
+    }
+
     // Platform-specific upper_bound and distance calculation
     inline size_t find_upper_bound_position(const DualVector<int64_t>& vec, const int64_t value, const bool use_gpu) {
         if (use_gpu) {

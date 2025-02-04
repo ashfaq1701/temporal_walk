@@ -14,38 +14,34 @@ set(TEST_FILES
         test_weight_based_random_picker.cpp
 )
 
-add_executable(test_temporal_walk
-        ${TEST_FILES}
-        ${SRC_FILES}
-)
-
-target_compile_features(test_temporal_walk PRIVATE cxx_std_17)
-
 if(USE_CUDA AND CMAKE_CUDA_COMPILER)
-    # Set CUDA source properties for all source and test files
-    set_source_files_properties(
-            ${CUDA_SRC_FILES}
-            ${TEST_FILES}
-            PROPERTIES
-            LANGUAGE CUDA
-            CUDA_SOURCE_PROPERTY_FORMAT OBJ
-    )
-
-    # Add CUDA compile options
-    target_compile_options(test_temporal_walk PRIVATE
+    set(CUDA_OPTIONS
             $<$<COMPILE_LANGUAGE:CUDA>:
             --extended-lambda
             --expt-relaxed-constexpr
             -Xcompiler=-fPIC
             >
     )
-
-    # Add CUDA-specific definitions
-    target_compile_definitions(test_temporal_walk PRIVATE
-            HAS_CUDA
-            THRUST_DEVICE_SYSTEM=THRUST_DEVICE_SYSTEM_CUDA
+    set(CUDA_LIBS CUDA::cudart CUDA::cuda_driver)
+    set_source_files_properties(
+            ${CUDA_SRC_FILES}
+            PROPERTIES
+            LANGUAGE CUDA
+    )
+else()
+    set(CUDA_OPTIONS "")
+    set(CUDA_LIBS "")
+    set_source_files_properties(
+            ${CUDA_SRC_FILES}
+            PROPERTIES
+            LANGUAGE CXX
     )
 endif()
+
+add_executable(test_temporal_walk ${TEST_FILES} ${SRC_FILES})
+
+target_compile_features(test_temporal_walk PRIVATE cxx_std_17)
+target_compile_options(test_temporal_walk PRIVATE ${CUDA_OPTIONS})
 
 target_link_libraries(test_temporal_walk PRIVATE
         GTest::gtest
@@ -53,6 +49,7 @@ target_link_libraries(test_temporal_walk PRIVATE
         GTest::gmock
         GTest::gmock_main
         Boost::math
+        ${CUDA_LIBS}
 )
 
 target_include_directories(test_temporal_walk PRIVATE

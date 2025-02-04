@@ -1,4 +1,5 @@
 #include "WeightBasedRandomPicker.cuh"
+#include "../cuda/cuda_functions.cuh"
 #include "../cuda/cuda_random_functions.cuh"
 
 template<typename T>
@@ -18,11 +19,8 @@ int WeightBasedRandomPicker::pick_random(
 
     // Get start and end sums
     const T start_sum = (group_start > 0) ?
-        (use_gpu ? cumulative_weights.device_at(group_start - 1)
-                 : cumulative_weights.host_at(group_start - 1))
-        : T{0};
-    const T end_sum = use_gpu ? cumulative_weights.device_at(group_end - 1)
-                             : cumulative_weights.host_at(group_end - 1);
+        cuda_functions::get_value_at(cumulative_weights, group_start - 1, use_gpu) : T{0};
+    const double end_sum = cuda_functions::get_value_at(cumulative_weights, group_end - 1, use_gpu);
 
     if (end_sum <= start_sum) {
         return -1;
