@@ -1,7 +1,7 @@
 #include <random>
 #include <cmath>
 #include <stdexcept>
-#include "LinearRandomPicker.h"
+#include "LinearRandomPicker.cuh"
 
 // Derivation available in derivations folder
 int LinearRandomPicker::pick_random(const int start, const int end, const bool prioritize_end) {

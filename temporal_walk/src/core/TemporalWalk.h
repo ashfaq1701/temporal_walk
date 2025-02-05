@@ -4,7 +4,7 @@
 #include<vector>
 #include "../../libs/thread-pool/ThreadPool.h"
 #include "../random/RandomPicker.h"
-#include "../data/TemporalGraph.h"
+#include "../data/TemporalGraph.cuh"
 
 constexpr float DEFAULT_SUCCESS_THRESHOLD = 0.01;
 
@@ -40,7 +40,7 @@ class TemporalWalk {
 
     int64_t max_edge_time = 0;
 
-    std::unique_ptr<TemporalGraph> temporal_graph;
+    std::unique_ptr<TemporalGraph> temporal_graph{};
 
     ThreadPool thread_pool;
 
@@ -52,7 +52,7 @@ class TemporalWalk {
         bool should_walk_forward,
         int start_node_id=-1) const;
 
-    std::shared_ptr<RandomPicker> get_random_picker(const RandomPickerType* picker_type);
+    std::shared_ptr<RandomPicker> get_random_picker(const RandomPickerType* picker_type) const;
 
     [[nodiscard]] long estimate_cw_count(int num_walks_per_node, int max_walk_len, int min_walk_len) const;
 

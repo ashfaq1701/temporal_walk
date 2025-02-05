@@ -2,10 +2,10 @@
 
 #include <iostream>
 #include "../utils/utils.h"
-#include "../random/UniformRandomPicker.h"
-#include "../random/LinearRandomPicker.h"
-#include "../random/ExponentialIndexRandomPicker.h"
-#include "../random/WeightBasedRandomPicker.h"
+#include "../random/UniformRandomPicker.cuh"
+#include "../random/LinearRandomPicker.cuh"
+#include "../random/ExponentialIndexRandomPicker.cuh"
+#include "../random/WeightBasedRandomPicker.cuh"
 
 
 constexpr int DEFAULT_CONTEXT_WINDOW_LEN = 2;
@@ -42,7 +42,7 @@ bool get_should_walk_forward(WalkDirection walk_direction) {
     }
 }
 
-std::shared_ptr<RandomPicker> TemporalWalk::get_random_picker(const RandomPickerType* picker_type) {
+std::shared_ptr<RandomPicker> TemporalWalk::get_random_picker(const RandomPickerType* picker_type) const {
     if (!picker_type) {
         throw std::invalid_argument("picker_type cannot be nullptr");
     }

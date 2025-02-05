@@ -4,7 +4,7 @@
 #include <vector>
 #include <cstdint>
 #include <tuple>
-#include "NodeMapping.h"
+#include "NodeMapping.cuh"
 
 struct NodeEdgeIndex
 {

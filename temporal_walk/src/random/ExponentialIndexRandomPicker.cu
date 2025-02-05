@@ -1,4 +1,4 @@
-#include "ExponentialIndexRandomPicker.h"
+#include "ExponentialIndexRandomPicker.cuh"
 #include <random>
 #include <cmath>
 #include <iostream>

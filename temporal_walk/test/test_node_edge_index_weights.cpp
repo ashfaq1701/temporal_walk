@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "../src/data/NodeEdgeIndex.h"
-#include "../src/data/NodeMapping.h"
-#include "../src/data/EdgeData.h"
+#include "../src/data/NodeEdgeIndex.cuh"
+#include "../src/data/NodeMapping.cuh"
+#include "../src/data/EdgeData.cuh"
 
 class NodeEdgeIndexWeightTest : public ::testing::Test {
 protected:

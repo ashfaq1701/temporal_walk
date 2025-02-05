@@ -5,8 +5,8 @@
 #include <cstdint>
 #include <tuple>
 #include <functional>
-#include "NodeMapping.h"
-#include "NodeEdgeIndex.h"
+#include "NodeMapping.cuh"
+#include "NodeEdgeIndex.cuh"
 #include "../utils/utils.h"
 #include "../config/constants.h"
 

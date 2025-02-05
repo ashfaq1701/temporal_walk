@@ -1,4 +1,4 @@
-#include "NodeEdgeIndex.h"
+#include "NodeEdgeIndex.cuh"
 
 #include <iostream>
 

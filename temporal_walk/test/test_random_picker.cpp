@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "../src/random/ExponentialIndexRandomPicker.h"
-#include "../src/random/WeightBasedRandomPicker.h"
-#include "../src/random/LinearRandomPicker.h"
+#include "../src/random/ExponentialIndexRandomPicker.cuh"
+#include "../src/random/WeightBasedRandomPicker.cuh"
+#include "../src/random/LinearRandomPicker.cuh"
 
 constexpr int RANDOM_START = 0;
 constexpr int RANDOM_END = 10000;

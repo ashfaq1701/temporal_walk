@@ -1,9 +1,9 @@
-#include "TemporalGraph.h"
+#include "TemporalGraph.cuh"
 #include <algorithm>
 #include <iostream>
 
 #include "../random/IndexBasedRandomPicker.h"
-#include "../random/WeightBasedRandomPicker.h"
+#include "../random/WeightBasedRandomPicker.cuh"
 #include "../random/RandomPicker.h"
 
 

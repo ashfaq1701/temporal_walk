@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include "../src/data/TemporalGraph.h"
-#include "../src/random/WeightBasedRandomPicker.h"
+#include "../src/data/TemporalGraph.cuh"
+#include "../src/random/WeightBasedRandomPicker.cuh"
 
 class TemporalGraphWeightTest : public ::testing::Test {
 protected:

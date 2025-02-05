@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../src/random/ExponentialIndexRandomPicker.h"
+#include "../src/random/ExponentialIndexRandomPicker.cuh"
 
 constexpr int TOTAL_TIMESTEPS = 100000000;
 

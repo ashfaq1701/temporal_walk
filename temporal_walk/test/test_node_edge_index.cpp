@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/data/NodeEdgeIndex.h"
+#include "../src/data/NodeEdgeIndex.cuh"
 
 class NodeEdgeIndexTest : public ::testing::Test {
 protected:

@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/data/EdgeData.h"
+#include "../src/data/EdgeData.cuh"
 #include <cmath>
 
 class EdgeDataWeightTest : public ::testing::Test {

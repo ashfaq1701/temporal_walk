@@ -1,4 +1,4 @@
-#include "NodeMapping.h"
+#include "NodeMapping.cuh"
 #include <algorithm>
 
 NodeMapping::NodeMapping(const bool use_gpu): use_gpu(use_gpu) {}

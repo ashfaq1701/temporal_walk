@@ -4,7 +4,7 @@
 #include <vector>
 #include <cstdint>
 #include <tuple>
-#include "EdgeData.h"
+#include "EdgeData.cuh"
 
 struct NodeMapping {
    bool use_gpu;

@@ -1,6 +1,6 @@
 #include <random>
 #include <stdexcept>
-#include "UniformRandomPicker.h"
+#include "UniformRandomPicker.cuh"
 
 int UniformRandomPicker::pick_random(const int start, const int end, const bool prioritize_end) {
     if (start >= end) {

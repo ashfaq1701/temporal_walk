@@ -1,4 +1,4 @@
-#include "EdgeData.h"
+#include "EdgeData.cuh"
 #include <algorithm>
 #include <iostream>
 

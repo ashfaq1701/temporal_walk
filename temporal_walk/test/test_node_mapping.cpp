@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/data/NodeMapping.h"
+#include "../src/data/NodeMapping.cuh"
 
 class NodeMappingTest : public ::testing::Test {
 protected:

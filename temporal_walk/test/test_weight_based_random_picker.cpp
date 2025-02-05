@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/random/WeightBasedRandomPicker.h"
+#include "../src/random/WeightBasedRandomPicker.cuh"
 #include "../src/utils/utils.h"
 
 class WeightBasedRandomPickerTest : public ::testing::Test

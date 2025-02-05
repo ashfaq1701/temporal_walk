@@ -1,4 +1,4 @@
-#include "WeightBasedRandomPicker.h"
+#include "WeightBasedRandomPicker.cuh"
 
 template<typename T>
 int WeightBasedRandomPicker::pick_random(
