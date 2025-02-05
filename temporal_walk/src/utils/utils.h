@@ -31,23 +31,6 @@ size_t count_elements_greater_than(const std::vector<T>& vec, const V& value, Co
     return std::distance(it, vec.end());
 }
 
-inline int get_random_number(const int max_bound) {
-    std::uniform_int_distribution<> dist(0, max_bound - 1);
-    return dist(thread_local_gen);
-}
-
-inline bool get_random_boolean() {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<int> dist(0, 1);
-    return dist(gen) == 1;
-}
-
-inline double get_random_double() {
-    std::uniform_real_distribution<double> dist(0.0, 1.0);
-    return dist(thread_local_gen);
-}
-
 template <typename K, typename V>
 void delete_items_less_than_key(std::map<K, V>& map_obj, const K& key) {
     const auto it = map_obj.lower_bound(key);
@@ -109,12 +92,6 @@ inline std::vector<int> divide_number(int n, int i) {
     return parts;
 }
 
-inline std::mt19937& get_random_generator() {
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    return gen;
-}
-
 template <typename T>
 void shuffle_vector(std::vector<T>& vec) {
     std::random_device rd;
@@ -122,11 +99,35 @@ void shuffle_vector(std::vector<T>& vec) {
     std::shuffle(vec.begin(), vec.end(), rng);
 }
 
-inline int pick_random_number(const int a, const int b) {
-    return get_random_boolean() ? a : b;
+inline std::mt19937& get_random_generator() {
+    thread_local std::mt19937 thread_local_gen(std::random_device{}());
+    return thread_local_gen;
 }
 
-inline int pick_other_number(const std::tuple<int, int>& number, int picked_number) {
+template <typename T>
+T generate_random_value(T start, T end) {
+    std::uniform_real_distribution<T> dist(start, end);
+    return dist(thread_local_gen);
+}
+
+inline int generate_random_int(const int start, const int end) {
+    std::uniform_int_distribution<> dist(start, end);
+    return dist(thread_local_gen);
+}
+
+inline int generate_random_number_bounded_by(const int max_bound) {
+    return generate_random_int(0, max_bound - 1);
+}
+
+inline bool generate_random_boolean() {
+    return generate_random_int(0, 1) == 1;
+}
+
+inline int pick_random_number(const int a, const int b) {
+    return generate_random_boolean() ? a : b;
+}
+
+inline int pick_other_number(const std::tuple<int, int>& number, const int picked_number) {
     const int first = std::get<0>(number);
     const int second = std::get<1>(number);
     return (picked_number == first) ? second : first;

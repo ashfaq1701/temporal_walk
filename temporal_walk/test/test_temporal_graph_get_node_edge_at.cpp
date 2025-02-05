@@ -155,7 +155,7 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, EdgeCasesTest) {
 
 // Test random selection within timestamp groups
 TEST_F(TemporalGraphGetNodeEdgeAtTest, RandomSelectionTest) {
-    auto edges = std::vector<std::tuple<int, int, int64_t>>{
+    const auto edges = std::vector<std::tuple<int, int, int64_t>>{
         {10, 20, 100}, // Group 1: ts 100
         {10, 30, 100},
         {10, 40, 100},

@@ -12,7 +12,7 @@ add_executable(
         test_temporal_graph.cpp
         test_temporal_graph_get_node_edge_at.cpp
         test_temporal_graph_weights.cpp
-        test_exponential_weight_random_picker.cpp
+        test_weight_based_random_picker.cpp
         ${SRC_FILES}
 )
 

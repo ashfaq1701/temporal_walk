@@ -24,9 +24,9 @@ struct NodeEdgeIndex
     std::vector<size_t> inbound_timestamp_group_offsets;
     std::vector<size_t> inbound_timestamp_group_indices;
 
-    std::vector<double> outbound_forward_weights_exponential;   // For all forward walks
-    std::vector<double> outbound_backward_weights_exponential;  // For undirected backward walks
-    std::vector<double> inbound_backward_weights_exponential;   // For directed backward walks
+    std::vector<double> outbound_forward_cumulative_weights_exponential;   // For all forward walks
+    std::vector<double> outbound_backward_cumulative_weights_exponential;  // For undirected backward walks
+    std::vector<double> inbound_backward_cumulative_weights_exponential;   // For directed backward walks
 
     explicit NodeEdgeIndex(bool use_gpu);
 

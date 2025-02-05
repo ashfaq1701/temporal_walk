@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "../src/random/WeightBasedRandomPicker.h"
+#include "../src/utils/utils.h"
 
 class WeightBasedRandomPickerTest : public ::testing::Test
 {
@@ -8,9 +9,9 @@ protected:
 
     // Helper to verify sampling is within correct range
     void verify_sampling_range(const std::vector<double>& weights,
-                               int start,
-                               int end,
-                               int num_samples = 1000)
+                               const int start,
+                               const int end,
+                               const int num_samples = 1000)
     {
         std::map<int, int> sample_counts;
         for (int i = 0; i < num_samples; i++)
@@ -47,22 +48,15 @@ TEST_F(WeightBasedRandomPickerTest, ValidationChecks)
 
 TEST_F(WeightBasedRandomPickerTest, FullRangeSampling)
 {
-    const std::vector<double> weights = {0.2, 0.5, 0.7, 1.0};
-    verify_sampling_range(weights, 0, 4);
+    verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 0, 4);
 }
 
 TEST_F(WeightBasedRandomPickerTest, SubrangeSampling)
 {
-    const std::vector<double> weights = {0.2, 0.5, 0.7, 1.0};
-
-    // Test middle range
-    verify_sampling_range(weights, 1, 3);
-
-    // Test start range
-    verify_sampling_range(weights, 0, 2);
-
-    // Test end range
-    verify_sampling_range(weights, 2, 4);
+    // Test all subranges with the same weight vector
+    verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 1, 3);  // middle range
+    verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 0, 2);  // start range
+    verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 2, 4);  // end range
 }
 
 TEST_F(WeightBasedRandomPickerTest, SingleElementRange)
@@ -79,7 +73,7 @@ TEST_F(WeightBasedRandomPickerTest, SingleElementRange)
 TEST_F(WeightBasedRandomPickerTest, WeightDistributionTest)
 {
     // Create weights with known distribution
-    const std::vector<double> weights = {0.25, 0.25, 0.25, 0.25}; // Equal increments
+    const std::vector<double> weights = {0.25, 0.5, 0.75, 1.0}; // Equal increments
 
     std::map<int, int> sample_counts;
     constexpr int num_samples = 10000;
@@ -95,7 +89,8 @@ TEST_F(WeightBasedRandomPickerTest, WeightDistributionTest)
     for (int i = 0; i < 4; i++)
     {
         const double proportion = static_cast<double>(sample_counts[i]) / num_samples;
-        EXPECT_NEAR(proportion, 0.25, 0.05); // Allow 5% deviation
+        EXPECT_NEAR(proportion, 0.25, 0.05)
+            << "Proportion for index " << i << " was " << proportion;
     }
 }
 
