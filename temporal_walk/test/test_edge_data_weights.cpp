@@ -2,7 +2,7 @@
 #include "../src/data/EdgeData.cuh"
 #include <cmath>
 
-class EdgeDataWeightTest : public ::testing::Test {
+class EdgeDataWeightTest : public ::testing::TestWithParam<bool> {
 protected:
    static void verify_cumulative_weights(const DualVector<double>& weights) {
        ASSERT_FALSE(weights.empty());
@@ -43,16 +43,16 @@ protected:
    }
 };
 
-TEST_F(EdgeDataWeightTest, EmptyEdges) {
-   EdgeData edges(false);  // CPU mode
+TEST_P(EdgeDataWeightTest, EmptyEdges) {
+   EdgeData edges(GetParam());  // CPU mode
    edges.update_temporal_weights(-1);
 
    EXPECT_TRUE(edges.forward_cumulative_weights_exponential.empty());
    EXPECT_TRUE(edges.backward_cumulative_weights_exponential.empty());
 }
 
-TEST_F(EdgeDataWeightTest, SingleTimestampGroup) {
-   EdgeData edges(false);  // CPU mode
+TEST_P(EdgeDataWeightTest, SingleTimestampGroup) {
+   EdgeData edges(GetParam());  // CPU mode
    edges.push_back(1, 2, 10);
    edges.push_back(2, 3, 10);
    edges.update_timestamp_groups();
@@ -66,8 +66,8 @@ TEST_F(EdgeDataWeightTest, SingleTimestampGroup) {
    EXPECT_NEAR(edges.backward_cumulative_weights_exponential[0], 1.0, 1e-6);
 }
 
-TEST_F(EdgeDataWeightTest, WeightNormalization) {
-   EdgeData edges(false);  // CPU mode
+TEST_P(EdgeDataWeightTest, WeightNormalization) {
+   EdgeData edges(GetParam());  // CPU mode
    add_test_edges(edges);
    edges.update_temporal_weights(-1);
 
@@ -79,8 +79,8 @@ TEST_F(EdgeDataWeightTest, WeightNormalization) {
    verify_cumulative_weights(edges.backward_cumulative_weights_exponential);
 }
 
-TEST_F(EdgeDataWeightTest, ForwardWeightBias) {
-   EdgeData edges(false);  // CPU mode
+TEST_P(EdgeDataWeightTest, ForwardWeightBias) {
+   EdgeData edges(GetParam());  // CPU mode
    add_test_edges(edges);
    edges.update_temporal_weights(-1);
 
@@ -94,8 +94,8 @@ TEST_F(EdgeDataWeightTest, ForwardWeightBias) {
    }
 }
 
-TEST_F(EdgeDataWeightTest, BackwardWeightBias) {
-   EdgeData edges(false);  // CPU mode
+TEST_P(EdgeDataWeightTest, BackwardWeightBias) {
+   EdgeData edges(GetParam());  // CPU mode
    add_test_edges(edges);
    edges.update_temporal_weights(-1);
 
@@ -109,8 +109,8 @@ TEST_F(EdgeDataWeightTest, BackwardWeightBias) {
    }
 }
 
-TEST_F(EdgeDataWeightTest, WeightExponentialDecay) {
-    EdgeData edges(false);  // CPU mode
+TEST_P(EdgeDataWeightTest, WeightExponentialDecay) {
+    EdgeData edges(GetParam());  // CPU mode
     edges.push_back(1, 2, 10);
     edges.push_back(2, 3, 20);
     edges.push_back(3, 4, 30);
@@ -141,8 +141,8 @@ TEST_F(EdgeDataWeightTest, WeightExponentialDecay) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, UpdateWeights) {
-   EdgeData edges(false);
+TEST_P(EdgeDataWeightTest, UpdateWeights) {
+   EdgeData edges(GetParam());
    add_test_edges(edges);
    edges.update_temporal_weights(-1);
 
@@ -164,8 +164,8 @@ TEST_F(EdgeDataWeightTest, UpdateWeights) {
    verify_cumulative_weights(edges.backward_cumulative_weights_exponential);
 }
 
-TEST_F(EdgeDataWeightTest, TimescaleBoundZero) {
-    EdgeData edges(false);
+TEST_P(EdgeDataWeightTest, TimescaleBoundZero) {
+    EdgeData edges(GetParam());
     add_test_edges(edges);
     edges.update_temporal_weights(0);  // Should behave like -1
 
@@ -173,8 +173,8 @@ TEST_F(EdgeDataWeightTest, TimescaleBoundZero) {
     verify_cumulative_weights(edges.backward_cumulative_weights_exponential);
 }
 
-TEST_F(EdgeDataWeightTest, TimescaleBoundPositive) {
-    EdgeData edges(false);
+TEST_P(EdgeDataWeightTest, TimescaleBoundPositive) {
+    EdgeData edges(GetParam());
     add_test_edges(edges);
     constexpr double timescale_bound = 30.0;
     edges.update_temporal_weights(timescale_bound);
@@ -205,8 +205,8 @@ TEST_F(EdgeDataWeightTest, TimescaleBoundPositive) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, ScalingComparison) {
-    EdgeData edges(false);
+TEST_P(EdgeDataWeightTest, ScalingComparison) {
+    EdgeData edges(GetParam());
     add_test_edges(edges);
 
     // Test relative weight proportions are preserved
@@ -230,8 +230,8 @@ TEST_F(EdgeDataWeightTest, ScalingComparison) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, ScaledWeightBounds) {
-    EdgeData edges(false);  // CPU mode
+TEST_P(EdgeDataWeightTest, ScaledWeightBounds) {
+    EdgeData edges(GetParam());  // CPU mode
     edges.push_back(1, 2, 100);
     edges.push_back(2, 3, 300);
     edges.push_back(3, 4, 700);
@@ -266,8 +266,8 @@ TEST_F(EdgeDataWeightTest, ScaledWeightBounds) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, DifferentTimescaleBounds) {
-    EdgeData edges(false);
+TEST_P(EdgeDataWeightTest, DifferentTimescaleBounds) {
+    EdgeData edges(GetParam());
     add_test_edges(edges);
 
     std::vector<double> bounds = {5.0, 10.0, 20.0};
@@ -293,8 +293,8 @@ TEST_F(EdgeDataWeightTest, DifferentTimescaleBounds) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, SingleTimestampWithBounds) {
-    EdgeData edges(false);
+TEST_P(EdgeDataWeightTest, SingleTimestampWithBounds) {
+    EdgeData edges(GetParam());
     // All edges have same timestamp
     edges.push_back(1, 2, 100);
     edges.push_back(2, 3, 100);
@@ -311,11 +311,11 @@ TEST_F(EdgeDataWeightTest, SingleTimestampWithBounds) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, WeightMonotonicity) {
-    EdgeData edges(false);
+TEST_P(EdgeDataWeightTest, WeightMonotonicity) {
+    EdgeData edges(GetParam());
     add_test_edges(edges);
 
-    const double timescale_bound = 20.0;
+    constexpr double timescale_bound = 20.0;
     edges.update_temporal_weights(timescale_bound);
 
     // Forward weights should decrease monotonically
@@ -349,8 +349,8 @@ TEST_F(EdgeDataWeightTest, WeightMonotonicity) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, TimescaleScalingPrecision) {
-    EdgeData edges(false);
+TEST_P(EdgeDataWeightTest, TimescaleScalingPrecision) {
+    EdgeData edges(GetParam());
     // Use precise timestamps for exact validation
     edges.push_back(1, 2, 100);
     edges.push_back(2, 3, 300);
@@ -386,3 +386,23 @@ TEST_F(EdgeDataWeightTest, TimescaleScalingPrecision) {
             << "Backward weight ratio incorrect at index " << i;
     }
 }
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    EdgeDataWeightTest,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    EdgeDataWeightTest,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif

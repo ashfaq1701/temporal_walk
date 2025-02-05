@@ -17,14 +17,14 @@ public:
     }
 };
 
-class TemporalGraphGetNodeEdgeAtTest : public ::testing::Test {
+class TemporalGraphGetNodeEdgeAtTest : public ::testing::TestWithParam<bool> {
 protected:
     std::unique_ptr<TemporalGraph> graph;
     std::unique_ptr<FirstIndexPicker> first_picker;
     std::unique_ptr<LastIndexPicker> last_picker;
 
     void SetUp() override {
-        graph = std::make_unique<TemporalGraph>(true, false); // directed graph
+        graph = std::make_unique<TemporalGraph>(true, GetParam()); // directed graph
         first_picker = std::make_unique<FirstIndexPicker>();
         last_picker = std::make_unique<LastIndexPicker>();
     }
@@ -39,7 +39,7 @@ protected:
 };
 
 // Test forward walks from a node
-TEST_F(TemporalGraphGetNodeEdgeAtTest, ForwardWalkTest) {
+TEST_P(TemporalGraphGetNodeEdgeAtTest, ForwardWalkTest) {
     const auto edges = std::vector<std::tuple<int, int, int64_t>>{
         {10, 20, 100}, // Node 10 outbound group 1
         {10, 30, 100},
@@ -71,7 +71,7 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, ForwardWalkTest) {
     verify_edge(edge, -1, -1, -1); // No groups after 104
 }
 
-TEST_F(TemporalGraphGetNodeEdgeAtTest, BackwardWalkTest) {
+TEST_P(TemporalGraphGetNodeEdgeAtTest, BackwardWalkTest) {
     const auto edges = std::vector<std::tuple<int, int, int64_t>>{
         {20, 10, 100}, // Node 10 inbound: ts 100 -> 103
         {30, 10, 101}, // From upstream (source) nodes: 20,30,40,50
@@ -124,7 +124,7 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, BackwardWalkTest) {
 }
 
 // Test edge cases and invalid inputs
-TEST_F(TemporalGraphGetNodeEdgeAtTest, EdgeCasesTest) {
+TEST_P(TemporalGraphGetNodeEdgeAtTest, EdgeCasesTest) {
     const auto edges = std::vector<std::tuple<int, int, int64_t>>{
         {10, 20, 100}, // Node 10 outbound: ts 100,101
         {10, 30, 101}, // Node 10 -> Nodes 20,30
@@ -154,7 +154,7 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, EdgeCasesTest) {
 }
 
 // Test random selection within timestamp groups
-TEST_F(TemporalGraphGetNodeEdgeAtTest, RandomSelectionTest) {
+TEST_P(TemporalGraphGetNodeEdgeAtTest, RandomSelectionTest) {
     const auto edges = std::vector<std::tuple<int, int, int64_t>>{
         {10, 20, 100}, // Group 1: ts 100
         {10, 30, 100},
@@ -178,7 +178,7 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, RandomSelectionTest) {
 }
 
 // Test exact timestamp matching
-TEST_F(TemporalGraphGetNodeEdgeAtTest, ExactTimestampTest) {
+TEST_P(TemporalGraphGetNodeEdgeAtTest, ExactTimestampTest) {
     const auto edges = std::vector<std::tuple<int, int, int64_t>>{
         // Edges for backward walks (upstream -> node 10)
         {20, 10, 100}, // Upstream nodes 20,30,40 -> downstream node 10
@@ -201,9 +201,9 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, ExactTimestampTest) {
 }
 
 // Test exact timestamp matching for undirected graphs
-TEST_F(TemporalGraphGetNodeEdgeAtTest, ExactTimestampUndirectedTest) {
+TEST_P(TemporalGraphGetNodeEdgeAtTest, ExactTimestampUndirectedTest) {
     // Create undirected graph
-    graph = std::make_unique<TemporalGraph>(false, false);
+    graph = std::make_unique<TemporalGraph>(false, GetParam());
 
     const auto edges = std::vector<std::tuple<int, int, int64_t>>{
         // Edges connecting to node 10
@@ -231,3 +231,23 @@ TEST_F(TemporalGraphGetNodeEdgeAtTest, ExactTimestampUndirectedTest) {
     edge = graph->get_node_edge_at(20, *first_picker, 100, true);
     verify_edge(edge, 20, 30, 104);
 }
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    TemporalGraphGetNodeEdgeAtTest,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    TemporalGraphGetNodeEdgeAtTest,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif

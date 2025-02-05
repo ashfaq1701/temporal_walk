@@ -11,32 +11,32 @@ constexpr int64_t MAX_TIME_CAPACITY = 5;
 constexpr RandomPickerType exponential_picker_type = RandomPickerType::ExponentialIndex;
 constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;
 
-class EmptyTemporalWalkTest : public ::testing::Test {
+class EmptyTemporalWalkTest : public ::testing::TestWithParam<bool> {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(true, false, -1, true, -1);
+        temporal_walk = std::make_unique<TemporalWalk>(true, GetParam(), -1, true, -1);
     }
 
     std::unique_ptr<TemporalWalk> temporal_walk;
 };
 
-class EmptyTemporalWalkTestWithMaxCapacity : public ::testing::Test {
+class EmptyTemporalWalkTestWithMaxCapacity : public ::testing::TestWithParam<bool> {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(true, false, MAX_TIME_CAPACITY, true, -1);
+        temporal_walk = std::make_unique<TemporalWalk>(true, GetParam(), MAX_TIME_CAPACITY, true, -1);
     }
 
     std::unique_ptr<TemporalWalk> temporal_walk;
 };
 
-class FilledDirectedTemporalWalkTest : public ::testing::Test {
+class FilledDirectedTemporalWalkTest : public ::testing::TestWithParam<bool> {
 protected:
     FilledDirectedTemporalWalkTest() {
         sample_edges = read_edges_from_csv("../../../data/sample_data.csv");
     }
 
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(true, false, -1, true, -1);
+        temporal_walk = std::make_unique<TemporalWalk>(true, GetParam(), -1, true, -1);
         temporal_walk->add_multiple_edges(sample_edges);
     }
 
@@ -44,14 +44,14 @@ protected:
     std::unique_ptr<TemporalWalk> temporal_walk;
 };
 
-class FilledUndirectedTemporalWalkTest : public ::testing::Test {
+class FilledUndirectedTemporalWalkTest : public ::testing::TestWithParam<bool> {
 protected:
     FilledUndirectedTemporalWalkTest() {
         sample_edges = read_edges_from_csv("../../../data/sample_data.csv");
     }
 
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(false, false, -1, true, -1);
+        temporal_walk = std::make_unique<TemporalWalk>(false, GetParam(), -1, true, -1);
         temporal_walk->add_multiple_edges(sample_edges);
     }
 
@@ -59,10 +59,10 @@ protected:
     std::unique_ptr<TemporalWalk> temporal_walk;
 };
 
-class TimescaleBoundedTemporalWalkTest : public ::testing::Test {
+class TimescaleBoundedTemporalWalkTest : public ::testing::TestWithParam<bool> {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk>(true, false, -1, true, 10.0);
+        temporal_walk = std::make_unique<TemporalWalk>(true, GetParam(), -1, true, 10.0);
         temporal_walk->add_multiple_edges({
             // Node 1's outgoing edges
             {1, 2, 100},
@@ -86,14 +86,14 @@ protected:
 };
 
 // Test the constructor of TemporalWalk to ensure it initializes correctly.
-TEST_F(EmptyTemporalWalkTest, ConstructorTest) {
-    EXPECT_NO_THROW(temporal_walk = std::make_unique<TemporalWalk>(true));
+TEST_P(EmptyTemporalWalkTest, ConstructorTest) {
+    EXPECT_NO_THROW(temporal_walk = std::make_unique<TemporalWalk>(true, GetParam()));
     EXPECT_EQ(temporal_walk->get_node_count(), 0); // Assuming initial node count is 0
 }
 
 
 // Test adding an edge to the TemporalWalk when it's empty.
-TEST_F(EmptyTemporalWalkTest, AddEdgeTest) {
+TEST_P(EmptyTemporalWalkTest, AddEdgeTest) {
     temporal_walk->add_multiple_edges({
         {1, 2, 100},
         {2, 3, 101},
@@ -108,7 +108,7 @@ TEST_F(EmptyTemporalWalkTest, AddEdgeTest) {
 }
 
 // When later edges are added than the allowed max time capacity, older edges are automatically deleted.
-TEST_F(EmptyTemporalWalkTestWithMaxCapacity, WhenMaxTimeCapacityExceedsEdgesAreDeletedAutomatically) {
+TEST_P(EmptyTemporalWalkTestWithMaxCapacity, WhenMaxTimeCapacityExceedsEdgesAreDeletedAutomatically) {
     temporal_walk->add_multiple_edges({
         { 0, 2, 1 },
         { 2, 3, 3 },
@@ -147,7 +147,7 @@ TEST_F(EmptyTemporalWalkTestWithMaxCapacity, WhenMaxTimeCapacityExceedsEdgesAreD
 }
 
 // Test to check if a specific node ID is present in the filled TemporalWalk.
-TEST_F(FilledDirectedTemporalWalkTest, TestNodeFoundTest) {
+TEST_P(FilledDirectedTemporalWalkTest, TestNodeFoundTest) {
     const auto nodes = temporal_walk->get_node_ids();
     const auto it = std::find(nodes.begin(), nodes.end(), TEST_NODE_ID);
     EXPECT_NE(it, nodes.end());
@@ -155,7 +155,7 @@ TEST_F(FilledDirectedTemporalWalkTest, TestNodeFoundTest) {
 
 // Test that the number of random walks generated matches the expected count and checks that no walk exceeds its length.
 // Also test that the system can sample walks of length more than 1.
-TEST_F(FilledDirectedTemporalWalkTest, WalkCountAndLensTest) {
+TEST_P(FilledDirectedTemporalWalkTest, WalkCountAndLensTest) {
     const auto walks = temporal_walk->get_random_walks_and_times_for_all_nodes(MAX_WALK_LEN, &linear_picker_type, 10);
 
     int total_walk_lens = 0;
@@ -172,7 +172,7 @@ TEST_F(FilledDirectedTemporalWalkTest, WalkCountAndLensTest) {
 }
 
 // Test to verify that the timestamps in each walk are strictly increasing in directed graphs.
-TEST_F(FilledDirectedTemporalWalkTest, WalkIncreasingTimestampTest) {
+TEST_P(FilledDirectedTemporalWalkTest, WalkIncreasingTimestampTest) {
     const auto walks_forward = temporal_walk->get_random_walks_and_times_for_all_nodes(MAX_WALK_LEN, &linear_picker_type, 10);
 
     for (const auto& walk : walks_forward) {
@@ -196,7 +196,7 @@ TEST_F(FilledDirectedTemporalWalkTest, WalkIncreasingTimestampTest) {
 }
 
 // Test to verify that the timestamps in each walk are strictly increasing in undirected graphs.
-TEST_F(FilledUndirectedTemporalWalkTest, WalkIncreasingTimestampTest) {
+TEST_P(FilledUndirectedTemporalWalkTest, WalkIncreasingTimestampTest) {
     const auto walks = temporal_walk->get_random_walks_and_times_for_all_nodes(MAX_WALK_LEN, &linear_picker_type, 10);
 
     for (const auto& walk : walks) {
@@ -220,7 +220,7 @@ TEST_F(FilledUndirectedTemporalWalkTest, WalkIncreasingTimestampTest) {
 }
 
 // Test to verify that each step in walks uses valid edges from the graph
-TEST_F(FilledDirectedTemporalWalkTest, WalkValidEdgesTest) {
+TEST_P(FilledDirectedTemporalWalkTest, WalkValidEdgesTest) {
     // Create a map of valid edges for O(1) lookup
     std::map<std::tuple<int, int, int64_t>, bool> valid_edges;
     for (const auto& edge : sample_edges) {
@@ -264,7 +264,7 @@ TEST_F(FilledDirectedTemporalWalkTest, WalkValidEdgesTest) {
     }
 }
 
-TEST_F(FilledDirectedTemporalWalkTest, WalkTerminalEdgesTest) {
+TEST_P(FilledDirectedTemporalWalkTest, WalkTerminalEdgesTest) {
     // For forward walks, track maximum outgoing timestamps
     std::map<int, int64_t> max_outgoing_timestamps;
     // For backward walks, track minimum incoming timestamps
@@ -348,7 +348,7 @@ TEST_F(FilledDirectedTemporalWalkTest, WalkTerminalEdgesTest) {
 }
 
 // Test timestamps and valid edges with WeightBasedRandomPicker
-TEST_F(FilledDirectedTemporalWalkTest, WalkIncreasingTimestampWithExponentialWeightTest) {
+TEST_P(FilledDirectedTemporalWalkTest, WalkIncreasingTimestampWithExponentialWeightTest) {
     constexpr RandomPickerType exponential_weight_picker = RandomPickerType::ExponentialWeight;
     const auto walks = temporal_walk->get_random_walks_and_times_for_all_nodes(
         MAX_WALK_LEN, &exponential_weight_picker, 10);
@@ -375,7 +375,7 @@ TEST_F(FilledDirectedTemporalWalkTest, WalkIncreasingTimestampWithExponentialWei
     }
 }
 
-TEST_F(FilledDirectedTemporalWalkTest, WalkValidEdgesWithExponentialWeightTest) {
+TEST_P(FilledDirectedTemporalWalkTest, WalkValidEdgesWithExponentialWeightTest) {
     constexpr RandomPickerType exponential_weight_picker = RandomPickerType::ExponentialWeight;
 
     // Create edge lookup map
@@ -423,7 +423,7 @@ TEST_F(FilledDirectedTemporalWalkTest, WalkValidEdgesWithExponentialWeightTest) 
     }
 }
 
-TEST_F(FilledDirectedTemporalWalkTest, WalkTerminalEdgesWithExponentialWeightTest) {
+TEST_P(FilledDirectedTemporalWalkTest, WalkTerminalEdgesWithExponentialWeightTest) {
     constexpr RandomPickerType exponential_weight_picker = RandomPickerType::ExponentialWeight;
 
     // Track valid timestamps for each node
@@ -484,7 +484,7 @@ TEST_F(FilledDirectedTemporalWalkTest, WalkTerminalEdgesWithExponentialWeightTes
     }
 }
 
-TEST_F(TimescaleBoundedTemporalWalkTest, ValidEdgesWithScaling) {
+TEST_P(TimescaleBoundedTemporalWalkTest, ValidEdgesWithScaling) {
     constexpr RandomPickerType exponential_weight_picker = RandomPickerType::ExponentialWeight;
 
     std::map<std::tuple<int, int, int64_t>, bool> valid_edges;
@@ -513,7 +513,7 @@ TEST_F(TimescaleBoundedTemporalWalkTest, ValidEdgesWithScaling) {
     }
 }
 
-TEST_F(TimescaleBoundedTemporalWalkTest, TerminalEdgeValidation) {
+TEST_P(TimescaleBoundedTemporalWalkTest, TerminalEdgeValidation) {
     constexpr RandomPickerType exponential_weight_picker = RandomPickerType::ExponentialWeight;
 
     std::map<int, std::vector<int64_t>> next_valid_timestamps;
@@ -575,3 +575,107 @@ TEST_F(TimescaleBoundedTemporalWalkTest, TerminalEdgeValidation) {
             << first_node << " before timestamp " << first_ts;
     }
 }
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    EmptyTemporalWalkTest,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    EmptyTemporalWalkTest,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif
+
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    EmptyTemporalWalkTestWithMaxCapacity,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    EmptyTemporalWalkTestWithMaxCapacity,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif
+
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    FilledDirectedTemporalWalkTest,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    FilledDirectedTemporalWalkTest,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif
+
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    FilledUndirectedTemporalWalkTest,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    FilledUndirectedTemporalWalkTest,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif
+
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    TimescaleBoundedTemporalWalkTest,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    TimescaleBoundedTemporalWalkTest,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif

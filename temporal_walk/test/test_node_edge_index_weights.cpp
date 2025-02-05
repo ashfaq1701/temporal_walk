@@ -1,13 +1,12 @@
-
 #include <gtest/gtest.h>
 
 #include "../src/data/NodeEdgeIndex.cuh"
 #include "../src/data/NodeMapping.cuh"
 #include "../src/data/EdgeData.cuh"
 
-class NodeEdgeIndexWeightTest : public ::testing::Test {
+class NodeEdgeIndexWeightTest : public ::testing::TestWithParam<bool> {
 protected:
-    NodeEdgeIndexWeightTest() : index(false) {}
+    NodeEdgeIndexWeightTest() : index(GetParam()) {}
 
     // Helper to verify weights are normalized and cumulative per node's group
     static void verify_node_weights(const DualVector<size_t>& group_offsets,
@@ -59,7 +58,7 @@ protected:
     }
 
     void setup_test_graph(bool directed = true) {
-        EdgeData edges(false);  // CPU mode
+        EdgeData edges(GetParam());  // CPU mode
         // Add edges that create multiple timestamp groups per node
         edges.push_back(1, 2, 10);
         edges.push_back(1, 3, 10); // Same timestamp group for node 1
@@ -80,10 +79,10 @@ protected:
     NodeEdgeIndex index;
 };
 
-TEST_F(NodeEdgeIndexWeightTest, EmptyGraph) {
-    EdgeData empty_edges(false);
-    NodeMapping empty_mapping(false);
-    index = NodeEdgeIndex(false);
+TEST_P(NodeEdgeIndexWeightTest, EmptyGraph) {
+    EdgeData empty_edges(GetParam());
+    NodeMapping empty_mapping(GetParam());
+    index = NodeEdgeIndex(GetParam());
     index.rebuild(empty_edges, empty_mapping, true);
     index.update_temporal_weights(empty_edges, -1);
 
@@ -92,7 +91,7 @@ TEST_F(NodeEdgeIndexWeightTest, EmptyGraph) {
     EXPECT_TRUE(index.inbound_backward_cumulative_weights_exponential.empty());
 }
 
-TEST_F(NodeEdgeIndexWeightTest, DirectedWeightNormalization) {
+TEST_P(NodeEdgeIndexWeightTest, DirectedWeightNormalization) {
     setup_test_graph(true);
 
     // Verify per-node weight normalization
@@ -104,17 +103,17 @@ TEST_F(NodeEdgeIndexWeightTest, DirectedWeightNormalization) {
                        index.inbound_backward_cumulative_weights_exponential);
 }
 
-TEST_F(NodeEdgeIndexWeightTest, WeightBiasPerNode) {
-    EdgeData edges(false);
+TEST_P(NodeEdgeIndexWeightTest, WeightBiasPerNode) {
+    EdgeData edges(GetParam());
     edges.push_back(1, 2, 100);  // Known timestamps for precise verification
     edges.push_back(1, 3, 200);
     edges.push_back(1, 4, 300);
     edges.update_timestamp_groups();
 
-    NodeMapping mapping(false);
+    NodeMapping mapping(GetParam());
     mapping.update(edges, 0, edges.size());
 
-    index = NodeEdgeIndex(false);
+    index = NodeEdgeIndex(GetParam());
     index.rebuild(edges, mapping, true);
     index.update_temporal_weights(edges, -1); // No scaling
 
@@ -139,17 +138,17 @@ TEST_F(NodeEdgeIndexWeightTest, WeightBiasPerNode) {
     }
 }
 
-TEST_F(NodeEdgeIndexWeightTest, ScaledWeightRatios) {
-    EdgeData edges(false);
+TEST_P(NodeEdgeIndexWeightTest, ScaledWeightRatios) {
+    EdgeData edges(GetParam());
     edges.push_back(1, 2, 100);
     edges.push_back(1, 3, 300);
     edges.push_back(1, 4, 500);
     edges.update_timestamp_groups();
 
-    NodeMapping mapping(false);
+    NodeMapping mapping(GetParam());
     mapping.update(edges, 0, edges.size());
 
-    index = NodeEdgeIndex(false);
+    index = NodeEdgeIndex(GetParam());
     index.rebuild(edges, mapping, true);
 
     constexpr double timescale_bound = 2.0;
@@ -182,7 +181,7 @@ TEST_F(NodeEdgeIndexWeightTest, ScaledWeightRatios) {
     }
 }
 
-TEST_F(NodeEdgeIndexWeightTest, UndirectedWeightNormalization) {
+TEST_P(NodeEdgeIndexWeightTest, UndirectedWeightNormalization) {
    setup_test_graph(false);
 
    // For undirected, should only have outbound weights
@@ -193,7 +192,7 @@ TEST_F(NodeEdgeIndexWeightTest, UndirectedWeightNormalization) {
    EXPECT_TRUE(index.inbound_backward_cumulative_weights_exponential.empty());
 }
 
-TEST_F(NodeEdgeIndexWeightTest, WeightConsistencyAcrossUpdates) {
+TEST_P(NodeEdgeIndexWeightTest, WeightConsistencyAcrossUpdates) {
    setup_test_graph(true);
 
    // Store original weights
@@ -202,12 +201,12 @@ TEST_F(NodeEdgeIndexWeightTest, WeightConsistencyAcrossUpdates) {
    auto original_in_backward = index.inbound_backward_cumulative_weights_exponential;
 
    // Rebuild and update weights again
-   EdgeData edges(false);
+   EdgeData edges(GetParam());
    edges.push_back(1, 2, 10);
    edges.push_back(1, 3, 10);
    edges.update_timestamp_groups();
 
-   NodeMapping mapping(false);
+   NodeMapping mapping(GetParam());
    mapping.update(edges, 0, edges.size());
 
    index.rebuild(edges, mapping, true);
@@ -219,15 +218,15 @@ TEST_F(NodeEdgeIndexWeightTest, WeightConsistencyAcrossUpdates) {
                       index.outbound_forward_cumulative_weights_exponential);
 }
 
-TEST_F(NodeEdgeIndexWeightTest, SingleTimestampGroupPerNode) {
-   EdgeData edges(false);
+TEST_P(NodeEdgeIndexWeightTest, SingleTimestampGroupPerNode) {
+   EdgeData edges(GetParam());
    // All edges in same timestamp group
    edges.push_back(1, 2, 10);
    edges.push_back(1, 3, 10);
    edges.push_back(2, 3, 10);
    edges.update_timestamp_groups();
 
-   NodeMapping mapping(false);
+   NodeMapping mapping(GetParam());
    mapping.update(edges, 0, edges.size());
 
    index.rebuild(edges, mapping, true);
@@ -245,14 +244,14 @@ TEST_F(NodeEdgeIndexWeightTest, SingleTimestampGroupPerNode) {
    }
 }
 
-TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundZero) {
-    EdgeData edges(false);
+TEST_P(NodeEdgeIndexWeightTest, TimescaleBoundZero) {
+    EdgeData edges(GetParam());
     edges.push_back(1, 2, 10);
     edges.push_back(1, 3, 20);
     edges.push_back(1, 4, 30);
     edges.update_timestamp_groups();
 
-    NodeMapping mapping(false);
+    NodeMapping mapping(GetParam());
     mapping.update(edges, 0, edges.size());
 
     index.rebuild(edges, mapping, true);
@@ -264,8 +263,8 @@ TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundZero) {
                        index.outbound_backward_cumulative_weights_exponential);
 }
 
-TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundWithSingleTimestamp) {
-    EdgeData edges(false);
+TEST_P(NodeEdgeIndexWeightTest, TimescaleBoundWithSingleTimestamp) {
+    EdgeData edges(GetParam());
     // All edges for node 1 have same timestamp
     constexpr int node_id = 1;  // Original node ID
     edges.push_back(node_id, 2, 10);
@@ -273,7 +272,7 @@ TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundWithSingleTimestamp) {
     edges.push_back(node_id, 4, 10);
     edges.update_timestamp_groups();
 
-    NodeMapping mapping(false);
+    NodeMapping mapping(GetParam());
     mapping.update(edges, 0, edges.size());
 
     // Get the dense index for node_id
@@ -295,14 +294,14 @@ TEST_F(NodeEdgeIndexWeightTest, TimescaleBoundWithSingleTimestamp) {
     }
 }
 
-TEST_F(NodeEdgeIndexWeightTest, WeightOrderPreservation) {
-    EdgeData edges(false);
+TEST_P(NodeEdgeIndexWeightTest, WeightOrderPreservation) {
+    EdgeData edges(GetParam());
     edges.push_back(1, 2, 10);
     edges.push_back(1, 3, 20);
     edges.push_back(1, 4, 30);
     edges.update_timestamp_groups();
 
-    NodeMapping mapping(false);
+    NodeMapping mapping(GetParam());
     mapping.update(edges, 0, edges.size());
     index.rebuild(edges, mapping, true);
 
@@ -326,8 +325,8 @@ TEST_F(NodeEdgeIndexWeightTest, WeightOrderPreservation) {
     }
 }
 
-TEST_F(NodeEdgeIndexWeightTest, TimescaleNormalizationTest) {
-    EdgeData edges(false);  // CPU mode
+TEST_P(NodeEdgeIndexWeightTest, TimescaleNormalizationTest) {
+    EdgeData edges(GetParam());  // CPU mode
     // Create edges with widely varying time differences
     edges.push_back(1, 2, 100);       // Small gap
     edges.push_back(1, 3, 200);       // 100 units
@@ -335,10 +334,10 @@ TEST_F(NodeEdgeIndexWeightTest, TimescaleNormalizationTest) {
     edges.push_back(1, 5, 100000);    // Large gap
     edges.update_timestamp_groups();
 
-    NodeMapping mapping(false);  // CPU mode
+    NodeMapping mapping(GetParam());  // CPU mode
     mapping.update(edges, 0, edges.size());
 
-    index = NodeEdgeIndex(false);  // CPU mode
+    index = NodeEdgeIndex(GetParam());  // CPU mode
     index.rebuild(edges, mapping, true);
 
     constexpr double timescale_bound = 5.0;
@@ -378,3 +377,23 @@ TEST_F(NodeEdgeIndexWeightTest, TimescaleNormalizationTest) {
             << "Weight ratio doesn't match expected scaled time difference at " << i;
     }
 }
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    NodeEdgeIndexWeightTest,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    NodeEdgeIndexWeightTest,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif

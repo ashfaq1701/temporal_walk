@@ -18,7 +18,7 @@ public:
     }
 };
 
-class TemporalGraphTest : public ::testing::Test {
+class TemporalGraphTest : public ::testing::TestWithParam<bool> {
 protected:
     std::unique_ptr<TemporalGraph> graph;
     std::unique_ptr<FirstIndexPicker> first_picker;
@@ -26,7 +26,7 @@ protected:
 
     void SetUp() override {
         // Create directed graph by default
-        graph = std::make_unique<TemporalGraph>(true, false);
+        graph = std::make_unique<TemporalGraph>(true, GetParam());
         first_picker = std::make_unique<FirstIndexPicker>();
         last_picker = std::make_unique<LastIndexPicker>();
     }
@@ -39,13 +39,13 @@ protected:
 };
 
 // Test empty state
-TEST_F(TemporalGraphTest, EmptyStateTest) {
+TEST_P(TemporalGraphTest, EmptyStateTest) {
     EXPECT_EQ(graph->get_node_ids().size(), 0);
     EXPECT_TRUE(graph->get_edges().empty());
 }
 
 // Test basic edge addition
-TEST_F(TemporalGraphTest, BasicEdgeAdditionTest) {
+TEST_P(TemporalGraphTest, BasicEdgeAdditionTest) {
     const auto edges = create_edges({
         {1, 2, 100},
         {2, 3, 200},
@@ -59,7 +59,7 @@ TEST_F(TemporalGraphTest, BasicEdgeAdditionTest) {
     EXPECT_EQ(graph->get_node_ids().size(), 3);
 }
 
-TEST_F(TemporalGraphTest, MaintainSortedOrderTest) {
+TEST_P(TemporalGraphTest, MaintainSortedOrderTest) {
     // First addition
     auto edges1 = create_edges({
         {10, 20, 200},  // Out of order timestamps
@@ -113,9 +113,9 @@ TEST_F(TemporalGraphTest, MaintainSortedOrderTest) {
 }
 
 // Test time window functionality
-TEST_F(TemporalGraphTest, TimeWindowTest) {
+TEST_P(TemporalGraphTest, TimeWindowTest) {
     // Create graph with 100 time unit window
-    graph = std::make_unique<TemporalGraph>(true, false, 100);
+    graph = std::make_unique<TemporalGraph>(true, GetParam(), 100);
 
     // Add edges spanning the time window
     const auto edges = create_edges({
@@ -133,7 +133,7 @@ TEST_F(TemporalGraphTest, TimeWindowTest) {
 }
 
 // Test edge cases and corner cases
-TEST_F(TemporalGraphTest, EdgeAdditionEdgeCasesTest) {
+TEST_P(TemporalGraphTest, EdgeAdditionEdgeCasesTest) {
     // Test empty edge list
     graph->add_multiple_edges({});
     EXPECT_TRUE(graph->get_edges().empty());
@@ -161,8 +161,8 @@ TEST_F(TemporalGraphTest, EdgeAdditionEdgeCasesTest) {
 }
 
 // Test deletion of nodes when all their edges are removed
-TEST_F(TemporalGraphTest, NodeDeletionTest) {
-    graph = std::make_unique<TemporalGraph>(true, false, 100);  // 100 time unit window
+TEST_P(TemporalGraphTest, NodeDeletionTest) {
+    graph = std::make_unique<TemporalGraph>(true, GetParam(), 100);  // 100 time unit window
 
     // Add initial edges
     const auto edges1 = create_edges({
@@ -186,8 +186,8 @@ TEST_F(TemporalGraphTest, NodeDeletionTest) {
 }
 
 // Test undirected graph behavior
-TEST_F(TemporalGraphTest, UndirectedGraphEdgeAdditionTest) {
-    graph = std::make_unique<TemporalGraph>(false, false);  // Undirected
+TEST_P(TemporalGraphTest, UndirectedGraphEdgeAdditionTest) {
+    graph = std::make_unique<TemporalGraph>(false, GetParam());  // Undirected
 
     const auto edges = create_edges({
         {2, 1, 100},  // Should be stored as (1,2,100)
@@ -204,7 +204,7 @@ TEST_F(TemporalGraphTest, UndirectedGraphEdgeAdditionTest) {
     EXPECT_EQ(std::get<1>(stored_edges[1]), 3);
 }
 
-TEST_F(TemporalGraphTest, CountTimestampsTest) {
+TEST_P(TemporalGraphTest, CountTimestampsTest) {
    // Set up a graph with carefully chosen timestamps
    auto edges = create_edges({
        {1, 2, 100},  // t0
@@ -235,12 +235,12 @@ TEST_F(TemporalGraphTest, CountTimestampsTest) {
    EXPECT_EQ(graph->count_timestamps_greater_than(500), 0);  // After last timestamp
 
    // Test empty graph
-   graph = std::make_unique<TemporalGraph>(true, false);
+   graph = std::make_unique<TemporalGraph>(true, GetParam());
    EXPECT_EQ(graph->count_timestamps_less_than(100), 0);
    EXPECT_EQ(graph->count_timestamps_greater_than(100), 0);
 }
 
-TEST_F(TemporalGraphTest, CountNodeTimestampsDirectedTest) {
+TEST_P(TemporalGraphTest, CountNodeTimestampsDirectedTest) {
     // Set up directed graph with careful node-timestamp patterns
     auto edges = create_edges({
         {1, 2, 100},  // Node 1 out: t0  | Node 2 in: t0
@@ -285,9 +285,9 @@ TEST_F(TemporalGraphTest, CountNodeTimestampsDirectedTest) {
     EXPECT_EQ(graph->count_node_timestamps_less_than(-1, 100), 0);
 }
 
-TEST_F(TemporalGraphTest, CountNodeTimestampsUndirectedTest) {
+TEST_P(TemporalGraphTest, CountNodeTimestampsUndirectedTest) {
    // Create undirected graph
-   graph = std::make_unique<TemporalGraph>(false, false);
+   graph = std::make_unique<TemporalGraph>(false, GetParam());
 
    // Add edges - note that order will be normalized (smaller ID becomes source)
    const auto edges = create_edges({
@@ -316,7 +316,7 @@ TEST_F(TemporalGraphTest, CountNodeTimestampsUndirectedTest) {
    EXPECT_EQ(graph->count_node_timestamps_less_than(2, 250), 2);     // Should see both t0 and t1
 }
 
-TEST_F(TemporalGraphTest, CountNodeTimestampsDuplicatesTest) {
+TEST_P(TemporalGraphTest, CountNodeTimestampsDuplicatesTest) {
     // Test handling of duplicate timestamps for a node
     const auto edges = create_edges({
         {1, 2, 100},  // t0 outbound from node 1
@@ -342,7 +342,7 @@ TEST_F(TemporalGraphTest, CountNodeTimestampsDuplicatesTest) {
     EXPECT_EQ(graph->count_node_timestamps_greater_than(2, 50), 1);   // Node 2 sends at t1
 }
 
-TEST_F(TemporalGraphTest, GetEdgeAtTest) {
+TEST_P(TemporalGraphTest, GetEdgeAtTest) {
     // Set up test graph with carefully structured timestamps
     const auto edges = create_edges({
         {10, 20, 100},  // Group 0: timestamp 100
@@ -387,12 +387,12 @@ TEST_F(TemporalGraphTest, GetEdgeAtTest) {
     EXPECT_EQ(ts8, -1);
 
     // Test with empty graph
-    graph = std::make_unique<TemporalGraph>(true, false);
+    graph = std::make_unique<TemporalGraph>(true, GetParam());
     auto [src9, tgt9, ts9] = graph->get_edge_at(*first_picker, 100, true);
     EXPECT_EQ(ts9, -1);
 }
 
-TEST_F(TemporalGraphTest, GetEdgeAtDuplicateTimestampsTest) {
+TEST_P(TemporalGraphTest, GetEdgeAtDuplicateTimestampsTest) {
     // Setup graph with multiple edges in same timestamp groups
     const auto edges = create_edges({
         {10, 20, 100},  // Group 0: three edges at 100
@@ -419,7 +419,7 @@ TEST_F(TemporalGraphTest, GetEdgeAtDuplicateTimestampsTest) {
                 (src2 == 50 && tgt2 == 60));  // Should be one of the t=100 edges
 }
 
-TEST_F(TemporalGraphTest, GetEdgeAtBoundaryConditionsTest) {
+TEST_P(TemporalGraphTest, GetEdgeAtBoundaryConditionsTest) {
     // Test exact timestamp boundaries
     const auto edges = create_edges({
         {10, 20, 100},
@@ -443,7 +443,7 @@ TEST_F(TemporalGraphTest, GetEdgeAtBoundaryConditionsTest) {
     EXPECT_EQ(ts4, -1);   // No timestamps before 100
 }
 
-TEST_F(TemporalGraphTest, GetEdgeAtRandomSelectionTest) {
+TEST_P(TemporalGraphTest, GetEdgeAtRandomSelectionTest) {
     // Test that we can get different edges from same group
     const auto edges = create_edges({
         {1, 2, 100},
@@ -465,3 +465,23 @@ TEST_F(TemporalGraphTest, GetEdgeAtRandomSelectionTest) {
     // We should see more than one edge (due to random selection within group)
     EXPECT_GT(seen_edges.size(), 1);
 }
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    TemporalGraphTest,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    TemporalGraphTest,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif
