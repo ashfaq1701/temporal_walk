@@ -1,6 +1,7 @@
 #include "NodeMapping.cuh"
 #include <algorithm>
 #include <stdexcept>
+#include <thrust/extrema.h>
 
 NodeMapping::NodeMapping(const bool use_gpu):
     use_gpu(use_gpu), sparse_to_dense(use_gpu), dense_to_sparse(use_gpu), is_deleted(use_gpu) {}
@@ -24,11 +25,36 @@ void NodeMapping::host_mark_node_deleted(const int sparse_id) {
     }
 }
 
-void NodeMapping::update(const EdgeData& edges, const size_t start_idx, const size_t end_idx) {
+void NodeMapping::update(const EdgeData &edges, const size_t start_idx, const size_t end_idx) {
     // First pass: find max node ID
     int max_node_id = 0;
-    for (size_t i = start_idx; i < end_idx; i++) {
-        max_node_id = std::max({max_node_id, edges.sources[i], edges.targets[i]});
+    if (use_gpu) {
+        #ifdef HAS_CUDA
+        // Use thrust::max_element directly on the edge ranges
+        const auto max_src = thrust::max_element(
+            thrust::device,
+            edges.sources.device_begin() + static_cast<int>(start_idx),
+            edges.sources.device_begin() + static_cast<int>(end_idx)
+        );
+        const auto max_tgt = thrust::max_element(
+            thrust::device,
+            edges.targets.device_begin() + static_cast<int>(start_idx),
+            edges.targets.device_begin() + static_cast<int>(end_idx)
+        );
+
+        max_node_id = std::max(
+            *max_src,
+            *max_tgt
+        );
+        #endif
+    } else {
+        for (size_t i = start_idx; i < end_idx; i++) {
+            max_node_id = std::max({
+                max_node_id,
+                edges.sources.host_at(i),
+                edges.targets.host_at(i)
+            });
+        }
     }
 
     // Extend sparse_to_dense if needed
@@ -38,17 +64,67 @@ void NodeMapping::update(const EdgeData& edges, const size_t start_idx, const si
     }
 
     // Map unmapped nodes
-    for (size_t i = start_idx; i < end_idx; i++) {
-        is_deleted[edges.sources[i]] = ITEM_NOT_DELETED;
-        is_deleted[edges.targets[i]] = ITEM_NOT_DELETED;
+    if (use_gpu) {
+        #ifdef HAS_CUDA
+        // Get source and target node IDs in parallel
+        const int *sources_ptr = edges.sources.device_data().get();
+        const int *targets_ptr = edges.targets.device_data().get();
+        int *s2d_ptr = sparse_to_dense.device_data().get();
 
-        if (sparse_to_dense[edges.sources[i]] == -1) {
-            sparse_to_dense[edges.sources[i]] = static_cast<int>(dense_to_sparse.size());
-            dense_to_sparse.push_back(edges.sources[i]);
+        // Create temporary storage for nodes needing mapping
+        thrust::device_vector<int> new_nodes(1);  // Start with size 1 for the counter
+        thrust::fill(new_nodes.begin(), new_nodes.end(), 0);  // Initialize counter to 0
+        new_nodes.resize(1 + 2 * (end_idx - start_idx));  // Space for counter + max possible new nodes
+
+        // First identify and collect nodes needing mapping
+        thrust::for_each(
+            thrust::device,
+            thrust::counting_iterator<size_t>(start_idx),
+            thrust::counting_iterator<size_t>(end_idx),
+            [sources = sources_ptr,
+                targets = targets_ptr,
+                s2d = s2d_ptr,
+                d2s_size = dense_to_sparse.size(),
+                new_nodes_ptr = thrust::raw_pointer_cast(new_nodes.data())] __device__ (size_t i) {
+                const int src = sources[i];
+                const int tgt = targets[i];
+
+                // Use atomic operation to ensure thread safety
+                if (atomicCAS(&s2d[src], -1, static_cast<int>(d2s_size)) == -1) {
+                    // If this thread won the race to map this node, add it to new nodes
+                    const size_t pos = atomicAdd(&new_nodes_ptr[0], 1) + 1;  // +1 to skip counter
+                    new_nodes_ptr[pos] = src;
+                }
+                if (atomicCAS(&s2d[tgt], -1, static_cast<int>(d2s_size)) == -1) {
+                    const size_t pos = atomicAdd(&new_nodes_ptr[0], 1) + 1;  // +1 to skip counter
+                    new_nodes_ptr[pos] = tgt;
+                }
+            }
+        );
+
+        // Copy new nodes to host and update dense_to_sparse
+        std::vector<int> h_new_nodes(new_nodes.size());
+        thrust::copy(new_nodes.begin(), new_nodes.end(), h_new_nodes.begin());
+
+        // Update dense_to_sparse sequentially on host
+        for (int node: h_new_nodes) {
+            dense_to_sparse.push_back(node);
         }
-        if (sparse_to_dense[edges.targets[i]] == -1) {
-            sparse_to_dense[edges.targets[i]] = static_cast<int>(dense_to_sparse.size());
-            dense_to_sparse.push_back(edges.targets[i]);
+        #endif
+    } else {
+        // CPU version
+        for (size_t i = start_idx; i < end_idx; i++) {
+            const int src = edges.sources.host_at(i);
+            const int tgt = edges.targets.host_at(i);
+
+            if (sparse_to_dense[src] == -1) {
+                sparse_to_dense[src] = static_cast<int>(dense_to_sparse.size());
+                dense_to_sparse.push_back(src);
+            }
+            if (sparse_to_dense[tgt] == -1) {
+                sparse_to_dense[tgt] = static_cast<int>(dense_to_sparse.size());
+                dense_to_sparse.push_back(tgt);
+            }
         }
     }
 }

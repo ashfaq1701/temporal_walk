@@ -60,8 +60,10 @@ public:
     device_const_iterator device_begin() const;
     device_iterator device_end();
     device_const_iterator device_end() const;
-    T& device_at(size_t i);
-    const T& device_at(size_t i) const;
+
+    T device_at(size_t i) const;
+    void device_at_set(size_t i, const T& value);
+
     T& device_back();
     const T& device_back() const;
 
@@ -75,11 +77,82 @@ public:
     void set_device_vector(thrust::device_vector<T>&& vec);  // Move version
     #endif
 
+    #ifdef HAS_CUDA
+    // Device-side direct access (for use in kernels)
+    __device__ T& device_at_kernel(size_t i) {
+        return thrust::raw_pointer_cast(d_vec.data())[i];
+    }
+
+    __device__ const T& device_at_kernel(size_t i) const {
+        return thrust::raw_pointer_cast(d_vec.data())[i];
+    }
+
+    // Get raw device pointer (for use in kernels)
+    __device__ T* device_ptr_kernel() {
+        return thrust::raw_pointer_cast(d_vec.data());
+    }
+
+    __device__ const T* device_ptr_kernel() const {
+        return thrust::raw_pointer_cast(d_vec.data());
+    }
+
+    class DeviceElementProxy {
+    private:
+        DualVector<T>& vec;
+        size_t index;
+
+    public:
+        DeviceElementProxy(DualVector<T>& v, size_t i) : vec(v), index(i) {}
+
+        // Conversion operator for reading
+        operator T() const {
+            return vec.device_at(index);
+        }
+
+        // Assignment operator for writing
+        DeviceElementProxy& operator=(const T& value) {
+            vec.device_at_set(index, value);
+            return *this;
+        }
+
+        DeviceElementProxy& operator/=(const T& value) {
+            T current = vec.device_at(index);
+            vec.device_at_set(index, current / value);
+            return *this;
+        }
+
+        DeviceElementProxy& operator+=(const T& value) {
+            T current = vec.device_at(index);
+            vec.device_at_set(index, current + value);
+            return *this;
+        }
+
+        // Prefix increment
+        DeviceElementProxy& operator++() {
+            T current = vec.device_at(index);
+            vec.device_at_set(index, current + 1);
+            return *this;
+        }
+
+        // Postfix increment
+        T operator++(int) {
+            T old_value = vec.device_at(index);
+            vec.device_at_set(index, old_value + 1);
+            return old_value;
+        }
+    };
+    #endif
+
     T& back();
     const T& back() const;
 
     // Default access operators
+    #ifdef HAS_CUDA
+    DeviceElementProxy operator[](size_t i);
+    #else
     T& operator[](size_t i);
+    #endif
+
     const T& operator[](size_t i) const;
 
 
@@ -342,16 +415,20 @@ typename DualVector<T>::device_const_iterator DualVector<T>::device_end() const 
 }
 
 template<typename T>
-T& DualVector<T>::device_at(size_t i) {
+T DualVector<T>::device_at(size_t i) const {
     if (!use_gpu) throw std::runtime_error("Using device access in host mode");
-    return thrust::raw_reference_cast(d_vec[i]);
+    T value;
+    thrust::copy_n(d_vec.begin() + i, 1, &value);
+    return value;
 }
 
+// Host-side write access
 template<typename T>
-const T& DualVector<T>::device_at(size_t i) const {
+void DualVector<T>::device_at_set(size_t i, const T& value) {
     if (!use_gpu) throw std::runtime_error("Using device access in host mode");
-    return thrust::raw_reference_cast(d_vec[i]);
+    thrust::copy_n(&value, 1, d_vec.begin() + i);
 }
+
 
 template<typename T>
 T& DualVector<T>::device_back() {
@@ -427,24 +504,27 @@ const T& DualVector<T>::back() const {
     return host_back();
 }
 
-// Default access operators
 template<typename T>
-T& DualVector<T>::operator[](size_t i) {
+#ifdef HAS_CUDA
+typename DualVector<T>::DeviceElementProxy DualVector<T>::operator[](size_t i) {
     if (use_gpu) {
-        #ifdef HAS_CUDA
-        return device_at(i);
-        #else
-        throw std::runtime_error("GPU support not compiled in");
-        #endif
+        return DeviceElementProxy(*this, i);
     }
+    return DeviceElementProxy(*this, i);
+}
+#else
+T& DualVector<T>::operator[](size_t i) {
     return host_at(i);
 }
+#endif
 
 template<typename T>
-const T& DualVector<T>::operator[](size_t i) const {
+const T& DualVector<T>::operator[](const size_t i) const {
     if (use_gpu) {
         #ifdef HAS_CUDA
-        return device_at(i);
+        thread_local T value;  // Make it thread-safe with thread_local
+        value = device_at(i);
+        return value;
         #else
         throw std::runtime_error("GPU support not compiled in");
         #endif
