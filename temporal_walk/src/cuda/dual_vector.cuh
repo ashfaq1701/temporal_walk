@@ -100,45 +100,62 @@ public:
     private:
         DualVector<T>& vec;
         size_t index;
+        bool is_gpu;
 
     public:
-        DeviceElementProxy(DualVector<T>& v, size_t i) : vec(v), index(i) {}
+        DeviceElementProxy(DualVector<T>& v, const size_t i) : vec(v), index(i), is_gpu(v.is_gpu()) {}
 
-        // Conversion operator for reading
         operator T() const {
-            return vec.device_at(index);
+            return is_gpu ? vec.device_at(index) : vec.host_at(index);
         }
 
-        // Assignment operator for writing
         DeviceElementProxy& operator=(const T& value) {
-            vec.device_at_set(index, value);
+            if (is_gpu) {
+                vec.device_at_set(index, value);
+            } else {
+                vec.host_at(index) = value;
+            }
             return *this;
         }
 
         DeviceElementProxy& operator/=(const T& value) {
-            T current = vec.device_at(index);
-            vec.device_at_set(index, current / value);
+            if (is_gpu) {
+                T current = vec.device_at(index);
+                vec.device_at_set(index, current / value);
+            } else {
+                vec.host_at(index) /= value;
+            }
             return *this;
         }
 
         DeviceElementProxy& operator+=(const T& value) {
-            T current = vec.device_at(index);
-            vec.device_at_set(index, current + value);
+            if (is_gpu) {
+                T current = vec.device_at(index);
+                vec.device_at_set(index, current + value);
+            } else {
+                vec.host_at(index) += value;
+            }
             return *this;
         }
 
-        // Prefix increment
         DeviceElementProxy& operator++() {
-            T current = vec.device_at(index);
-            vec.device_at_set(index, current + 1);
+            if (is_gpu) {
+                T current = vec.device_at(index);
+                vec.device_at_set(index, current + 1);
+            } else {
+                ++vec.host_at(index);
+            }
             return *this;
         }
 
-        // Postfix increment
         T operator++(int) {
-            T old_value = vec.device_at(index);
-            vec.device_at_set(index, old_value + 1);
-            return old_value;
+            if (is_gpu) {
+                T old_value = vec.device_at(index);
+                vec.device_at_set(index, old_value + 1);
+                return old_value;
+            } else {
+                return vec.host_at(index)++;
+            }
         }
     };
     #endif
@@ -507,9 +524,6 @@ const T& DualVector<T>::back() const {
 template<typename T>
 #ifdef HAS_CUDA
 typename DualVector<T>::DeviceElementProxy DualVector<T>::operator[](size_t i) {
-    if (use_gpu) {
-        return DeviceElementProxy(*this, i);
-    }
     return DeviceElementProxy(*this, i);
 }
 #else
