@@ -2,9 +2,9 @@
 
 #include <iostream>
 #include "../utils/utils.h"
-#include "../random/UniformRandomPicker.h"
-#include "../random/LinearRandomPicker.h"
-#include "../random/ExponentialIndexRandomPicker.h"
+#include "../random/UniformRandomPicker.cuh"
+#include "../random/LinearRandomPicker.cuh"
+#include "../random/ExponentialIndexRandomPicker.cuh"
 #include "../random/WeightBasedRandomPicker.cuh"
 
 
@@ -17,7 +17,7 @@ TemporalWalk::TemporalWalk(
     int64_t max_time_capacity,
     bool enable_weight_computation,
     double timescale_bound,
-    size_t n_threads):
+    const size_t n_threads):
     is_directed(is_directed), use_gpu(use_gpu), max_time_capacity(max_time_capacity),
     n_threads(static_cast<int>(n_threads)), enable_weight_computation(enable_weight_computation),
     timescale_bound(timescale_bound), thread_pool(n_threads)
@@ -30,7 +30,7 @@ TemporalWalk::TemporalWalk(
         timescale_bound);
 }
 
-bool get_should_walk_forward(WalkDirection walk_direction) {
+bool get_should_walk_forward(const WalkDirection walk_direction) {
     switch (walk_direction)
     {
     case WalkDirection::Forward_In_Time:
@@ -42,7 +42,7 @@ bool get_should_walk_forward(WalkDirection walk_direction) {
     }
 }
 
-std::shared_ptr<RandomPicker> TemporalWalk::get_random_picker(const RandomPickerType* picker_type) {
+std::shared_ptr<RandomPicker> TemporalWalk::get_random_picker(const RandomPickerType* picker_type) const {
     if (!picker_type) {
         throw std::invalid_argument("picker_type cannot be nullptr");
     }

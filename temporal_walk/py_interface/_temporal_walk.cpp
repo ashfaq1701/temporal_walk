@@ -3,9 +3,9 @@
 #include <pybind11/numpy.h>
 #include <optional>
 #include "../src/core/TemporalWalk.h"
-#include "../src/random/LinearRandomPicker.h"
-#include "../src/random/ExponentialIndexRandomPicker.h"
-#include "../src/random/UniformRandomPicker.h"
+#include "../src/random/LinearRandomPicker.cuh"
+#include "../src/random/ExponentialIndexRandomPicker.cuh"
+#include "../src/random/UniformRandomPicker.cuh"
 #include <stdexcept>
 
 
@@ -501,17 +501,17 @@ PYBIND11_MODULE(_temporal_walk, m)
         .def(py::init<>(), "Initialize a LinearRandomPicker instance.")
         .def("pick_random", &LinearRandomPicker::pick_random,
              "Pick a random index with linear probabilities.",
-             py::arg("start"), py::arg("end"), py::arg("prioritize_end") = true);
+             py::arg("start"), py::arg("end"), py::arg("prioritize_end") = true, py::arg("use_gpu") = false);
 
     py::class_<ExponentialIndexRandomPicker>(m, "ExponentialIndexRandomPicker")
         .def(py::init<>(), "Initialize a ExponentialIndexRandomPicker instance.")
         .def("pick_random", &ExponentialIndexRandomPicker::pick_random,
              "Pick a random index with exponential probabilities with index sampling.",
-             py::arg("start"), py::arg("end"), py::arg("prioritize_end") = true);
+             py::arg("start"), py::arg("end"), py::arg("prioritize_end") = true, py::arg("use_gpu") = false);
 
     py::class_<UniformRandomPicker>(m, "UniformRandomPicker")
         .def(py::init<>(), "Initialize a UniformRandomPicker instance.")
         .def("pick_random", &UniformRandomPicker::pick_random,
              "Pick a random index with uniform probabilities.",
-             py::arg("start"), py::arg("end"), py::arg("prioritize_end") = true);
+             py::arg("start"), py::arg("end"), py::arg("prioritize_end") = true, py::arg("use_gpu") = false);
 }

@@ -1,7 +1,7 @@
 #ifndef WEIGHTBASEDRANDOMPICKER_H
 #define WEIGHTBASEDRANDOMPICKER_H
 
-#include <cuda/DualVector.cuh>
+#include <cuda/dual_vector.cuh>
 
 #include "RandomPicker.h"
 
@@ -12,7 +12,7 @@
 #include <thrust/binary_search.h>
 #endif
 
-class WeightBasedRandomPicker : public RandomPicker
+class WeightBasedRandomPicker final : public RandomPicker
 {
 public:
     template<typename T>

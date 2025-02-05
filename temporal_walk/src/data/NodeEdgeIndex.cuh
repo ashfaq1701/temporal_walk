@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <tuple>
 #include "NodeMapping.cuh"
-#include "../cuda/DualVector.cuh"
+#include "../cuda/dual_vector.cuh"
 
 struct NodeEdgeIndex
 {

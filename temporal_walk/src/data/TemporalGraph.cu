@@ -511,7 +511,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(
             if (available_groups == 0) return {-1, -1, -1};
 
             if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
-                const size_t index = index_picker->pick_random(0, static_cast<int>(available_groups), false);
+                const size_t index = index_picker->pick_random(0, static_cast<int>(available_groups), false, use_gpu);
                 if (index >= available_groups) return {-1, -1, -1};
                 group_idx = first_group + index;
             }
@@ -529,7 +529,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(
 
             const size_t available_groups = last_group + 1;
             if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
-                const size_t index = index_picker->pick_random(0, static_cast<int>(available_groups), true);
+                const size_t index = index_picker->pick_random(0, static_cast<int>(available_groups), true, use_gpu);
                 if (index >= available_groups) return {-1, -1, -1};
                 group_idx = last_group - (available_groups - index - 1);
             }
@@ -544,7 +544,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_edge_at(
     } else {
         // No timestamp constraint - select from all groups
         if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
-            const size_t index = index_picker->pick_random(0, static_cast<int>(num_groups), !forward);
+            const size_t index = index_picker->pick_random(0, static_cast<int>(num_groups), !forward, use_gpu);
             if (index >= num_groups) return {-1, -1, -1};
             group_idx = index;
         } else {
@@ -641,7 +641,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
                 const size_t start_pos = it - timestamp_group_indices.device_begin();
 
                 if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
-                    const size_t index = index_picker->pick_random(0, static_cast<int>(available), false);
+                    const size_t index = index_picker->pick_random(0, static_cast<int>(available), false, use_gpu);
                     if (index >= available) return {-1, -1, -1};
                     group_pos = start_pos + index;
                 } else {
@@ -670,7 +670,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
                 const size_t start_pos = it - timestamp_group_indices.host_begin();
 
                 if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
-                    const size_t index = index_picker->pick_random(0, static_cast<int>(available), false);
+                    const size_t index = index_picker->pick_random(0, static_cast<int>(available), false, use_gpu);
                     if (index >= available) return {-1, -1, -1};
                     group_pos = start_pos + index;
                 } else {
@@ -698,7 +698,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
                 if (available == 0) return {-1, -1, -1};
 
                 if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
-                    const size_t index = index_picker->pick_random(0, static_cast<int>(available), true);
+                    const size_t index = index_picker->pick_random(0, static_cast<int>(available), true, use_gpu);
                     if (index >= available) return {-1, -1, -1};
                     group_pos = (it - timestamp_group_indices.device_begin()) - 1 - (available - index - 1);
                 } else {
@@ -727,7 +727,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
                 if (available == 0) return {-1, -1, -1};
 
                 if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
-                    const size_t index = index_picker->pick_random(0, static_cast<int>(available), true);
+                    const size_t index = index_picker->pick_random(0, static_cast<int>(available), true, use_gpu);
                     if (index >= available) return {-1, -1, -1};
                     group_pos = (it - timestamp_group_indices.host_begin()) - 1 - (available - index - 1);
                 } else {
@@ -747,7 +747,7 @@ std::tuple<int, int, int64_t> TemporalGraph::get_node_edge_at(
         if (num_groups == 0) return {-1, -1, -1};
 
         if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
-            const size_t index = index_picker->pick_random(0, static_cast<int>(num_groups), !forward);
+            const size_t index = index_picker->pick_random(0, static_cast<int>(num_groups), !forward, use_gpu);
             if (index >= num_groups) return {-1, -1, -1};
             group_pos = forward
                 ? group_start_offset + index

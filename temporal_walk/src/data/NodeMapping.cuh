@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <tuple>
 #include "EdgeData.cuh"
-#include "../cuda/DualVector.cuh"
+#include "../cuda/dual_vector.cuh"
 
 #ifdef HAS_CUDA
 #include <thrust/copy.h>
@@ -16,6 +16,9 @@
 #else
 #define HOST_DEVICE
 #endif
+
+constexpr short ITEM_DELETED = 1;
+constexpr short ITEM_NOT_DELETED = 0;
 
 struct NodeMapping {
    bool use_gpu;
@@ -37,11 +40,19 @@ struct NodeMapping {
    void clear();
    void reserve(size_t size);
 
-   static __device__ void device_mark_node_deleted(int sparse_id, short* deleted_ptr, size_t vector_size);  // Device-specific version
-
-   #if HAS_CUDA
-   void host_mark_node_deleted(int sparse_id);               // Host-specific version
+   #ifdef HAS_CUDA
+   static __device__ void device_mark_node_deleted(
+       const int sparse_id,
+       short* deleted_ptr,
+       const size_t vector_size)
+   {
+      if (sparse_id < vector_size) {
+         deleted_ptr[sparse_id] = ITEM_DELETED;
+      }
+   }
    #endif
+
+   void host_mark_node_deleted(int sparse_id);               // Host-specific version
 
    [[nodiscard]] bool has_node(int sparse_id) const;
    [[nodiscard]] std::vector<int> get_all_sparse_ids() const;

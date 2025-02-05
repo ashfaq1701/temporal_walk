@@ -2,9 +2,6 @@
 #include <algorithm>
 #include <stdexcept>
 
-constexpr short ITEM_DELETED = 1;
-constexpr short ITEM_NOT_DELETED = 1;
-
 NodeMapping::NodeMapping(const bool use_gpu):
     use_gpu(use_gpu), sparse_to_dense(use_gpu), dense_to_sparse(use_gpu), is_deleted(use_gpu) {}
 
@@ -26,17 +23,6 @@ void NodeMapping::host_mark_node_deleted(const int sparse_id) {
         is_deleted[sparse_id] = ITEM_DELETED;
     }
 }
-
-#ifdef HAS_CUDA
-__device__ void NodeMapping::device_mark_node_deleted(
-    const int sparse_id,
-    short* deleted_ptr,
-    const size_t vector_size) {
-    if (sparse_id < vector_size) {
-        deleted_ptr[sparse_id] = ITEM_DELETED;
-    }
-}
-#endif
 
 void NodeMapping::update(const EdgeData& edges, const size_t start_idx, const size_t end_idx) {
     // First pass: find max node ID

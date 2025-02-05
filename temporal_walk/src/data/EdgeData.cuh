@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <tuple>
 #include <cmath>
-#include "../cuda/DualVector.cuh"
+#include "../cuda/dual_vector.cuh"
 
 #ifdef HAS_CUDA
 #include <thrust/binary_search.h>

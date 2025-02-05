@@ -1,17 +1,39 @@
 #include <gtest/gtest.h>
 #include "../src/random/WeightBasedRandomPicker.cuh"
+#include "../src/cuda/dual_vector.cuh"
 
 class WeightBasedRandomPickerTest : public ::testing::Test
 {
 protected:
     WeightBasedRandomPicker picker;
 
+    // Helper to create a DualVector with weights
+    static DualVector<double> create_weight_vector(const std::vector<double>& weights, bool use_gpu = false) {
+        DualVector<double> weight_vec(use_gpu);
+
+        if (use_gpu) {
+            #ifdef HAS_CUDA
+            // Use thrust::copy for GPU
+            const thrust::device_vector<double> d_vec(weights.begin(), weights.end());
+            weight_vec.set_device_vector(d_vec);
+            #else
+            throw std::runtime_error("GPU support not compiled in");
+            #endif
+        } else {
+            // Direct vector assignment for CPU
+            weight_vec.set_host_vector(weights);
+        }
+
+        return weight_vec;
+    }
+
     // Helper to verify sampling is within correct range
-    void verify_sampling_range(const std::vector<double>& weights,
-                               int start,
-                               int end,
-                               int num_samples = 1000)
+    void verify_sampling_range(const std::vector<double>& init_weights,
+                               const int start,
+                               const int end,
+                               const int num_samples = 1000)
     {
+        auto weights = create_weight_vector(init_weights);
         std::map<int, int> sample_counts;
         for (int i = 0; i < num_samples; i++)
         {
@@ -32,7 +54,7 @@ protected:
 
 TEST_F(WeightBasedRandomPickerTest, ValidationChecks)
 {
-    const std::vector<double> weights = {0.2, 0.5, 0.7, 1.0};
+    const auto weights = create_weight_vector({0.2, 0.5, 0.7, 1.0});
 
     // Invalid start index
     EXPECT_EQ(picker.pick_random(weights, -1, 2), -1);
@@ -47,27 +69,20 @@ TEST_F(WeightBasedRandomPickerTest, ValidationChecks)
 
 TEST_F(WeightBasedRandomPickerTest, FullRangeSampling)
 {
-    const std::vector<double> weights = {0.2, 0.5, 0.7, 1.0};
-    verify_sampling_range(weights, 0, 4);
+    verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 0, 4);
 }
 
 TEST_F(WeightBasedRandomPickerTest, SubrangeSampling)
 {
-    const std::vector<double> weights = {0.2, 0.5, 0.7, 1.0};
-
-    // Test middle range
-    verify_sampling_range(weights, 1, 3);
-
-    // Test start range
-    verify_sampling_range(weights, 0, 2);
-
-    // Test end range
-    verify_sampling_range(weights, 2, 4);
+    // Test all subranges with the same weight vector
+    verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 1, 3);  // middle range
+    verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 0, 2);  // start range
+    verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 2, 4);  // end range
 }
 
 TEST_F(WeightBasedRandomPickerTest, SingleElementRange)
 {
-    const std::vector<double> weights = {0.2, 0.5, 0.7, 1.0};
+    const auto weights = create_weight_vector({0.2, 0.5, 0.7, 1.0});
 
     // When sampling single element, should always return that index
     for (int i = 0; i < 100; i++)
@@ -79,7 +94,7 @@ TEST_F(WeightBasedRandomPickerTest, SingleElementRange)
 TEST_F(WeightBasedRandomPickerTest, WeightDistributionTest)
 {
     // Create weights with known distribution
-    const std::vector<double> weights = {0.25, 0.25, 0.25, 0.25}; // Equal increments
+    const auto weights = create_weight_vector({0.25, 0.5, 0.75, 1.0}); // Equal increments
 
     std::map<int, int> sample_counts;
     constexpr int num_samples = 10000;
@@ -95,17 +110,18 @@ TEST_F(WeightBasedRandomPickerTest, WeightDistributionTest)
     for (int i = 0; i < 4; i++)
     {
         const double proportion = static_cast<double>(sample_counts[i]) / num_samples;
-        EXPECT_NEAR(proportion, 0.25, 0.05); // Allow 5% deviation
+        EXPECT_NEAR(proportion, 0.25, 0.05)
+            << "Proportion for index " << i << " was " << proportion;
     }
 }
 
 TEST_F(WeightBasedRandomPickerTest, EdgeCaseWeights)
 {
     // Test with very small weight differences
-    const std::vector<double> small_diffs = {0.1, 0.100001, 0.100002, 0.100003};
+    const auto small_diffs = create_weight_vector({0.1, 0.100001, 0.100002, 0.100003});
     EXPECT_NE(picker.pick_random(small_diffs, 0, 4), -1);
 
     // Test with very large weight differences
-    const std::vector<double> large_diffs = {0.1, 0.5, 0.9, 1000.0};
+    const auto large_diffs = create_weight_vector({0.1, 0.5, 0.9, 1000.0});
     EXPECT_NE(picker.pick_random(large_diffs, 0, 4), -1);
 }
