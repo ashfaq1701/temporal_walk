@@ -64,8 +64,7 @@ public:
     T device_at(size_t i) const;
     void device_at_set(size_t i, const T& value);
 
-    T& device_back();
-    const T& device_back() const;
+    T device_back() const;
 
     thrust::device_vector<T>& get_device_vector();
     const thrust::device_vector<T>& get_device_vector() const;
@@ -160,8 +159,7 @@ public:
     };
     #endif
 
-    T& back();
-    const T& back() const;
+    T back() const;
 
     // Default access operators
     #ifdef HAS_CUDA
@@ -446,17 +444,12 @@ void DualVector<T>::device_at_set(size_t i, const T& value) {
     thrust::copy_n(&value, 1, d_vec.begin() + i);
 }
 
-
 template<typename T>
-T& DualVector<T>::device_back() {
+T DualVector<T>::device_back() const {  // Changed return type from const T& to T
     if (!use_gpu) throw std::runtime_error("Using device access in host mode");
-    return thrust::raw_reference_cast(d_vec.back());
-}
-
-template<typename T>
-const T& DualVector<T>::device_back() const {
-    if (!use_gpu) throw std::runtime_error("Using device access in host mode");
-    return thrust::raw_reference_cast(d_vec.back());
+    T value;
+    thrust::copy_n(d_vec.end() - 1, 1, &value);
+    return value;
 }
 
 template<typename T>
@@ -498,19 +491,7 @@ void DualVector<T>::set_device_vector(thrust::device_vector<T>&& vec) {
 #endif
 
 template<typename T>
-T& DualVector<T>::back() {
-    if (use_gpu) {
-        #ifdef HAS_CUDA
-        return device_back();
-        #else
-        throw std::runtime_error("GPU support not compiled in");
-        #endif
-    }
-    return host_back();
-}
-
-template<typename T>
-const T& DualVector<T>::back() const {
+T DualVector<T>::back() const {
     if (use_gpu) {
         #ifdef HAS_CUDA
         return device_back();
