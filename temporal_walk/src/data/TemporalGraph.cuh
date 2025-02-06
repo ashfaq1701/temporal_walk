@@ -12,10 +12,10 @@
 
 class RandomPicker;
 
+template<bool UseGPU>
 class TemporalGraph
 {
 private:
-    bool use_gpu;
     bool is_directed;
     int64_t time_window; // Time duration to keep edges (-1 means keep all)
     bool enable_weight_computation;
@@ -26,13 +26,12 @@ private:
     void delete_old_edges();
 
 public:
-    NodeEdgeIndex node_index; // Node to edge mappings
-    EdgeData edges; // Main edge storage
-    NodeMapping node_mapping; // Sparse to dense node ID mapping
+    NodeEdgeIndex<UseGPU> node_index; // Node to edge mappings
+    EdgeData<UseGPU> edges; // Main edge storage
+    NodeMapping<UseGPU> node_mapping; // Sparse to dense node ID mapping
 
     explicit TemporalGraph(
         bool directed,
-        bool use_gpu,
         int64_t window = -1,
         bool enable_weight_computation = false,
         double timescale_bound=-1);

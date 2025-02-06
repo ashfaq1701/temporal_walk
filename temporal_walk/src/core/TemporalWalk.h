@@ -40,7 +40,12 @@ class TemporalWalk {
 
     int64_t max_edge_time = 0;
 
-    std::unique_ptr<TemporalGraph> temporal_graph{};
+    #ifdef USE_CUDA
+    using TemporalGraphType = std::conditional_t<true, TemporalGraph<true>, TemporalGraph<false>>;
+    #else
+    using TemporalGraphType = TemporalGraph<false>;
+    #endif
+    std::unique_ptr<TemporalGraphType> temporal_graph;
 
     ThreadPool thread_pool;
 

@@ -22,12 +22,18 @@ TemporalWalk::TemporalWalk(
     n_threads(static_cast<int>(n_threads)), enable_weight_computation(enable_weight_computation),
     timescale_bound(timescale_bound), thread_pool(n_threads)
 {
-    temporal_graph = std::make_unique<TemporalGraph>(
-        is_directed,
-        use_gpu,
-        max_time_capacity,
-        enable_weight_computation,
-        timescale_bound);
+    #ifdef USE_CUDA
+    if (use_gpu) {
+        temporal_graph = std::make_unique<TemporalGraph<true>>(
+            is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
+    } else {
+        temporal_graph = std::make_unique<TemporalGraph<false>>(
+            is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
+    }
+    #else
+    temporal_graph = std::make_unique<TemporalGraph<false>>(
+        is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
+    #endif
 }
 
 bool get_should_walk_forward(WalkDirection walk_direction) {
@@ -513,7 +519,16 @@ bool TemporalWalk::get_is_directed() const {
 }
 
 void TemporalWalk::clear() {
-    temporal_graph = std::make_unique<TemporalGraph>(
-        is_directed, use_gpu, max_time_capacity, enable_weight_computation,
-        timescale_bound);
+    #ifdef USE_CUDA
+    if (use_gpu) {
+        temporal_graph = std::make_unique<TemporalGraph<true>>(
+            is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
+    } else {
+        temporal_graph = std::make_unique<TemporalGraph<false>>(
+            is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
+    }
+    #else
+    temporal_graph = std::make_unique<TemporalGraph<false>>(
+        is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
+    #endif
 }

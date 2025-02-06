@@ -5,21 +5,27 @@
 #include <cstdint>
 #include <tuple>
 #include <cmath>
+#include "../cuda/types.h"
 
+template<bool UseGPU>
 struct EdgeData {
-    bool use_gpu;
+
+    using IntVector = typename SelectVectorType<int, UseGPU>::type;
+    using Int64Vector = typename SelectVectorType<int64_t, UseGPU>::type;
+    using SizeVector = typename SelectVectorType<size_t, UseGPU>::type;
+    using DoubleVector = typename SelectVectorType<double, UseGPU>::type;
 
     // Core edge data
-    std::vector<int> sources;
-    std::vector<int> targets;
-    std::vector<int64_t> timestamps;
+    IntVector sources;
+    IntVector targets;
+    Int64Vector timestamps;
 
     // Timestamp grouping
-    std::vector<size_t> timestamp_group_offsets;     // Start of each timestamp group
-    std::vector<int64_t> unique_timestamps;          // Corresponding unique timestamps
+    SizeVector timestamp_group_offsets;     // Start of each timestamp group
+    Int64Vector unique_timestamps;          // Corresponding unique timestamps
 
-    std::vector<double> forward_cumulative_weights_exponential;  // For forward temporal sampling
-    std::vector<double> backward_cumulative_weights_exponential; // For backward temporal sampling
+    DoubleVector forward_cumulative_weights_exponential;  // For forward temporal sampling
+    DoubleVector backward_cumulative_weights_exponential; // For backward temporal sampling
 
     void reserve(size_t size);
     void clear();
@@ -30,7 +36,7 @@ struct EdgeData {
 
     std::vector<std::tuple<int, int, int64_t>> get_edges();
 
-    explicit EdgeData(bool use_gpu);
+    explicit EdgeData();
 
     // Group management
     void update_timestamp_groups();  // Call after sorting

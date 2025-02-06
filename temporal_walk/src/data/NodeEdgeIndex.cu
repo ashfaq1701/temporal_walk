@@ -2,10 +2,8 @@
 
 #include <iostream>
 
-NodeEdgeIndex::NodeEdgeIndex(const bool use_gpu): use_gpu(use_gpu) {}
-
-
-void NodeEdgeIndex::clear() {
+template<bool UseGPU>
+void NodeEdgeIndex<UseGPU>::clear() {
    // Clear edge CSR structures
    outbound_offsets.clear();
    outbound_indices.clear();
@@ -19,9 +17,10 @@ void NodeEdgeIndex::clear() {
    inbound_timestamp_group_indices.clear();
 }
 
-void NodeEdgeIndex::rebuild(
-   const EdgeData& edges,
-   const NodeMapping& mapping,
+template<bool UseGPU>
+void NodeEdgeIndex<UseGPU>::rebuild(
+   const EdgeData<UseGPU>& edges,
+   const NodeMapping<UseGPU>& mapping,
    const bool is_directed) {
 
    const size_t num_nodes = mapping.size();
@@ -170,7 +169,8 @@ void NodeEdgeIndex::rebuild(
    }
 }
 
-void NodeEdgeIndex::update_temporal_weights(const EdgeData& edges, double timescale_bound) {
+template<bool UseGPU>
+void NodeEdgeIndex<UseGPU>::update_temporal_weights(const EdgeData<UseGPU>& edges, double timescale_bound) {
     const size_t num_nodes = outbound_offsets.size() - 1;
 
     outbound_forward_cumulative_weights_exponential.resize(outbound_timestamp_group_indices.size());
@@ -276,7 +276,8 @@ void NodeEdgeIndex::update_temporal_weights(const EdgeData& edges, double timesc
     }
 }
 
-std::pair<size_t, size_t> NodeEdgeIndex::get_edge_range(
+template<bool UseGPU>
+std::pair<size_t, size_t> NodeEdgeIndex<UseGPU>::get_edge_range(
    int dense_node_id,
    bool forward,
    bool is_directed) const {
@@ -295,7 +296,8 @@ std::pair<size_t, size_t> NodeEdgeIndex::get_edge_range(
    }
 }
 
-std::pair<size_t, size_t> NodeEdgeIndex::get_timestamp_group_range(
+template<bool UseGPU>
+std::pair<size_t, size_t> NodeEdgeIndex<UseGPU>::get_timestamp_group_range(
    int dense_node_id,
    size_t group_idx,
    bool forward,
@@ -331,7 +333,8 @@ std::pair<size_t, size_t> NodeEdgeIndex::get_timestamp_group_range(
    return {group_start, group_end};
 }
 
-size_t NodeEdgeIndex::get_timestamp_group_count(
+template<bool UseGPU>
+size_t NodeEdgeIndex<UseGPU>::get_timestamp_group_count(
    int dense_node_id,
    bool forward,
    bool is_directed) const {
