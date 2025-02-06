@@ -5,12 +5,12 @@
 #include <cstdint>
 #include <tuple>
 #include <functional>
+#include <random/RandomPicker.h>
+
 #include "NodeMapping.cuh"
 #include "NodeEdgeIndex.cuh"
 #include "../utils/utils.h"
 #include "../config/constants.h"
-
-class RandomPicker;
 
 template<bool UseGPU>
 class TemporalGraph
@@ -49,11 +49,11 @@ public:
 
     // Edge selection
     [[nodiscard]] std::tuple<int, int, int64_t> get_edge_at(
-        RandomPicker& picker, int64_t timestamp = -1,
+        RandomPicker<UseGPU>& picker, int64_t timestamp = -1,
         bool forward = true) const;
 
     [[nodiscard]] std::tuple<int, int, int64_t> get_node_edge_at(int node_id,
-                                                                 RandomPicker& picker,
+                                                                 RandomPicker<UseGPU>& picker,
                                                                  int64_t timestamp = -1,
                                                                  bool forward = true) const;
 

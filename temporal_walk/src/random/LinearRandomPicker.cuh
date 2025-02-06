@@ -3,7 +3,8 @@
 
 #include "IndexBasedRandomPicker.h"
 
-class LinearRandomPicker final : public IndexBasedRandomPicker {
+template<bool UseGPU>
+class LinearRandomPicker final : public IndexBasedRandomPicker<UseGPU> {
 public:
     int pick_random(int start, int end, bool prioritize_end) override;
 };

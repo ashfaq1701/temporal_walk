@@ -260,7 +260,7 @@ size_t TemporalGraph<UseGPU>::count_node_timestamps_greater_than(int node_id, in
 
 template<bool UseGPU>
 std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_edge_at(
-    RandomPicker& picker,
+    RandomPicker<UseGPU>& picker,
     int64_t timestamp,
     bool forward) const {
 
@@ -276,13 +276,13 @@ std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_edge_at(
             const size_t available_groups = num_groups - first_group;
             if (available_groups == 0) return {-1, -1, -1};
 
-            if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+            if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker<UseGPU>*>(&picker)) {
                 const size_t index = index_picker->pick_random(0, static_cast<int>(available_groups), false);
                 if (index >= available_groups) return {-1, -1, -1};
                 group_idx = first_group + index;
             }
             else {
-                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
+                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<UseGPU>*>(&picker);
                 group_idx = weight_picker->pick_random(
                     edges.forward_cumulative_weights_exponential,
                     static_cast<int>(first_group),
@@ -293,13 +293,13 @@ std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_edge_at(
             if (last_group == static_cast<size_t>(-1)) return {-1, -1, -1};
 
             const size_t available_groups = last_group + 1;
-            if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+            if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker<UseGPU>*>(&picker)) {
                 const size_t index = index_picker->pick_random(0, static_cast<int>(available_groups), true);
                 if (index >= available_groups) return {-1, -1, -1};
                 group_idx = last_group - (available_groups - index - 1);
             }
             else {
-                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
+                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<UseGPU>*>(&picker);
                 group_idx = weight_picker->pick_random(
                     edges.backward_cumulative_weights_exponential,
                     0,
@@ -308,12 +308,12 @@ std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_edge_at(
         }
     } else {
         // No timestamp constraint - select from all groups
-        if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+        if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker<UseGPU>*>(&picker)) {
             const size_t index = index_picker->pick_random(0, static_cast<int>(num_groups), !forward);
             if (index >= num_groups) return {-1, -1, -1};
             group_idx = index;
         } else {
-            auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
+            auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<UseGPU>*>(&picker);
             if (forward) {
                 group_idx = weight_picker->pick_random(
                     edges.forward_cumulative_weights_exponential,
@@ -345,7 +345,7 @@ std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_edge_at(
 template<bool UseGPU>
 std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_node_edge_at(
     const int node_id,
-    RandomPicker& picker,
+    RandomPicker<UseGPU>& picker,
     const int64_t timestamp,
     const bool forward) const {
 
@@ -388,14 +388,14 @@ std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_node_edge_at(
             if (available == 0) return {-1, -1, -1};
 
             const size_t start_pos = it - timestamp_group_indices.begin();
-            if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+            if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker<UseGPU>*>(&picker)) {
                 const size_t index = index_picker->pick_random(0, static_cast<int>(available), false);
                 if (index >= available) return {-1, -1, -1};
                 group_pos = start_pos + index;
             }
             else
             {
-                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
+                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<UseGPU>*>(&picker);
                 group_pos = weight_picker->pick_random(
                     node_index.outbound_forward_cumulative_weights_exponential,
                     static_cast<int>(start_pos),
@@ -415,14 +415,14 @@ std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_node_edge_at(
                 static_cast<int>(group_start_offset));
             if (available == 0) return {-1, -1, -1};
 
-            if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+            if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker<UseGPU>*>(&picker)) {
                 const size_t index = index_picker->pick_random(0, static_cast<int>(available), true);
                 if (index >= available) return {-1, -1, -1};
                 group_pos = (it - timestamp_group_indices.begin()) - 1 - (available - index - 1);
             }
             else
             {
-                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
+                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<UseGPU>*>(&picker);
                 group_pos = weight_picker->pick_random(
                     is_directed
                         ? node_index.inbound_backward_cumulative_weights_exponential
@@ -437,7 +437,7 @@ std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_node_edge_at(
         const size_t num_groups = group_end_offset - group_start_offset;
         if (num_groups == 0) return {-1, -1, -1};
 
-        if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+        if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker<UseGPU>*>(&picker)) {
             const size_t index = index_picker->pick_random(0, static_cast<int>(num_groups), !forward);
             if (index >= num_groups) return {-1, -1, -1};
             group_pos = forward
@@ -446,7 +446,7 @@ std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_node_edge_at(
         }
         else
         {
-            auto* weight_picker = dynamic_cast<WeightBasedRandomPicker*>(&picker);
+            auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<UseGPU>*>(&picker);
             if (forward)
             {
                 group_pos = weight_picker->pick_random(

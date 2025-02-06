@@ -1,8 +1,10 @@
 #include "WeightBasedRandomPicker.cuh"
 
-template<typename T>
-int WeightBasedRandomPicker::pick_random(
-    const std::vector<T>& cumulative_weights,
+#include <cuda/types.cuh>
+
+template<bool UseGPU>
+int WeightBasedRandomPicker<UseGPU>::pick_random(
+    const typename SelectVectorType<double, UseGPU>::type& cumulative_weights,
     const int group_start,
     const int group_end)
 {
@@ -14,13 +16,13 @@ int WeightBasedRandomPicker::pick_random(
     }
 
     // Get start and end sums
-    const T start_sum = (group_start > 0) ? cumulative_weights[group_start - 1] : T{0};
-    const T end_sum = cumulative_weights[group_end - 1];
+    const double start_sum = (group_start > 0) ? cumulative_weights[group_start - 1] : 0.0;
+    const double end_sum = cumulative_weights[group_end - 1];
 
     if (end_sum < start_sum) return -1;
 
     // Generate random value between [start_sum, end_sum]
-    const T random_val = start_sum + generate_random_value(T{0}, end_sum - start_sum);
+    const double random_val = start_sum + generate_random_value(0.0, end_sum - start_sum);
 
     // Find the group where random_val falls
     return static_cast<int>(std::lower_bound(
@@ -29,5 +31,7 @@ int WeightBasedRandomPicker::pick_random(
         random_val) - cumulative_weights.begin());
 }
 
-template int WeightBasedRandomPicker::pick_random<double>(
-    const std::vector<double>&, const int, const int);
+template class WeightBasedRandomPicker<false>;
+#ifdef USE_CUDA
+template class WeightBasedRandomPicker<true>;
+#endif

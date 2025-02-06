@@ -5,7 +5,8 @@
 #include <stdexcept>
 
 // Derivation available in derivations folder
-int ExponentialIndexRandomPicker::pick_random(const int start, const int end, const bool prioritize_end) {
+template<bool UseGPU>
+int ExponentialIndexRandomPicker<UseGPU>::pick_random(const int start, const int end, const bool prioritize_end) {
     if (start >= end) {
         throw std::invalid_argument("Start must be less than end.");
     }
@@ -38,3 +39,8 @@ int ExponentialIndexRandomPicker::pick_random(const int start, const int end, co
         return start + (len_seq - 1 - rounded_index);
     }
 }
+
+template class ExponentialIndexRandomPicker<false>;
+#ifdef USE_CUDA
+template class ExponentialIndexRandomPicker<true>;
+#endif

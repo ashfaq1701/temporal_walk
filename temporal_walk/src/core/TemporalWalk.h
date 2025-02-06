@@ -25,10 +25,9 @@ struct NodeWithTime {
     int64_t timestamp;
 };
 
+template<bool UseGPU>
 class TemporalWalk {
     bool is_directed;
-
-    bool use_gpu;
 
     int64_t max_time_capacity;
 
@@ -51,20 +50,19 @@ class TemporalWalk {
 
     void generate_random_walk_and_time(
         std::vector<NodeWithTime>* walk,
-        const std::shared_ptr<RandomPicker>& edge_picker,
-        const std::shared_ptr<RandomPicker>& start_picker,
+        const std::shared_ptr<RandomPicker<UseGPU>>& edge_picker,
+        const std::shared_ptr<RandomPicker<UseGPU>>& start_picker,
         int max_walk_len,
         bool should_walk_forward,
         int start_node_id=-1) const;
 
-    std::shared_ptr<RandomPicker> get_random_picker(const RandomPickerType* picker_type) const;
+    std::shared_ptr<RandomPicker<UseGPU>> get_random_picker(const RandomPickerType* picker_type) const;
 
     [[nodiscard]] long estimate_cw_count(int num_walks_per_node, int max_walk_len, int min_walk_len) const;
 
 public:
     explicit TemporalWalk(
         bool is_directed,
-        bool use_gpu=false,
         int64_t max_time_capacity=-1,
         bool enable_weight_computation=false,
         double timescale_bound=DEFAULT_TIMESCALE_BOUND,

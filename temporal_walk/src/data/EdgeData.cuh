@@ -16,16 +16,16 @@ struct EdgeData {
     using DoubleVector = typename SelectVectorType<double, UseGPU>::type;
 
     // Core edge data
-    IntVector sources;
-    IntVector targets;
-    Int64Vector timestamps;
+    IntVector sources{};
+    IntVector targets{};
+    Int64Vector timestamps{};
 
     // Timestamp grouping
-    SizeVector timestamp_group_offsets;     // Start of each timestamp group
-    Int64Vector unique_timestamps;          // Corresponding unique timestamps
+    SizeVector timestamp_group_offsets{};     // Start of each timestamp group
+    Int64Vector unique_timestamps{};          // Corresponding unique timestamps
 
-    DoubleVector forward_cumulative_weights_exponential;  // For forward temporal sampling
-    DoubleVector backward_cumulative_weights_exponential; // For backward temporal sampling
+    DoubleVector forward_cumulative_weights_exponential{};  // For forward temporal sampling
+    DoubleVector backward_cumulative_weights_exponential{}; // For backward temporal sampling
 
     void reserve(size_t size);
     void clear();

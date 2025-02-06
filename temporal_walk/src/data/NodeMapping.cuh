@@ -12,9 +12,9 @@ struct NodeMapping {
    using IntVector = typename SelectVectorType<int, UseGPU>::type;
    using BoolVector = typename SelectVectorType<bool, UseGPU>::type;
 
-   IntVector sparse_to_dense;    // Maps sparse ID to dense index
-   IntVector dense_to_sparse;    // Maps dense index back to sparse ID
-   BoolVector is_deleted;        // Tracks deleted status of nodes
+   IntVector sparse_to_dense{};    // Maps sparse ID to dense index
+   IntVector dense_to_sparse{};    // Maps dense index back to sparse ID
+   BoolVector is_deleted{};        // Tracks deleted status of nodes
 
    void update(const EdgeData<UseGPU>& edges, size_t start_idx, size_t end_idx);
    [[nodiscard]] int to_dense(int sparse_id) const;

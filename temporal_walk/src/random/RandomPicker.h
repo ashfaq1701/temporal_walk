@@ -3,7 +3,9 @@
 
 #include "../utils/utils.h"
 
-class RandomPicker {
+template<bool UseGPU>
+class RandomPicker
+{
 
 public:
     virtual ~RandomPicker() = default;

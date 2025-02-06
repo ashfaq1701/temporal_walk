@@ -2,54 +2,50 @@
 #include "../src/data/EdgeData.cuh"
 #include <cmath>
 
+template<typename UseGPUType>
 class EdgeDataWeightTest : public ::testing::Test {
 protected:
-   static void verify_cumulative_weights(const std::vector<double>& weights) {
-       ASSERT_FALSE(weights.empty());
-       // Check weights are monotonically increasing
-       for (size_t i = 0; i < weights.size(); i++) {
-           EXPECT_GE(weights[i], 0.0);
-           if (i > 0) {
-               EXPECT_GE(weights[i], weights[i-1]);
-           }
-       }
+    static void verify_cumulative_weights(const std::vector<double>& weights) {
+        ASSERT_FALSE(weights.empty());
+        for (size_t i = 0; i < weights.size(); i++) {
+            EXPECT_GE(weights[i], 0.0);
+            if (i > 0) {
+                EXPECT_GE(weights[i], weights[i-1]);
+            }
+        }
+        EXPECT_NEAR(weights.back(), 1.0, 1e-6);
+    }
 
-       // Last weight should be normalized to 1.0
-       EXPECT_NEAR(weights.back(), 1.0, 1e-6);
-   }
+    static void add_test_edges(EdgeData<UseGPUType::value>& edges) {
+        edges.push_back(1, 2, 10);
+        edges.push_back(1, 3, 10);
+        edges.push_back(2, 3, 20);
+        edges.push_back(2, 4, 20);
+        edges.push_back(3, 4, 30);
+        edges.push_back(4, 1, 40);
+        edges.update_timestamp_groups();
+    }
 
-   static void add_test_edges(EdgeData& edges) {
-       edges.push_back(1, 2, 10);  // Group 0
-       edges.push_back(1, 3, 10);  // Group 0
-       edges.push_back(2, 3, 20);  // Group 1
-       edges.push_back(2, 4, 20);  // Group 1
-       edges.push_back(3, 4, 30);  // Group 2
-       edges.push_back(4, 1, 40);  // Group 3
-       edges.update_timestamp_groups();
-   }
-
-   static std::vector<double> get_individual_weights(const std::vector<double>& cumulative) {
-       std::vector<double> weights;
-       weights.reserve(cumulative.size());
-
-       weights.push_back(cumulative[0]);
-       for (size_t i = 1; i < cumulative.size(); i++) {
-           weights.push_back(cumulative[i] - cumulative[i-1]);
-       }
-       return weights;
-   }
+    static std::vector<double> get_individual_weights(const std::vector<double>& cumulative) {
+        std::vector<double> weights;
+        weights.reserve(cumulative.size());
+        weights.push_back(cumulative[0]);
+        for (size_t i = 1; i < cumulative.size(); i++) {
+            weights.push_back(cumulative[i] - cumulative[i-1]);
+        }
+        return weights;
+    }
 };
 
-TEST_F(EdgeDataWeightTest, EmptyEdges) {
-   EdgeData edges(false);  // CPU mode
-   edges.update_temporal_weights(-1);
+#ifdef HAS_CUDA
+using USE_GPU_TYPES = ::testing::Types<std::false_type, std::true_type>;
+#else
+using USE_GPU_TYPES = ::testing::Types<std::false_type>;
+#endif
+TYPED_TEST_SUITE(EdgeDataWeightTest, USE_GPU_TYPES);
 
-   EXPECT_TRUE(edges.forward_cumulative_weights_exponential.empty());
-   EXPECT_TRUE(edges.backward_cumulative_weights_exponential.empty());
-}
-
-TEST_F(EdgeDataWeightTest, SingleTimestampGroup) {
-   EdgeData edges(false);  // CPU mode
+TYPED_TEST(EdgeDataWeightTest, SingleTimestampGroup) {
+   EdgeData<TypeParam::value> edges;  // CPU mode
    edges.push_back(1, 2, 10);
    edges.push_back(2, 3, 10);
    edges.update_timestamp_groups();
@@ -63,26 +59,26 @@ TEST_F(EdgeDataWeightTest, SingleTimestampGroup) {
    EXPECT_NEAR(edges.backward_cumulative_weights_exponential[0], 1.0, 1e-6);
 }
 
-TEST_F(EdgeDataWeightTest, WeightNormalization) {
-   EdgeData edges(false);  // CPU mode
-   add_test_edges(edges);
+TYPED_TEST(EdgeDataWeightTest, WeightNormalization) {
+   EdgeData<TypeParam::value> edges;  // CPU mode
+   this->add_test_edges(edges);
    edges.update_temporal_weights(-1);
 
    // Should have 4 timestamp groups (10,20,30,40)
    ASSERT_EQ(edges.forward_cumulative_weights_exponential.size(), 4);
    ASSERT_EQ(edges.backward_cumulative_weights_exponential.size(), 4);
 
-   verify_cumulative_weights(edges.forward_cumulative_weights_exponential);
-   verify_cumulative_weights(edges.backward_cumulative_weights_exponential);
+   this->verify_cumulative_weights(edges.forward_cumulative_weights_exponential);
+   this->verify_cumulative_weights(edges.backward_cumulative_weights_exponential);
 }
 
-TEST_F(EdgeDataWeightTest, ForwardWeightBias) {
-   EdgeData edges(false);  // CPU mode
-   add_test_edges(edges);
+TYPED_TEST(EdgeDataWeightTest, ForwardWeightBias) {
+   EdgeData<TypeParam::value> edges;  // CPU mode
+   this->add_test_edges(edges);
    edges.update_temporal_weights(-1);
 
    // Forward weights should be higher for earlier timestamps
-   const std::vector<double> forward_weights = get_individual_weights(edges.forward_cumulative_weights_exponential);
+   const std::vector<double> forward_weights = this->get_individual_weights(edges.forward_cumulative_weights_exponential);
 
    // Earlier groups should have higher weights
    for (size_t i = 0; i < forward_weights.size() - 1; i++) {
@@ -91,13 +87,13 @@ TEST_F(EdgeDataWeightTest, ForwardWeightBias) {
    }
 }
 
-TEST_F(EdgeDataWeightTest, BackwardWeightBias) {
-   EdgeData edges(false);  // CPU mode
-   add_test_edges(edges);
+TYPED_TEST(EdgeDataWeightTest, BackwardWeightBias) {
+   EdgeData<TypeParam::value> edges;  // CPU mode
+   this->add_test_edges(edges);
    edges.update_temporal_weights(-1);
 
    // Backward weights should be higher for later timestamps
-   const std::vector<double> backward_weights = get_individual_weights(edges.backward_cumulative_weights_exponential);
+   const std::vector<double> backward_weights = this->get_individual_weights(edges.backward_cumulative_weights_exponential);
 
    // Later groups should have higher weights
    for (size_t i = 0; i < backward_weights.size() - 1; i++) {
@@ -106,16 +102,16 @@ TEST_F(EdgeDataWeightTest, BackwardWeightBias) {
    }
 }
 
-TEST_F(EdgeDataWeightTest, WeightExponentialDecay) {
-    EdgeData edges(false);  // CPU mode
+TYPED_TEST(EdgeDataWeightTest, WeightExponentialDecay) {
+    EdgeData<TypeParam::value> edges;  // CPU mode
     edges.push_back(1, 2, 10);
     edges.push_back(2, 3, 20);
     edges.push_back(3, 4, 30);
     edges.update_timestamp_groups();
     edges.update_temporal_weights(-1);
 
-    const auto forward_weights = get_individual_weights(edges.forward_cumulative_weights_exponential);
-    const auto backward_weights = get_individual_weights(edges.backward_cumulative_weights_exponential);
+    const auto forward_weights = this->get_individual_weights(edges.forward_cumulative_weights_exponential);
+    const auto backward_weights = this->get_individual_weights(edges.backward_cumulative_weights_exponential);
 
     // For forward weights: log(w[i+1]/w[i]) = -Δt
     for (size_t i = 0; i < forward_weights.size() - 1; i++) {
@@ -138,9 +134,9 @@ TEST_F(EdgeDataWeightTest, WeightExponentialDecay) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, UpdateWeights) {
-   EdgeData edges(false);
-   add_test_edges(edges);
+TYPED_TEST(EdgeDataWeightTest, UpdateWeights) {
+   EdgeData<TypeParam::value> edges;
+   this->add_test_edges(edges);
    edges.update_temporal_weights(-1);
 
    // Store original weights
@@ -157,22 +153,22 @@ TEST_F(EdgeDataWeightTest, UpdateWeights) {
    EXPECT_NE(original_backward.size(), edges.backward_cumulative_weights_exponential.size());
 
    // But should still maintain normalization
-   verify_cumulative_weights(edges.forward_cumulative_weights_exponential);
-   verify_cumulative_weights(edges.backward_cumulative_weights_exponential);
+   this->verify_cumulative_weights(edges.forward_cumulative_weights_exponential);
+   this->verify_cumulative_weights(edges.backward_cumulative_weights_exponential);
 }
 
-TEST_F(EdgeDataWeightTest, TimescaleBoundZero) {
-    EdgeData edges(false);
-    add_test_edges(edges);
+TYPED_TEST(EdgeDataWeightTest, TimescaleBoundZero) {
+    EdgeData<TypeParam::value> edges;
+    this->add_test_edges(edges);
     edges.update_temporal_weights(0);  // Should behave like -1
 
-    verify_cumulative_weights(edges.forward_cumulative_weights_exponential);
-    verify_cumulative_weights(edges.backward_cumulative_weights_exponential);
+    this->verify_cumulative_weights(edges.forward_cumulative_weights_exponential);
+    this->verify_cumulative_weights(edges.backward_cumulative_weights_exponential);
 }
 
-TEST_F(EdgeDataWeightTest, TimescaleBoundPositive) {
-    EdgeData edges(false);
-    add_test_edges(edges);
+TYPED_TEST(EdgeDataWeightTest, TimescaleBoundPositive) {
+    EdgeData<TypeParam::value> edges;
+    this->add_test_edges(edges);
     constexpr double timescale_bound = 30.0;
     edges.update_temporal_weights(timescale_bound);
 
@@ -202,9 +198,9 @@ TEST_F(EdgeDataWeightTest, TimescaleBoundPositive) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, ScalingComparison) {
-    EdgeData edges(false);
-    add_test_edges(edges);
+TYPED_TEST(EdgeDataWeightTest, ScalingComparison) {
+    EdgeData<TypeParam::value> edges;
+    this->add_test_edges(edges);
 
     // Test relative weight proportions are preserved
     std::vector<double> weights_unscaled, weights_scaled;
@@ -227,8 +223,8 @@ TEST_F(EdgeDataWeightTest, ScalingComparison) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, ScaledWeightBounds) {
-    EdgeData edges(false);  // CPU mode
+TYPED_TEST(EdgeDataWeightTest, ScaledWeightBounds) {
+    EdgeData<TypeParam::value> edges;  // CPU mode
     edges.push_back(1, 2, 100);
     edges.push_back(2, 3, 300);
     edges.push_back(3, 4, 700);
@@ -238,8 +234,8 @@ TEST_F(EdgeDataWeightTest, ScaledWeightBounds) {
     edges.update_temporal_weights(timescale_bound);
 
     // Get weights using the helper method defined in the test fixture
-    const auto forward_weights = get_individual_weights(edges.forward_cumulative_weights_exponential);
-    const auto backward_weights = get_individual_weights(edges.backward_cumulative_weights_exponential);
+    const auto forward_weights = this->get_individual_weights(edges.forward_cumulative_weights_exponential);
+    const auto backward_weights = this->get_individual_weights(edges.backward_cumulative_weights_exponential);
 
     // Maximum log ratio should not exceed timescale_bound
     for (size_t i = 0; i < forward_weights.size(); i++) {
@@ -263,9 +259,9 @@ TEST_F(EdgeDataWeightTest, ScaledWeightBounds) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, DifferentTimescaleBounds) {
-    EdgeData edges(false);
-    add_test_edges(edges);
+TYPED_TEST(EdgeDataWeightTest, DifferentTimescaleBounds) {
+    EdgeData<TypeParam::value> edges;
+    this->add_test_edges(edges);
 
     std::vector<double> bounds = {5.0, 10.0, 20.0};
     std::vector<std::vector<double>> scaled_ratios;
@@ -290,8 +286,8 @@ TEST_F(EdgeDataWeightTest, DifferentTimescaleBounds) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, SingleTimestampWithBounds) {
-    EdgeData edges(false);
+TYPED_TEST(EdgeDataWeightTest, SingleTimestampWithBounds) {
+    EdgeData<TypeParam::value> edges;
     // All edges have same timestamp
     edges.push_back(1, 2, 100);
     edges.push_back(2, 3, 100);
@@ -308,9 +304,9 @@ TEST_F(EdgeDataWeightTest, SingleTimestampWithBounds) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, WeightMonotonicity) {
-    EdgeData edges(false);
-    add_test_edges(edges);
+TYPED_TEST(EdgeDataWeightTest, WeightMonotonicity) {
+    EdgeData<TypeParam::value> edges;
+    this->add_test_edges(edges);
 
     const double timescale_bound = 20.0;
     edges.update_temporal_weights(timescale_bound);
@@ -346,8 +342,8 @@ TEST_F(EdgeDataWeightTest, WeightMonotonicity) {
     }
 }
 
-TEST_F(EdgeDataWeightTest, TimescaleScalingPrecision) {
-    EdgeData edges(false);
+TYPED_TEST(EdgeDataWeightTest, TimescaleScalingPrecision) {
+    EdgeData<TypeParam::value> edges;
     // Use precise timestamps for exact validation
     edges.push_back(1, 2, 100);
     edges.push_back(2, 3, 300);
@@ -357,8 +353,8 @@ TEST_F(EdgeDataWeightTest, TimescaleScalingPrecision) {
     constexpr double timescale_bound = 2.0;
     edges.update_temporal_weights(timescale_bound);
 
-    const auto forward_weights = get_individual_weights(edges.forward_cumulative_weights_exponential);
-    const auto backward_weights = get_individual_weights(edges.backward_cumulative_weights_exponential);
+    const auto forward_weights = this->get_individual_weights(edges.forward_cumulative_weights_exponential);
+    const auto backward_weights = this->get_individual_weights(edges.backward_cumulative_weights_exponential);
 
     // Time range is 600, scale = 2.0/600
     constexpr double time_scale = timescale_bound / 600.0;

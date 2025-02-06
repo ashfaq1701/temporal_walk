@@ -2,7 +2,8 @@
 #include <stdexcept>
 #include "UniformRandomPicker.cuh"
 
-int UniformRandomPicker::pick_random(const int start, const int end, const bool prioritize_end) {
+template<bool UseGPU>
+int UniformRandomPicker<UseGPU>::pick_random(const int start, const int end, const bool prioritize_end) {
     if (start >= end) {
         throw std::invalid_argument("Start must be less than end.");
     }
@@ -11,3 +12,8 @@ int UniformRandomPicker::pick_random(const int start, const int end, const bool 
 
     return dist(thread_local_gen);
 }
+
+template class UniformRandomPicker<false>;
+#ifdef USE_CUDA
+template class UniformRandomPicker<true>;
+#endif

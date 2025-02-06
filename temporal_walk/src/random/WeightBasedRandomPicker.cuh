@@ -2,13 +2,14 @@
 #define WEIGHTBASEDRANDOMPICKER_H
 
 #include "RandomPicker.h"
+#include "../cuda/types.cuh"
 
-class WeightBasedRandomPicker final : public RandomPicker
+template<bool UseGPU>
+class WeightBasedRandomPicker final : public RandomPicker<UseGPU>
 {
 public:
-    template<typename T>
     [[nodiscard]] int pick_random(
-        const std::vector<T>& cumulative_weights,
+        const typename SelectVectorType<double, UseGPU>::type& cumulative_weights,
         int group_start,
         int group_end);
 };

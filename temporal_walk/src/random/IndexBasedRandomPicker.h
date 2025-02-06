@@ -3,7 +3,8 @@
 
 #include "RandomPicker.h"
 
-class IndexBasedRandomPicker : public RandomPicker {
+template<bool UseGPU>
+class IndexBasedRandomPicker : public RandomPicker<UseGPU> {
 
 public:
     virtual int pick_random(int start, int end, bool prioritize_end) = 0;
