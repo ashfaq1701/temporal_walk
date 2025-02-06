@@ -58,3 +58,4 @@ if(NOT USE_CUDA OR NOT CMAKE_CUDA_COMPILER)
 endif()
 
 add_subdirectory(temporal_walk/py_interface)
+add_subdirectory(temporal_walk/test_run)

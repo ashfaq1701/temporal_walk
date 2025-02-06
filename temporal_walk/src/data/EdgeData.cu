@@ -165,3 +165,8 @@ size_t EdgeData<UseGPU>::find_group_before_timestamp(int64_t timestamp) const {
     auto it = std::lower_bound(unique_timestamps.begin(), unique_timestamps.end(), timestamp);
     return (it - unique_timestamps.begin()) - 1;
 }
+
+template class EdgeData<false>;
+#ifdef USE_CUDA
+template class EdgeData<true>;
+#endif

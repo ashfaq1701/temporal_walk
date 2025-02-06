@@ -498,3 +498,8 @@ template<bool UseGPU>
 std::vector<std::tuple<int, int, int64_t>> TemporalGraph<UseGPU>::get_edges() {
     return edges.get_edges();
 }
+
+template class TemporalGraph<false>;
+#ifdef USE_CUDA
+template class TemporalGraph<true>;
+#endif

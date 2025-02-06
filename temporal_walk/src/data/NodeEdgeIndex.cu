@@ -348,3 +348,8 @@ size_t NodeEdgeIndex<UseGPU>::get_timestamp_group_count(
 
    return offsets[dense_node_id + 1] - offsets[dense_node_id];
 }
+
+template class NodeEdgeIndex<false>;
+#ifdef USE_CUDA
+template class NodeEdgeIndex<true>;
+#endif

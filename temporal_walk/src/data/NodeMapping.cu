@@ -93,3 +93,8 @@ template<bool UseGPU>
 std::vector<int> NodeMapping<UseGPU>::get_all_sparse_ids() const {
     return dense_to_sparse;
 }
+
+template class NodeMapping<false>;
+#ifdef USE_CUDA
+template class NodeMapping<true>;
+#endif
