@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <tuple>
 #include <cmath>
-#include "../cuda/types.h"
+#include "../cuda/types.cuh"
 
 template<bool UseGPU>
 struct EdgeData {
