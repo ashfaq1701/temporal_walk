@@ -14,7 +14,7 @@ int main() {
     temporal_walk.add_multiple_edges(edge_infos);
 
     constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;
-    constexpr RandomPickerType exponential_picker_type = RandomPickerType::ExponentialIndex;
+    constexpr RandomPickerType exponential_picker_type = RandomPickerType::ExponentialWeight;
     constexpr RandomPickerType uniform_picker_type = RandomPickerType::Uniform;
 
     auto start = std::chrono::high_resolution_clock::now();
