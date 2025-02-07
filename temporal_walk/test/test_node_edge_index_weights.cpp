@@ -53,7 +53,7 @@ protected:
     }
 
     void setup_test_graph(bool directed = true) {
-        EdgeData<UseGPUType::value> edges(false);  // CPU mode
+        EdgeData<UseGPUType::value> edges;  // CPU mode
         // Add edges that create multiple timestamp groups per node
         edges.push_back(1, 2, 10);
         edges.push_back(1, 3, 10); // Same timestamp group for node 1
@@ -63,7 +63,7 @@ protected:
         edges.push_back(3, 4, 40);
         edges.update_timestamp_groups();
 
-        NodeMapping<UseGPUType::value> mapping(false);  // CPU mode
+        NodeMapping<UseGPUType::value> mapping;  // CPU mode
         mapping.update(edges, 0, edges.size());
 
         index = NodeEdgeIndex<UseGPUType::value>();  // CPU mode
@@ -84,7 +84,7 @@ TYPED_TEST_SUITE(NodeEdgeIndexWeightTest, USE_GPU_TYPES);
 TYPED_TEST(NodeEdgeIndexWeightTest, EmptyGraph) {
     EdgeData<TypeParam::value> empty_edges;
     NodeMapping<TypeParam::value> empty_mapping;
-    index = NodeEdgeIndex<TypeParam::value>();
+    this->index = NodeEdgeIndex<TypeParam::value>();
     this->index.rebuild(empty_edges, empty_mapping, true);
     this->index.update_temporal_weights(empty_edges, -1);
 
@@ -115,7 +115,7 @@ TYPED_TEST(NodeEdgeIndexWeightTest, WeightBiasPerNode) {
     NodeMapping<TypeParam::value> mapping;
     mapping.update(edges, 0, edges.size());
 
-    index = NodeEdgeIndex<TypeParam::value>();
+    this->index = NodeEdgeIndex<TypeParam::value>();
     this->index.rebuild(edges, mapping, true);
     this->index.update_temporal_weights(edges, -1); // No scaling
 
@@ -150,7 +150,7 @@ TYPED_TEST(NodeEdgeIndexWeightTest, ScaledWeightRatios) {
     NodeMapping<TypeParam::value> mapping;
     mapping.update(edges, 0, edges.size());
 
-    index = NodeEdgeIndex<TypeParam::value>();
+    this->index = NodeEdgeIndex<TypeParam::value>();
     this->index.rebuild(edges, mapping, true);
 
     constexpr double timescale_bound = 2.0;
@@ -339,7 +339,7 @@ TYPED_TEST(NodeEdgeIndexWeightTest, TimescaleNormalizationTest) {
     NodeMapping<TypeParam::value> mapping;  // CPU mode
     mapping.update(edges, 0, edges.size());
 
-    index = NodeEdgeIndex<TypeParam::value>();  // CPU mode
+    this->index = NodeEdgeIndex<TypeParam::value>();  // CPU mode
     this->index.rebuild(edges, mapping, true);
 
     constexpr double timescale_bound = 5.0;

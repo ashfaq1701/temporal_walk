@@ -1,12 +1,15 @@
 import csv
 from temporal_walk import TemporalWalk
 
+
+USE_GPU = False
+
 def print_walks_for_nodes(walks):
     for idx, walk in enumerate(walks):
         print(f"Walk {idx}: {','.join(map(str, walk))}")
 
 if __name__ == '__main__':
-    temporal_walk_obj = TemporalWalk(False)
+    temporal_walk_obj = TemporalWalk(False, USE_GPU)
 
     data_file_path = 'data/sample_data.csv'
 
