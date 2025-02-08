@@ -5,6 +5,7 @@
 #include "temporal_walk_proxy.h"
 #include "random_picker_proxies.h"
 #include <stdexcept>
+#include "../src/core/structs.h"
 #include <core/TemporalWalk.h>
 
 
