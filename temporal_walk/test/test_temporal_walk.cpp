@@ -2,6 +2,7 @@
 #include <cmath>
 
 #include "test_utils.h"
+#include "../py_interface/temporal_walk_proxy.h"
 #include "../src/core/TemporalWalk.h"
 
 constexpr int TEST_NODE_ID = 42;
@@ -21,10 +22,10 @@ template<typename UseGPUType>
 class EmptyTemporalWalkTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk<UseGPUType::value>>(true, -1, true, -1);
+        temporal_walk = std::make_unique<TemporalWalkProxy>(true, UseGPUType::value, -1, true, -1);
     }
 
-    std::unique_ptr<TemporalWalk<UseGPUType::value>> temporal_walk;
+    std::unique_ptr<TemporalWalkProxy> temporal_walk;
 };
 
 TYPED_TEST_SUITE(EmptyTemporalWalkTest, USE_GPU_TYPES);
@@ -33,10 +34,10 @@ template<typename UseGPUType>
 class EmptyTemporalWalkTestWithMaxCapacity : public ::testing::Test {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk<UseGPUType::value>>(true, MAX_TIME_CAPACITY, true, -1);
+        temporal_walk = std::make_unique<TemporalWalkProxy>(true, UseGPUType::value, MAX_TIME_CAPACITY, true, -1);
     }
 
-    std::unique_ptr<TemporalWalk<UseGPUType::value>> temporal_walk;
+    std::unique_ptr<TemporalWalkProxy> temporal_walk;
 };
 
 TYPED_TEST_SUITE(EmptyTemporalWalkTestWithMaxCapacity, USE_GPU_TYPES);
@@ -49,12 +50,12 @@ protected:
     }
 
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk<UseGPUType::value>>(true, -1, true, -1);
+        temporal_walk = std::make_unique<TemporalWalkProxy>(true, UseGPUType::value, -1, true, -1);
         temporal_walk->add_multiple_edges(sample_edges);
     }
 
     std::vector<std::tuple<int, int, int64_t>> sample_edges;
-    std::unique_ptr<TemporalWalk<UseGPUType::value>> temporal_walk;
+    std::unique_ptr<TemporalWalkProxy> temporal_walk;
 };
 
 TYPED_TEST_SUITE(FilledDirectedTemporalWalkTest, USE_GPU_TYPES);
@@ -67,12 +68,12 @@ protected:
     }
 
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk<UseGPUType::value>>(false, -1, true, -1);
+        temporal_walk = std::make_unique<TemporalWalkProxy>(false, UseGPUType::value, -1, true, -1);
         temporal_walk->add_multiple_edges(sample_edges);
     }
 
     std::vector<std::tuple<int, int, int64_t>> sample_edges;
-    std::unique_ptr<TemporalWalk<UseGPUType::value>> temporal_walk;
+    std::unique_ptr<TemporalWalkProxy> temporal_walk;
 };
 
 TYPED_TEST_SUITE(FilledUndirectedTemporalWalkTest, USE_GPU_TYPES);
@@ -81,7 +82,7 @@ template<typename UseGPUType>
 class TimescaleBoundedTemporalWalkTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalk<UseGPUType::value>>(true, -1, true, 10.0);
+        temporal_walk = std::make_unique<TemporalWalkProxy>(true, UseGPUType::value, -1, true, 10.0);
         temporal_walk->add_multiple_edges({
             // Node 1's outgoing edges
             {1, 2, 100},
@@ -101,14 +102,14 @@ protected:
         });
     }
 
-    std::unique_ptr<TemporalWalk<UseGPUType::value>> temporal_walk;
+    std::unique_ptr<TemporalWalkProxy> temporal_walk;
 };
 
 TYPED_TEST_SUITE(TimescaleBoundedTemporalWalkTest, USE_GPU_TYPES);
 
 // Test the constructor of TemporalWalk to ensure it initializes correctly.
 TYPED_TEST(EmptyTemporalWalkTest, ConstructorTest) {
-    EXPECT_NO_THROW(this->temporal_walk = std::make_unique<TemporalWalk<TypeParam::value>>(true));
+    EXPECT_NO_THROW(this->temporal_walk = std::make_unique<TemporalWalkProxy>(true));
     EXPECT_EQ(this->temporal_walk->get_node_count(), 0); // Assuming initial node count is 0
 }
 
