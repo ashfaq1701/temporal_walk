@@ -46,7 +46,7 @@ set(SRC_FILES
 
 if(NOT USE_CUDA OR NOT CMAKE_CUDA_COMPILER)
     set_source_files_properties(
-            ${CUDA_SRC_FILES}
+            ${SRC_FILES}
             PROPERTIES
             LANGUAGE CXX
             COMPILE_FLAGS "-x c++"

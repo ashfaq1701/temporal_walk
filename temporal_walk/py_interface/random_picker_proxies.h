@@ -1,5 +1,6 @@
 #ifndef RANDOM_PICKER_PROXIES_H
 #define RANDOM_PICKER_PROXIES_H
+
 #include <random/ExponentialIndexRandomPicker.cuh>
 #include <random/LinearRandomPicker.cuh>
 #include <random/UniformRandomPicker.cuh>
