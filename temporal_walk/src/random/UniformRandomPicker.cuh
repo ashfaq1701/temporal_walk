@@ -2,6 +2,7 @@
 #define UNIFORMRANDOMPICKER_H
 
 #include "IndexBasedRandomPicker.h"
+#include "../utils/utils.h"
 
 template<bool UseGPU>
 class UniformRandomPicker final : public IndexBasedRandomPicker {

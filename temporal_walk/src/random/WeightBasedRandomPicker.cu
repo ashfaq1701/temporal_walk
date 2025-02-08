@@ -1,4 +1,3 @@
-
 #include "WeightBasedRandomPicker.cuh"
 
 #include <cuda/types.cuh>
@@ -27,7 +26,7 @@ int WeightBasedRandomPicker<UseGPU>::pick_random(
     }
 
     // Generate random value between [start_sum, end_sum]
-    const double random_val = generate_random_double(start_sum, end_sum);
+    const double random_val = generate_random_value(start_sum, end_sum);
 
     // Find the group where random_val falls
     return static_cast<int>(std::lower_bound(

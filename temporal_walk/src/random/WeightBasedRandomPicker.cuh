@@ -2,6 +2,7 @@
 #define WEIGHTBASEDRANDOMPICKER_H
 
 #include "RandomPicker.h"
+#include "../utils/utils.h"
 #include "../cuda/types.cuh"
 
 template<bool UseGPU>

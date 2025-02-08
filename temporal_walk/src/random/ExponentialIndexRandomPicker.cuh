@@ -2,6 +2,7 @@
 #define EXPONENTIALINDEXRANDOMPICKER_H
 
 #include "IndexBasedRandomPicker.h"
+#include "../utils/utils.h"
 
 template<bool UseGPU>
 class ExponentialIndexRandomPicker final : public IndexBasedRandomPicker {

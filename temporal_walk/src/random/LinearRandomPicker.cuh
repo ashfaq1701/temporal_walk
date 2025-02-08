@@ -2,6 +2,7 @@
 #define LINEARRANDOMPICKER_H
 
 #include "IndexBasedRandomPicker.h"
+#include "../utils/utils.h"
 
 template<bool UseGPU>
 class LinearRandomPicker final : public IndexBasedRandomPicker {

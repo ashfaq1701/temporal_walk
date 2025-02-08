@@ -14,8 +14,7 @@ int ExponentialIndexRandomPicker<UseGPU>::pick_random(const int start, const int
     const int len_seq = end - start;
 
     // Generate uniform random number between 0 and 1
-    std::uniform_real_distribution<double> dist(0.0, 1.0);
-    const double u = dist(thread_local_gen);
+    const double u = generate_random_value(0.0, 1.0);
 
     double k;
     if (len_seq < 710) {
