@@ -1,7 +1,5 @@
 #include "WeightBasedRandomPicker.cuh"
 
-#include <cuda/types.cuh>
-
 template<bool UseGPU>
 int WeightBasedRandomPicker<UseGPU>::pick_random(
     const typename SelectVectorType<double, UseGPU>::type& cumulative_weights,

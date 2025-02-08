@@ -3,7 +3,7 @@
 
 #include "RandomPicker.h"
 #include "../utils/utils.h"
-#include "../cuda/types.cuh"
+#include "../cuda_common/types.cuh"
 
 template<bool UseGPU>
 class WeightBasedRandomPicker final : public RandomPicker
