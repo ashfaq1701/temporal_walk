@@ -2,10 +2,26 @@
 #define TEMPORAL_WALK_H
 
 #include<vector>
-#include "structs.h"
 #include "../../libs/thread-pool/ThreadPool.h"
 #include "../random/RandomPicker.h"
 #include "../data/TemporalGraph.cuh"
+
+enum RandomPickerType {
+    Uniform,
+    Linear,
+    ExponentialIndex,
+    ExponentialWeight
+};
+
+enum WalkDirection {
+    Forward_In_Time,
+    Backward_In_Time
+};
+
+struct NodeWithTime {
+    int node;
+    int64_t timestamp;
+};
 
 template<bool UseGPU>
 class TemporalWalk {
