@@ -9,6 +9,8 @@
 template<bool UseGPU>
 struct NodeEdgeIndex
 {
+public:
+
     using SizeVector = typename SelectVectorType<size_t, UseGPU>::type;
     using DoubleVector = typename SelectVectorType<double, UseGPU>::type;
 
@@ -37,9 +39,12 @@ struct NodeEdgeIndex
     [[nodiscard]] std::pair<size_t, size_t> get_edge_range(int dense_node_id, bool forward, bool is_directed) const;
     [[nodiscard]] std::pair<size_t, size_t> get_timestamp_group_range(int dense_node_id, size_t group_idx, bool forward,
                                                                       bool is_directed) const;
-    [[nodiscard]] size_t get_timestamp_group_count(int dense_node_id, bool forward, bool is_directed) const;
+    [[nodiscard]] size_t get_timestamp_group_count(int dense_node_id, bool forward, bool directed) const;
 
     void update_temporal_weights(const EdgeData<UseGPU>& edges, double timescale_bound);
+
+private:
+    SizeVector get_timestamp_offset_vector(bool forward, bool directed) const;
 };
 
 #endif //NODEEDGEINDEX_H

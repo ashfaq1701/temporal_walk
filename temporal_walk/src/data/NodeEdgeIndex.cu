@@ -39,11 +39,11 @@ void NodeEdgeIndex<UseGPU>::rebuild(
        const int src_idx = mapping.to_dense(edges.sources[i]);
        const int tgt_idx = mapping.to_dense(edges.targets[i]);
 
-       outbound_offsets[src_idx + 1]++;
+       ++outbound_offsets[src_idx + 1];
        if (is_directed) {
-           inbound_offsets[tgt_idx + 1]++;
+           ++inbound_offsets[tgt_idx + 1];
        } else {
-           outbound_offsets[tgt_idx + 1]++;
+           ++outbound_offsets[tgt_idx + 1];
        }
    }
 
@@ -179,12 +179,16 @@ void NodeEdgeIndex<UseGPU>::update_temporal_weights(const EdgeData<UseGPU>& edge
         inbound_backward_cumulative_weights_exponential.resize(inbound_timestamp_group_indices.size());
     }
 
+    // Process each node
     for (size_t node = 0; node < num_nodes; node++) {
-        size_t num_groups = get_timestamp_group_count(static_cast<int>(node), true, !inbound_offsets.empty());
+        // Outbound weights
+        const auto& outbound_offsets = get_timestamp_offset_vector(true, false);
+        const size_t out_start = outbound_offsets[node];
+        const size_t out_end = outbound_offsets[node + 1];
 
-        if (num_groups > 0) {
-            const size_t first_group_start = outbound_timestamp_group_indices[outbound_timestamp_group_offsets[node]];
-            const size_t last_group_start = outbound_timestamp_group_indices[outbound_timestamp_group_offsets[node + 1] - 1];
+        if (out_start < out_end) {
+            const size_t first_group_start = outbound_timestamp_group_indices[out_start];
+            const size_t last_group_start = outbound_timestamp_group_indices[out_end - 1];
             const int64_t min_ts = edges.timestamps[outbound_indices[first_group_start]];
             const int64_t max_ts = edges.timestamps[outbound_indices[last_group_start]];
             const auto time_diff = static_cast<double>(max_ts - min_ts);
@@ -194,10 +198,9 @@ void NodeEdgeIndex<UseGPU>::update_temporal_weights(const EdgeData<UseGPU>& edge
             double forward_sum = 0.0;
             double backward_sum = 0.0;
 
-            // First calculate weights and sums
-            for (size_t group = 0; group < num_groups; group++) {
-                const size_t group_pos = outbound_timestamp_group_offsets[node] + group;
-                const size_t edge_start = outbound_timestamp_group_indices[group_pos];
+            // Calculate weights and sums
+            for (size_t pos = out_start; pos < out_end; ++pos) {
+                const size_t edge_start = outbound_timestamp_group_indices[pos];
                 const int64_t group_ts = edges.timestamps[outbound_indices[edge_start]];
 
                 const auto time_diff_forward = static_cast<double>(max_ts - group_ts);
@@ -209,19 +212,17 @@ void NodeEdgeIndex<UseGPU>::update_temporal_weights(const EdgeData<UseGPU>& edge
                     time_diff_backward * time_scale : time_diff_backward;
 
                 const double forward_weight = exp(forward_scaled);
-                outbound_forward_cumulative_weights_exponential[group_pos] = forward_weight;
+                outbound_forward_cumulative_weights_exponential[pos] = forward_weight;
                 forward_sum += forward_weight;
 
                 const double backward_weight = exp(backward_scaled);
-                outbound_backward_cumulative_weights_exponential[group_pos] = backward_weight;
+                outbound_backward_cumulative_weights_exponential[pos] = backward_weight;
                 backward_sum += backward_weight;
             }
 
-            // Then normalize and compute cumulative sums
-            const size_t start_pos = outbound_timestamp_group_offsets[node];
-            const size_t end_pos = outbound_timestamp_group_offsets[node + 1];
+            // Normalize and compute cumulative sums
             double forward_cumsum = 0.0, backward_cumsum = 0.0;
-            for (size_t pos = start_pos; pos < end_pos; pos++) {
+            for (size_t pos = out_start; pos < out_end; ++pos) {
                 outbound_forward_cumulative_weights_exponential[pos] /= forward_sum;
                 outbound_backward_cumulative_weights_exponential[pos] /= backward_sum;
 
@@ -233,12 +234,15 @@ void NodeEdgeIndex<UseGPU>::update_temporal_weights(const EdgeData<UseGPU>& edge
             }
         }
 
+        // Inbound weights
         if (!inbound_offsets.empty()) {
-            num_groups = get_timestamp_group_count(static_cast<int>(node), false, true);
+            const auto& inbound_group_offsets = get_timestamp_offset_vector(false, true);
+            const size_t in_start = inbound_group_offsets[node];
+            const size_t in_end = inbound_group_offsets[node + 1];
 
-            if (num_groups > 0) {
-                const size_t first_group_start = inbound_timestamp_group_indices[inbound_timestamp_group_offsets[node]];
-                const size_t last_group_start = inbound_timestamp_group_indices[inbound_timestamp_group_offsets[node + 1] - 1];
+            if (in_start < in_end) {
+                const size_t first_group_start = inbound_timestamp_group_indices[in_start];
+                const size_t last_group_start = inbound_timestamp_group_indices[in_end - 1];
                 const int64_t min_ts = edges.timestamps[inbound_indices[first_group_start]];
                 const int64_t max_ts = edges.timestamps[inbound_indices[last_group_start]];
                 const auto time_diff = static_cast<double>(max_ts - min_ts);
@@ -247,10 +251,9 @@ void NodeEdgeIndex<UseGPU>::update_temporal_weights(const EdgeData<UseGPU>& edge
 
                 double backward_sum = 0.0;
 
-                // First calculate weights and sum
-                for (size_t group = 0; group < num_groups; group++) {
-                    const size_t group_pos = inbound_timestamp_group_offsets[node] + group;
-                    const size_t edge_start = inbound_timestamp_group_indices[group_pos];
+                // Calculate weights and sum
+                for (size_t pos = in_start; pos < in_end; ++pos) {
+                    const size_t edge_start = inbound_timestamp_group_indices[pos];
                     const int64_t group_ts = edges.timestamps[inbound_indices[edge_start]];
 
                     const auto time_diff_backward = static_cast<double>(group_ts - min_ts);
@@ -258,15 +261,13 @@ void NodeEdgeIndex<UseGPU>::update_temporal_weights(const EdgeData<UseGPU>& edge
                         time_diff_backward * time_scale : time_diff_backward;
 
                     const double backward_weight = exp(backward_scaled);
-                    inbound_backward_cumulative_weights_exponential[group_pos] = backward_weight;
+                    inbound_backward_cumulative_weights_exponential[pos] = backward_weight;
                     backward_sum += backward_weight;
                 }
 
-                // Then normalize and compute cumulative sum
-                const size_t start_pos = inbound_timestamp_group_offsets[node];
-                const size_t end_pos = inbound_timestamp_group_offsets[node + 1];
+                // Normalize and compute cumulative sum
                 double backward_cumsum = 0.0;
-                for (size_t pos = start_pos; pos < end_pos; pos++) {
+                for (size_t pos = in_start; pos < in_end; ++pos) {
                     inbound_backward_cumulative_weights_exponential[pos] /= backward_sum;
                     backward_cumsum += inbound_backward_cumulative_weights_exponential[pos];
                     inbound_backward_cumulative_weights_exponential[pos] = backward_cumsum;
@@ -337,16 +338,22 @@ template<bool UseGPU>
 size_t NodeEdgeIndex<UseGPU>::get_timestamp_group_count(
    int dense_node_id,
    bool forward,
-   bool is_directed) const {
+   bool directed) const {
 
-   const auto& offsets = (is_directed && !forward) ?
-       inbound_timestamp_group_offsets : outbound_timestamp_group_offsets;
+   const auto& offsets = get_timestamp_offset_vector(forward, directed);
 
    if (dense_node_id < 0 || dense_node_id >= offsets.size() - 1) {
        return 0;
    }
 
    return offsets[dense_node_id + 1] - offsets[dense_node_id];
+}
+
+template<bool UseGPU>
+[[nodiscard]] typename NodeEdgeIndex<UseGPU>::SizeVector NodeEdgeIndex<UseGPU>::get_timestamp_offset_vector(
+    bool forward,
+    bool directed) const {
+    return (directed && !forward) ? inbound_timestamp_group_offsets : outbound_timestamp_group_offsets;
 }
 
 template class NodeEdgeIndex<false>;

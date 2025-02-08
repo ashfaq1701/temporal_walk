@@ -104,9 +104,8 @@ inline std::mt19937& get_random_generator() {
     return thread_local_gen;
 }
 
-template <typename T>
-T generate_random_value(T start, T end) {
-    std::uniform_real_distribution<T> dist(start, end);
+inline double generate_random_double(double start, double end) {
+    std::uniform_real_distribution<double> dist(start, end);
     return dist(thread_local_gen);
 }
 

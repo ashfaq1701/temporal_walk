@@ -331,7 +331,9 @@ std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_edge_at(
 
     // Get selected group's boundaries
     auto [group_start, group_end] = edges.get_timestamp_group_range(group_idx);
-    if (group_start == group_end) return {-1, -1, -1};
+    if (group_start == group_end) {
+        return {-1, -1, -1};
+    }
 
     // Random selection from the chosen group
     const size_t random_idx = group_start + generate_random_number_bounded_by(static_cast<int>(group_end - group_start));
