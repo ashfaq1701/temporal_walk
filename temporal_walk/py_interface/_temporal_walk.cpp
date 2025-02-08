@@ -6,7 +6,7 @@
 #include "random_picker_proxies.h"
 #include <stdexcept>
 #include "../src/core/structs.h"
-#include <core/TemporalWalk.h>
+#include "../src/core/TemporalWalk.h"
 
 
 namespace py = pybind11;

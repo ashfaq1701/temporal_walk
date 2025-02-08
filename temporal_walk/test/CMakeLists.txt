@@ -38,7 +38,7 @@ if(USE_CUDA AND CMAKE_CUDA_COMPILER)
 
     # Mark all source files as CUDA
     set_source_files_properties(
-            ${CUDA_SRC_FILES}
+            ${SRC_FILES}
             ${TEST_FILES}
             PROPERTIES
             LANGUAGE CUDA
@@ -49,15 +49,24 @@ if(USE_CUDA AND CMAKE_CUDA_COMPILER)
             CUDA_SEPARABLE_COMPILATION ON
             CUDA_RESOLVE_DEVICE_SYMBOLS ON
     )
+
+    target_include_directories(test_temporal_walk PRIVATE
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src
+            ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+    )
 else()
     set(CUDA_OPTIONS "")
     set(CUDA_LIBS "")
     set_source_files_properties(
-            ${CUDA_SRC_FILES}
+            ${SRC_FILES}
             PROPERTIES
             LANGUAGE CXX
     )
     add_executable(test_temporal_walk ${TEST_FILES} ${SRC_FILES})
+
+    target_include_directories(test_temporal_walk PRIVATE
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src
+    )
 endif()
 
 target_compile_features(test_temporal_walk PRIVATE cxx_std_17)
@@ -70,9 +79,4 @@ target_link_libraries(test_temporal_walk PRIVATE
         GTest::gmock_main
         Boost::math
         ${CUDA_LIBS}
-)
-
-target_include_directories(test_temporal_walk PRIVATE
-        ${CMAKE_SOURCE_DIR}/temporal_walk/src
-        ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
 )

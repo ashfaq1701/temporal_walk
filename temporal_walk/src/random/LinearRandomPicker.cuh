@@ -4,7 +4,7 @@
 #include "IndexBasedRandomPicker.h"
 
 template<bool UseGPU>
-class LinearRandomPicker final : public IndexBasedRandomPicker<UseGPU> {
+class LinearRandomPicker final : public IndexBasedRandomPicker {
 public:
     int pick_random(int start, int end, bool prioritize_end) override;
 };

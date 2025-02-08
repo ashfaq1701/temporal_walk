@@ -3,8 +3,7 @@
 #include "../src/random/IndexBasedRandomPicker.h"
 
 // Test-specific picker that always selects first element
-template<bool UseGPU>
-class FirstIndexPicker : public IndexBasedRandomPicker<UseGPU> {
+class FirstIndexPicker : public IndexBasedRandomPicker {
 public:
     [[nodiscard]] int pick_random(int start, int end, bool prioritize_end) override {
         return start;
@@ -12,8 +11,7 @@ public:
 };
 
 // Test-specific picker that always selects last element
-template<bool UseGPU>
-class LastIndexPicker : public IndexBasedRandomPicker<UseGPU> {
+class LastIndexPicker : public IndexBasedRandomPicker {
 public:
     [[nodiscard]] int pick_random(int start, int end, bool prioritize_end) override {
         return end - 1;
@@ -24,14 +22,14 @@ template<typename UseGPUType>
 class TemporalGraphTest : public ::testing::Test {
 protected:
     std::unique_ptr<TemporalGraph<UseGPUType::value>> graph;
-    std::unique_ptr<FirstIndexPicker<UseGPUType::value>> first_picker;
-    std::unique_ptr<LastIndexPicker<UseGPUType::value>> last_picker;
+    std::unique_ptr<FirstIndexPicker> first_picker;
+    std::unique_ptr<LastIndexPicker> last_picker;
 
     void SetUp() override {
         // Create directed graph by default
         graph = std::make_unique<TemporalGraph<UseGPUType::value>>(true);
-        first_picker = std::make_unique<FirstIndexPicker<UseGPUType::value>>();
-        last_picker = std::make_unique<LastIndexPicker<UseGPUType::value>>();
+        first_picker = std::make_unique<FirstIndexPicker>();
+        last_picker = std::make_unique<LastIndexPicker>();
     }
 
     // Helper to create edge tuples

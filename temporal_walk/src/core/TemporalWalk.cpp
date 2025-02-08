@@ -44,7 +44,7 @@ bool get_should_walk_forward(WalkDirection walk_direction) {
 }
 
 template<bool UseGPU>
-std::shared_ptr<RandomPicker<UseGPU>> TemporalWalk<UseGPU>::get_random_picker(const RandomPickerType* picker_type) const {
+std::shared_ptr<RandomPicker> TemporalWalk<UseGPU>::get_random_picker(const RandomPickerType* picker_type) const {
     if (!picker_type) {
         throw std::invalid_argument("picker_type cannot be nullptr");
     }
@@ -74,8 +74,8 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk<UseGPU>::get_random_walks_an
     const RandomPickerType* initial_edge_bias,
     const WalkDirection walk_direction) {
 
-    const std::shared_ptr<RandomPicker<UseGPU>> edge_picker = get_random_picker(walk_bias);
-    std::shared_ptr<RandomPicker<UseGPU>> start_picker;
+    const std::shared_ptr<RandomPicker> edge_picker = get_random_picker(walk_bias);
+    std::shared_ptr<RandomPicker> start_picker;
     if (initial_edge_bias) {
         start_picker = get_random_picker(initial_edge_bias);
     } else {
@@ -181,8 +181,8 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk<UseGPU>::get_random_walks_an
     const RandomPickerType* initial_edge_bias,
     const WalkDirection walk_direction) {
 
-    const std::shared_ptr<RandomPicker<UseGPU>> edge_picker = get_random_picker(walk_bias);
-    std::shared_ptr<RandomPicker<UseGPU>> start_picker;
+    const std::shared_ptr<RandomPicker> edge_picker = get_random_picker(walk_bias);
+    std::shared_ptr<RandomPicker> start_picker;
     if (initial_edge_bias) {
         start_picker = get_random_picker(initial_edge_bias);
     } else {
@@ -289,8 +289,8 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk<UseGPU>::get_random_walks_an
     const int context_window_len,
     const float p_walk_success_threshold) {
 
-    const std::shared_ptr<RandomPicker<UseGPU>> edge_picker = get_random_picker(walk_bias);
-    std::shared_ptr<RandomPicker<UseGPU>> start_picker;
+    const std::shared_ptr<RandomPicker> edge_picker = get_random_picker(walk_bias);
+    std::shared_ptr<RandomPicker> start_picker;
     if (initial_edge_bias) {
         start_picker = get_random_picker(initial_edge_bias);
     } else {
@@ -415,8 +415,8 @@ std::vector<std::vector<int>> TemporalWalk<UseGPU>::get_random_walks_with_specif
 template<bool UseGPU>
 void TemporalWalk<UseGPU>::generate_random_walk_and_time(
     std::vector<NodeWithTime>* walk,
-    const std::shared_ptr<RandomPicker<UseGPU>>& edge_picker,
-    const std::shared_ptr<RandomPicker<UseGPU>>& start_picker,
+    const std::shared_ptr<RandomPicker>& edge_picker,
+    const std::shared_ptr<RandomPicker>& start_picker,
     const int max_walk_len,
     const bool should_walk_forward,
     const int start_node_id) const {

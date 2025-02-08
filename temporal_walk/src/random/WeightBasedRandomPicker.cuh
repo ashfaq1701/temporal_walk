@@ -5,7 +5,7 @@
 #include "../cuda/types.cuh"
 
 template<bool UseGPU>
-class WeightBasedRandomPicker final : public RandomPicker<UseGPU>
+class WeightBasedRandomPicker final : public RandomPicker
 {
 public:
     [[nodiscard]] int pick_random(

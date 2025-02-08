@@ -32,7 +32,7 @@ if(USE_CUDA AND NOT APPLE)
     endif()
 endif()
 
-set(CUDA_SRC_FILES
+set(SRC_FILES
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/EdgeData.cu
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/NodeEdgeIndex.cu
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/NodeMapping.cu
@@ -41,19 +41,15 @@ set(CUDA_SRC_FILES
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/ExponentialIndexRandomPicker.cu
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/LinearRandomPicker.cu
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/UniformRandomPicker.cu
-)
-
-set(CPU_SRC_FILES
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/core/TemporalWalk.cpp
 )
-
-set(SRC_FILES ${CUDA_SRC_FILES} ${CPU_SRC_FILES})
 
 if(NOT USE_CUDA OR NOT CMAKE_CUDA_COMPILER)
     set_source_files_properties(
             ${CUDA_SRC_FILES}
             PROPERTIES
             LANGUAGE CXX
+            COMPILE_FLAGS "-x c++"
     )
 endif()
 

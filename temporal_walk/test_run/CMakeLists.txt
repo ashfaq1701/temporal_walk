@@ -5,7 +5,7 @@ function(add_test_executable target_name source_file)
 
     if(USE_CUDA AND CMAKE_CUDA_COMPILER)
         set_source_files_properties(
-                ${CUDA_SRC_FILES}
+                ${SRC_FILES}
                 PROPERTIES
                 LANGUAGE CUDA
         )
@@ -22,19 +22,24 @@ function(add_test_executable target_name source_file)
                 CUDA::cudart
                 CUDA::cuda_driver
         )
+
+        target_include_directories(${target_name} PRIVATE
+                ${CMAKE_SOURCE_DIR}/temporal_walk/src
+                ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+        )
     else()
         set_source_files_properties(
-                ${CUDA_SRC_FILES}
+                ${SRC_FILES}
                 PROPERTIES
                 LANGUAGE CXX
+        )
+
+        target_include_directories(${target_name} PRIVATE
+                ${CMAKE_SOURCE_DIR}/temporal_walk/src
         )
     endif()
 
     target_link_libraries(${target_name} PRIVATE Boost::math)
-    target_include_directories(${target_name} PRIVATE
-            ${CMAKE_SOURCE_DIR}/temporal_walk/src
-            ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
-    )
 
     set_target_properties(${target_name} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin

@@ -3,7 +3,6 @@
 
 #include "../utils/utils.h"
 
-template<bool UseGPU>
 class RandomPicker
 {
 

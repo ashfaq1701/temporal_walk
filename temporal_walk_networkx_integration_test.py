@@ -1,5 +1,5 @@
 import networkx as nx
-from _temporal_walk import TemporalWalk
+from temporal_walk import TemporalWalk
 import pytest
 
 USE_GPU = False

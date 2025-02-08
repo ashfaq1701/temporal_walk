@@ -6,7 +6,7 @@ if(USE_CUDA AND CMAKE_CUDA_COMPILER)
     )
 
     set_source_files_properties(
-            ${CUDA_SRC_FILES}
+            ${SRC_FILES}
             PROPERTIES
             LANGUAGE CUDA
     )
@@ -40,15 +40,19 @@ if(USE_CUDA AND CMAKE_CUDA_COMPILER)
             CUDA_SEPARABLE_COMPILATION ON
             CUDA_ARCHITECTURES 89
     )
+
+    target_include_directories(_temporal_walk PRIVATE
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src
+            ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+    )
+else ()
+    target_include_directories(_temporal_walk PRIVATE
+            ${CMAKE_SOURCE_DIR}/temporal_walk/src
+    )
 endif()
 
 target_link_libraries(_temporal_walk PRIVATE
         pybind11::module
         ${Python3_LIBRARIES}
         Boost::math
-)
-
-target_include_directories(_temporal_walk PRIVATE
-        ${CMAKE_SOURCE_DIR}/temporal_walk/src
-        ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
 )
