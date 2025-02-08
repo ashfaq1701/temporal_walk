@@ -84,7 +84,7 @@ TYPED_TEST(WeightBasedRandomPickerTest, WeightDistributionTest)
     const std::vector<double> weights = {0.25, 0.5, 0.75, 1.0}; // Equal increments
 
     std::map<int, int> sample_counts;
-    constexpr int num_samples = 10000;
+    constexpr int num_samples = 100000;
 
     for (int i = 0; i < num_samples; i++)
     {
@@ -97,7 +97,7 @@ TYPED_TEST(WeightBasedRandomPickerTest, WeightDistributionTest)
     for (int i = 0; i < 4; i++)
     {
         const double proportion = static_cast<double>(sample_counts[i]) / num_samples;
-        EXPECT_NEAR(proportion, 0.25, 0.05)
+        EXPECT_NEAR(proportion, 0.25, 0.01)
             << "Proportion for index " << i << " was " << proportion;
     }
 }

@@ -10,7 +10,7 @@ int main() {
     const auto edge_infos = read_edges_from_csv("../../data/sample_data.csv");
     std::cout << edge_infos.size() << std::endl;
 
-    TemporalWalk<USE_GPU> temporal_walk(false, -1, true, 100);
+    TemporalWalk<USE_GPU> temporal_walk(false, -1, true, 20);
     temporal_walk.add_multiple_edges(edge_infos);
 
     constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;

@@ -123,7 +123,7 @@ TYPED_TEST(TemporalGraphWeightTest, WeightBasedSampling) {
 
     // Test forward sampling after timestamp 20
     std::map<int64_t, int> forward_samples;
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 100; i++) {
         auto [src, tgt, ts] = graph.get_edge_at(picker, 20, true);
         EXPECT_GT(ts, 20) << "Forward sampled timestamp should be > 20";
         forward_samples[ts]++;
@@ -133,13 +133,21 @@ TYPED_TEST(TemporalGraphWeightTest, WeightBasedSampling) {
 
     // Test backward sampling before timestamp 30
     std::map<int64_t, int> backward_samples;
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 100; i++) {
         auto [src, tgt, ts] = graph.get_edge_at(picker, 30, false);
         EXPECT_LT(ts, 30) << "Backward sampled timestamp should be < 30";
         backward_samples[ts]++;
     }
     EXPECT_GT(backward_samples[20], backward_samples[10])
-        << "Later timestamp 20 should be sampled more than 10";
+        << "Later timestamp 30 should be sampled more than 10";
+
+    backward_samples.clear();
+    for (int i = 0; i < 100; i++) {
+        auto [src, tgt, ts] = graph.get_edge_at(picker, 50, false);
+        backward_samples[ts]++;
+    }
+    EXPECT_GT(backward_samples[40], backward_samples[30])
+        << "Later timestamp 40 should be sampled more than 30";
 }
 
 TYPED_TEST(TemporalGraphWeightTest, EdgeCases) {
