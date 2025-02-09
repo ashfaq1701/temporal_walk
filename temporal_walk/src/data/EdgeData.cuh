@@ -8,13 +8,14 @@
 #include "../cuda_common/types.cuh"
 
 template<bool UseGPU>
-struct EdgeData {
+class EdgeData {
 
     using IntVector = typename SelectVectorType<int, UseGPU>::type;
     using Int64Vector = typename SelectVectorType<int64_t, UseGPU>::type;
     using SizeVector = typename SelectVectorType<size_t, UseGPU>::type;
     using DoubleVector = typename SelectVectorType<double, UseGPU>::type;
 
+public:
     // Core edge data
     IntVector sources{};
     IntVector targets{};

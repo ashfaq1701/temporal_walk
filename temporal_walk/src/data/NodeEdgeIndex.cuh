@@ -7,7 +7,7 @@
 #include "NodeMapping.cuh"
 
 template<bool UseGPU>
-struct NodeEdgeIndex
+class NodeEdgeIndex
 {
 public:
 
