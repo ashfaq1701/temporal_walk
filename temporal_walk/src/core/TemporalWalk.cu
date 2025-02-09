@@ -1,4 +1,4 @@
-#include "TemporalWalk.h"
+#include "TemporalWalk.cuh"
 
 #include <iostream>
 #include "../utils/utils.h"

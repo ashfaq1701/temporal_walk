@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <tuple>
 #include <functional>
-#include <random/RandomPicker.h>
+#include "../random/RandomPicker.h"
 
 #include "NodeMapping.cuh"
 #include "NodeEdgeIndex.cuh"

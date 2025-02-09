@@ -3,7 +3,7 @@
 
 #include "test_utils.h"
 #include "../py_interface/temporal_walk_proxy.h"
-#include "../src/core/TemporalWalk.h"
+#include "../src/core/TemporalWalk.cuh"
 
 constexpr int TEST_NODE_ID = 42;
 constexpr int MAX_WALK_LEN = 20;

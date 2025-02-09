@@ -1,6 +1,6 @@
 #include <vector>
 
-#include "../src/core/TemporalWalk.h"
+#include "../src/core/TemporalWalk.cuh"
 #include "test_utils.h"
 #include "../test/test_utils.h"
 

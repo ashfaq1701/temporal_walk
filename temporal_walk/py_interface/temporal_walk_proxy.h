@@ -1,7 +1,7 @@
 #ifndef TEMPORAL_WALK_PROXY_H
 #define TEMPORAL_WALK_PROXY_H
 
-#include <core/TemporalWalk.h>
+#include "../src/core/TemporalWalk.cuh"
 
 class TemporalWalkProxy {
 

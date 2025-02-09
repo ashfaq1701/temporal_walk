@@ -1,10 +1,10 @@
 #ifndef RANDOM_PICKER_PROXIES_H
 #define RANDOM_PICKER_PROXIES_H
 
-#include <random/ExponentialIndexRandomPicker.cuh>
-#include <random/LinearRandomPicker.cuh>
-#include <random/UniformRandomPicker.cuh>
-#include <random/WeightBasedRandomPicker.cuh>
+#include "../src/random/ExponentialIndexRandomPicker.cuh"
+#include "../src/random/LinearRandomPicker.cuh"
+#include "../src/random/UniformRandomPicker.cuh"
+#include "../src/random/WeightBasedRandomPicker.cuh"
 
 class ExponentialIndexRandomPickerProxy
 {

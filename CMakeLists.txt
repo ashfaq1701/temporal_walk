@@ -41,7 +41,7 @@ set(SRC_FILES
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/ExponentialIndexRandomPicker.cu
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/LinearRandomPicker.cu
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/UniformRandomPicker.cu
-        ${CMAKE_SOURCE_DIR}/temporal_walk/src/core/TemporalWalk.cpp
+        ${CMAKE_SOURCE_DIR}/temporal_walk/src/core/TemporalWalk.cu
 )
 
 if(USE_CUDA AND CMAKE_CUDA_COMPILER)
