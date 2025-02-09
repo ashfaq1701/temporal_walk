@@ -10,14 +10,6 @@ function(add_test_executable target_name source_file)
                 LANGUAGE CUDA
         )
 
-        target_compile_options(${target_name} PRIVATE
-                $<$<COMPILE_LANGUAGE:CUDA>:
-                --extended-lambda
-                --expt-relaxed-constexpr
-                -Xcompiler=-fPIC
-                >
-        )
-
         target_link_libraries(${target_name} PRIVATE
                 CUDA::cudart
                 CUDA::cuda_driver

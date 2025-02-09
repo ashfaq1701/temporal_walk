@@ -18,15 +18,6 @@ if(USE_CUDA AND CMAKE_CUDA_COMPILER)
     find_package(CUDAToolkit REQUIRED)
     set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 
-    set(CUDA_OPTIONS
-            $<$<COMPILE_LANGUAGE:CUDA>:
-            --extended-lambda
-            --expt-relaxed-constexpr
-            -Xcompiler=-fPIC
-            --relocatable-device-code=true
-            -rdc=true
-            >
-    )
     set(CUDA_LIBS
             CUDA::cudart
             CUDA::cuda_driver

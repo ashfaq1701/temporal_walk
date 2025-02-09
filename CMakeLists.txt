@@ -44,12 +44,23 @@ set(SRC_FILES
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/core/TemporalWalk.cpp
 )
 
-if(NOT USE_CUDA OR NOT CMAKE_CUDA_COMPILER)
+if(USE_CUDA AND CMAKE_CUDA_COMPILER)
+    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}
+            --extended-lambda
+            --expt-relaxed-constexpr
+            -Xcompiler=-fPIC
+    )
+
+    set_source_files_properties(
+            ${SRC_FILES}
+            PROPERTIES
+            LANGUAGE CUDA
+    )
+else ()
     set_source_files_properties(
             ${SRC_FILES}
             PROPERTIES
             LANGUAGE CXX
-            COMPILE_FLAGS "-x c++"
     )
 endif()
 

@@ -1,17 +1,3 @@
-if(USE_CUDA AND CMAKE_CUDA_COMPILER)
-    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}
-            --extended-lambda
-            --expt-relaxed-constexpr
-            -Xcompiler=-fPIC
-    )
-
-    set_source_files_properties(
-            ${SRC_FILES}
-            PROPERTIES
-            LANGUAGE CUDA
-    )
-endif()
-
 pybind11_add_module(_temporal_walk
         _temporal_walk.cpp
         ${SRC_FILES}
@@ -23,14 +9,6 @@ set_target_properties(_temporal_walk PROPERTIES
 )
 
 if(USE_CUDA AND CMAKE_CUDA_COMPILER)
-    target_compile_options(_temporal_walk PRIVATE
-            $<$<COMPILE_LANGUAGE:CUDA>:
-            --extended-lambda
-            --expt-relaxed-constexpr
-            -Xcompiler=-fPIC
-            >
-    )
-
     target_link_libraries(_temporal_walk PRIVATE
             CUDA::cudart
             CUDA::cuda_driver
