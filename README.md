@@ -8,7 +8,7 @@
 ---
 
 ## 🔥 Why Temporal Walk?
-✅ **Performance First** – GPU-accelerated sampling for massive networks (development in progress)
+✅ **Performance First** – GPU-accelerated sampling for massive networks (development in progress) 
 ✅ **Memory Efficient** – Smart memory management for large graphs  
 ✅ **Flexible Integration** – Easy Python bindings with **NumPy/NetworkX** support  
 ✅ **Production Ready** – Developed by [Packets Research Lab](https://packets-lab.github.io/)
