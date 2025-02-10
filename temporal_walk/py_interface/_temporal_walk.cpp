@@ -54,7 +54,9 @@ WalkDirection walk_direction_from_string(const std::string& walk_direction_str)
 PYBIND11_MODULE(_temporal_walk, m)
 {
     py::class_<TemporalWalkProxy>(m, "TemporalWalk")
-        .def(py::init([](const bool is_directed, const std::optional<bool> use_gpu, const std::optional<int64_t> max_time_capacity, std::optional<bool> enable_weight_computation, std::optional<double> timescale_bound)
+        .def(py::init([](const bool is_directed, const std::optional<bool> use_gpu,
+                         const std::optional<int64_t> max_time_capacity, std::optional<bool> enable_weight_computation,
+                         std::optional<double> timescale_bound)
              {
                  return std::make_unique<TemporalWalkProxy>(
                      is_directed,
@@ -63,6 +65,16 @@ PYBIND11_MODULE(_temporal_walk, m)
                      enable_weight_computation.value_or(false),
                      timescale_bound.value_or(DEFAULT_TIMESCALE_BOUND));
              }),
+             R"(
+            Initialize a temporal walk generator.
+
+            Args:
+            is_directed (bool): Whether to create a directed graph.
+            use_gpu (bool, optional): Enable GPU acceleration if available. Defaults to False.
+            max_time_capacity (int, optional): Maximum time window for edges. Edges older than (latest_time - max_time_capacity) are removed. Use -1 for no limit. Defaults to -1.
+            enable_weight_computation (bool, optional): Enable CTDNE weight computation. Required for ExponentialWeight picker. Defaults to False.
+            timescale_bound (float, optional): Scale factor for temporal differences. Used to prevent numerical issues with large time differences. Defaults to 50.0.
+            )",
              py::arg("is_directed"),
              py::arg("use_gpu") = false,
              py::arg("max_time_capacity") = py::none(),
@@ -73,18 +85,19 @@ PYBIND11_MODULE(_temporal_walk, m)
                  tw.add_multiple_edges(edge_infos);
              },
              R"(
-            Adds multiple directed edges to the temporal graph based on the provided vector of tuples.
+             Add multiple directed edges to the temporal graph.
 
-            Parameters:
-            - edge_infos (List[Tuple[int, int, int64_t]]): A list of tuples, each containing (source node, destination node, timestamp).
-            )"
+             Args:
+                edge_infos (List[Tuple[int, int, int]]): List of (source, target, timestamp) tuples.
+            )",
+            py::arg("edge_infos")
         )
         .def("get_random_walks_for_all_nodes", [](TemporalWalkProxy& tw,
-                                    const int max_walk_len,
-                                    const std::string& walk_bias,
-                                    const int num_walks_per_node,
-                                    const std::optional<std::string>& initial_edge_bias = std::nullopt,
-                                    const std::string& walk_direction = "Forward_In_Time")
+                                                  const int max_walk_len,
+                                                  const std::string& walk_bias,
+                                                  const int num_walks_per_node,
+                                                  const std::optional<std::string>& initial_edge_bias = std::nullopt,
+                                                  const std::string& walk_direction = "Forward_In_Time")
              {
                  const RandomPickerType walk_bias_enum = picker_type_from_string(walk_bias);
                  const RandomPickerType* initial_edge_bias_enum_ptr = nullptr;
@@ -104,18 +117,25 @@ PYBIND11_MODULE(_temporal_walk, m)
                      walk_direction_enum);
              },
              R"(
-             Generates temporal random walks for all the nodes in the graph.
+             Generate temporal random walks starting from all nodes.
 
-             Parameters:
-             max_walk_len (int): Maximum length of each random walk
-             walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "ExponentialIndex" or "ExponentialWeight")
-             num_walks_per_node (int): Number of walks per node
-             initial_edge_bias (str, optional): Type of bias for selecting initial edge
-             walk_direction (str): Direction of walk ("Forward_In_Time" or "Backward_In_Time")
+            Args:
+                max_walk_len (int): Maximum length of each random walk.
+                walk_bias (str): Type of bias for selecting next node.
+                    Choices:
+                        - "Uniform": Equal probability
+                        - "Linear": Linear time decay
+                        - "ExponentialIndex": Exponential decay with indices
+                        - "ExponentialWeight": Exponential decay with weights
+                num_walks_per_node (int): Number of walks per starting node.
+                initial_edge_bias (str, optional): Bias type for first edge selection.
+                    Uses walk_bias if not specified.
+                walk_direction (str, optional): Direction of temporal walks.
+                    Either "Forward_In_Time" (default) or "Backward_In_Time".
 
-             Returns:
-             List[List[int]]: List of walks, each containing a sequence of node IDs
-             )",
+            Returns:
+                List[List[int]]: List of walks as node ID sequences.
+            )",
              py::arg("max_walk_len"),
              py::arg("walk_bias"),
              py::arg("num_walks_per_node"),
@@ -163,17 +183,24 @@ PYBIND11_MODULE(_temporal_walk, m)
                 return result;
              },
              R"(
-            Generates temporal random walks with timestamps for all the nodes in the graph.
+            Generate temporal walks with timestamps starting from all nodes.
 
-            Parameters:
-            max_walk_len (int): Maximum length of each random walk
-            walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "ExponentialIndex", "ExponentialWeight")
-            num_walks_per_node (int): Number of walks per node
-            initial_edge_bias (str, optional): Type of bias for selecting initial edge
-            walk_direction (str): Direction of walk ("Forward_In_Time" or "Backward_In_Time")
+            Args:
+                max_walk_len (int): Maximum length of each random walk.
+                walk_bias (str): Type of bias for selecting next node.
+                    Choices:
+                        - "Uniform": Equal probability
+                        - "Linear": Linear time decay
+                        - "ExponentialIndex": Exponential decay with indices
+                        - "ExponentialWeight": Exponential decay with weights
+                num_walks_per_node (int): Number of walks per starting node.
+                initial_edge_bias (str, optional): Bias type for first edge selection.
+                    Uses walk_bias if not specified.
+                walk_direction (str, optional): Direction of temporal walks.
+                    Either "Forward_In_Time" (default) or "Backward_In_Time".
 
             Returns:
-            List[List[Tuple[int, int64_t]]]: List of walks, each containing (node_id, timestamp) pairs
+                List[List[Tuple[int, int]]]: List of walks as (node_id, timestamp) sequences.
             )",
              py::arg("max_walk_len"),
              py::arg("walk_bias"),
@@ -206,23 +233,26 @@ PYBIND11_MODULE(_temporal_walk, m)
                      walk_direction_enum);
              },
              R"(
-             Generates temporal random walks.
+            Generates temporal random walks.
 
-             Parameters:
-             max_walk_len (int): Maximum length of each random walk
-             walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "ExponentialIndex", "ExponentialWeight")
-             num_walks_per_node (int): Number of walks per node
-             initial_edge_bias (str, optional): Type of bias for selecting initial edge
-             walk_direction (str): Direction of walk ("Forward_In_Time" or "Backward_In_Time")
+            Args:
+                max_walk_len (int): Maximum length of each random walk
+                walk_bias (str): Type of bias for selecting next edges during walk.
+                    Can be one of:
+                        - "Uniform": Equal probability for all valid edges
+                        - "Linear": Linear decay based on time
+                        - "ExponentialIndex": Exponential decay with index sampling
+                        - "ExponentialWeight": Exponential decay with timestamp weights
+                num_walks_per_node (int): Number of walks to generate per node
+                initial_edge_bias (str, optional): Bias type for selecting first edge.
+                    Uses walk_bias if not specified.
+                walk_direction (str, optional): Direction of temporal walk.
+                    Either "Forward_In_Time" (default) or "Backward_In_Time"
 
-             Returns:
-             List[List[int]]: List of walks, each containing a sequence of node IDs
-             )",
-             py::arg("max_walk_len"),
-             py::arg("walk_bias"),
-             py::arg("num_walks_per_node"),
-             py::arg("initial_edge_bias") = py::none(),
-             py::arg("walk_direction") = "Forward_In_Time")
+            Returns:
+                List[List[int]]: A list of walks, where each walk is a list of node IDs
+                    representing a temporal path through the network.
+            )")
 
         .def("get_random_walks_and_times", [](TemporalWalkProxy& tw,
                                                const int max_walk_len,
@@ -265,17 +295,25 @@ PYBIND11_MODULE(_temporal_walk, m)
                 return result;
              },
              R"(
-            Generates temporal random walks with timestamps.
+            Generate temporal random walks with timestamps.
 
-            Parameters:
-            max_walk_len (int): Maximum length of each random walk
-            walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "ExponentialIndex", "ExponentialWeight")
-            num_walks_per_node (int): Number of walks per node
-            initial_edge_bias (str, optional): Type of bias for selecting initial edge
-            walk_direction (str): Direction of walk ("Forward_In_Time" or "Backward_In_Time")
+            Args:
+                max_walk_len (int): Maximum length of each random walk.
+                walk_bias (str): Type of bias for selecting next node.
+                    Choices:
+                        - "Uniform": Equal probability for all edges
+                        - "Linear": Linear time decay
+                        - "ExponentialIndex": Exponential decay with indices
+                        - "ExponentialWeight": Exponential decay with weights
+                num_walks_per_node (int): Number of walks per starting node.
+                initial_edge_bias (str, optional): Bias type for first edge selection.
+                    Uses walk_bias if not specified.
+                walk_direction (str, optional): Direction of temporal walks.
+                    Either "Forward_In_Time" (default) or "Backward_In_Time".
 
             Returns:
-            List[List[Tuple[int, int64_t]]]: List of walks, each containing (node_id, timestamp) pairs
+                List[List[Tuple[int, int]]]: List of walks where each walk is a sequence of
+                    (node_id, timestamp) pairs representing temporal paths through the network.
             )",
              py::arg("max_walk_len"),
              py::arg("walk_bias"),
@@ -314,21 +352,36 @@ PYBIND11_MODULE(_temporal_walk, m)
                      p_walk_success_threshold);
              },
              R"(
-             Generates temporal random walks with specified number of contexts. Here number of walks can vary based on their actual lengths.
+            Generate temporal random walks with a specific number of contexts.
 
-             Parameters:
-             max_walk_len (int): Maximum length of each random walk
-             walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "ExponentialIndex", "ExponentialWeight")
-             num_cw (int, optional): Number of context windows to generate
-             num_walks_per_node (int, optional): Number of walks per node (used if num_cw not specified)
-             initial_edge_bias (str, optional): Type of bias for selecting initial edge
-             walk_direction (str): Direction of walk ("Forward_In_Time" or "Backward_In_Time")
-             context_window_len (int, optional): Size of context window
-             p_walk_success_threshold (float): Minimum proportion of successful walks (default: 0.01)
+            The number of walks can vary based on their actual lengths as this method ensures
+            a fixed number of context windows rather than a fixed number of walks.
 
-             Returns:
-             List[List[int]]: List of walks, each containing a sequence of node IDs
-             )",
+            Args:
+                max_walk_len (int): Maximum length of each random walk.
+                walk_bias (str): Type of bias for selecting next node.
+                    Choices:
+                        - "Uniform": Equal probability for all edges
+                        - "Linear": Linear time decay
+                        - "ExponentialIndex": Exponential decay with indices
+                        - "ExponentialWeight": Exponential decay with weights
+                num_cw (int, optional): Target number of context windows to generate.
+                    If not specified, calculated using num_walks_per_node.
+                num_walks_per_node (int, optional): Number of walks per starting node.
+                    Only used if num_cw is not specified.
+                initial_edge_bias (str, optional): Bias type for first edge selection.
+                    Uses walk_bias if not specified.
+                walk_direction (str, optional): Direction of temporal walks.
+                    Either "Forward_In_Time" (default) or "Backward_In_Time".
+                context_window_len (int, optional): Minimum length of each walk.
+                    Defaults to 2 if not specified.
+                p_walk_success_threshold (float, optional): Minimum required success rate
+                    for walk generation. Default: 0.01
+
+                Returns:
+                    List[List[int]]: List of walks where each walk is a sequence of node IDs
+                        representing temporal paths through the network.
+            )",
              py::arg("max_walk_len"),
              py::arg("walk_bias"),
              py::arg("num_cw") = py::none(),
@@ -385,20 +438,34 @@ PYBIND11_MODULE(_temporal_walk, m)
                 return result;
              },
              R"(
-            Generates temporal random walks with timestamps with specified number of contexts. Here number of walks can vary based on their actual lengths.
+             Generate temporal random walks with timestamps and specific number of contexts.
 
-            Parameters:
-            max_walk_len (int): Maximum length of each random walk
-            walk_bias (str): Type of bias for selecting next node ("Uniform", "Linear", "ExponentialIndex", "ExponentialWeight")
-            num_cw (int, optional): Number of context windows to generate
-            num_walks_per_node (int, optional): Number of walks per node (used if num_cw not specified)
-            initial_edge_bias (str, optional): Type of bias for selecting initial edge
-            walk_direction (str): Direction of walk ("Forward_In_Time" or "Backward_In_Time")
-            context_window_len (int, optional): Size of context window
-            p_walk_success_threshold (float): Minimum proportion of successful walks (default: 0.01)
+            The number of walks can vary based on their actual lengths as this method ensura fixed number of context windows rather than a fixed number of walks.
+
+            Args:
+                max_walk_len (int): Maximum length of each random walk.
+                walk_bias (str): Type of bias for selecting next node.
+                    Choices:
+                        - "Uniform": Equal probability for all edges
+                        - "Linear": Linear time decay
+                        - "ExponentialIndex": Exponential decay with indices
+                        - "ExponentialWeight": Exponential decay with weights
+                num_cw (int, optional): Target number of context windows to generate.
+                    If not specified, calculated using num_walks_per_node.
+                num_walks_per_node (int, optional): Number of walks per starting node.
+                    Only used if num_cw is not specified.
+                initial_edge_bias (str, optional): Bias type for first edge selection.
+                    Uses walk_bias if not specified.
+                walk_direction (str, optional): Direction of temporal walks.
+                    Either "Forward_In_Time" (default) or "Backward_In_Time".
+                context_window_len (int, optional): Minimum length of each walk.
+                    Defaults to 2 if not specified.
+                p_walk_success_threshold (float, optional): Minimum required success rate
+                    for walk generation. Default: 0.01
 
             Returns:
-            List[List[Tuple[int, int64_t]]]: List of walks, each containing (node_id, timestamp) pairs
+                List[List[Tuple[int, int]]]: List of walks where each walk is a sequence of
+                    (node_id, timestamp) pairs representing temporal paths through the network.
             )",
              py::arg("max_walk_len"),
              py::arg("walk_bias"),
@@ -410,18 +477,18 @@ PYBIND11_MODULE(_temporal_walk, m)
              py::arg("p_walk_success_threshold") = DEFAULT_SUCCESS_THRESHOLD)
 
         .def("get_node_count", &TemporalWalkProxy::get_node_count,
-             R"(
-             Returns the total number of nodes present in the temporal graph.
+            R"(
+            Get total number of nodes in the graph.
 
-             Returns:
-             int: The total number of nodes.
-             )")
+            Returns:
+                int: Number of active nodes.
+            )")
         .def("get_edge_count", &TemporalWalkProxy::get_edge_count,
              R"(
              Returns the total number of directed edges in the temporal graph.
 
              Returns:
-             int: The total number of directed edges.
+                int: The total number of directed edges.
              )")
         .def("get_node_ids", [](const TemporalWalkProxy& tw)
              {
@@ -437,10 +504,10 @@ PYBIND11_MODULE(_temporal_walk, m)
                  return py_node_ids;
              },
              R"(
-            Returns a NumPy array containing the IDs of all nodes in the temporal graph.
+             Returns a NumPy array containing the IDs of all nodes in the temporal graph.
 
             Returns:
-            np.ndarray: A NumPy array with all node IDs.
+                np.ndarray: A NumPy array with all node IDs.
             )"
         )
         .def("clear", &TemporalWalkProxy::clear,
@@ -467,10 +534,10 @@ PYBIND11_MODULE(_temporal_walk, m)
                  tw.add_multiple_edges(edge_infos);
              },
              R"(
-            Adds edges from a networkx graph to the current TemporalWalk object.
+            Add edges from a NetworkX graph.
 
-            Parameters:
-            - nx_graph (networkx.Graph): The networkx graph to load edges from.
+            Args:
+                nx_graph (networkx.Graph): NetworkX graph with timestamp edge attributes.
             )"
         )
         .def("to_networkx", [](const TemporalWalkProxy& tw)
@@ -492,36 +559,103 @@ PYBIND11_MODULE(_temporal_walk, m)
                  return nx_graph;
              },
              R"(
-            Exports the TemporalWalk object to a networkX graph.
+             Export graph to NetworkX format.
 
             Returns:
-            networkx.Graph: The exported networkx graph.
+                networkx.Graph: NetworkX graph with timestamp edge attributes.
             )"
         );
 
     py::class_<LinearRandomPickerProxy>(m, "LinearRandomPicker")
-        .def(py::init<bool>(), "Initialize a LinearRandomPicker instance.", py::arg("use_gpu") = false)
+        .def(py::init<bool>(),
+        R"(
+        Initialize linear time decay random picker.
+
+        Args:
+            use_gpu (bool, optional): Enable GPU acceleration. Default: False
+        )",
+        py::arg("use_gpu") = false)
         .def("pick_random", &LinearRandomPickerProxy::pick_random,
-            "Pick a random index with linear probabilities.",
+            R"(
+            Pick random index with linear time decay probability.
+
+            Args:
+                start (int): Start index inclusive
+                end (int): End index exclusive
+                prioritize_end (bool, optional): Prioritize recent timestamps. Default: True
+
+            Returns:
+                int: Selected index
+            )",
             py::arg("start"), py::arg("end"), py::arg("prioritize_end") = true);
 
     py::class_<ExponentialIndexRandomPickerProxy>(m, "ExponentialIndexRandomPicker")
-        .def(py::init<bool>(), "Initialize a ExponentialIndexRandomPicker instance.", py::arg("use_gpu") = false)
+        .def(py::init<bool>(),
+            R"(
+            Initialize index based exponential time decay random picker.
+
+            Args:
+                use_gpu (bool, optional): Enable GPU acceleration. Default: False
+            )",
+            py::arg("use_gpu") = false)
         .def("pick_random", &ExponentialIndexRandomPickerProxy::pick_random,
-            "Pick a random index with exponential probabilities with index sampling.",
+            R"(
+            Pick random index with index based exponential time decay probability.
+
+            Args:
+                start (int): Start index inclusive
+                end (int): End index exclusive
+                prioritize_end (bool, optional): Prioritize recent timestamps. Default: True
+
+            Returns:
+                int: Selected index
+            )",
             py::arg("start"), py::arg("end"), py::arg("prioritize_end") = true);
 
     py::class_<UniformRandomPickerProxy>(m, "UniformRandomPicker")
-        .def(py::init<bool>(), "Initialize a UniformRandomPicker instance.", py::arg("use_gpu") = false)
+        .def(py::init<bool>(),
+            R"(
+            Initialize uniform random picker.
+
+            Args:
+                use_gpu (bool, optional): Enable GPU acceleration. Default: False
+            )",
+            py::arg("use_gpu") = false)
         .def("pick_random", &UniformRandomPickerProxy::pick_random,
-            "Pick a random index with uniform probabilities.",
+            R"(
+            Pick random index with uniform probability.
+
+            Args:
+                start (int): Start index inclusive
+                end (int): End index exclusive
+                prioritize_end (bool, optional): Prioritize recent timestamps. Default: True
+
+            Returns:
+                int: Selected index
+            )",
             py::arg("start"), py::arg("end"), py::arg("prioritize_end") = true);
 
     py::class_<WeightBasedRandomPickerProxy>(m, "WeightBasedRandomPicker")
         .def(
             py::init([](){ return WeightBasedRandomPickerProxy(false); }),
-            "Initialize a WeightBasedRandomPicker instance.")
+            R"(
+            Initialize exponential time decay random picker with weight-based sampling.
+
+            For use with CTDNE temporal walks where edge selection probabilities are weighted
+            by temporal differences.
+            )")
         .def("pick_random", py::overload_cast<const std::vector<double>&, int, int>(&WeightBasedRandomPickerProxy::pick_random),
-            "Pick a random index based on cumulative weights",
+            R"(
+            Pick random index based on cumulative temporal weights.
+
+            Args:
+                cumulative_weights (List[float]): Array of cumulative weights for sampling.
+                    Must be monotonically increasing.
+                group_start (int): Start index of the group (inclusive)
+                group_end (int): End index of the group (exclusive)
+
+            Returns:
+                int: Selected index based on the weight distribution
+            )",
             py::arg("cumulative_weights"), py::arg("group_start"), py::arg("group_end"));
 }

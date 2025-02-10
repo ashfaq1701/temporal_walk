@@ -7,3 +7,4 @@ pybind11
 numpy
 networkx
 pytest
+pdoc3
