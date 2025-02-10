@@ -33,7 +33,7 @@ walker.add_multiple_edges(edges)
 # Sample walks with exponential time bias
 walks = walker.get_random_walks_for_all_nodes(
     max_walk_len=5,
-    walk_bias="ExponentialWeight",
+    walk_bias="ExponentialIndex",
     num_walks_per_node=10,
     initial_edge_bias="Uniform"
 )
