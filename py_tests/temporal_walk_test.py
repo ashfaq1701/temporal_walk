@@ -11,7 +11,7 @@ def print_walks_for_nodes(walks):
 if __name__ == '__main__':
     temporal_walk_obj = TemporalWalk(False, USE_GPU)
 
-    data_file_path = 'data/sample_data.csv'
+    data_file_path = '../data/sample_data.csv'
 
     data_tuples = []
 
