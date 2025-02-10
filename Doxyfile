@@ -1,8 +1,41 @@
-PROJECT_NAME = "Temporal Walk"
-INPUT = temporal_walk/src/core/TemporalWalk.h
-OUTPUT_DIRECTORY = docs
-GENERATE_HTML = YES
-GENERATE_LATEX = NO
-EXTRACT_ALL = YES
-EXTRACT_PRIVATE = NO
-EXTRACT_STATIC = YES
+PROJECT_NAME           = "Temporal Walk"
+PROJECT_BRIEF          = "Documentation for Temporal Walk library"
+INPUT                 = temporal_walk/src/core/TemporalWalk.cuh
+OUTPUT_DIRECTORY      = docs
+RECURSIVE             = YES  # Ensures all subdirectories are included
+
+# File handling
+FILE_PATTERNS         = *.h *.hpp *.cuh  # Ensures .cuh files are processed
+EXTENSION_MAPPING     = cuh=C++  # Treat .cuh files as C++ headers
+
+# Output format
+GENERATE_HTML         = YES
+GENERATE_LATEX        = NO
+
+# Extraction settings
+EXTRACT_ALL           = NO  # Do NOT extract everything automatically
+EXTRACT_PRIVATE       = NO  # Do NOT include private members
+EXTRACT_STATIC        = YES
+EXTRACT_LOCAL_METHODS = NO  # Do NOT include local class methods
+
+# CUDA-specific handling
+ENABLE_PREPROCESSING  = YES
+MACRO_EXPANSION       = YES
+PREDEFINED           = "__global__=" "__device__=" "__host__="
+
+# Source browsing
+SOURCE_BROWSER        = YES
+INLINE_SOURCES        = YES
+VERBATIM_HEADERS      = YES
+
+# Warnings & optimizations
+WARN_IF_UNDOCUMENTED  = YES
+WARN_IF_DOC_ERROR     = YES
+QUIET                 = NO  # Set to YES to suppress output
+
+# Markdown support
+MARKDOWN_SUPPORT      = YES
+USE_MDFILE_AS_MAINPAGE = README.md  # If you have a README file
+
+# Optimizations
+EXCLUDE_PATTERNS      = */test/* */examples/*
