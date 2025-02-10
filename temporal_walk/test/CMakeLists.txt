@@ -14,7 +14,15 @@ set(TEST_FILES
         test_weight_based_random_picker.cpp
 )
 
+set(MODULE_SRC_FILES ${SRC_FILES} ${TEST_FILES})
+
 if(USE_CUDA AND CMAKE_CUDA_COMPILER)
+    set_source_files_properties(
+            ${MODULE_SRC_FILES}
+            PROPERTIES
+            LANGUAGE CUDA
+    )
+
     find_package(CUDAToolkit REQUIRED)
     set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 
@@ -25,14 +33,6 @@ if(USE_CUDA AND CMAKE_CUDA_COMPILER)
             CUDA::nvrtc
             cuda
             cudart
-    )
-
-    # Mark all source files as CUDA
-    set_source_files_properties(
-            ${SRC_FILES}
-            ${TEST_FILES}
-            PROPERTIES
-            LANGUAGE CUDA
     )
 
     add_executable(test_temporal_walk ${TEST_FILES} ${SRC_FILES})
@@ -46,13 +46,15 @@ if(USE_CUDA AND CMAKE_CUDA_COMPILER)
             ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
     )
 else()
-    set(CUDA_OPTIONS "")
-    set(CUDA_LIBS "")
     set_source_files_properties(
-            ${SRC_FILES}
+            ${MODULE_SRC_FILES}
             PROPERTIES
             LANGUAGE CXX
     )
+
+    set(CUDA_OPTIONS "")
+    set(CUDA_LIBS "")
+
     add_executable(test_temporal_walk ${TEST_FILES} ${SRC_FILES})
 
     target_include_directories(test_temporal_walk PRIVATE

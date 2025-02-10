@@ -506,11 +506,6 @@ bool TemporalWalk::get_is_directed() const {
 }
 
 void TemporalWalk::clear() {
-    #ifdef USE_CUDA
-    temporal_graph = std::make_unique<TemporalGraph<UseGPU>>(
-        is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
-    #else
     temporal_graph = TemporalGraph(
         is_directed, use_gpu, max_time_capacity, enable_weight_computation, timescale_bound);
-    #endif
 }

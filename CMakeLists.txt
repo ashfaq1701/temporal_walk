@@ -50,18 +50,6 @@ if(USE_CUDA AND CMAKE_CUDA_COMPILER)
             --expt-relaxed-constexpr
             -Xcompiler=-fPIC
     )
-
-    set_source_files_properties(
-            ${SRC_FILES}
-            PROPERTIES
-            LANGUAGE CUDA
-    )
-else ()
-    set_source_files_properties(
-            ${SRC_FILES}
-            PROPERTIES
-            LANGUAGE CXX
-    )
 endif()
 
 add_subdirectory(temporal_walk/py_interface)
