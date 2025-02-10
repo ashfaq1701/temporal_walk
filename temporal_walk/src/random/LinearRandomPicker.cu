@@ -3,9 +3,10 @@
 #include <stdexcept>
 #include "LinearRandomPicker.cuh"
 
+LinearRandomPicker::LinearRandomPicker(bool use_gpu): use_gpu(use_gpu) {}
+
 // Derivation available in derivations folder
-template<bool UseGPU>
-int LinearRandomPicker<UseGPU>::pick_random(const int start, const int end, const bool prioritize_end) {
+int LinearRandomPicker::pick_random(const int start, const int end, const bool prioritize_end) {
     if (start >= end) {
         throw std::invalid_argument("Start must be less than end.");
     }
@@ -39,8 +40,3 @@ int LinearRandomPicker<UseGPU>::pick_random(const int start, const int end, cons
         return start + std::max(0, revered_index);
     }
 }
-
-template class LinearRandomPicker<false>;
-#ifdef USE_CUDA
-template class LinearRandomPicker<true>;
-#endif

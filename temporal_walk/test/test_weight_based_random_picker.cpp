@@ -2,11 +2,12 @@
 #include "../src/random/WeightBasedRandomPicker.cuh"
 #include "../src/utils/utils.h"
 
-template<typename UseGPUType>
-class WeightBasedRandomPickerTest : public ::testing::Test
+class WeightBasedRandomPickerTest : public ::testing::TestWithParam<bool>
 {
 protected:
-    WeightBasedRandomPicker<UseGPUType::value> picker;
+    WeightBasedRandomPicker picker;
+
+    WeightBasedRandomPickerTest(): picker(WeightBasedRandomPicker(GetParam())){}
 
     // Helper to verify sampling is within correct range
     void verify_sampling_range(const std::vector<double>& weights,
@@ -32,53 +33,46 @@ protected:
     }
 };
 
-#ifdef HAS_CUDA
-using USE_GPU_TYPES = ::testing::Types<std::false_type, std::true_type>;
-#else
-using USE_GPU_TYPES = ::testing::Types<std::false_type>;
-#endif
-TYPED_TEST_SUITE(WeightBasedRandomPickerTest, USE_GPU_TYPES);
-
-TYPED_TEST(WeightBasedRandomPickerTest, ValidationChecks)
+TEST_P(WeightBasedRandomPickerTest, ValidationChecks)
 {
     const std::vector<double> weights = {0.2, 0.5, 0.7, 1.0};
 
     // Invalid start index
-    EXPECT_EQ(this->picker.pick_random(weights, -1, 2), -1);
+    EXPECT_EQ(picker.pick_random(weights, -1, 2), -1);
 
     // End <= start
-    EXPECT_EQ(this->picker.pick_random(weights, 2, 2), -1);
-    EXPECT_EQ(this->picker.pick_random(weights, 2, 1), -1);
+    EXPECT_EQ(picker.pick_random(weights, 2, 2), -1);
+    EXPECT_EQ(picker.pick_random(weights, 2, 1), -1);
 
     // End > size
-    EXPECT_EQ(this->picker.pick_random(weights, 0, 5), -1);
+    EXPECT_EQ(picker.pick_random(weights, 0, 5), -1);
 }
 
-TYPED_TEST(WeightBasedRandomPickerTest, FullRangeSampling)
+TEST_P(WeightBasedRandomPickerTest, FullRangeSampling)
 {
-    this->verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 0, 4);
+    verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 0, 4);
 }
 
-TYPED_TEST(WeightBasedRandomPickerTest, SubrangeSampling)
+TEST_P(WeightBasedRandomPickerTest, SubrangeSampling)
 {
     // Test all subranges with the same weight vector
-    this->verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 1, 3);  // middle range
-    this->verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 0, 2);  // start range
-    this->verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 2, 4);  // end range
+    verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 1, 3);  // middle range
+    verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 0, 2);  // start range
+    verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 2, 4);  // end range
 }
 
-TYPED_TEST(WeightBasedRandomPickerTest, SingleElementRange)
+TEST_P(WeightBasedRandomPickerTest, SingleElementRange)
 {
     const std::vector<double> weights = {0.2, 0.5, 0.7, 1.0};
 
     // When sampling single element, should always return that index
     for (int i = 0; i < 100; i++)
     {
-        EXPECT_EQ(this->picker.pick_random(weights, 1, 2), 1);
+        EXPECT_EQ(picker.pick_random(weights, 1, 2), 1);
     }
 }
 
-TYPED_TEST(WeightBasedRandomPickerTest, WeightDistributionTest)
+TEST_P(WeightBasedRandomPickerTest, WeightDistributionTest)
 {
     // Create weights with known distribution
     const std::vector<double> weights = {0.25, 0.5, 0.75, 1.0}; // Equal increments
@@ -88,7 +82,7 @@ TYPED_TEST(WeightBasedRandomPickerTest, WeightDistributionTest)
 
     for (int i = 0; i < num_samples; i++)
     {
-        int picked = this->picker.pick_random(weights, 0, 4);
+        int picked = picker.pick_random(weights, 0, 4);
         sample_counts[picked]++;
     }
 
@@ -102,13 +96,33 @@ TYPED_TEST(WeightBasedRandomPickerTest, WeightDistributionTest)
     }
 }
 
-TYPED_TEST(WeightBasedRandomPickerTest, EdgeCaseWeights)
+TEST_P(WeightBasedRandomPickerTest, EdgeCaseWeights)
 {
     // Test with very small weight differences
     const std::vector<double> small_diffs = {0.1, 0.100001, 0.100002, 0.100003};
-    EXPECT_NE(this->picker.pick_random(small_diffs, 0, 4), -1);
+    EXPECT_NE(picker.pick_random(small_diffs, 0, 4), -1);
 
     // Test with very large weight differences
     const std::vector<double> large_diffs = {0.1, 0.5, 0.9, 1000.0};
-    EXPECT_NE(this->picker.pick_random(large_diffs, 0, 4), -1);
+    EXPECT_NE(picker.pick_random(large_diffs, 0, 4), -1);
 }
+
+#ifdef HAS_CUDA
+INSTANTIATE_TEST_SUITE_P(
+    CPUAndGPU,
+    WeightBasedRandomPickerTest,
+    ::testing::Values(false, true),
+    [](const testing::TestParamInfo<bool>& info) {
+        return info.param ? "GPU" : "CPU";
+    }
+);
+#else
+INSTANTIATE_TEST_SUITE_P(
+    CPUOnly,
+    WeightBasedRandomPickerTest,
+    ::testing::Values(false),
+    [](const testing::TestParamInfo<bool>& info) {
+        return "CPU";
+    }
+);
+#endif

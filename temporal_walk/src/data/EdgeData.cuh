@@ -4,29 +4,26 @@
 #include <vector>
 #include <cstdint>
 #include <tuple>
-#include <cmath>
 #include "../cuda_common/types.cuh"
 
-template<bool UseGPU>
 class EdgeData {
 
-    using IntVector = typename SelectVectorType<int, UseGPU>::type;
-    using Int64Vector = typename SelectVectorType<int64_t, UseGPU>::type;
-    using SizeVector = typename SelectVectorType<size_t, UseGPU>::type;
-    using DoubleVector = typename SelectVectorType<double, UseGPU>::type;
-
 public:
+    bool use_gpu;
+
     // Core edge data
-    IntVector sources{};
-    IntVector targets{};
-    Int64Vector timestamps{};
+    VectorTypes<int>::Vector sources{};
+    VectorTypes<int>::Vector targets{};
+    VectorTypes<int64_t>::Vector timestamps{};
 
     // Timestamp grouping
-    SizeVector timestamp_group_offsets{};     // Start of each timestamp group
-    Int64Vector unique_timestamps{};          // Corresponding unique timestamps
+    VectorTypes<size_t>::Vector timestamp_group_offsets{};     // Start of each timestamp group
+    VectorTypes<int64_t>::Vector unique_timestamps{};          // Corresponding unique timestamps
 
-    DoubleVector forward_cumulative_weights_exponential{};  // For forward temporal sampling
-    DoubleVector backward_cumulative_weights_exponential{}; // For backward temporal sampling
+    VectorTypes<double>::Vector forward_cumulative_weights_exponential{};  // For forward temporal sampling
+    VectorTypes<double>::Vector backward_cumulative_weights_exponential{}; // For backward temporal sampling
+
+    explicit EdgeData(bool use_gpu);
 
     void reserve(size_t size);
     void clear();

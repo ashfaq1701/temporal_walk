@@ -11,25 +11,17 @@
 constexpr int DEFAULT_CONTEXT_WINDOW_LEN = 2;
 constexpr int DEFAULT_NUM_WALKS_PER_THREAD = 500;
 
-template<bool UseGPU>
-TemporalWalk<UseGPU>::TemporalWalk(
+TemporalWalk::TemporalWalk(
     bool is_directed,
+    bool use_gpu,
     int64_t max_time_capacity,
     bool enable_weight_computation,
     double timescale_bound,
     size_t n_threads):
-    is_directed(is_directed), max_time_capacity(max_time_capacity),
+    is_directed(is_directed), use_gpu(use_gpu), max_time_capacity(max_time_capacity),
     n_threads(static_cast<int>(n_threads)), enable_weight_computation(enable_weight_computation),
-    timescale_bound(timescale_bound), thread_pool(n_threads)
-{
-    #ifdef USE_CUDA
-    temporal_graph = std::make_unique<TemporalGraph<UseGPU>>(
-        is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
-    #else
-    temporal_graph = std::make_unique<TemporalGraph<false>>(
-        is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
-    #endif
-}
+    timescale_bound(timescale_bound), thread_pool(n_threads),
+    temporal_graph(is_directed, use_gpu, max_time_capacity, enable_weight_computation, timescale_bound) {}
 
 bool get_should_walk_forward(WalkDirection walk_direction) {
     switch (walk_direction)
@@ -43,31 +35,29 @@ bool get_should_walk_forward(WalkDirection walk_direction) {
     }
 }
 
-template<bool UseGPU>
-std::shared_ptr<RandomPicker> TemporalWalk<UseGPU>::get_random_picker(const RandomPickerType* picker_type) const {
+std::shared_ptr<RandomPicker> TemporalWalk::get_random_picker(const RandomPickerType* picker_type) const {
     if (!picker_type) {
         throw std::invalid_argument("picker_type cannot be nullptr");
     }
 
     switch (*picker_type) {
     case Uniform:
-        return std::make_shared<UniformRandomPicker<UseGPU>>();
+        return std::make_shared<UniformRandomPicker>(use_gpu);
     case Linear:
-        return std::make_shared<LinearRandomPicker<UseGPU>>();
+        return std::make_shared<LinearRandomPicker>(use_gpu);
     case ExponentialIndex:
-        return std::make_shared<ExponentialIndexRandomPicker<UseGPU>>();
+        return std::make_shared<ExponentialIndexRandomPicker>(use_gpu);
     case ExponentialWeight:
         if (!enable_weight_computation) {
             throw std::invalid_argument("To enable weight based random pickers, set enable_weight_computation constructor argument to true.");
         }
-        return std::make_shared<WeightBasedRandomPicker<UseGPU>>();
+        return std::make_shared<WeightBasedRandomPicker>(use_gpu);
     default:
         throw std::invalid_argument("Invalid picker type");
     }
 }
 
-template<bool UseGPU>
-std::vector<std::vector<NodeWithTime>> TemporalWalk<UseGPU>::get_random_walks_and_times_for_all_nodes(
+std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_and_times_for_all_nodes(
     const int max_walk_len,
     const RandomPickerType* walk_bias,
     const int num_walks_per_node,
@@ -141,8 +131,7 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk<UseGPU>::get_random_walks_an
     return walks;
 }
 
-template<bool UseGPU>
-std::vector<std::vector<int>> TemporalWalk<UseGPU>::get_random_walks_for_all_nodes(
+std::vector<std::vector<int>> TemporalWalk::get_random_walks_for_all_nodes(
         const int max_walk_len,
         const RandomPickerType* walk_bias,
         const int num_walks_per_node,
@@ -173,8 +162,7 @@ std::vector<std::vector<int>> TemporalWalk<UseGPU>::get_random_walks_for_all_nod
     return walks;
 }
 
-template<bool UseGPU>
-std::vector<std::vector<NodeWithTime>> TemporalWalk<UseGPU>::get_random_walks_and_times(
+std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_and_times(
     const int max_walk_len,
     const RandomPickerType* walk_bias,
     const int num_walks_total,
@@ -246,8 +234,7 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk<UseGPU>::get_random_walks_an
     return walks;
 }
 
-template<bool UseGPU>
-std::vector<std::vector<int>> TemporalWalk<UseGPU>::get_random_walks(
+std::vector<std::vector<int>> TemporalWalk::get_random_walks(
         int max_walk_len,
         const RandomPickerType* walk_bias,
         int num_walks_total,
@@ -278,8 +265,7 @@ std::vector<std::vector<int>> TemporalWalk<UseGPU>::get_random_walks(
     return walks;
 }
 
-template<bool UseGPU>
-std::vector<std::vector<NodeWithTime>> TemporalWalk<UseGPU>::get_random_walks_and_times_with_specific_number_of_contexts(
+std::vector<std::vector<NodeWithTime>> TemporalWalk::get_random_walks_and_times_with_specific_number_of_contexts(
     const int max_walk_len,
     const RandomPickerType* walk_bias,
     const long num_cw,
@@ -383,8 +369,7 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk<UseGPU>::get_random_walks_an
     return walks;
 }
 
-template<bool UseGPU>
-std::vector<std::vector<int>> TemporalWalk<UseGPU>::get_random_walks_with_specific_number_of_contexts(
+std::vector<std::vector<int>> TemporalWalk::get_random_walks_with_specific_number_of_contexts(
     const int max_walk_len,
     const RandomPickerType* walk_bias,
     const long num_cw,
@@ -412,8 +397,7 @@ std::vector<std::vector<int>> TemporalWalk<UseGPU>::get_random_walks_with_specif
     return walks;
 }
 
-template<bool UseGPU>
-void TemporalWalk<UseGPU>::generate_random_walk_and_time(
+void TemporalWalk::generate_random_walk_and_time(
     std::vector<NodeWithTime>* walk,
     const std::shared_ptr<RandomPicker>& edge_picker,
     const std::shared_ptr<RandomPicker>& start_picker,
@@ -423,12 +407,12 @@ void TemporalWalk<UseGPU>::generate_random_walk_and_time(
 
     std::tuple<int, int, int64_t> start_edge;
     if (start_node_id == -1) {
-        start_edge = temporal_graph->get_edge_at(
+        start_edge = temporal_graph.get_edge_at(
             *start_picker,
             -1,
             should_walk_forward);
     } else {
-        start_edge = temporal_graph->get_node_edge_at(
+        start_edge = temporal_graph.get_node_edge_at(
             start_node_id,
             *start_picker,
             -1,
@@ -463,7 +447,7 @@ void TemporalWalk<UseGPU>::generate_random_walk_and_time(
     while (walk->size() < max_walk_len && current_node != -1) {
         walk->emplace_back(NodeWithTime {current_node, current_timestamp});
 
-        auto [picked_src, picked_dst, picked_ts] = temporal_graph->get_node_edge_at(
+        auto [picked_src, picked_dst, picked_ts] = temporal_graph.get_node_edge_at(
             current_node,
             *edge_picker,
             current_timestamp,
@@ -489,18 +473,15 @@ void TemporalWalk<UseGPU>::generate_random_walk_and_time(
     }
 }
 
-template<bool UseGPU>
-void TemporalWalk<UseGPU>::add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& edge_infos) const {
-    temporal_graph->add_multiple_edges(edge_infos);
+void TemporalWalk::add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& edge_infos) {
+    temporal_graph.add_multiple_edges(edge_infos);
 }
 
-template<bool UseGPU>
-size_t TemporalWalk<UseGPU>::get_node_count() const {
-    return temporal_graph->get_node_count();
+size_t TemporalWalk::get_node_count() const {
+    return temporal_graph.get_node_count();
 }
 
-template<bool UseGPU>
-long TemporalWalk<UseGPU>::estimate_cw_count(
+long TemporalWalk::estimate_cw_count(
     const int num_walks_per_node,
     const int max_walk_len,
     const int min_walk_len) const {
@@ -508,38 +489,28 @@ long TemporalWalk<UseGPU>::estimate_cw_count(
     return static_cast<long>(get_node_count()) * num_walks_per_node * (max_walk_len - min_walk_len + 1);
 }
 
-template<bool UseGPU>
-size_t TemporalWalk<UseGPU>::get_edge_count() const {
-    return temporal_graph->get_total_edges();
+size_t TemporalWalk::get_edge_count() const {
+    return temporal_graph.get_total_edges();
 }
 
-template<bool UseGPU>
-std::vector<int> TemporalWalk<UseGPU>::get_node_ids() const {
-    return temporal_graph->get_node_ids();
+std::vector<int> TemporalWalk::get_node_ids() const {
+    return temporal_graph.get_node_ids();
 }
 
-template<bool UseGPU>
-std::vector<std::tuple<int, int, int64_t>> TemporalWalk<UseGPU>::get_edges() const {
-    return temporal_graph->get_edges();
+std::vector<std::tuple<int, int, int64_t>> TemporalWalk::get_edges() {
+    return temporal_graph.get_edges();
 }
 
-template<bool UseGPU>
-bool TemporalWalk<UseGPU>::get_is_directed() const {
+bool TemporalWalk::get_is_directed() const {
     return is_directed;
 }
 
-template<bool UseGPU>
-void TemporalWalk<UseGPU>::clear() {
+void TemporalWalk::clear() {
     #ifdef USE_CUDA
     temporal_graph = std::make_unique<TemporalGraph<UseGPU>>(
         is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
     #else
-    temporal_graph = std::make_unique<TemporalGraph<false>>(
-        is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
+    temporal_graph = TemporalGraph(
+        is_directed, use_gpu, max_time_capacity, enable_weight_computation, timescale_bound);
     #endif
 }
-
-template class TemporalWalk<false>;
-#ifdef USE_CUDA
-template class TemporalWalk<true>;
-#endif

@@ -5,12 +5,15 @@
 #include "../utils/utils.h"
 #include "../cuda_common/types.cuh"
 
-template<bool UseGPU>
 class WeightBasedRandomPicker final : public RandomPicker
 {
 public:
+    bool use_gpu;
+
+    explicit WeightBasedRandomPicker(bool use_gpu);
+
     [[nodiscard]] int pick_random(
-        const typename SelectVectorType<double, UseGPU>::type& cumulative_weights,
+        const VectorTypes<double>::Vector& cumulative_weights,
         int group_start,
         int group_end);
 };

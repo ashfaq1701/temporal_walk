@@ -6,7 +6,7 @@ constexpr bool USE_GPU = false;
 
 int main()
 {
-    ExponentialIndexRandomPicker<USE_GPU> random_picker;
+    ExponentialIndexRandomPicker random_picker(USE_GPU);
 
     std::cout << "Prioritizing end: " << std::endl;
     std::cout << "---------------------------------------" << std::endl;

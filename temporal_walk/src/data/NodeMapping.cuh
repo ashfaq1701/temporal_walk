@@ -6,20 +6,19 @@
 #include <tuple>
 #include "EdgeData.cuh"
 
-template<bool UseGPU>
 class NodeMapping {
-
-   using IntVector = typename SelectVectorType<int, UseGPU>::type;
-   using BoolVector = typename SelectVectorType<bool, UseGPU>::type;
-
 public:
 
-   IntVector sparse_to_dense{};    // Maps sparse ID to dense index
-   IntVector dense_to_sparse{};    // Maps dense index back to sparse ID
+   bool use_gpu;
 
-   BoolVector is_deleted{};        // Tracks deleted status of nodes
+   explicit NodeMapping(bool use_gpu);
 
-   void update(const EdgeData<UseGPU>& edges, size_t start_idx, size_t end_idx);
+   VectorTypes<int>::Vector sparse_to_dense;    // Maps sparse ID to dense index
+   VectorTypes<int>::Vector dense_to_sparse;    // Maps dense index back to sparse ID
+
+   VectorTypes<bool>::Vector is_deleted;        // Tracks deleted status of nodes
+
+   void update(const EdgeData& edges, size_t start_idx, size_t end_idx);
    [[nodiscard]] int to_dense(int sparse_id) const;
    [[nodiscard]] int to_sparse(int dense_idx) const;
    [[nodiscard]] size_t size() const;

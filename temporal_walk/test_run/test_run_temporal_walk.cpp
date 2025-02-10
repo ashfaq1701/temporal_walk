@@ -24,7 +24,7 @@ int main() {
         {5, 4, 32}
     };
 
-    TemporalWalk<USE_GPU> temporal_walk(true);
+    TemporalWalk temporal_walk(true, USE_GPU);
     temporal_walk.add_multiple_edges(edges);
 
     constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;

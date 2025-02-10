@@ -14,13 +14,13 @@
  * Supports both CPU and GPU computation for generating random walks on temporal graphs.
  * The walks respect temporal causality and can be biased using different strategies.
  *
- * @tparam UseGPU Boolean flag to enable GPU acceleration when available
  */
-template<bool UseGPU>
 class TemporalWalk {
     bool is_directed;
 
-    int64_t max_time_capacity;
+    bool use_gpu;
+
+    int64_t max_time_capacity{};
 
     int n_threads;
 
@@ -30,12 +30,7 @@ class TemporalWalk {
 
     int64_t max_edge_time = 0;
 
-    #ifdef USE_CUDA
-    using TemporalGraphType = std::conditional_t<true, TemporalGraph<true>, TemporalGraph<false>>;
-    #else
-    using TemporalGraphType = TemporalGraph<false>;
-    #endif
-    std::unique_ptr<TemporalGraphType> temporal_graph;
+    TemporalGraph temporal_graph;
 
     ThreadPool thread_pool;
 
@@ -57,6 +52,7 @@ public:
      * @brief Construct a temporal walk generator
      *
      * @param is_directed Whether the graph is directed
+     * @param use_gpu Should the storage and sampling use gpu
      * @param max_time_capacity Maximum time window for edges (-1 for no limit)
      * @param enable_weight_computation Enable CTDNE weight computation for ExponentialWeight picker
      * @param timescale_bound Scale factor for temporal differences
@@ -64,6 +60,7 @@ public:
      */
     explicit TemporalWalk(
         bool is_directed,
+        bool use_gpu,
         int64_t max_time_capacity=-1,
         bool enable_weight_computation=false,
         double timescale_bound=DEFAULT_TIMESCALE_BOUND,
@@ -190,7 +187,7 @@ public:
      * @brief Add multiple edges to the graph
      * @param edge_infos Vector of (source, target, timestamp) tuples
      */
-    void add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& edge_infos) const;
+    void add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& edge_infos);
 
     /** @brief Get number of nodes in the graph */
     [[nodiscard]] size_t get_node_count() const;
@@ -202,7 +199,7 @@ public:
     [[nodiscard]] std::vector<int> get_node_ids() const;
 
     /** @brief Get all edges as (source, target, timestamp) tuples */
-    [[nodiscard]] std::vector<std::tuple<int, int, int64_t>> get_edges() const;
+    [[nodiscard]] std::vector<std::tuple<int, int, int64_t>> get_edges();
 
     /** @brief Check if graph is directed */
     [[nodiscard]] bool get_is_directed() const;
