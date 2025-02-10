@@ -57,7 +57,7 @@ pip install temporal-walk
 
 ## 📖 Documentation
 
-📌 **[C++ Documentation →](https://htmlpreview.github.io/?https://github.com/ashfaq1701/temporal_walk/blob/master/docs/html/class_temporal_walk.html)**
+📌 **[C++ Documentation →](https://htmlpreview.github.io/?https://github.com/ashfaq1701/temporal_walk/blob/master/docs/html/class_temporal_walk.html)**<br>
 📌 **[Python Interface Documentation →](docs/_temporal_walk.md)**
 
 ---
