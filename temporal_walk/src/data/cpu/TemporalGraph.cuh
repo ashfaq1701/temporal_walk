@@ -5,12 +5,19 @@
 #include <cstdint>
 #include <tuple>
 #include <functional>
-#include "../random/RandomPicker.h"
+#include "../../random/RandomPicker.h"
 
 #include "NodeMapping.cuh"
+#include "../cuda/NodeMappingCUDA.cuh"
+
+#include "EdgeData.cuh"
+#include "../cuda/EdgeDataCUDA.cuh"
+
 #include "NodeEdgeIndex.cuh"
-#include "../utils/utils.h"
-#include "../config/constants.h"
+#include "../cuda/NodeEdgeIndexCUDA.cuh"
+
+#include "../../utils/utils.h"
+#include "../../config/constants.h"
 
 template<bool UseGPU>
 class TemporalGraph

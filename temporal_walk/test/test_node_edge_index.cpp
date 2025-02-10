@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/data/NodeEdgeIndex.cuh"
+#include "../src/data/cpu/NodeEdgeIndex.cuh"
 
 template<typename UseGPUType>
 class NodeEdgeIndexTest : public ::testing::Test {

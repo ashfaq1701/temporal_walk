@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "../src/data/NodeEdgeIndex.cuh"
-#include "../src/data/NodeMapping.cuh"
-#include "../src/data/EdgeData.cuh"
+#include "../src/data/cpu/NodeEdgeIndex.cuh"
+#include "../src/data/cpu/NodeMapping.cuh"
+#include "../src/data/cpu/EdgeData.cuh"
 
 template<typename UseGPUType>
 class NodeEdgeIndexWeightTest : public ::testing::Test {

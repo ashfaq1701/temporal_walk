@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/data/EdgeData.cuh"
+#include "../src/data/cpu/EdgeData.cuh"
 #include <cmath>
 
 template<typename UseGPUType>

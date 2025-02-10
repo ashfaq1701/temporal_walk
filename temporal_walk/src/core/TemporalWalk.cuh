@@ -6,7 +6,7 @@
 #include "../config/constants.h"
 #include "../../libs/thread-pool/ThreadPool.h"
 #include "../random/RandomPicker.h"
-#include "../data/TemporalGraph.cuh"
+#include "../data/cpu/TemporalGraph.cuh"
 
 /**
  * @brief Main class for generating temporal random walks

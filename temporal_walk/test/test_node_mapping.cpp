@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/data/NodeMapping.cuh"
+#include "../src/data/cpu/NodeMapping.cuh"
 
 template<typename UseGPUType>
 class NodeMappingTest : public ::testing::Test {

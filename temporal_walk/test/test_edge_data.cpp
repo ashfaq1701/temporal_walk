@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/data/EdgeData.cuh"
+#include "../src/data/cpu/EdgeData.cuh"
 
 template<typename UseGPUType>
 class EdgeDataTest : public ::testing::Test {

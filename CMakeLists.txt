@@ -38,10 +38,17 @@ set(SRC_FILES
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/ExponentialIndexRandomPicker.cu
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/LinearRandomPicker.cu
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/UniformRandomPicker.cu
-        ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/EdgeData.cu
-        ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/NodeEdgeIndex.cu
-        ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/NodeMapping.cu
-        ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/TemporalGraph.cu
+
+        ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/cpu/EdgeData.cu
+        ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/cpu/NodeEdgeIndex.cu
+        ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/cpu/NodeMapping.cu
+        ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/cpu/TemporalGraph.cu
+
+        ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/cuda/EdgeDataCUDA.cu
+        ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/cuda/NodeEdgeIndexCUDA.cu
+        ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/cuda/NodeMappingCUDA.cu
+        ${CMAKE_SOURCE_DIR}/temporal_walk/src/data/cuda/TemporalGraphCUDA.cu
+
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/core/TemporalWalk.cu
 )
 

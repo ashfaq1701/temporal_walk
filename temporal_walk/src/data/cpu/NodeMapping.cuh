@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <tuple>
 #include "EdgeData.cuh"
+#include "../../cuda_common/types.cuh"
 
 template<bool UseGPU>
 class NodeMapping {

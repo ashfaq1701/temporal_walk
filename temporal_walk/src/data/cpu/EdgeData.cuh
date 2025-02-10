@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <tuple>
 #include <cmath>
-#include "../cuda_common/types.cuh"
+#include "../../cuda_common/types.cuh"
 
 template<bool UseGPU>
 class EdgeData {

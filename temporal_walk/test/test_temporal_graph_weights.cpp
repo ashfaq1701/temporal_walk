@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/data/TemporalGraph.cuh"
+#include "../src/data/cpu/TemporalGraph.cuh"
 #include "../src/random/WeightBasedRandomPicker.cuh"
 
 template<typename UseGPUType>

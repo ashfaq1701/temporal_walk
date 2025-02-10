@@ -2,9 +2,9 @@
 #include <algorithm>
 #include <iostream>
 
-#include "../random/IndexBasedRandomPicker.h"
-#include "../random/WeightBasedRandomPicker.cuh"
-#include "../random/RandomPicker.h"
+#include "../../random/IndexBasedRandomPicker.h"
+#include "../../random/WeightBasedRandomPicker.cuh"
+#include "../../random/RandomPicker.h"
 
 template<bool UseGPU>
 TemporalGraph<UseGPU>::TemporalGraph(
@@ -12,10 +12,21 @@ TemporalGraph<UseGPU>::TemporalGraph(
     const int64_t window,
     const bool enable_weight_computation,
     const double timescale_bound)
-    : is_directed(directed), time_window(window),
-        enable_weight_computation(enable_weight_computation),
-        timescale_bound(timescale_bound), latest_timestamp(0),
-        node_index(NodeEdgeIndex<UseGPU>()), edges(EdgeData<UseGPU>()), node_mapping(NodeMapping<UseGPU>()) {}
+    : is_directed(directed)
+    , time_window(window)
+    , enable_weight_computation(enable_weight_computation)
+    , timescale_bound(timescale_bound)
+    , latest_timestamp(0)
+#ifdef USE_CUDA
+    , node_index(NodeEdgeIndexCUDA<UseGPU>())
+    , edges(EdgeDataCUDA<UseGPU>())
+    , node_mapping(NodeMappingCUDA<UseGPU>())
+#else
+    , node_index(NodeEdgeIndex<UseGPU>())
+    , edges(EdgeData<UseGPU>())
+    , node_mapping(NodeMapping<UseGPU>())
+#endif
+    {}
 
 template<bool UseGPU>
 void TemporalGraph<UseGPU>::add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& new_edges) {
