@@ -40,7 +40,7 @@ walks = walker.get_random_walks_for_all_nodes(
 ```
 
 ## ✨ Key Features
-- ⚡ **GPU acceleration** for large graphs (development in progress)
+- ⚡ **GPU acceleration** for large graphs (development in progress)  
 - 🎯 **Multiple sampling strategies** – Uniform, Linear, Exponential
 - 🔄 **Forward & backward** temporal walks
 - 📡 **Rolling window support** for streaming data
