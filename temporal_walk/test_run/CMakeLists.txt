@@ -1,11 +1,13 @@
+
 function(add_test_executable target_name source_file)
     add_executable(${target_name} ${source_file} ${SRC_FILES})
+    set(MOD_SRC_FILES ${SRC_FILES} ${source_file})
 
     target_compile_features(${target_name} PRIVATE cxx_std_17)
 
     if(USE_CUDA AND CMAKE_CUDA_COMPILER)
         set_source_files_properties(
-                ${SRC_FILES}
+                ${MOD_SRC_FILES}
                 PROPERTIES
                 LANGUAGE CUDA
         )
@@ -21,7 +23,7 @@ function(add_test_executable target_name source_file)
         )
     else()
         set_source_files_properties(
-                ${SRC_FILES}
+                ${MOD_SRC_FILES}
                 PROPERTIES
                 LANGUAGE CXX
         )

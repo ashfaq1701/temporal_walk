@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 3.28)
 project(temporal_walk)
 
@@ -49,18 +50,6 @@ if(USE_CUDA AND CMAKE_CUDA_COMPILER)
             --extended-lambda
             --expt-relaxed-constexpr
             -Xcompiler=-fPIC
-    )
-
-    set_source_files_properties(
-            ${SRC_FILES}
-            PROPERTIES
-            LANGUAGE CUDA
-    )
-else ()
-    set_source_files_properties(
-            ${SRC_FILES}
-            PROPERTIES
-            LANGUAGE CXX
     )
 endif()
 
