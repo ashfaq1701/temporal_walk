@@ -23,7 +23,7 @@ TemporalWalk<UseGPU>::TemporalWalk(
     timescale_bound(timescale_bound), thread_pool(n_threads)
 {
     #ifdef USE_CUDA
-    temporal_graph = std::make_unique<TemporalGraph<UseGPU>>(
+    temporal_graph = std::make_unique<TemporalGraphCUDA<UseGPU>>(
         is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
     #else
     temporal_graph = std::make_unique<TemporalGraph<false>>(

@@ -7,6 +7,7 @@
 #include "../../libs/thread-pool/ThreadPool.h"
 #include "../random/RandomPicker.h"
 #include "../data/cpu/TemporalGraph.cuh"
+#include "../data/cuda/TemporalGraphCUDA.cuh"
 
 /**
  * @brief Main class for generating temporal random walks
