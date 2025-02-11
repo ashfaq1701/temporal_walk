@@ -1,5 +1,5 @@
-#ifndef NODEEDGEINDEX_GPU_H
-#define NODEEDGEINDEX_GPU_H
+#ifndef NODEEDGEINDEX_CUDA_H
+#define NODEEDGEINDEX_CUDA_H
 
 #include "../cpu/NodeEdgeIndex.cuh"
 
@@ -10,4 +10,4 @@ class NodeEdgeIndexCUDA : public NodeEdgeIndex<UseGPU> {
 #endif
 };
 
-#endif //NODEEDGEINDEX_GPU_H
+#endif //NODEEDGEINDEX_CUDA_H

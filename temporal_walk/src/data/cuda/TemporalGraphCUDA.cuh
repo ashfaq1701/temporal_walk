@@ -1,5 +1,5 @@
-#ifndef TEMPORALGRAPH_GPU_H
-#define TEMPORALGRAPH_GPU_H
+#ifndef TEMPORALGRAPH_CUDA_H
+#define TEMPORALGRAPH_CUDA_H
 
 #include "../cpu/TemporalGraph.cuh"
 
@@ -14,4 +14,4 @@ public:
 #endif
 };
 
-#endif //TEMPORALGRAPH_GPU_H
+#endif //TEMPORALGRAPH_CUDA_H

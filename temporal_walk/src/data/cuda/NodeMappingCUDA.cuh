@@ -1,5 +1,5 @@
-#ifndef NODEMAPPING_GPU_H
-#define NODEMAPPING_GPU_H
+#ifndef NODEMAPPING_CUDA_H
+#define NODEMAPPING_CUDA_H
 
 #include "../cpu/NodeMapping.cuh"
 
@@ -10,4 +10,4 @@ class NodeMappingCUDA : public NodeMapping<UseGPU> {
 #endif
 };
 
-#endif //NODEMAPPING_GPU_H
+#endif //NODEMAPPING_CUDA_H

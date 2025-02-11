@@ -1,5 +1,5 @@
-#ifndef EDGEDATA_GPU_H
-#define EDGEDATA_GPU_H
+#ifndef EDGEDATA_CUDA_H
+#define EDGEDATA_CUDA_H
 
 #include "../cpu/EdgeData.cuh"
 
@@ -10,4 +10,4 @@ class EdgeDataCUDA : public EdgeData<UseGPU> {
 #endif
 };
 
-#endif //EDGEDATA_GPU_H
+#endif //EDGEDATA_CUDA_H
