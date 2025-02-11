@@ -53,10 +53,11 @@ set(SRC_FILES
 )
 
 if(HAS_CUDA AND CMAKE_CUDA_COMPILER)
-    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}
-            --extended-lambda
-            --expt-relaxed-constexpr
-            -Xcompiler=-fPIC
+    add_compile_options(
+            $<$<COMPILE_LANGUAGE:CUDA>:--extended-lambda>
+            $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
+            $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
+            $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-fPIC>
     )
 endif()
 

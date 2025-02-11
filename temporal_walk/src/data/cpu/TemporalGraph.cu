@@ -11,6 +11,18 @@
 
 #include "../../utils/utils.h"
 
+#ifdef HAS_CUDA
+#include <thrust/sort.h>
+#include <thrust/execution_policy.h>
+#endif
+
+
+#ifdef HAS_CUDA
+__device__ bool compare_timestamps(const int64_t* ts, const size_t i, const size_t j) {
+    return ts[i] < ts[j];
+}
+#endif
+
 template<bool UseGPU>
 TemporalGraph<UseGPU>::TemporalGraph(
     const bool directed,
@@ -83,20 +95,30 @@ void TemporalGraph<UseGPU>::sort_and_merge_edges(const size_t start_idx) {
     if (start_idx >= edges.size()) return;
 
     // Sort new edges first
-    std::vector<size_t> indices(edges.size() - start_idx);
+    SizeVector indices(edges.size() - start_idx);
     for (size_t i = 0; i < indices.size(); i++) {
         indices[i] = start_idx + i;
     }
 
-    std::sort(indices.begin(), indices.end(),
-              [this](const size_t i, const size_t j) {
-                  return edges.timestamps[i] < edges.timestamps[j];
-              });
+    #ifdef HAS_CUDA
+    if constexpr (UseGPU) {
+        thrust::sort(thrust::device, indices.begin(), indices.end(),
+            [ts = edges.timestamps.data().get()] __device__ (const size_t i, const size_t j) {
+                return compare_timestamps(ts, i, j);
+            });
+    } else
+    #endif
+    {
+        std::sort(indices.begin(), indices.end(),
+            [this](const size_t i, const size_t j) {
+                return edges.timestamps[i] < edges.timestamps[j];
+            });
+    }
 
     // Apply permutation in-place using temporary vectors
-    std::vector<int> sorted_sources(edges.size() - start_idx);
-    std::vector<int> sorted_targets(edges.size() - start_idx);
-    std::vector<int64_t> sorted_timestamps(edges.size() - start_idx);
+    IntVector sorted_sources(edges.size() - start_idx);
+    IntVector sorted_targets(edges.size() - start_idx);
+    Int64TVector sorted_timestamps(edges.size() - start_idx);
 
     for (size_t i = 0; i < indices.size(); i++) {
         const size_t idx = indices[i];
@@ -115,9 +137,9 @@ void TemporalGraph<UseGPU>::sort_and_merge_edges(const size_t start_idx) {
     // Merge with existing edges
     if (start_idx > 0) {
         // Create buffer vectors
-        std::vector<int> merged_sources(edges.size());
-        std::vector<int> merged_targets(edges.size());
-        std::vector<int64_t> merged_timestamps(edges.size());
+        IntVector merged_sources(edges.size());
+        IntVector merged_targets(edges.size());
+        Int64TVector merged_timestamps(edges.size());
 
         size_t i = 0;  // Index for existing edges
         size_t j = start_idx;  // Index for new edges
@@ -175,7 +197,7 @@ void TemporalGraph<UseGPU>::delete_old_edges() {
     const size_t remaining = edges.size() - delete_count;
 
     // Track which nodes still have edges
-    std::vector<bool> has_edges(node_mapping.sparse_to_dense.size(), false);
+    BoolVector has_edges(node_mapping.sparse_to_dense.size(), false);
 
     if (remaining > 0) {
         std::move(edges.sources.begin() + delete_count, edges.sources.end(), edges.sources.begin());

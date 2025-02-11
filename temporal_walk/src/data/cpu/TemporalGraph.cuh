@@ -17,13 +17,17 @@ template<bool UseGPU>
 class TemporalGraph
 {
 private:
+    using SizeVector = typename SelectVectorType<size_t, UseGPU>::type;
+    using IntVector = typename SelectVectorType<int, UseGPU>::type;
+    using Int64TVector = typename SelectVectorType<int64_t, UseGPU>::type;
+    using BoolVector = typename SelectVectorType<bool, UseGPU>::type;
+
     bool is_directed;
     int64_t time_window; // Time duration to keep edges (-1 means keep all)
     bool enable_weight_computation;
     double timescale_bound;
     int64_t latest_timestamp; // Track latest edge timestamp
 
-    void sort_and_merge_edges(size_t start_idx);
     void delete_old_edges();
 
 public:
@@ -36,6 +40,8 @@ public:
         int64_t window = -1,
         bool enable_weight_computation = false,
         double timescale_bound=-1);
+
+    void sort_and_merge_edges(size_t start_idx);
 
     // Edge addition
     void add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& new_edges);
