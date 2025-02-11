@@ -9,7 +9,6 @@
 
 
 constexpr int DEFAULT_CONTEXT_WINDOW_LEN = 2;
-constexpr int DEFAULT_NUM_WALKS_PER_THREAD = 500;
 
 template<bool UseGPU>
 TemporalWalk<UseGPU>::TemporalWalk(
