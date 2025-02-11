@@ -5,7 +5,7 @@ function(add_test_executable target_name source_file)
 
     target_compile_features(${target_name} PRIVATE cxx_std_17)
 
-    if(USE_CUDA AND CMAKE_CUDA_COMPILER)
+    if(HAS_CUDA AND CMAKE_CUDA_COMPILER)
         set_source_files_properties(
                 ${MOD_SRC_FILES}
                 PROPERTIES

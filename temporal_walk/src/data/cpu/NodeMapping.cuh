@@ -32,7 +32,7 @@ public:
    void reserve(size_t size);
    void mark_node_deleted(int sparse_id);
    [[nodiscard]] bool has_node(int sparse_id) const;
-   [[nodiscard]] std::vector<int> get_all_sparse_ids() const;
+   [[nodiscard]] IntVector get_all_sparse_ids() const;
 };
 
 #endif //NODEMAPPING_H

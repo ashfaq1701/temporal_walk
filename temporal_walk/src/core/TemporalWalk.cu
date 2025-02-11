@@ -21,7 +21,7 @@ TemporalWalk<UseGPU>::TemporalWalk(
     n_threads(static_cast<int>(n_threads)), enable_weight_computation(enable_weight_computation),
     timescale_bound(timescale_bound), thread_pool(n_threads)
 {
-    #ifdef USE_CUDA
+    #ifdef HAS_CUDA
     temporal_graph = std::make_unique<TemporalGraphCUDA<UseGPU>>(
         is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
     #else
@@ -529,8 +529,8 @@ bool TemporalWalk<UseGPU>::get_is_directed() const {
 
 template<bool UseGPU>
 void TemporalWalk<UseGPU>::clear() {
-    #ifdef USE_CUDA
-    temporal_graph = std::make_unique<TemporalGraph<UseGPU>>(
+    #ifdef HAS_CUDA
+    temporal_graph = std::make_unique<TemporalGraphCUDA<UseGPU>>(
         is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
     #else
     temporal_graph = std::make_unique<TemporalGraph<false>>(
@@ -539,6 +539,6 @@ void TemporalWalk<UseGPU>::clear() {
 }
 
 template class TemporalWalk<false>;
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
 template class TemporalWalk<true>;
 #endif

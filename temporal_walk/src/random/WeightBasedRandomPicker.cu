@@ -34,6 +34,6 @@ int WeightBasedRandomPicker<UseGPU>::pick_random(
 }
 
 template class WeightBasedRandomPicker<false>;
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
 template class WeightBasedRandomPicker<true>;
 #endif

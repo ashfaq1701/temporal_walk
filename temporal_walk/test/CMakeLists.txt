@@ -16,7 +16,7 @@ set(TEST_FILES
 
 set(MODULE_SRC_FILES ${SRC_FILES} ${TEST_FILES})
 
-if(USE_CUDA AND CMAKE_CUDA_COMPILER)
+if(HAS_CUDA AND CMAKE_CUDA_COMPILER)
     set_source_files_properties(
             ${MODULE_SRC_FILES}
             PROPERTIES

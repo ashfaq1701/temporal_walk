@@ -27,7 +27,11 @@ void NodeMapping<UseGPU>::update(const EdgeData<UseGPU>& edges, const size_t sta
     // First pass: find max node ID
     int max_node_id = 0;
     for (size_t i = start_idx; i < end_idx; i++) {
-        max_node_id = std::max({max_node_id, edges.sources[i], edges.targets[i]});
+        max_node_id = std::max({
+            max_node_id,
+            static_cast<int>(edges.sources[i]),
+            static_cast<int>(edges.targets[i])
+        });
     }
 
     // Extend sparse_to_dense if needed
@@ -90,11 +94,11 @@ bool NodeMapping<UseGPU>::has_node(int sparse_id) const {
 }
 
 template<bool UseGPU>
-std::vector<int> NodeMapping<UseGPU>::get_all_sparse_ids() const {
+typename NodeMapping<UseGPU>::IntVector NodeMapping<UseGPU>::get_all_sparse_ids() const {
     return dense_to_sparse;
 }
 
 template class NodeMapping<false>;
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
 template class NodeMapping<true>;
 #endif

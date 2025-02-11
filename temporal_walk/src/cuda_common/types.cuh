@@ -4,7 +4,7 @@
 #include <vector>
 #include <type_traits>
 
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
     #include <thrust/device_vector.h>
     #include <thrust/host_vector.h>
 #endif
@@ -17,14 +17,14 @@ enum class VectorStorageType {
 
 template <typename T, bool UseGPU>
 struct SelectVectorType {
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
     using type = typename std::conditional<UseGPU, thrust::device_vector<T>, thrust::host_vector<T>>::type;
 #else
     using type = std::vector<T>;
 #endif
 
     static constexpr VectorStorageType get_vector_storage_type() {
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
         return UseGPU ? VectorStorageType::THRUST_DEVICE_VECTOR : VectorStorageType::THRUST_HOST_VECTOR;
 #else
         return VectorStorageType::STD_VECTOR;

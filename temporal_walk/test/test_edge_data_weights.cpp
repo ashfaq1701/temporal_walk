@@ -4,8 +4,11 @@
 
 template<typename UseGPUType>
 class EdgeDataWeightTest : public ::testing::Test {
+
+    using DoubleVector = typename SelectVectorType<double, UseGPUType::value>::type;
+
 protected:
-    static void verify_cumulative_weights(const std::vector<double>& weights) {
+    static void verify_cumulative_weights(const DoubleVector& weights) {
         ASSERT_FALSE(weights.empty());
         for (size_t i = 0; i < weights.size(); i++) {
             EXPECT_GE(weights[i], 0.0);
@@ -26,7 +29,7 @@ protected:
         edges.update_timestamp_groups();
     }
 
-    static std::vector<double> get_individual_weights(const std::vector<double>& cumulative) {
+    static std::vector<double> get_individual_weights(const DoubleVector& cumulative) {
         std::vector<double> weights;
         weights.reserve(cumulative.size());
         weights.push_back(cumulative[0]);

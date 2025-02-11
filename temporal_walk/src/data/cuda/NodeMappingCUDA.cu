@@ -1,6 +1,6 @@
 #include "NodeMappingCUDA.cuh"
 
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
 
 
 template class NodeMappingCUDA<false>;

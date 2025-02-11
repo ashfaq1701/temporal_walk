@@ -4,6 +4,8 @@
 
 template<typename UseGPUType>
 class TemporalGraphWeightTest : public ::testing::Test {
+    using DoubleVector = typename SelectVectorType<double, UseGPUType::value>::type;
+
 protected:
     void SetUp() override {
         // Will be used in multiple tests
@@ -18,7 +20,7 @@ protected:
     }
 
     // Helper to verify cumulative weights are properly normalized
-    static void verify_cumulative_weights(const std::vector<double>& weights) {
+    static void verify_cumulative_weights(const DoubleVector& weights) {
         ASSERT_FALSE(weights.empty());
         for (size_t i = 0; i < weights.size(); i++) {
             EXPECT_GE(weights[i], 0.0);
@@ -30,7 +32,7 @@ protected:
     }
 
     // Helper to get individual weights from cumulative weights
-    static std::vector<double> get_individual_weights(const std::vector<double>& cumulative) {
+    static std::vector<double> get_individual_weights(const DoubleVector& cumulative) {
         std::vector<double> weights;
         weights.push_back(cumulative[0]);
         for (size_t i = 1; i < cumulative.size(); i++) {

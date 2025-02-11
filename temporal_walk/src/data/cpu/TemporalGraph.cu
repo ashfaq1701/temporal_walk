@@ -1,10 +1,15 @@
 #include "TemporalGraph.cuh"
 #include <algorithm>
-#include <iostream>
 
 #include "../../random/IndexBasedRandomPicker.h"
 #include "../../random/WeightBasedRandomPicker.cuh"
 #include "../../random/RandomPicker.h"
+
+#include "../cuda/NodeMappingCUDA.cuh"
+#include "../cuda/EdgeDataCUDA.cuh"
+#include "../cuda/NodeEdgeIndexCUDA.cuh"
+
+#include "../../utils/utils.h"
 
 template<bool UseGPU>
 TemporalGraph<UseGPU>::TemporalGraph(
@@ -17,7 +22,7 @@ TemporalGraph<UseGPU>::TemporalGraph(
     , enable_weight_computation(enable_weight_computation)
     , timescale_bound(timescale_bound)
     , latest_timestamp(0)
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
     , node_index(NodeEdgeIndexCUDA<UseGPU>())
     , edges(EdgeDataCUDA<UseGPU>())
     , node_mapping(NodeMappingCUDA<UseGPU>())
@@ -513,6 +518,6 @@ std::vector<std::tuple<int, int, int64_t>> TemporalGraph<UseGPU>::get_edges() {
 }
 
 template class TemporalGraph<false>;
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
 template class TemporalGraph<true>;
 #endif

@@ -40,6 +40,6 @@ int ExponentialIndexRandomPicker<UseGPU>::pick_random(const int start, const int
 }
 
 template class ExponentialIndexRandomPicker<false>;
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
 template class ExponentialIndexRandomPicker<true>;
 #endif

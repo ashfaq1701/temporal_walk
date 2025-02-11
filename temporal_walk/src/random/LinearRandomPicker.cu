@@ -41,6 +41,6 @@ int LinearRandomPicker<UseGPU>::pick_random(const int start, const int end, cons
 }
 
 template class LinearRandomPicker<false>;
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
 template class LinearRandomPicker<true>;
 #endif

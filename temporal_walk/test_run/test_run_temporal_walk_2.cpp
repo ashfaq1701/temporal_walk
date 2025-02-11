@@ -4,7 +4,7 @@
 #include "test_utils.h"
 #include "../test/test_utils.h"
 
-constexpr bool USE_GPU = true;
+constexpr bool USE_GPU = false;
 
 int main() {
     const auto edge_infos = read_edges_from_csv("../../data/sample_data.csv");

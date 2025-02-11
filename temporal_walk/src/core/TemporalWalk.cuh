@@ -31,8 +31,9 @@ class TemporalWalk {
 
     int64_t max_edge_time = 0;
 
-    #ifdef USE_CUDA
-    using TemporalGraphType = std::conditional_t<true, TemporalGraph<true>, TemporalGraph<false>>;
+    // In TemporalWalk.h, change the type declaration:
+    #ifdef HAS_CUDA
+    using TemporalGraphType = TemporalGraph<UseGPU>;
     #else
     using TemporalGraphType = TemporalGraph<false>;
     #endif

@@ -14,6 +14,6 @@ int UniformRandomPicker<UseGPU>::pick_random(const int start, const int end, con
 }
 
 template class UniformRandomPicker<false>;
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
 template class UniformRandomPicker<true>;
 #endif

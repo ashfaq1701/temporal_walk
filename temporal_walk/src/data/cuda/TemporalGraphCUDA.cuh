@@ -9,7 +9,7 @@ public:
     // Inherit constructors from base class
     using TemporalGraph<UseGPU>::TemporalGraph;
 
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
 
 #endif
 };

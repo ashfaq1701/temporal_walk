@@ -5,7 +5,7 @@
 
 template<bool UseGPU>
 class NodeEdgeIndexCUDA : public NodeEdgeIndex<UseGPU> {
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
 
 #endif
 };

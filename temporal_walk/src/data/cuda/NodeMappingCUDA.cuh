@@ -5,7 +5,7 @@
 
 template<bool UseGPU>
 class NodeMappingCUDA : public NodeMapping<UseGPU> {
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
 
 #endif
 };

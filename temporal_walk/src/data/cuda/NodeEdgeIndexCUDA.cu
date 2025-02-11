@@ -1,6 +1,6 @@
 #include "NodeEdgeIndexCUDA.cuh"
 
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
 
 
 template class NodeEdgeIndexCUDA<false>;

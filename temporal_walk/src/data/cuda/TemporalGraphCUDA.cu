@@ -1,6 +1,6 @@
 #include "TemporalGraphCUDA.cuh"
 
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
 
 
 template class TemporalGraphCUDA<false>;

@@ -167,6 +167,6 @@ size_t EdgeData<UseGPU>::find_group_before_timestamp(int64_t timestamp) const {
 }
 
 template class EdgeData<false>;
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
 template class EdgeData<true>;
 #endif

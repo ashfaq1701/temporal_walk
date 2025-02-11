@@ -10,7 +10,7 @@ set_target_properties(_temporal_walk PROPERTIES
         POSITION_INDEPENDENT_CODE ON
 )
 
-if(USE_CUDA AND CMAKE_CUDA_COMPILER)
+if(HAS_CUDA AND CMAKE_CUDA_COMPILER)
     set_source_files_properties(
             ${MODULE_SRC_FILES}
             PROPERTIES

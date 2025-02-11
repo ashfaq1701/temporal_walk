@@ -357,6 +357,6 @@ template<bool UseGPU>
 }
 
 template class NodeEdgeIndex<false>;
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
 template class NodeEdgeIndex<true>;
 #endif

@@ -5,7 +5,7 @@
 
 template<bool UseGPU>
 class EdgeDataCUDA : public EdgeData<UseGPU> {
-#ifdef USE_CUDA
+#ifdef HAS_CUDA
 
 #endif
 };

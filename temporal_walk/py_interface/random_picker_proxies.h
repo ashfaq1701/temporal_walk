@@ -10,7 +10,7 @@ class ExponentialIndexRandomPickerProxy
 {
 private:
     bool use_gpu;
-    #ifdef USE_CUDA
+    #ifdef HAS_CUDA
     std::unique_ptr<ExponentialIndexRandomPicker<false>> cpu_impl;
     std::unique_ptr<ExponentialIndexRandomPicker<true>> gpu_impl;
     #else
@@ -20,7 +20,7 @@ private:
 public:
     explicit ExponentialIndexRandomPickerProxy(bool use_gpu): use_gpu(use_gpu)
     {
-        #ifdef USE_CUDA
+        #ifdef HAS_CUDA
         this->use_gpu = use_gpu;
         if (use_gpu) {
             gpu_impl = std::make_unique<ExponentialIndexRandomPicker<true>>();
@@ -34,7 +34,7 @@ public:
 
     int pick_random(int start, int end, bool prioritize_end)
     {
-        #ifdef USE_CUDA
+        #ifdef HAS_CUDA
         if (use_gpu) return gpu_impl->pick_random(start, end, prioritize_end);
         else return cpu_impl->pick_random(start, end, prioritize_end);
         #else
@@ -47,7 +47,7 @@ public:
 class LinearRandomPickerProxy {
 private:
     bool use_gpu;
-    #ifdef USE_CUDA
+    #ifdef HAS_CUDA
     std::unique_ptr<LinearRandomPicker<false>> cpu_impl;
     std::unique_ptr<LinearRandomPicker<true>> gpu_impl;
     #else
@@ -56,7 +56,7 @@ private:
 
 public:
    explicit LinearRandomPickerProxy(bool use_gpu): use_gpu(use_gpu) {
-       #ifdef USE_CUDA
+       #ifdef HAS_CUDA
        this->use_gpu = use_gpu;
        if (use_gpu) {
            gpu_impl = std::make_unique<LinearRandomPicker<true>>();
@@ -69,7 +69,7 @@ public:
    }
 
    int pick_random(int start, int end, bool prioritize_end) {
-       #ifdef USE_CUDA
+       #ifdef HAS_CUDA
        if (use_gpu) return gpu_impl->pick_random(start, end, prioritize_end);
        else return cpu_impl->pick_random(start, end, prioritize_end);
        #else
@@ -82,7 +82,7 @@ public:
 class UniformRandomPickerProxy {
 private:
     bool use_gpu;
-    #ifdef USE_CUDA
+    #ifdef HAS_CUDA
     std::unique_ptr<UniformRandomPicker<false>> cpu_impl;
     std::unique_ptr<UniformRandomPicker<true>> gpu_impl;
     #else
@@ -91,7 +91,7 @@ private:
 
 public:
    explicit UniformRandomPickerProxy(bool use_gpu): use_gpu(use_gpu) {
-       #ifdef USE_CUDA
+       #ifdef HAS_CUDA
        this->use_gpu = use_gpu;
        if (use_gpu) {
            gpu_impl = std::make_unique<UniformRandomPicker<true>>();
@@ -104,7 +104,7 @@ public:
    }
 
    int pick_random(int start, int end, bool prioritize_end) {
-       #ifdef USE_CUDA
+       #ifdef HAS_CUDA
        if (use_gpu) return gpu_impl->pick_random(start, end, prioritize_end);
        else return cpu_impl->pick_random(start, end, prioritize_end);
        #else
@@ -116,7 +116,7 @@ public:
 class WeightBasedRandomPickerProxy {
 private:
     bool use_gpu;
-    #ifdef USE_CUDA
+    #ifdef HAS_CUDA
     std::unique_ptr<WeightBasedRandomPicker<false>> cpu_impl;
     std::unique_ptr<WeightBasedRandomPicker<true>> gpu_impl;
     #else
@@ -125,7 +125,7 @@ private:
 
 public:
     explicit WeightBasedRandomPickerProxy(bool use_gpu): use_gpu(use_gpu) {
-        #ifdef USE_CUDA
+        #ifdef HAS_CUDA
         this->use_gpu = use_gpu;
         if (use_gpu) {
             gpu_impl = std::make_unique<WeightBasedRandomPicker<true>>();
@@ -137,7 +137,7 @@ public:
         #endif
     }
 
-    #ifdef USE_CUDA
+    #ifdef HAS_CUDA
     int pick_random(const thrust::host_vector<double>& cumulative_weights, int group_start, int group_end) {
         return gpu_impl->pick_random(cumulative_weights, group_start, group_end);
     }

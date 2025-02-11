@@ -8,9 +8,12 @@ template<typename UseGPUType>
 class NodeEdgeIndexWeightTest : public ::testing::Test {
 protected:
 
+    using DoubleVector = typename SelectVectorType<double, UseGPUType::value>::type;
+    using SizeTVector = typename SelectVectorType<size_t, UseGPUType::value>::type;
+
     // Helper to verify weights are normalized and cumulative per node's group
-    static void verify_node_weights(const std::vector<size_t>& group_offsets,
-                                  const std::vector<double>& weights)
+    static void verify_node_weights(const SizeTVector& group_offsets,
+                                  const DoubleVector& weights)
     {
         // For each node
         for (size_t node = 0; node < group_offsets.size() - 1; node++) {
@@ -33,8 +36,8 @@ protected:
 
     // Helper to get individual weights for a node
     static std::vector<double> get_individual_weights(
-        const std::vector<double> &cumulative,
-        const std::vector<size_t> &offsets,
+        const DoubleVector &cumulative,
+        const SizeTVector &offsets,
         const size_t node) {
         // First get host data
 

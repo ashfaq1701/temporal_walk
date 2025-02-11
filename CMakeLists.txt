@@ -16,9 +16,9 @@ set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};${PYBIND11_DIR}")
 find_package(pybind11 REQUIRED)
 find_package(Boost REQUIRED COMPONENTS math)
 
-option(USE_CUDA "Enable CUDA support" ON)
+option(HAS_CUDA "Enable CUDA support" ON)
 
-if(USE_CUDA)
+if(HAS_CUDA)
     include(CheckLanguage)
     check_language(CUDA)
     if(CMAKE_CUDA_COMPILER)
@@ -29,7 +29,7 @@ if(USE_CUDA)
         set(CMAKE_CUDA_ARCHITECTURES 89)
         add_definitions(-DHAS_CUDA)
     else()
-        set(USE_CUDA OFF)
+        set(HAS_CUDA OFF)
     endif()
 endif()
 
@@ -52,7 +52,7 @@ set(SRC_FILES
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/core/TemporalWalk.cu
 )
 
-if(USE_CUDA AND CMAKE_CUDA_COMPILER)
+if(HAS_CUDA AND CMAKE_CUDA_COMPILER)
     set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}
             --extended-lambda
             --expt-relaxed-constexpr
