@@ -18,7 +18,7 @@ find_package(Boost REQUIRED COMPONENTS math)
 
 option(USE_CUDA "Enable CUDA support" ON)
 
-if(USE_CUDA AND NOT APPLE)
+if(USE_CUDA)
     include(CheckLanguage)
     check_language(CUDA)
     if(CMAKE_CUDA_COMPILER)
