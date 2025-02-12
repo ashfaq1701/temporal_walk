@@ -22,7 +22,7 @@ TemporalWalk<GPUUsage>::TemporalWalk(
     timescale_bound(timescale_bound), thread_pool(n_threads)
 {
     #ifndef HAS_CUDA
-    if (GPUUsage != ON_CPU) {
+    if (GPUUsage != GPUUsageMode::ON_CPU) {
         throw std::runtime_error("GPU support is not available, only \"ON_CPU\" version is available.");
     }
     #endif
