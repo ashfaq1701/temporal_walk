@@ -11,7 +11,8 @@
 ✅ **Performance First** – GPU-accelerated sampling for massive networks (development in progress)<br>
 ✅ **Memory Efficient** – Smart memory management for large graphs  
 ✅ **Flexible Integration** – Easy Python bindings with **NumPy/NetworkX** support  
-✅ **Production Ready** – Tested with hundreds of extensive unit tests.
+✅ **Production Ready** – Tested with hundreds of extensive unit tests.<br>
+✅ **Multi Platform** Builds and runs seamlessly on devices with or without CUDA.
 
 ---
 
@@ -46,6 +47,21 @@ walks = walker.get_random_walks_for_all_nodes(
 - 📡 **Rolling window support** for streaming data
 - 🔗 **NetworkX integration**
 - 🛠️ **Efficient memory management**
+- ⚙️ Uses **C++ std libraries** or **Thrust API** selectively based on hardware availability and configuration. 
+
+---
+
+## 📦 Dependencies
+
+| Dependency     | Purpose                                     |
+|---------------|---------------------------------------------|
+| **pybind11**  | Python-C++ bindings                         |
+| **python3**   | Required for building the python interfaces |
+| **gtest**     | Unit testing framework                      |
+| **boost-math** | Mathematical utilities for computation      |
+
+
+> 💡 **Tip:** Use **vcpkg** to easily install and link the C++ dependencies.
 
 ---
 
