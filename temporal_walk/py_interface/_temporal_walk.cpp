@@ -95,7 +95,7 @@ PYBIND11_MODULE(_temporal_walk, m)
             timescale_bound (float, optional): Scale factor for temporal differences. Used to prevent numerical issues with large time differences. Defaults to 50.0.
             )",
              py::arg("is_directed"),
-             py::arg("use_gpu") = false,
+             py::arg("gpu_usage_mode") = "USE_CPU",
              py::arg("max_time_capacity") = py::none(),
              py::arg("enable_weight_computation") = py::none(),
              py::arg("timescale_bound") = py::none())

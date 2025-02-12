@@ -10,3 +10,7 @@ twine upload dist/*
 
 # On Windows after autowheel repair
 twine upload wheelhouse/*
+
+#Doc generation command
+doxygen
+python -m pdoc _temporal_walk -o docs --force
