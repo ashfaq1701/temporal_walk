@@ -23,6 +23,12 @@ public:
        bool enable_weight_computation=false,
        double timescale_bound=DEFAULT_TIMESCALE_BOUND): gpu_usage(gpu_usage) {
 
+        #ifndef HAS_CUDA
+        if (gpu_usage != GPUUsageMode::ON_CPU) {
+            throw std::runtime_error("GPU support is not available, only \"ON_CPU\" version is available.");
+        }
+        #endif
+
         #ifdef HAS_CUDA
         switch(gpu_usage) {
         case GPUUsageMode::DATA_ON_GPU:

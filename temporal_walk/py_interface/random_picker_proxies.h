@@ -23,6 +23,12 @@ private:
 public:
     explicit ExponentialIndexRandomPickerProxy(GPUUsageMode gpu_usage): gpu_usage(gpu_usage)
     {
+        #ifndef HAS_CUDA
+        if (gpu_usage != GPUUsageMode::ON_CPU) {
+            throw std::runtime_error("GPU support is not available, only \"ON_CPU\" version is available.");
+        }
+        #endif
+
         #ifdef HAS_CUDA
         switch(gpu_usage) {
         case GPUUsageMode::DATA_ON_GPU:
@@ -73,6 +79,12 @@ private:
 public:
     explicit LinearRandomPickerProxy(GPUUsageMode gpu_usage): gpu_usage(gpu_usage)
     {
+        #ifndef HAS_CUDA
+        if (gpu_usage != GPUUsageMode::ON_CPU) {
+            throw std::runtime_error("GPU support is not available, only \"ON_CPU\" version is available.");
+        }
+        #endif
+
         #ifdef HAS_CUDA
         switch(gpu_usage) {
         case GPUUsageMode::DATA_ON_GPU:
@@ -123,6 +135,12 @@ private:
 public:
     explicit UniformRandomPickerProxy(GPUUsageMode gpu_usage): gpu_usage(gpu_usage)
     {
+        #ifndef HAS_CUDA
+        if (gpu_usage != GPUUsageMode::ON_CPU) {
+            throw std::runtime_error("GPU support is not available, only \"ON_CPU\" version is available.");
+        }
+        #endif
+
         #ifdef HAS_CUDA
         switch(gpu_usage) {
         case GPUUsageMode::DATA_ON_GPU:
@@ -170,6 +188,12 @@ private:
 public:
     explicit WeightBasedRandomPickerProxy(GPUUsageMode gpu_usage): gpu_usage(gpu_usage)
     {
+        #ifndef HAS_CUDA
+        if (gpu_usage != GPUUsageMode::ON_CPU) {
+            throw std::runtime_error("GPU support is not available, only \"ON_CPU\" version is available.");
+        }
+        #endif
+
         #ifdef HAS_CUDA
         switch(gpu_usage) {
         case GPUUsageMode::DATA_ON_GPU:
