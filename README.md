@@ -21,7 +21,7 @@
 from temporal_walk import TemporalWalk
 
 # Create a directed temporal graph
-walker = TemporalWalk(is_directed=True, use_gpu=False)
+walker = TemporalWalk(is_directed=True, gpu_usage_mode="ON_CPU")
 
 # Add edges: (source, target, timestamp)
 edges = [
