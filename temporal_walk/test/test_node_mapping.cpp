@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 #include "../src/data/cpu/NodeMapping.cuh"
 
-template<typename UseGPUType>
+template<typename T>
 class NodeMappingTest : public ::testing::Test {
 protected:
-    NodeMapping<UseGPUType::value> mapping;
-    EdgeData<UseGPUType::value> edges;
+    NodeMapping<T::value> mapping;
+    EdgeData<T::value> edges;
 
     // Helper to verify bidirectional mapping
     void verify_mapping(int sparse_id, int expected_dense_idx) const {
@@ -17,11 +17,18 @@ protected:
 };
 
 #ifdef HAS_CUDA
-using USE_GPU_TYPES = ::testing::Types<std::false_type, std::true_type>;
+using GPU_USAGE_TYPES = ::testing::Types<
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_GPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_HOST>
+>;
 #else
-using USE_GPU_TYPES = ::testing::Types<std::false_type>;
+using GPU_USAGE_TYPES = ::testing::Types<
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>
+>;
 #endif
-TYPED_TEST_SUITE(NodeMappingTest, USE_GPU_TYPES);
+
+TYPED_TEST_SUITE(NodeMappingTest, GPU_USAGE_TYPES);
 
 // Test empty state
 TYPED_TEST(NodeMappingTest, EmptyStateTest) {

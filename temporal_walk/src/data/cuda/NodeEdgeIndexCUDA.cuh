@@ -3,8 +3,8 @@
 
 #include "../cpu/NodeEdgeIndex.cuh"
 
-template<bool UseGPU>
-class NodeEdgeIndexCUDA : public NodeEdgeIndex<UseGPU> {
+template<GPUUsageMode GPUUsage>
+class NodeEdgeIndexCUDA : public NodeEdgeIndex<GPUUsage> {
 #ifdef HAS_CUDA
 
 #endif

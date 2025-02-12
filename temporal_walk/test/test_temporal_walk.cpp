@@ -13,36 +13,42 @@ constexpr RandomPickerType exponential_picker_type = RandomPickerType::Exponenti
 constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;
 
 #ifdef HAS_CUDA
-using USE_GPU_TYPES = ::testing::Types<std::false_type, std::true_type>;
+using GPU_USAGE_TYPES = ::testing::Types<
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_GPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_HOST>
+>;
 #else
-using USE_GPU_TYPES = ::testing::Types<std::false_type>;
+using GPU_USAGE_TYPES = ::testing::Types<
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>
+>;
 #endif
 
-template<typename UseGPUType>
+template<typename T>
 class EmptyTemporalWalkTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalkProxy>(true, UseGPUType::value, -1, true, -1);
+        temporal_walk = std::make_unique<TemporalWalkProxy>(true, T::value, -1, true, -1);
     }
 
     std::unique_ptr<TemporalWalkProxy> temporal_walk;
 };
 
-TYPED_TEST_SUITE(EmptyTemporalWalkTest, USE_GPU_TYPES);
+TYPED_TEST_SUITE(EmptyTemporalWalkTest, GPU_USAGE_TYPES);
 
-template<typename UseGPUType>
+template<typename T>
 class EmptyTemporalWalkTestWithMaxCapacity : public ::testing::Test {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalkProxy>(true, UseGPUType::value, MAX_TIME_CAPACITY, true, -1);
+        temporal_walk = std::make_unique<TemporalWalkProxy>(true, T::value, MAX_TIME_CAPACITY, true, -1);
     }
 
     std::unique_ptr<TemporalWalkProxy> temporal_walk;
 };
 
-TYPED_TEST_SUITE(EmptyTemporalWalkTestWithMaxCapacity, USE_GPU_TYPES);
+TYPED_TEST_SUITE(EmptyTemporalWalkTestWithMaxCapacity, GPU_USAGE_TYPES);
 
-template<typename UseGPUType>
+template<typename T>
 class FilledDirectedTemporalWalkTest : public ::testing::Test {
 protected:
     FilledDirectedTemporalWalkTest() {
@@ -50,7 +56,7 @@ protected:
     }
 
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalkProxy>(true, UseGPUType::value, -1, true, -1);
+        temporal_walk = std::make_unique<TemporalWalkProxy>(true, T::value, -1, true, -1);
         temporal_walk->add_multiple_edges(sample_edges);
     }
 
@@ -58,9 +64,9 @@ protected:
     std::unique_ptr<TemporalWalkProxy> temporal_walk;
 };
 
-TYPED_TEST_SUITE(FilledDirectedTemporalWalkTest, USE_GPU_TYPES);
+TYPED_TEST_SUITE(FilledDirectedTemporalWalkTest, GPU_USAGE_TYPES);
 
-template<typename UseGPUType>
+template<typename T>
 class FilledUndirectedTemporalWalkTest : public ::testing::Test {
 protected:
     FilledUndirectedTemporalWalkTest() {
@@ -68,7 +74,7 @@ protected:
     }
 
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalkProxy>(false, UseGPUType::value, -1, true, -1);
+        temporal_walk = std::make_unique<TemporalWalkProxy>(false, T::value, -1, true, -1);
         temporal_walk->add_multiple_edges(sample_edges);
     }
 
@@ -76,13 +82,13 @@ protected:
     std::unique_ptr<TemporalWalkProxy> temporal_walk;
 };
 
-TYPED_TEST_SUITE(FilledUndirectedTemporalWalkTest, USE_GPU_TYPES);
+TYPED_TEST_SUITE(FilledUndirectedTemporalWalkTest, GPU_USAGE_TYPES);
 
-template<typename UseGPUType>
+template<typename T>
 class TimescaleBoundedTemporalWalkTest : public ::testing::Test {
 protected:
     void SetUp() override {
-        temporal_walk = std::make_unique<TemporalWalkProxy>(true, UseGPUType::value, -1, true, 10.0);
+        temporal_walk = std::make_unique<TemporalWalkProxy>(true, T::value, -1, true, 10.0);
         temporal_walk->add_multiple_edges({
             // Node 1's outgoing edges
             {1, 2, 100},
@@ -105,7 +111,7 @@ protected:
     std::unique_ptr<TemporalWalkProxy> temporal_walk;
 };
 
-TYPED_TEST_SUITE(TimescaleBoundedTemporalWalkTest, USE_GPU_TYPES);
+TYPED_TEST_SUITE(TimescaleBoundedTemporalWalkTest, GPU_USAGE_TYPES);
 
 // Test the constructor of TemporalWalk to ensure it initializes correctly.
 TYPED_TEST(EmptyTemporalWalkTest, ConstructorTest) {

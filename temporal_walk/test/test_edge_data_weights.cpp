@@ -2,10 +2,10 @@
 #include "../src/data/cpu/EdgeData.cuh"
 #include <cmath>
 
-template<typename UseGPUType>
+template<typename T>
 class EdgeDataWeightTest : public ::testing::Test {
 
-    using DoubleVector = typename SelectVectorType<double, UseGPUType::value>::type;
+    using DoubleVector = typename SelectVectorType<double, T::value>::type;
 
 protected:
     static void verify_cumulative_weights(const DoubleVector& weights) {
@@ -19,7 +19,7 @@ protected:
         EXPECT_NEAR(weights.back(), 1.0, 1e-6);
     }
 
-    static void add_test_edges(EdgeData<UseGPUType::value>& edges) {
+    static void add_test_edges(EdgeData<T::value>& edges) {
         edges.push_back(1, 2, 10);
         edges.push_back(1, 3, 10);
         edges.push_back(2, 3, 20);
@@ -41,11 +41,18 @@ protected:
 };
 
 #ifdef HAS_CUDA
-using USE_GPU_TYPES = ::testing::Types<std::false_type, std::true_type>;
+using GPU_USAGE_TYPES = ::testing::Types<
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_GPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_HOST>
+>;
 #else
-using USE_GPU_TYPES = ::testing::Types<std::false_type>;
+using GPU_USAGE_TYPES = ::testing::Types<
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>
+>;
 #endif
-TYPED_TEST_SUITE(EdgeDataWeightTest, USE_GPU_TYPES);
+
+TYPED_TEST_SUITE(EdgeDataWeightTest, GPU_USAGE_TYPES);
 
 TYPED_TEST(EdgeDataWeightTest, SingleTimestampGroup) {
    EdgeData<TypeParam::value> edges;  // CPU mode

@@ -3,8 +3,8 @@
 
 #include "../cpu/EdgeData.cuh"
 
-template<bool UseGPU>
-class EdgeDataCUDA : public EdgeData<UseGPU> {
+template<GPUUsageMode GPUUsage>
+class EdgeDataCUDA : public EdgeData<GPUUsage> {
 #ifdef HAS_CUDA
 
 #endif

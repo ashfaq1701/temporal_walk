@@ -7,11 +7,11 @@
 #include "EdgeData.cuh"
 #include "../../cuda_common/types.cuh"
 
-template<bool UseGPU>
+template<GPUUsageMode GPUUsage>
 class NodeMapping {
 
-   using IntVector = typename SelectVectorType<int, UseGPU>::type;
-   using BoolVector = typename SelectVectorType<bool, UseGPU>::type;
+   using IntVector = typename SelectVectorType<int, GPUUsage>::type;
+   using BoolVector = typename SelectVectorType<bool, GPUUsage>::type;
 
 public:
 
@@ -20,7 +20,7 @@ public:
 
    BoolVector is_deleted{};        // Tracks deleted status of nodes
 
-   void update(const EdgeData<UseGPU>& edges, size_t start_idx, size_t end_idx);
+   void update(const EdgeData<GPUUsage>& edges, size_t start_idx, size_t end_idx);
    [[nodiscard]] int to_dense(int sparse_id) const;
    [[nodiscard]] int to_sparse(int dense_idx) const;
    [[nodiscard]] size_t size() const;

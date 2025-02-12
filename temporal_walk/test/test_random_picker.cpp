@@ -7,12 +7,12 @@ constexpr int RANDOM_START = 0;
 constexpr int RANDOM_END = 10000;
 constexpr int RANDOM_NUM_SAMPLES = 1000000;
 
-template<typename UseGPUType>
+template<typename T>
 class RandomPickerTest : public ::testing::Test {
 protected:
 
-    LinearRandomPicker<UseGPUType::value> linear_picker;
-    ExponentialIndexRandomPicker<UseGPUType::value> exp_picker;
+    LinearRandomPicker<T::value> linear_picker;
+    ExponentialIndexRandomPicker<T::value> exp_picker;
 
     double compute_average_picks(const bool use_exponential, const bool prioritize_end) {
         double sum = 0;
@@ -27,11 +27,18 @@ protected:
 };
 
 #ifdef HAS_CUDA
-using USE_GPU_TYPES = ::testing::Types<std::false_type, std::true_type>;
+using GPU_USAGE_TYPES = ::testing::Types<
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_GPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_HOST>
+>;
 #else
-using USE_GPU_TYPES = ::testing::Types<std::false_type>;
+using GPU_USAGE_TYPES = ::testing::Types<
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>
+>;
 #endif
-TYPED_TEST_SUITE(RandomPickerTest, USE_GPU_TYPES);
+
+TYPED_TEST_SUITE(RandomPickerTest, GPU_USAGE_TYPES);
 
 // Test that prioritize_end=true gives higher average than prioritize_end=false for both pickers
 TYPED_TEST(RandomPickerTest, PrioritizeEndGivesHigherAverage) {

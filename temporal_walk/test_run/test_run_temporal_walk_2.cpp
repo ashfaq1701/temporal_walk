@@ -4,13 +4,13 @@
 #include "test_utils.h"
 #include "../test/test_utils.h"
 
-constexpr bool USE_GPU = false;
+constexpr GPUUsageMode GPU_USAGE_MODE = GPUUsageMode::ON_CPU;
 
 int main() {
     const auto edge_infos = read_edges_from_csv("../../data/sample_data.csv");
     std::cout << edge_infos.size() << std::endl;
 
-    TemporalWalk<USE_GPU> temporal_walk(false, -1, true, 34);
+    TemporalWalk<GPU_USAGE_MODE> temporal_walk(false, -1, true, 34);
     temporal_walk.add_multiple_edges(edge_infos);
 
     constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;

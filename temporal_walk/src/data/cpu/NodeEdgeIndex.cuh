@@ -6,13 +6,13 @@
 #include <tuple>
 #include "NodeMapping.cuh"
 
-template<bool UseGPU>
+template<GPUUsageMode GPUUsage>
 class NodeEdgeIndex
 {
 public:
 
-    using SizeVector = typename SelectVectorType<size_t, UseGPU>::type;
-    using DoubleVector = typename SelectVectorType<double, UseGPU>::type;
+    using SizeVector = typename SelectVectorType<size_t, GPUUsage>::type;
+    using DoubleVector = typename SelectVectorType<double, GPUUsage>::type;
 
     // Base CSR format for edges
     SizeVector outbound_offsets{}; // Size: num_nodes + 1
@@ -33,7 +33,7 @@ public:
     DoubleVector inbound_backward_cumulative_weights_exponential{};   // For directed backward walks
 
     void clear();
-    void rebuild(const EdgeData<UseGPU>& edges, const NodeMapping<UseGPU>& mapping, bool is_directed);
+    void rebuild(const EdgeData<GPUUsage>& edges, const NodeMapping<GPUUsage>& mapping, bool is_directed);
 
     // Core access methods
     [[nodiscard]] std::pair<size_t, size_t> get_edge_range(int dense_node_id, bool forward, bool is_directed) const;
@@ -41,7 +41,7 @@ public:
                                                                       bool is_directed) const;
     [[nodiscard]] size_t get_timestamp_group_count(int dense_node_id, bool forward, bool directed) const;
 
-    void update_temporal_weights(const EdgeData<UseGPU>& edges, double timescale_bound);
+    void update_temporal_weights(const EdgeData<GPUUsage>& edges, double timescale_bound);
 
 private:
     SizeVector get_timestamp_offset_vector(bool forward, bool directed) const;

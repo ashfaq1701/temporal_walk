@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
 #include "../src/data/cpu/NodeEdgeIndex.cuh"
 
-template<typename UseGPUType>
+template<typename T>
 class NodeEdgeIndexTest : public ::testing::Test {
 protected:
-    NodeEdgeIndex<UseGPUType::value> index;
-    EdgeData<UseGPUType::value> edges;
-    NodeMapping<UseGPUType::value> mapping;
+    NodeEdgeIndex<T::value> index;
+    EdgeData<T::value> edges;
+    NodeMapping<T::value> mapping;
 
     // Helper function to set up a simple directed graph
     void setup_simple_directed_graph() {
@@ -43,11 +43,18 @@ protected:
 };
 
 #ifdef HAS_CUDA
-using USE_GPU_TYPES = ::testing::Types<std::false_type, std::true_type>;
+using GPU_USAGE_TYPES = ::testing::Types<
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_GPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_HOST>
+>;
 #else
-using USE_GPU_TYPES = ::testing::Types<std::false_type>;
+using GPU_USAGE_TYPES = ::testing::Types<
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>
+>;
 #endif
-TYPED_TEST_SUITE(NodeEdgeIndexTest, USE_GPU_TYPES);
+
+TYPED_TEST_SUITE(NodeEdgeIndexTest, GPU_USAGE_TYPES);
 
 // Test empty state
 TYPED_TEST(NodeEdgeIndexTest, EmptyStateTest) {

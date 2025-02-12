@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <tuple>
 #include <functional>
+
+#include "../../core/structs.h"
 #include "../../random/RandomPicker.h"
 
 #include "NodeMapping.cuh"
@@ -13,14 +15,29 @@
 
 #include "NodeEdgeIndex.cuh"
 
-template<bool UseGPU>
+template<GPUUsageMode GPUUsage>
 class TemporalGraph
 {
 private:
-    using SizeVector = typename SelectVectorType<size_t, UseGPU>::type;
-    using IntVector = typename SelectVectorType<int, UseGPU>::type;
-    using Int64TVector = typename SelectVectorType<int64_t, UseGPU>::type;
-    using BoolVector = typename SelectVectorType<bool, UseGPU>::type;
+    #ifdef HAS_CUDA
+    using NodeIndexType = std::conditional_t<
+        (GPUUsage == ON_CPU), NodeEdgeIndex<GPUUsage>, NodeEdgeIndexCUDA<GPUUsageType>>;
+
+    using EdgeDataType = std::conditional_t<
+        (GPUUsage == ON_CPU), EdgeData<GPUUsage>, EdgeDataCUDA<GPUUsage>>;
+
+    using NodeMappingType = std::conditional_t<
+        (GPUUsage == ON_CPU), NodeMapping<GPUUsage>, NodeMappingCUDA<GPUUsage>>;
+    #else
+    using NodeIndexType = NodeEdgeIndex<GPUUsage>;
+    using EdgeDataType = EdgeData<GPUUsage>;
+    using NodeMappingType = NodeMapping<GPUUsage>;
+    #endif
+
+    using SizeVector = typename SelectVectorType<size_t, GPUUsage>::type;
+    using IntVector = typename SelectVectorType<int, GPUUsage>::type;
+    using Int64TVector = typename SelectVectorType<int64_t, GPUUsage>::type;
+    using BoolVector = typename SelectVectorType<bool, GPUUsage>::type;
 
     bool is_directed;
     int64_t time_window; // Time duration to keep edges (-1 means keep all)
@@ -31,9 +48,9 @@ private:
     void delete_old_edges();
 
 public:
-    NodeEdgeIndex<UseGPU> node_index; // Node to edge mappings
-    EdgeData<UseGPU> edges; // Main edge storage
-    NodeMapping<UseGPU> node_mapping; // Sparse to dense node ID mapping
+    NodeIndexType node_index; // Node to edge mappings
+    EdgeDataType edges; // Main edge storage
+    NodeMappingType node_mapping; // Sparse to dense node ID mapping
 
     explicit TemporalGraph(
         bool directed,

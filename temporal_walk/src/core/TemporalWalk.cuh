@@ -15,9 +15,9 @@
  * Supports both CPU and GPU computation for generating random walks on temporal graphs.
  * The walks respect temporal causality and can be biased using different strategies.
  *
- * @tparam UseGPU Boolean flag to enable GPU acceleration when available
+ * @tparam GPUUsageMode enum to control data placement and computation between CPU and GPU. Possible values are ON_CPU, DATA_ON_GPU, DATA_ON_HOST.
  */
-template<bool UseGPU>
+template<GPUUsageMode GPUUsage>
 class TemporalWalk {
     bool is_directed;
 
@@ -33,9 +33,9 @@ class TemporalWalk {
 
     // In TemporalWalk.h, change the type declaration:
     #ifdef HAS_CUDA
-    using TemporalGraphType = TemporalGraph<UseGPU>;
+    using TemporalGraphType = TemporalGraph<GPUUsage>;
     #else
-    using TemporalGraphType = TemporalGraph<false>;
+    using TemporalGraphType = TemporalGraph<GPUUsageMode::ON_CPU>;
     #endif
     std::unique_ptr<TemporalGraphType> temporal_graph;
 

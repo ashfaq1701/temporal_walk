@@ -4,12 +4,12 @@
 #include "../src/data/cpu/NodeMapping.cuh"
 #include "../src/data/cpu/EdgeData.cuh"
 
-template<typename UseGPUType>
+template<typename T>
 class NodeEdgeIndexWeightTest : public ::testing::Test {
 protected:
 
-    using DoubleVector = typename SelectVectorType<double, UseGPUType::value>::type;
-    using SizeTVector = typename SelectVectorType<size_t, UseGPUType::value>::type;
+    using DoubleVector = typename SelectVectorType<double, T::value>::type;
+    using SizeTVector = typename SelectVectorType<size_t, T::value>::type;
 
     // Helper to verify weights are normalized and cumulative per node's group
     static void verify_node_weights(const SizeTVector& group_offsets,
@@ -56,7 +56,7 @@ protected:
     }
 
     void setup_test_graph(bool directed = true) {
-        EdgeData<UseGPUType::value> edges;  // CPU mode
+        EdgeData<T::value> edges;  // CPU mode
         // Add edges that create multiple timestamp groups per node
         edges.push_back(1, 2, 10);
         edges.push_back(1, 3, 10); // Same timestamp group for node 1
@@ -66,23 +66,30 @@ protected:
         edges.push_back(3, 4, 40);
         edges.update_timestamp_groups();
 
-        NodeMapping<UseGPUType::value> mapping;  // CPU mode
+        NodeMapping<T::value> mapping;  // CPU mode
         mapping.update(edges, 0, edges.size());
 
-        index = NodeEdgeIndex<UseGPUType::value>();  // CPU mode
+        index = NodeEdgeIndex<T::value>();  // CPU mode
         index.rebuild(edges, mapping, directed);
         index.update_temporal_weights(edges, -1);
     }
 
-    NodeEdgeIndex<UseGPUType::value> index;
+    NodeEdgeIndex<T::value> index;
 };
 
 #ifdef HAS_CUDA
-using USE_GPU_TYPES = ::testing::Types<std::false_type, std::true_type>;
+using GPU_USAGE_TYPES = ::testing::Types<
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_GPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_HOST>
+>;
 #else
-using USE_GPU_TYPES = ::testing::Types<std::false_type>;
+using GPU_USAGE_TYPES = ::testing::Types<
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>
+>;
 #endif
-TYPED_TEST_SUITE(NodeEdgeIndexWeightTest, USE_GPU_TYPES);
+
+TYPED_TEST_SUITE(NodeEdgeIndexWeightTest, GPU_USAGE_TYPES);
 
 TYPED_TEST(NodeEdgeIndexWeightTest, EmptyGraph) {
     EdgeData<TypeParam::value> empty_edges;

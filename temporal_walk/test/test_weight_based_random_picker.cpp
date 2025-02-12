@@ -2,11 +2,11 @@
 #include "../src/random/WeightBasedRandomPicker.cuh"
 #include "../src/utils/utils.h"
 
-template<typename UseGPUType>
+template<typename T>
 class WeightBasedRandomPickerTest : public ::testing::Test
 {
 protected:
-    WeightBasedRandomPicker<UseGPUType::value> picker;
+    WeightBasedRandomPicker<T::value> picker;
 
     // Helper to verify sampling is within correct range
     void verify_sampling_range(const std::vector<double>& weights,
@@ -33,11 +33,18 @@ protected:
 };
 
 #ifdef HAS_CUDA
-using USE_GPU_TYPES = ::testing::Types<std::false_type, std::true_type>;
+using GPU_USAGE_TYPES = ::testing::Types<
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_GPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_HOST>
+>;
 #else
-using USE_GPU_TYPES = ::testing::Types<std::false_type>;
+using GPU_USAGE_TYPES = ::testing::Types<
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>
+>;
 #endif
-TYPED_TEST_SUITE(WeightBasedRandomPickerTest, USE_GPU_TYPES);
+
+TYPED_TEST_SUITE(WeightBasedRandomPickerTest, GPU_USAGE_TYPES);
 
 TYPED_TEST(WeightBasedRandomPickerTest, ValidationChecks)
 {

@@ -1,47 +1,59 @@
 #ifndef TEMPORAL_WALK_PROXY_H
 #define TEMPORAL_WALK_PROXY_H
 
+#include "../src/core/structs.h"
 #include "../src/core/TemporalWalk.cuh"
 
 class TemporalWalkProxy {
 
-    bool use_gpu;
-
+    GPUUsageMode gpu_usage;
     #ifdef HAS_CUDA
-    std::unique_ptr<TemporalWalk<false>> cpu_impl;
-    std::unique_ptr<TemporalWalk<true>> gpu_impl;
+    std::unique_ptr<TemporalWalk<GPUUsageMode::ON_CPU>> cpu_impl;
+    std::unique_ptr<TemporalWalk<GPUUsageMode::DATA_ON_GPU>> gpu_impl;
+    std::unique_ptr<TemporalWalk<GPUUsageMode::DATA_ON_HOST>> host_impl;
     #else
-    std::unique_ptr<TemporalWalk<false>> cpu_impl;
+    std::unique_ptr<TemporalWalk<GPUUsageMode::ON_CPU>> cpu_impl;
     #endif
 
 public:
     explicit TemporalWalkProxy(
-        bool is_directed,
-        bool use_gpu=false,
-        int64_t max_time_capacity=-1,
-        bool enable_weight_computation=false,
-        double timescale_bound=DEFAULT_TIMESCALE_BOUND): use_gpu(use_gpu) {
+       bool is_directed,
+       GPUUsageMode gpu_usage=GPUUsageMode::ON_CPU,
+       int64_t max_time_capacity=-1,
+       bool enable_weight_computation=false,
+       double timescale_bound=DEFAULT_TIMESCALE_BOUND): gpu_usage(gpu_usage) {
 
         #ifdef HAS_CUDA
-        if (use_gpu) {
-            gpu_impl = std::make_unique<TemporalWalk<true>>(
+        switch(gpu_usage) {
+        case GPUUsageMode::DATA_ON_GPU:
+            gpu_impl = std::make_unique<TemporalWalk<GPUUsageMode::DATA_ON_GPU>>(
                 is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
-        } else {
-            cpu_impl = std::make_unique<TemporalWalk<false>>(
+            break;
+        case GPUUsageMode::DATA_ON_HOST:
+            host_impl = std::make_unique<TemporalWalk<GPUUsageMode::DATA_ON_HOST>>(
+                is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
+            break;
+        default:  // ON_CPU
+            cpu_impl = std::make_unique<TemporalWalk<GPUUsageMode::ON_CPU>>(
                 is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
         }
         #else
-        cpu_impl = std::make_unique<TemporalWalk<false>>(
+        cpu_impl = std::make_unique<TemporalWalk<GPUUsageMode::ON_CPU>>(
             is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
         #endif
     }
 
     void add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& edges) {
         #ifdef HAS_CUDA
-        if (use_gpu) {
-            gpu_impl->add_multiple_edges(edges);
-        } else {
-            cpu_impl->add_multiple_edges(edges);
+        switch(gpu_usage) {
+            case GPUUsageMode::DATA_ON_GPU:
+                gpu_impl->add_multiple_edges(edges);
+            break;
+            case GPUUsageMode::DATA_ON_HOST:
+                host_impl->add_multiple_edges(edges);
+            break;
+            default:  // ON_CPU
+                cpu_impl->add_multiple_edges(edges);
         }
         #else
         cpu_impl->add_multiple_edges(edges);
@@ -55,8 +67,14 @@ public:
         const RandomPickerType* initial_edge_bias=nullptr,
         WalkDirection walk_direction=WalkDirection::Forward_In_Time) {
         #ifdef HAS_CUDA
-        if (use_gpu) return gpu_impl->get_random_walks_and_times_for_all_nodes(max_walk_len, walk_bias, num_walks_per_node, initial_edge_bias, walk_direction);
-        else return cpu_impl->get_random_walks_and_times_for_all_nodes(max_walk_len, walk_bias, num_walks_per_node, initial_edge_bias, walk_direction);
+        switch(gpu_usage) {
+            case GPUUsageMode::DATA_ON_GPU:
+                return gpu_impl->get_random_walks_and_times_for_all_nodes(max_walk_len, walk_bias, num_walks_per_node, initial_edge_bias, walk_direction);
+            case GPUUsageMode::DATA_ON_HOST:
+                return host_impl->get_random_walks_and_times_for_all_nodes(max_walk_len, walk_bias, num_walks_per_node, initial_edge_bias, walk_direction);
+            default:  // ON_CPU
+                return cpu_impl->get_random_walks_and_times_for_all_nodes(max_walk_len, walk_bias, num_walks_per_node, initial_edge_bias, walk_direction);
+        }
         #else
         return cpu_impl->get_random_walks_and_times_for_all_nodes(max_walk_len, walk_bias, num_walks_per_node, initial_edge_bias, walk_direction);
         #endif
@@ -69,8 +87,14 @@ public:
         const RandomPickerType* initial_edge_bias=nullptr,
         WalkDirection walk_direction=WalkDirection::Forward_In_Time) {
         #ifdef HAS_CUDA
-        if (use_gpu) return gpu_impl->get_random_walks_for_all_nodes(max_walk_len, walk_bias, num_walks_per_node, initial_edge_bias, walk_direction);
-        else return cpu_impl->get_random_walks_for_all_nodes(max_walk_len, walk_bias, num_walks_per_node, initial_edge_bias, walk_direction);
+        switch(gpu_usage) {
+            case GPUUsageMode::DATA_ON_GPU:
+                return gpu_impl->get_random_walks_for_all_nodes(max_walk_len, walk_bias, num_walks_per_node, initial_edge_bias, walk_direction);
+            case GPUUsageMode::DATA_ON_HOST:
+                return host_impl->get_random_walks_for_all_nodes(max_walk_len, walk_bias, num_walks_per_node, initial_edge_bias, walk_direction);
+            default:  // ON_CPU
+                return cpu_impl->get_random_walks_for_all_nodes(max_walk_len, walk_bias, num_walks_per_node, initial_edge_bias, walk_direction);
+        }
         #else
         return cpu_impl->get_random_walks_for_all_nodes(max_walk_len, walk_bias, num_walks_per_node, initial_edge_bias, walk_direction);
         #endif
@@ -83,8 +107,14 @@ public:
         const RandomPickerType* initial_edge_bias=nullptr,
         WalkDirection walk_direction=WalkDirection::Forward_In_Time) {
         #ifdef HAS_CUDA
-        if (use_gpu) return gpu_impl->get_random_walks_and_times(max_walk_len, walk_bias, num_walks_total, initial_edge_bias, walk_direction);
-        else return cpu_impl->get_random_walks_and_times(max_walk_len, walk_bias, num_walks_total, initial_edge_bias, walk_direction);
+        switch(gpu_usage) {
+            case GPUUsageMode::DATA_ON_GPU:
+                return gpu_impl->get_random_walks_and_times(max_walk_len, walk_bias, num_walks_total, initial_edge_bias, walk_direction);
+            case GPUUsageMode::DATA_ON_HOST:
+                return host_impl->get_random_walks_and_times(max_walk_len, walk_bias, num_walks_total, initial_edge_bias, walk_direction);
+            default:  // ON_CPU
+                return cpu_impl->get_random_walks_and_times(max_walk_len, walk_bias, num_walks_total, initial_edge_bias, walk_direction);
+        }
         #else
         return cpu_impl->get_random_walks_and_times(max_walk_len, walk_bias, num_walks_total, initial_edge_bias, walk_direction);
         #endif
@@ -97,8 +127,14 @@ public:
         const RandomPickerType* initial_edge_bias=nullptr,
         WalkDirection walk_direction=WalkDirection::Forward_In_Time) {
         #ifdef HAS_CUDA
-        if (use_gpu) return gpu_impl->get_random_walks(max_walk_len, walk_bias, num_walks_total, initial_edge_bias, walk_direction);
-        else return cpu_impl->get_random_walks(max_walk_len, walk_bias, num_walks_total, initial_edge_bias, walk_direction);
+        switch(gpu_usage) {
+            case GPUUsageMode::DATA_ON_GPU:
+                return gpu_impl->get_random_walks(max_walk_len, walk_bias, num_walks_total, initial_edge_bias, walk_direction);
+            case GPUUsageMode::DATA_ON_HOST:
+                return host_impl->get_random_walks(max_walk_len, walk_bias, num_walks_total, initial_edge_bias, walk_direction);
+            default:  // ON_CPU
+                return cpu_impl->get_random_walks(max_walk_len, walk_bias, num_walks_total, initial_edge_bias, walk_direction);
+        }
         #else
         return cpu_impl->get_random_walks(max_walk_len, walk_bias, num_walks_total, initial_edge_bias, walk_direction);
         #endif
@@ -114,13 +150,24 @@ public:
         int context_window_len=-1,
         float p_walk_success_threshold=DEFAULT_SUCCESS_THRESHOLD) {
         #ifdef HAS_CUDA
-        if (use_gpu) return gpu_impl->get_random_walks_and_times_with_specific_number_of_contexts(
-            max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias, walk_direction, context_window_len, p_walk_success_threshold);
-        else return cpu_impl->get_random_walks_and_times_with_specific_number_of_contexts(
-            max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias, walk_direction, context_window_len, p_walk_success_threshold);
+        switch(gpu_usage) {
+            case GPUUsageMode::DATA_ON_GPU:
+                return gpu_impl->get_random_walks_and_times_with_specific_number_of_contexts(
+                    max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias,
+                    walk_direction, context_window_len, p_walk_success_threshold);
+            case GPUUsageMode::DATA_ON_HOST:
+                return host_impl->get_random_walks_and_times_with_specific_number_of_contexts(
+                    max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias,
+                    walk_direction, context_window_len, p_walk_success_threshold);
+            default:  // ON_CPU
+                return cpu_impl->get_random_walks_and_times_with_specific_number_of_contexts(
+                    max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias,
+                    walk_direction, context_window_len, p_walk_success_threshold);
+        }
         #else
         return cpu_impl->get_random_walks_and_times_with_specific_number_of_contexts(
-            max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias, walk_direction, context_window_len, p_walk_success_threshold);
+            max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias,
+            walk_direction, context_window_len, p_walk_success_threshold);
         #endif
     }
 
@@ -134,20 +181,37 @@ public:
         int context_window_len=-1,
         float p_walk_success_threshold=DEFAULT_SUCCESS_THRESHOLD) {
         #ifdef HAS_CUDA
-        if (use_gpu) return gpu_impl->get_random_walks_with_specific_number_of_contexts(
-            max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias, walk_direction, context_window_len, p_walk_success_threshold);
-        else return cpu_impl->get_random_walks_with_specific_number_of_contexts(
-            max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias, walk_direction, context_window_len, p_walk_success_threshold);
+        switch(gpu_usage) {
+            case GPUUsageMode::DATA_ON_GPU:
+                return gpu_impl->get_random_walks_with_specific_number_of_contexts(
+                    max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias,
+                    walk_direction, context_window_len, p_walk_success_threshold);
+            case GPUUsageMode::DATA_ON_HOST:
+                return host_impl->get_random_walks_with_specific_number_of_contexts(
+                    max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias,
+                    walk_direction, context_window_len, p_walk_success_threshold);
+            default:  // ON_CPU
+                return cpu_impl->get_random_walks_with_specific_number_of_contexts(
+                    max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias,
+                    walk_direction, context_window_len, p_walk_success_threshold);
+        }
         #else
         return cpu_impl->get_random_walks_with_specific_number_of_contexts(
-            max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias, walk_direction, context_window_len, p_walk_success_threshold);
+            max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias,
+            walk_direction, context_window_len, p_walk_success_threshold);
         #endif
     }
 
     [[nodiscard]] size_t get_node_count() const {
         #ifdef HAS_CUDA
-        if (use_gpu) return gpu_impl->get_node_count();
-        else return cpu_impl->get_node_count();
+        switch(gpu_usage) {
+            case GPUUsageMode::DATA_ON_GPU:
+                return gpu_impl->get_node_count();
+            case GPUUsageMode::DATA_ON_HOST:
+                return host_impl->get_node_count();
+            default:  // ON_CPU
+                return cpu_impl->get_node_count();
+        }
         #else
         return cpu_impl->get_node_count();
         #endif
@@ -155,8 +219,14 @@ public:
 
     [[nodiscard]] size_t get_edge_count() const {
         #ifdef HAS_CUDA
-        if (use_gpu) return gpu_impl->get_edge_count();
-        else return cpu_impl->get_edge_count();
+        switch(gpu_usage) {
+            case GPUUsageMode::DATA_ON_GPU:
+                return gpu_impl->get_edge_count();
+            case GPUUsageMode::DATA_ON_HOST:
+                return host_impl->get_edge_count();
+            default:  // ON_CPU
+                return cpu_impl->get_edge_count();
+        }
         #else
         return cpu_impl->get_edge_count();
         #endif
@@ -164,8 +234,14 @@ public:
 
     [[nodiscard]] std::vector<int> get_node_ids() const {
         #ifdef HAS_CUDA
-        if (use_gpu) return gpu_impl->get_node_ids();
-        else return cpu_impl->get_node_ids();
+        switch(gpu_usage) {
+        case GPUUsageMode::DATA_ON_GPU:
+            return gpu_impl->get_node_ids();
+        case GPUUsageMode::DATA_ON_HOST:
+            return host_impl->get_node_ids();
+        default:  // ON_CPU
+            return cpu_impl->get_node_ids();
+        }
         #else
         return cpu_impl->get_node_ids();
         #endif
@@ -173,8 +249,14 @@ public:
 
     [[nodiscard]] std::vector<std::tuple<int, int, int64_t>> get_edges() const {
         #ifdef HAS_CUDA
-        if (use_gpu) return gpu_impl->get_edges();
-        else return cpu_impl->get_edges();
+        switch(gpu_usage) {
+        case GPUUsageMode::DATA_ON_GPU:
+            return gpu_impl->get_edges();
+        case GPUUsageMode::DATA_ON_HOST:
+            return host_impl->get_edges();
+        default:  // ON_CPU
+            return cpu_impl->get_edges();
+        }
         #else
         return cpu_impl->get_edges();
         #endif
@@ -182,8 +264,14 @@ public:
 
     [[nodiscard]] bool get_is_directed() const {
         #ifdef HAS_CUDA
-        if (use_gpu) return gpu_impl->get_is_directed();
-        else return cpu_impl->get_is_directed();
+        switch(gpu_usage) {
+        case GPUUsageMode::DATA_ON_GPU:
+            return gpu_impl->get_is_directed();
+        case GPUUsageMode::DATA_ON_HOST:
+            return host_impl->get_is_directed();
+        default:  // ON_CPU
+            return cpu_impl->get_is_directed();
+        }
         #else
         return cpu_impl->get_is_directed();
         #endif
@@ -191,8 +279,16 @@ public:
 
     void clear() const {
         #ifdef HAS_CUDA
-        if (use_gpu) gpu_impl->clear();
-        else cpu_impl->clear();
+        switch(gpu_usage) {
+        case GPUUsageMode::DATA_ON_GPU:
+            gpu_impl->clear();
+            break;
+        case GPUUsageMode::DATA_ON_HOST:
+            host_impl->clear();
+            break;
+        default:  // ON_CPU
+            cpu_impl->clear();
+        }
         #else
         cpu_impl->clear();
         #endif

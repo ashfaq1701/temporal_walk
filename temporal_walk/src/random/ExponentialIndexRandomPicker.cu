@@ -5,8 +5,8 @@
 #include <stdexcept>
 
 // Derivation available in derivations folder
-template<bool UseGPU>
-int ExponentialIndexRandomPicker<UseGPU>::pick_random(const int start, const int end, const bool prioritize_end) {
+template<GPUUsageMode GPUUsage>
+int ExponentialIndexRandomPicker<GPUUsage>::pick_random(const int start, const int end, const bool prioritize_end) {
     if (start >= end) {
         throw std::invalid_argument("Start must be less than end.");
     }
@@ -39,7 +39,8 @@ int ExponentialIndexRandomPicker<UseGPU>::pick_random(const int start, const int
     }
 }
 
-template class ExponentialIndexRandomPicker<false>;
+template class ExponentialIndexRandomPicker<GPUUsageMode::ON_CPU>;
 #ifdef HAS_CUDA
-template class ExponentialIndexRandomPicker<true>;
+template class ExponentialIndexRandomPicker<GPUUsageMode::DATA_ON_GPU>;
+template class ExponentialIndexRandomPicker<GPUUsageMode::DATA_ON_HOST>;
 #endif

@@ -51,16 +51,35 @@ WalkDirection walk_direction_from_string(const std::string& walk_direction_str)
     }
 }
 
+GPUUsageMode gpu_usage_mode_from_string(const std::string& gpu_usage_mode_str)
+{
+    if (gpu_usage_mode_str == "ON_GPU")
+    {
+        return GPUUsageMode::ON_CPU;
+    }
+    else if (gpu_usage_mode_str == "DATA_ON_GPU")
+    {
+        return GPUUsageMode::DATA_ON_GPU;
+    }
+    else if (gpu_usage_mode_str == "DATA_ON_HOST")
+    {
+        return GPUUsageMode::DATA_ON_HOST;
+    } else
+    {
+        throw std::invalid_argument("Invalid usage mode: " + gpu_usage_mode_str);
+    }
+}
+
 PYBIND11_MODULE(_temporal_walk, m)
 {
     py::class_<TemporalWalkProxy>(m, "TemporalWalk")
-        .def(py::init([](const bool is_directed, const std::optional<bool> use_gpu,
+        .def(py::init([](const bool is_directed, const std::optional<std::string>& gpu_usage_mode,
                          const std::optional<int64_t> max_time_capacity, std::optional<bool> enable_weight_computation,
                          std::optional<double> timescale_bound)
              {
                  return std::make_unique<TemporalWalkProxy>(
                      is_directed,
-                     use_gpu.value_or(false),
+                     gpu_usage_mode_from_string(gpu_usage_mode.value_or("ON_CPU")),
                      max_time_capacity.value_or(-1),
                      enable_weight_computation.value_or(false),
                      timescale_bound.value_or(DEFAULT_TIMESCALE_BOUND));
@@ -70,7 +89,7 @@ PYBIND11_MODULE(_temporal_walk, m)
 
             Args:
             is_directed (bool): Whether to create a directed graph.
-            use_gpu (bool, optional): Enable GPU acceleration if available. Defaults to False.
+            gpu_usage_mode (str, optional): GPU usage mode ("ON_CPU", "DATA_ON_GPU", or "DATA_ON_HOST"). Default: "ON_CPU".
             max_time_capacity (int, optional): Maximum time window for edges. Edges older than (latest_time - max_time_capacity) are removed. Use -1 for no limit. Defaults to -1.
             enable_weight_computation (bool, optional): Enable CTDNE weight computation. Required for ExponentialWeight picker. Defaults to False.
             timescale_bound (float, optional): Scale factor for temporal differences. Used to prevent numerical issues with large time differences. Defaults to 50.0.
@@ -567,14 +586,19 @@ PYBIND11_MODULE(_temporal_walk, m)
         );
 
     py::class_<LinearRandomPickerProxy>(m, "LinearRandomPicker")
-        .def(py::init<bool>(),
-        R"(
-        Initialize linear time decay random picker.
+        .def(py::init([](const std::optional<std::string>& gpu_usage_mode)
+             {
+                 return LinearRandomPickerProxy(
+                     gpu_usage_mode_from_string(gpu_usage_mode.value_or("ON_CPU")));
+             }),
+             R"(
+            Initialize linear time decay random picker.
 
-        Args:
-            use_gpu (bool, optional): Enable GPU acceleration. Default: False
-        )",
-        py::arg("use_gpu") = false)
+            Args:
+                gpu_usage_mode (str, optional): GPU usage mode ("ON_CPU", "DATA_ON_GPU", or "DATA_ON_HOST"). Default: "ON_CPU"
+            )",
+             py::arg("gpu_usage_mode") = "ON_CPU")
+
         .def("pick_random", &LinearRandomPickerProxy::pick_random,
             R"(
             Pick random index with linear time decay probability.
@@ -590,14 +614,19 @@ PYBIND11_MODULE(_temporal_walk, m)
             py::arg("start"), py::arg("end"), py::arg("prioritize_end") = true);
 
     py::class_<ExponentialIndexRandomPickerProxy>(m, "ExponentialIndexRandomPicker")
-        .def(py::init<bool>(),
-            R"(
+        .def(py::init([](const std::optional<std::string>& gpu_usage_mode)
+             {
+                 return ExponentialIndexRandomPickerProxy(
+                     gpu_usage_mode_from_string(gpu_usage_mode.value_or("ON_CPU")));
+             }),
+             R"(
             Initialize index based exponential time decay random picker.
 
             Args:
-                use_gpu (bool, optional): Enable GPU acceleration. Default: False
+                gpu_usage_mode (str, optional): GPU usage mode ("ON_CPU", "DATA_ON_GPU", or "DATA_ON_HOST"). Default: "ON_CPU"
             )",
-            py::arg("use_gpu") = false)
+             py::arg("gpu_usage_mode") = "ON_CPU")
+
         .def("pick_random", &ExponentialIndexRandomPickerProxy::pick_random,
             R"(
             Pick random index with index based exponential time decay probability.
@@ -613,14 +642,19 @@ PYBIND11_MODULE(_temporal_walk, m)
             py::arg("start"), py::arg("end"), py::arg("prioritize_end") = true);
 
     py::class_<UniformRandomPickerProxy>(m, "UniformRandomPicker")
-        .def(py::init<bool>(),
-            R"(
+        .def(py::init([](const std::optional<std::string>& gpu_usage_mode)
+             {
+                 return UniformRandomPickerProxy(
+                     gpu_usage_mode_from_string(gpu_usage_mode.value_or("ON_CPU")));
+             }),
+             R"(
             Initialize uniform random picker.
 
             Args:
-                use_gpu (bool, optional): Enable GPU acceleration. Default: False
+                gpu_usage_mode (str, optional): GPU usage mode ("ON_CPU", "DATA_ON_GPU", or "DATA_ON_HOST"). Default: "ON_CPU"
             )",
-            py::arg("use_gpu") = false)
+             py::arg("gpu_usage_mode") = "ON_CPU")
+
         .def("pick_random", &UniformRandomPickerProxy::pick_random,
             R"(
             Pick random index with uniform probability.
@@ -637,7 +671,7 @@ PYBIND11_MODULE(_temporal_walk, m)
 
     py::class_<WeightBasedRandomPickerProxy>(m, "WeightBasedRandomPicker")
         .def(
-            py::init([](){ return WeightBasedRandomPickerProxy(false); }),
+            py::init([](){ return WeightBasedRandomPickerProxy(GPUUsageMode::ON_CPU); }),
             R"(
             Initialize exponential time decay random picker with weight-based sampling.
 

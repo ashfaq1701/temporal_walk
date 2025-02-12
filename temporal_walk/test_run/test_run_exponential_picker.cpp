@@ -2,11 +2,11 @@
 #include "../src/random/ExponentialIndexRandomPicker.cuh"
 
 constexpr int TOTAL_TIMESTEPS = 100000000;
-constexpr bool USE_GPU = false;
+constexpr GPUUsageMode GPU_USAGE_MODE = GPUUsageMode::ON_CPU;
 
 int main()
 {
-    ExponentialIndexRandomPicker<USE_GPU> random_picker;
+    ExponentialIndexRandomPicker<GPU_USAGE_MODE> random_picker;
 
     std::cout << "Prioritizing end: " << std::endl;
     std::cout << "---------------------------------------" << std::endl;

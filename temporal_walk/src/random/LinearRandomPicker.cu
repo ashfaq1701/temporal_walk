@@ -4,8 +4,8 @@
 #include "LinearRandomPicker.cuh"
 
 // Derivation available in derivations folder
-template<bool UseGPU>
-int LinearRandomPicker<UseGPU>::pick_random(const int start, const int end, const bool prioritize_end) {
+template<GPUUsageMode GPUUsage>
+int LinearRandomPicker<GPUUsage>::pick_random(const int start, const int end, const bool prioritize_end) {
     if (start >= end) {
         throw std::invalid_argument("Start must be less than end.");
     }
@@ -40,7 +40,8 @@ int LinearRandomPicker<UseGPU>::pick_random(const int start, const int end, cons
     }
 }
 
-template class LinearRandomPicker<false>;
+template class LinearRandomPicker<GPUUsageMode::ON_CPU>;
 #ifdef HAS_CUDA
-template class LinearRandomPicker<true>;
+template class LinearRandomPicker<GPUUsageMode::DATA_ON_GPU>;
+template class LinearRandomPicker<GPUUsageMode::DATA_ON_HOST>;
 #endif

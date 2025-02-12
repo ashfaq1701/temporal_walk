@@ -5,15 +5,17 @@
 #include <cstdint>
 #include <tuple>
 #include <cmath>
+
+#include "../../core/structs.h"
 #include "../../cuda_common/types.cuh"
 
-template<bool UseGPU>
+template<GPUUsageMode GPUUsage>
 class EdgeData {
 
-    using IntVector = typename SelectVectorType<int, UseGPU>::type;
-    using Int64Vector = typename SelectVectorType<int64_t, UseGPU>::type;
-    using SizeVector = typename SelectVectorType<size_t, UseGPU>::type;
-    using DoubleVector = typename SelectVectorType<double, UseGPU>::type;
+    using IntVector = typename SelectVectorType<int, GPUUsage>::type;
+    using Int64Vector = typename SelectVectorType<int64_t, GPUUsage>::type;
+    using SizeVector = typename SelectVectorType<size_t, GPUUsage>::type;
+    using DoubleVector = typename SelectVectorType<double, GPUUsage>::type;
 
 public:
     // Core edge data

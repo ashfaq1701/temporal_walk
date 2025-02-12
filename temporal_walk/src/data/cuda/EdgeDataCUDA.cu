@@ -3,6 +3,7 @@
 #ifdef HAS_CUDA
 
 
-template class EdgeDataCUDA<false>;
-template class EdgeDataCUDA<true>;
+template class EdgeDataCUDA<GPUUsageMode::ON_CPU>;
+template class EdgeDataCUDA<GPUUsageMode::DATA_ON_GPU>;
+template class EdgeDataCUDA<GPUUsageMode::DATA_ON_HOST>;
 #endif

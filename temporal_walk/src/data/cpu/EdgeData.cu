@@ -2,8 +2,8 @@
 #include <algorithm>
 #include <iostream>
 
-template<bool UseGPU>
-void EdgeData<UseGPU>::reserve(size_t size) {
+template<GPUUsageMode GPUUsage>
+void EdgeData<GPUUsage>::reserve(size_t size) {
     sources.reserve(size);
     targets.reserve(size);
     timestamps.reserve(size);
@@ -11,8 +11,8 @@ void EdgeData<UseGPU>::reserve(size_t size) {
     unique_timestamps.reserve(size/4);
 }
 
-template<bool UseGPU>
-void EdgeData<UseGPU>::clear() {
+template<GPUUsageMode GPUUsage>
+void EdgeData<GPUUsage>::clear() {
     sources.clear();
     targets.clear();
     timestamps.clear();
@@ -20,32 +20,32 @@ void EdgeData<UseGPU>::clear() {
     unique_timestamps.clear();
 }
 
-template<bool UseGPU>
-size_t EdgeData<UseGPU>::size() const {
+template<GPUUsageMode GPUUsage>
+size_t EdgeData<GPUUsage>::size() const {
     return timestamps.size();
 }
 
-template<bool UseGPU>
-bool EdgeData<UseGPU>::empty() const {
+template<GPUUsageMode GPUUsage>
+bool EdgeData<GPUUsage>::empty() const {
     return timestamps.empty();
 }
 
-template<bool UseGPU>
-void EdgeData<UseGPU>::resize(size_t new_size) {
+template<GPUUsageMode GPUUsage>
+void EdgeData<GPUUsage>::resize(size_t new_size) {
     sources.resize(new_size);
     targets.resize(new_size);
     timestamps.resize(new_size);
 }
 
-template<bool UseGPU>
-void EdgeData<UseGPU>::push_back(int src, int tgt, int64_t ts) {
+template<GPUUsageMode GPUUsage>
+void EdgeData<GPUUsage>::push_back(int src, int tgt, int64_t ts) {
     sources.push_back(src);
     targets.push_back(tgt);
     timestamps.push_back(ts);
 }
 
-template<bool UseGPU>
-std::vector<std::tuple<int, int, int64_t>> EdgeData<UseGPU>::get_edges() {
+template<GPUUsageMode GPUUsage>
+std::vector<std::tuple<int, int, int64_t>> EdgeData<GPUUsage>::get_edges() {
     std::vector<std::tuple<int, int, int64_t>> edges;
     edges.reserve(sources.size());
 
@@ -56,8 +56,8 @@ std::vector<std::tuple<int, int, int64_t>> EdgeData<UseGPU>::get_edges() {
     return edges;
 }
 
-template<bool UseGPU>
-void EdgeData<UseGPU>::update_timestamp_groups() {
+template<GPUUsageMode GPUUsage>
+void EdgeData<GPUUsage>::update_timestamp_groups() {
     if (timestamps.empty()) {
         timestamp_group_offsets.clear();
         unique_timestamps.clear();
@@ -79,8 +79,8 @@ void EdgeData<UseGPU>::update_timestamp_groups() {
     timestamp_group_offsets.push_back(timestamps.size());
 }
 
-template<bool UseGPU>
-void EdgeData<UseGPU>::update_temporal_weights(const double timescale_bound) {
+template<GPUUsageMode GPUUsage>
+void EdgeData<GPUUsage>::update_temporal_weights(const double timescale_bound) {
     if (timestamps.empty()) {
         forward_cumulative_weights_exponential.clear();
         backward_cumulative_weights_exponential.clear();
@@ -137,36 +137,37 @@ void EdgeData<UseGPU>::update_temporal_weights(const double timescale_bound) {
     }
 }
 
-template<bool UseGPU>
-std::pair<size_t, size_t> EdgeData<UseGPU>::get_timestamp_group_range(size_t group_idx) const {
+template<GPUUsageMode GPUUsage>
+std::pair<size_t, size_t> EdgeData<GPUUsage>::get_timestamp_group_range(size_t group_idx) const {
     if (group_idx >= unique_timestamps.size()) {
         return {0, 0};
     }
     return {timestamp_group_offsets[group_idx], timestamp_group_offsets[group_idx + 1]};
 }
 
-template<bool UseGPU>
-size_t EdgeData<UseGPU>::get_timestamp_group_count() const {
+template<GPUUsageMode GPUUsage>
+size_t EdgeData<GPUUsage>::get_timestamp_group_count() const {
     return unique_timestamps.size();
 }
 
-template<bool UseGPU>
-size_t EdgeData<UseGPU>::find_group_after_timestamp(int64_t timestamp) const {
+template<GPUUsageMode GPUUsage>
+size_t EdgeData<GPUUsage>::find_group_after_timestamp(int64_t timestamp) const {
     if (unique_timestamps.empty()) return 0;
 
     auto it = std::upper_bound(unique_timestamps.begin(), unique_timestamps.end(), timestamp);
     return it - unique_timestamps.begin();
 }
 
-template<bool UseGPU>
-size_t EdgeData<UseGPU>::find_group_before_timestamp(int64_t timestamp) const {
+template<GPUUsageMode GPUUsage>
+size_t EdgeData<GPUUsage>::find_group_before_timestamp(int64_t timestamp) const {
     if (unique_timestamps.empty()) return 0;
 
     auto it = std::lower_bound(unique_timestamps.begin(), unique_timestamps.end(), timestamp);
     return (it - unique_timestamps.begin()) - 1;
 }
 
-template class EdgeData<false>;
+template class EdgeData<GPUUsageMode::ON_CPU>;
 #ifdef HAS_CUDA
-template class EdgeData<true>;
+template class EdgeData<GPUUsageMode::DATA_ON_GPU>;
+template class EdgeData<GPUUsageMode::DATA_ON_HOST>;
 #endif

@@ -17,15 +17,15 @@ public:
     }
 };
 
-template<typename UseGPUType>
+template<typename T>
 class TemporalGraphGetNodeEdgeAtTest : public ::testing::Test {
 protected:
-    std::unique_ptr<TemporalGraph<UseGPUType::value>> graph;
+    std::unique_ptr<TemporalGraph<T::value>> graph;
     std::unique_ptr<FirstIndexPicker> first_picker;
     std::unique_ptr<LastIndexPicker> last_picker;
 
     void SetUp() override {
-        graph = std::make_unique<TemporalGraph<UseGPUType::value>>(true); // directed graph
+        graph = std::make_unique<TemporalGraph<T::value>>(true); // directed graph
         first_picker = std::make_unique<FirstIndexPicker>();
         last_picker = std::make_unique<LastIndexPicker>();
     }
@@ -40,11 +40,18 @@ protected:
 };
 
 #ifdef HAS_CUDA
-using USE_GPU_TYPES = ::testing::Types<std::false_type, std::true_type>;
+using GPU_USAGE_TYPES = ::testing::Types<
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_GPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_HOST>
+>;
 #else
-using USE_GPU_TYPES = ::testing::Types<std::false_type>;
+using GPU_USAGE_TYPES = ::testing::Types<
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>
+>;
 #endif
-TYPED_TEST_SUITE(TemporalGraphGetNodeEdgeAtTest, USE_GPU_TYPES);
+
+TYPED_TEST_SUITE(TemporalGraphGetNodeEdgeAtTest, GPU_USAGE_TYPES);
 
 // Test forward walks from a node
 TYPED_TEST(TemporalGraphGetNodeEdgeAtTest, ForwardWalkTest) {

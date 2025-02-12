@@ -3,11 +3,11 @@
 
 #include "../cpu/TemporalGraph.cuh"
 
-template<bool UseGPU>
-class TemporalGraphCUDA : public TemporalGraph<UseGPU> {
+template<GPUUsageMode GPUUsage>
+class TemporalGraphCUDA : public TemporalGraph<GPUUsage> {
 public:
     // Inherit constructors from base class
-    using TemporalGraph<UseGPU>::TemporalGraph;
+    using TemporalGraph<GPUUsage>::TemporalGraph;
 
 #ifdef HAS_CUDA
 

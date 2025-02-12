@@ -3,7 +3,7 @@
 #include "../src/core/TemporalWalk.cuh"
 #include "test_utils.h"
 
-constexpr bool USE_GPU = false;
+constexpr GPUUsageMode GPU_USAGE_MODE = GPUUsageMode::ON_CPU;
 
 int main() {
     const std::vector<std::tuple<int, int, int64_t>> edges {
@@ -24,7 +24,7 @@ int main() {
         {5, 4, 32}
     };
 
-    TemporalWalk<USE_GPU> temporal_walk(true);
+    TemporalWalk<GPU_USAGE_MODE> temporal_walk(true);
     temporal_walk.add_multiple_edges(edges);
 
     constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;

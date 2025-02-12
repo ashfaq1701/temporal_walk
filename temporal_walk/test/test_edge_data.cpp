@@ -1,25 +1,32 @@
 #include <gtest/gtest.h>
 #include "../src/data/cpu/EdgeData.cuh"
 
-template<typename UseGPUType>
+template<typename T>
 class EdgeDataTest : public ::testing::Test {
 protected:
-    EdgeData<UseGPUType::value> edges;
+    EdgeData<T::value> edges;
 
-    void verify_edge(const size_t index, const int expected_src, const int expected_tgt, const int64_t expected_ts) const {
-        ASSERT_LT(index, this->edges.size());
-        EXPECT_EQ(this->edges.sources[index], expected_src);
-        EXPECT_EQ(this->edges.targets[index], expected_tgt);
-        EXPECT_EQ(this->edges.timestamps[index], expected_ts);
-    }
+   void verify_edge(const size_t index, const int expected_src, const int expected_tgt, const int64_t expected_ts) const {
+       ASSERT_LT(index, this->edges.size());
+       EXPECT_EQ(this->edges.sources[index], expected_src);
+       EXPECT_EQ(this->edges.targets[index], expected_tgt);
+       EXPECT_EQ(this->edges.timestamps[index], expected_ts);
+   }
 };
 
 #ifdef HAS_CUDA
-using USE_GPU_TYPES = ::testing::Types<std::false_type, std::true_type>;
+using GPU_USAGE_TYPES = ::testing::Types<
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_GPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_HOST>
+>;
 #else
-using USE_GPU_TYPES = ::testing::Types<std::false_type>;
+using GPU_USAGE_TYPES = ::testing::Types<
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>
+>;
 #endif
-TYPED_TEST_SUITE(EdgeDataTest, USE_GPU_TYPES);
+
+TYPED_TEST_SUITE(EdgeDataTest, GPU_USAGE_TYPES);
 
 // Test empty state
 TYPED_TEST(EdgeDataTest, EmptyStateTest) {

@@ -3,8 +3,8 @@
 
 #include "../cpu/NodeMapping.cuh"
 
-template<bool UseGPU>
-class NodeMappingCUDA : public NodeMapping<UseGPU> {
+template<GPUUsageMode GPUUsage>
+class NodeMappingCUDA : public NodeMapping<GPUUsage> {
 #ifdef HAS_CUDA
 
 #endif

@@ -1,8 +1,8 @@
 #include "WeightBasedRandomPicker.cuh"
 
-template<bool UseGPU>
-int WeightBasedRandomPicker<UseGPU>::pick_random(
-    const typename SelectVectorType<double, UseGPU>::type& cumulative_weights,
+template<GPUUsageMode GPUUsage>
+int WeightBasedRandomPicker<GPUUsage>::pick_random(
+    const typename SelectVectorType<double, GPUUsage>::type& cumulative_weights,
     const int group_start,
     const int group_end)
 {
@@ -33,7 +33,8 @@ int WeightBasedRandomPicker<UseGPU>::pick_random(
         random_val) - cumulative_weights.begin());
 }
 
-template class WeightBasedRandomPicker<false>;
+template class WeightBasedRandomPicker<GPUUsageMode::ON_CPU>;
 #ifdef HAS_CUDA
-template class WeightBasedRandomPicker<true>;
+template class WeightBasedRandomPicker<GPUUsageMode::DATA_ON_GPU>;
+template class WeightBasedRandomPicker<GPUUsageMode::DATA_ON_HOST>;
 #endif

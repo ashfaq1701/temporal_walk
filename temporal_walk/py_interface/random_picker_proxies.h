@@ -1,6 +1,7 @@
 #ifndef RANDOM_PICKER_PROXIES_H
 #define RANDOM_PICKER_PROXIES_H
 
+#include "../src/core/structs.h"
 #include "../src/random/ExponentialIndexRandomPicker.cuh"
 #include "../src/random/LinearRandomPicker.cuh"
 #include "../src/random/UniformRandomPicker.cuh"
@@ -9,34 +10,46 @@
 class ExponentialIndexRandomPickerProxy
 {
 private:
-    bool use_gpu;
+    GPUUsageMode gpu_usage;
     #ifdef HAS_CUDA
-    std::unique_ptr<ExponentialIndexRandomPicker<false>> cpu_impl;
-    std::unique_ptr<ExponentialIndexRandomPicker<true>> gpu_impl;
+    std::unique_ptr<ExponentialIndexRandomPicker<GPUUsageMode::ON_CPU>> cpu_impl;
+    std::unique_ptr<ExponentialIndexRandomPicker<GPUUsageMode::DATA_ON_GPU>> gpu_impl;
+    std::unique_ptr<ExponentialIndexRandomPicker<GPUUsageMode::DATA_ON_HOST>> host_impl;
     #else
-    std::unique_ptr<ExponentialIndexRandomPicker<false>> cpu_impl;
+    std::unique_ptr<ExponentialIndexRandomPicker<GPUUsageMode::ON_CPU>> cpu_impl;
     #endif
 
+
 public:
-    explicit ExponentialIndexRandomPickerProxy(bool use_gpu): use_gpu(use_gpu)
+    explicit ExponentialIndexRandomPickerProxy(GPUUsageMode gpu_usage): gpu_usage(gpu_usage)
     {
         #ifdef HAS_CUDA
-        this->use_gpu = use_gpu;
-        if (use_gpu) {
-            gpu_impl = std::make_unique<ExponentialIndexRandomPicker<true>>();
-        } else {
-            cpu_impl = std::make_unique<ExponentialIndexRandomPicker<false>>();
+        switch(gpu_usage) {
+        case GPUUsageMode::DATA_ON_GPU:
+            gpu_impl = std::make_unique<ExponentialIndexRandomPicker<GPUUsageMode::DATA_ON_GPU>>();
+            break;
+        case GPUUsageMode::DATA_ON_HOST:
+            host_impl = std::make_unique<ExponentialIndexRandomPicker<GPUUsageMode::DATA_ON_HOST>>();
+            break;
+        default:  // ON_CPU
+            cpu_impl = std::make_unique<ExponentialIndexRandomPicker<GPUUsageMode::ON_CPU>>();
         }
         #else
-        cpu_impl = std::make_unique<ExponentialIndexRandomPicker<false>>();
+        cpu_impl = std::make_unique<ExponentialIndexRandomPicker<GPUUsageMode::ON_CPU>>();
         #endif
     }
 
     int pick_random(int start, int end, bool prioritize_end)
     {
         #ifdef HAS_CUDA
-        if (use_gpu) return gpu_impl->pick_random(start, end, prioritize_end);
-        else return cpu_impl->pick_random(start, end, prioritize_end);
+        switch(gpu_usage) {
+        case GPUUsageMode::DATA_ON_GPU:
+            return gpu_impl->pick_random(start, end, prioritize_end);
+        case GPUUsageMode::DATA_ON_HOST:
+            return host_impl->pick_random(start, end, prioritize_end);
+        default:  // ON_CPU
+            return cpu_impl->pick_random(start, end, prioritize_end);
+        }
         #else
         return cpu_impl->pick_random(start, end, prioritize_end);
         #endif
@@ -44,102 +57,138 @@ public:
 };
 
 
-class LinearRandomPickerProxy {
+class LinearRandomPickerProxy
+{
 private:
-    bool use_gpu;
+    GPUUsageMode gpu_usage;
     #ifdef HAS_CUDA
-    std::unique_ptr<LinearRandomPicker<false>> cpu_impl;
-    std::unique_ptr<LinearRandomPicker<true>> gpu_impl;
+    std::unique_ptr<LinearRandomPicker<GPUUsageMode::ON_CPU>> cpu_impl;
+    std::unique_ptr<LinearRandomPicker<GPUUsageMode::DATA_ON_GPU>> gpu_impl;
+    std::unique_ptr<LinearRandomPicker<GPUUsageMode::DATA_ON_HOST>> host_impl;
     #else
-    std::unique_ptr<LinearRandomPicker<false>> cpu_impl;
+    std::unique_ptr<LinearRandomPicker<GPUUsageMode::ON_CPU>> cpu_impl;
     #endif
 
-public:
-   explicit LinearRandomPickerProxy(bool use_gpu): use_gpu(use_gpu) {
-       #ifdef HAS_CUDA
-       this->use_gpu = use_gpu;
-       if (use_gpu) {
-           gpu_impl = std::make_unique<LinearRandomPicker<true>>();
-       } else {
-           cpu_impl = std::make_unique<LinearRandomPicker<false>>();
-       }
-       #else
-       cpu_impl = std::make_unique<LinearRandomPicker<false>>();
-       #endif
-   }
 
-   int pick_random(int start, int end, bool prioritize_end) {
-       #ifdef HAS_CUDA
-       if (use_gpu) return gpu_impl->pick_random(start, end, prioritize_end);
-       else return cpu_impl->pick_random(start, end, prioritize_end);
-       #else
-       return cpu_impl->pick_random(start, end, prioritize_end);
-       #endif
-   }
+public:
+    explicit LinearRandomPickerProxy(GPUUsageMode gpu_usage): gpu_usage(gpu_usage)
+    {
+        #ifdef HAS_CUDA
+        switch(gpu_usage) {
+        case GPUUsageMode::DATA_ON_GPU:
+            gpu_impl = std::make_unique<LinearRandomPicker<GPUUsageMode::DATA_ON_GPU>>();
+            break;
+        case GPUUsageMode::DATA_ON_HOST:
+            host_impl = std::make_unique<LinearRandomPicker<GPUUsageMode::DATA_ON_HOST>>();
+            break;
+        default:  // ON_CPU
+            cpu_impl = std::make_unique<LinearRandomPicker<GPUUsageMode::ON_CPU>>();
+        }
+        #else
+        cpu_impl = std::make_unique<LinearRandomPicker<GPUUsageMode::ON_CPU>>();
+        #endif
+    }
+
+    int pick_random(int start, int end, bool prioritize_end)
+    {
+        #ifdef HAS_CUDA
+        switch(gpu_usage) {
+        case GPUUsageMode::DATA_ON_GPU:
+            return gpu_impl->pick_random(start, end, prioritize_end);
+        case GPUUsageMode::DATA_ON_HOST:
+            return host_impl->pick_random(start, end, prioritize_end);
+        default:  // ON_CPU
+            return cpu_impl->pick_random(start, end, prioritize_end);
+        }
+        #else
+        return cpu_impl->pick_random(start, end, prioritize_end);
+        #endif
+    }
 };
 
 
-class UniformRandomPickerProxy {
+class UniformRandomPickerProxy
+{
 private:
-    bool use_gpu;
+    GPUUsageMode gpu_usage;
     #ifdef HAS_CUDA
-    std::unique_ptr<UniformRandomPicker<false>> cpu_impl;
-    std::unique_ptr<UniformRandomPicker<true>> gpu_impl;
+    std::unique_ptr<UniformRandomPicker<GPUUsageMode::ON_CPU>> cpu_impl;
+    std::unique_ptr<UniformRandomPicker<GPUUsageMode::DATA_ON_GPU>> gpu_impl;
+    std::unique_ptr<UniformRandomPicker<GPUUsageMode::DATA_ON_HOST>> host_impl;
     #else
-    std::unique_ptr<UniformRandomPicker<false>> cpu_impl;
+    std::unique_ptr<UniformRandomPicker<GPUUsageMode::ON_CPU>> cpu_impl;
     #endif
 
-public:
-   explicit UniformRandomPickerProxy(bool use_gpu): use_gpu(use_gpu) {
-       #ifdef HAS_CUDA
-       this->use_gpu = use_gpu;
-       if (use_gpu) {
-           gpu_impl = std::make_unique<UniformRandomPicker<true>>();
-       } else {
-           cpu_impl = std::make_unique<UniformRandomPicker<false>>();
-       }
-       #else
-       cpu_impl = std::make_unique<UniformRandomPicker<false>>();
-       #endif
-   }
 
-   int pick_random(int start, int end, bool prioritize_end) {
-       #ifdef HAS_CUDA
-       if (use_gpu) return gpu_impl->pick_random(start, end, prioritize_end);
-       else return cpu_impl->pick_random(start, end, prioritize_end);
-       #else
-       return cpu_impl->pick_random(start, end, prioritize_end);
-       #endif
-   }
+public:
+    explicit UniformRandomPickerProxy(GPUUsageMode gpu_usage): gpu_usage(gpu_usage)
+    {
+        #ifdef HAS_CUDA
+        switch(gpu_usage) {
+        case GPUUsageMode::DATA_ON_GPU:
+            gpu_impl = std::make_unique<UniformRandomPicker<GPUUsageMode::DATA_ON_GPU>>();
+            break;
+        case GPUUsageMode::DATA_ON_HOST:
+            host_impl = std::make_unique<UniformRandomPicker<GPUUsageMode::DATA_ON_HOST>>();
+            break;
+        default:  // ON_CPU
+            cpu_impl = std::make_unique<UniformRandomPicker<GPUUsageMode::ON_CPU>>();
+        }
+        #else
+        cpu_impl = std::make_unique<UniformRandomPicker<GPUUsageMode::ON_CPU>>();
+        #endif
+    }
+
+    int pick_random(int start, int end, bool prioritize_end)
+    {
+        #ifdef HAS_CUDA
+        switch(gpu_usage) {
+        case GPUUsageMode::DATA_ON_GPU:
+            return gpu_impl->pick_random(start, end, prioritize_end);
+        case GPUUsageMode::DATA_ON_HOST:
+            return host_impl->pick_random(start, end, prioritize_end);
+        default:  // ON_CPU
+            return cpu_impl->pick_random(start, end, prioritize_end);
+        }
+        #else
+        return cpu_impl->pick_random(start, end, prioritize_end);
+        #endif
+    }
 };
 
 class WeightBasedRandomPickerProxy {
 private:
-    bool use_gpu;
+    GPUUsageMode gpu_usage;
     #ifdef HAS_CUDA
-    std::unique_ptr<WeightBasedRandomPicker<false>> cpu_impl;
-    std::unique_ptr<WeightBasedRandomPicker<true>> gpu_impl;
+    std::unique_ptr<WeightBasedRandomPicker<GPUUsageMode::ON_CPU>> cpu_impl;
+    std::unique_ptr<WeightBasedRandomPicker<GPUUsageMode::DATA_ON_GPU>> gpu_impl;
+    std::unique_ptr<WeightBasedRandomPicker<GPUUsageMode::DATA_ON_HOST>> host_impl;
     #else
-    std::unique_ptr<WeightBasedRandomPicker<false>> cpu_impl;
+    std::unique_ptr<WeightBasedRandomPicker<GPUUsageMode::ON_CPU>> cpu_impl;
     #endif
 
 public:
-    explicit WeightBasedRandomPickerProxy(bool use_gpu): use_gpu(use_gpu) {
+    explicit WeightBasedRandomPickerProxy(GPUUsageMode gpu_usage): gpu_usage(gpu_usage)
+    {
         #ifdef HAS_CUDA
-        this->use_gpu = use_gpu;
-        if (use_gpu) {
-            gpu_impl = std::make_unique<WeightBasedRandomPicker<true>>();
-        } else {
-            cpu_impl = std::make_unique<WeightBasedRandomPicker<false>>();
+        switch(gpu_usage) {
+        case GPUUsageMode::DATA_ON_GPU:
+            gpu_impl = std::make_unique<WeightBasedRandomPicker<GPUUsageMode::DATA_ON_GPU>>();
+            break;
+        case GPUUsageMode::DATA_ON_HOST:
+            host_impl = std::make_unique<WeightBasedRandomPicker<GPUUsageMode::DATA_ON_HOST>>();
+            break;
+        default:  // ON_CPU
+            cpu_impl = std::make_unique<WeightBasedRandomPicker<GPUUsageMode::ON_CPU>>();
         }
         #else
-        cpu_impl = std::make_unique<WeightBasedRandomPicker<false>>();
+        cpu_impl = std::make_unique<WeightBasedRandomPicker<GPUUsageMode::ON_CPU>>();
         #endif
     }
 
     #ifdef HAS_CUDA
     int pick_random(const thrust::host_vector<double>& cumulative_weights, int group_start, int group_end) {
-        return gpu_impl->pick_random(cumulative_weights, group_start, group_end);
+        return host_impl->pick_random(cumulative_weights, group_start, group_end);
     }
 
     int pick_random(const thrust::device_vector<double>& cumulative_weights, int group_start, int group_end) {

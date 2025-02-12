@@ -23,8 +23,8 @@ __device__ bool compare_timestamps(const int64_t* ts, const size_t i, const size
 }
 #endif
 
-template<bool UseGPU>
-TemporalGraph<UseGPU>::TemporalGraph(
+template<GPUUsageMode GPUUsage>
+TemporalGraph<GPUUsage>::TemporalGraph(
     const bool directed,
     const int64_t window,
     const bool enable_weight_computation,
@@ -34,19 +34,13 @@ TemporalGraph<UseGPU>::TemporalGraph(
     , enable_weight_computation(enable_weight_computation)
     , timescale_bound(timescale_bound)
     , latest_timestamp(0)
-#ifdef HAS_CUDA
-    , node_index(NodeEdgeIndexCUDA<UseGPU>())
-    , edges(EdgeDataCUDA<UseGPU>())
-    , node_mapping(NodeMappingCUDA<UseGPU>())
-#else
-    , node_index(NodeEdgeIndex<UseGPU>())
-    , edges(EdgeData<UseGPU>())
-    , node_mapping(NodeMapping<UseGPU>())
-#endif
+    , node_index()
+    , edges()
+    , node_mapping()
     {}
 
-template<bool UseGPU>
-void TemporalGraph<UseGPU>::add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& new_edges) {
+template<GPUUsageMode GPUUsage>
+void TemporalGraph<GPUUsage>::add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& new_edges) {
     if (new_edges.empty()) return;
 
     const size_t start_idx = edges.size();
@@ -84,14 +78,14 @@ void TemporalGraph<UseGPU>::add_multiple_edges(const std::vector<std::tuple<int,
     }
 }
 
-template<bool UseGPU>
-void TemporalGraph<UseGPU>::update_temporal_weights() {
+template<GPUUsageMode GPUUsage>
+void TemporalGraph<GPUUsage>::update_temporal_weights() {
     edges.update_temporal_weights(timescale_bound);
     node_index.update_temporal_weights(edges, timescale_bound);
 }
 
-template<bool UseGPU>
-void TemporalGraph<UseGPU>::sort_and_merge_edges(const size_t start_idx) {
+template<GPUUsageMode GPUUsage>
+void TemporalGraph<GPUUsage>::sort_and_merge_edges(const size_t start_idx) {
     if (start_idx >= edges.size()) return;
 
     // Sort new edges first
@@ -185,8 +179,8 @@ void TemporalGraph<UseGPU>::sort_and_merge_edges(const size_t start_idx) {
     }
 }
 
-template<bool UseGPU>
-void TemporalGraph<UseGPU>::delete_old_edges() {
+template<GPUUsageMode GPUUsage>
+void TemporalGraph<GPUUsage>::delete_old_edges() {
     if (time_window <= 0 || edges.empty()) return;
 
     const int64_t cutoff_time = latest_timestamp - time_window;
@@ -226,24 +220,24 @@ void TemporalGraph<UseGPU>::delete_old_edges() {
     node_index.rebuild(edges, node_mapping, is_directed);
 }
 
-template<bool UseGPU>
-size_t TemporalGraph<UseGPU>::count_timestamps_less_than(int64_t timestamp) const {
+template<GPUUsageMode GPUUsage>
+size_t TemporalGraph<GPUUsage>::count_timestamps_less_than(int64_t timestamp) const {
     if (edges.empty()) return 0;
 
     const auto it = std::lower_bound(edges.unique_timestamps.begin(), edges.unique_timestamps.end(), timestamp);
     return it - edges.unique_timestamps.begin();
 }
 
-template<bool UseGPU>
-size_t TemporalGraph<UseGPU>::count_timestamps_greater_than(int64_t timestamp) const {
+template<GPUUsageMode GPUUsage>
+size_t TemporalGraph<GPUUsage>::count_timestamps_greater_than(int64_t timestamp) const {
     if (edges.empty()) return 0;
 
     auto it = std::upper_bound(edges.unique_timestamps.begin(), edges.unique_timestamps.end(), timestamp);
     return edges.unique_timestamps.end() - it;
 }
 
-template<bool UseGPU>
-size_t TemporalGraph<UseGPU>::count_node_timestamps_less_than(int node_id, int64_t timestamp) const {
+template<GPUUsageMode GPUUsage>
+size_t TemporalGraph<GPUUsage>::count_node_timestamps_less_than(int node_id, int64_t timestamp) const {
     // Used for backward walks
     const int dense_idx = node_mapping.to_dense(node_id);
     if (dense_idx < 0) return 0;
@@ -269,8 +263,8 @@ size_t TemporalGraph<UseGPU>::count_node_timestamps_less_than(int node_id, int64
     return std::distance(timestamp_group_indices.begin() + static_cast<int>(group_start), it);
 }
 
-template<bool UseGPU>
-size_t TemporalGraph<UseGPU>::count_node_timestamps_greater_than(int node_id, int64_t timestamp) const {
+template<GPUUsageMode GPUUsage>
+size_t TemporalGraph<GPUUsage>::count_node_timestamps_greater_than(int node_id, int64_t timestamp) const {
     // Used for forward walks
     int dense_idx = node_mapping.to_dense(node_id);
     if (dense_idx < 0) return 0;
@@ -296,8 +290,8 @@ size_t TemporalGraph<UseGPU>::count_node_timestamps_greater_than(int node_id, in
     return std::distance(it, timestamp_group_indices.begin() + static_cast<int>(group_end));
 }
 
-template<bool UseGPU>
-std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_edge_at(
+template<GPUUsageMode GPUUsage>
+std::tuple<int, int, int64_t> TemporalGraph<GPUUsage>::get_edge_at(
     RandomPicker& picker,
     int64_t timestamp,
     bool forward) const {
@@ -320,7 +314,7 @@ std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_edge_at(
                 group_idx = first_group + index;
             }
             else {
-                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<UseGPU>*>(&picker);
+                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
                 group_idx = weight_picker->pick_random(
                     edges.forward_cumulative_weights_exponential,
                     static_cast<int>(first_group),
@@ -337,7 +331,7 @@ std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_edge_at(
                 group_idx = last_group - (available_groups - index - 1);
             }
             else {
-                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<UseGPU>*>(&picker);
+                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
                 group_idx = weight_picker->pick_random(
                     edges.backward_cumulative_weights_exponential,
                     0,
@@ -351,7 +345,7 @@ std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_edge_at(
             if (index >= num_groups) return {-1, -1, -1};
             group_idx = index;
         } else {
-            auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<UseGPU>*>(&picker);
+            auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
             if (forward) {
                 group_idx = weight_picker->pick_random(
                     edges.forward_cumulative_weights_exponential,
@@ -382,8 +376,8 @@ std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_edge_at(
     };
 }
 
-template<bool UseGPU>
-std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_node_edge_at(
+template<GPUUsageMode GPUUsage>
+std::tuple<int, int, int64_t> TemporalGraph<GPUUsage>::get_node_edge_at(
     const int node_id,
     RandomPicker& picker,
     const int64_t timestamp,
@@ -435,7 +429,7 @@ std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_node_edge_at(
             }
             else
             {
-                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<UseGPU>*>(&picker);
+                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
                 group_pos = weight_picker->pick_random(
                     node_index.outbound_forward_cumulative_weights_exponential,
                     static_cast<int>(start_pos),
@@ -462,7 +456,7 @@ std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_node_edge_at(
             }
             else
             {
-                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<UseGPU>*>(&picker);
+                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
                 group_pos = weight_picker->pick_random(
                     is_directed
                         ? node_index.inbound_backward_cumulative_weights_exponential
@@ -486,7 +480,7 @@ std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_node_edge_at(
         }
         else
         {
-            auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<UseGPU>*>(&picker);
+            auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
             if (forward)
             {
                 group_pos = weight_picker->pick_random(
@@ -529,17 +523,18 @@ std::tuple<int, int, int64_t> TemporalGraph<UseGPU>::get_node_edge_at(
     };
 }
 
-template<bool UseGPU>
-std::vector<int> TemporalGraph<UseGPU>::get_node_ids() const {
+template<GPUUsageMode GPUUsage>
+std::vector<int> TemporalGraph<GPUUsage>::get_node_ids() const {
     return node_mapping.get_active_node_ids();
 }
 
-template<bool UseGPU>
-std::vector<std::tuple<int, int, int64_t>> TemporalGraph<UseGPU>::get_edges() {
+template<GPUUsageMode GPUUsage>
+std::vector<std::tuple<int, int, int64_t>> TemporalGraph<GPUUsage>::get_edges() {
     return edges.get_edges();
 }
 
-template class TemporalGraph<false>;
+template class TemporalGraph<GPUUsageMode::ON_CPU>;
 #ifdef HAS_CUDA
-template class TemporalGraph<true>;
+template class TemporalGraph<GPUUsageMode::DATA_ON_GPU>;
+template class TemporalGraph<GPUUsageMode::DATA_ON_HOST>;
 #endif

@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-template<bool UseGPU>
-void NodeEdgeIndex<UseGPU>::clear() {
+template<GPUUsageMode GPUUsage>
+void NodeEdgeIndex<GPUUsage>::clear() {
    // Clear edge CSR structures
    outbound_offsets.clear();
    outbound_indices.clear();
@@ -17,10 +17,10 @@ void NodeEdgeIndex<UseGPU>::clear() {
    inbound_timestamp_group_indices.clear();
 }
 
-template<bool UseGPU>
-void NodeEdgeIndex<UseGPU>::rebuild(
-   const EdgeData<UseGPU>& edges,
-   const NodeMapping<UseGPU>& mapping,
+template<GPUUsageMode GPUUsage>
+void NodeEdgeIndex<GPUUsage>::rebuild(
+   const EdgeData<GPUUsage>& edges,
+   const NodeMapping<GPUUsage>& mapping,
    const bool is_directed) {
 
    const size_t num_nodes = mapping.size();
@@ -169,8 +169,8 @@ void NodeEdgeIndex<UseGPU>::rebuild(
    }
 }
 
-template<bool UseGPU>
-void NodeEdgeIndex<UseGPU>::update_temporal_weights(const EdgeData<UseGPU>& edges, double timescale_bound) {
+template<GPUUsageMode GPUUsage>
+void NodeEdgeIndex<GPUUsage>::update_temporal_weights(const EdgeData<GPUUsage>& edges, double timescale_bound) {
     const size_t num_nodes = outbound_offsets.size() - 1;
 
     outbound_forward_cumulative_weights_exponential.resize(outbound_timestamp_group_indices.size());
@@ -277,8 +277,8 @@ void NodeEdgeIndex<UseGPU>::update_temporal_weights(const EdgeData<UseGPU>& edge
     }
 }
 
-template<bool UseGPU>
-std::pair<size_t, size_t> NodeEdgeIndex<UseGPU>::get_edge_range(
+template<GPUUsageMode GPUUsage>
+std::pair<size_t, size_t> NodeEdgeIndex<GPUUsage>::get_edge_range(
    int dense_node_id,
    bool forward,
    bool is_directed) const {
@@ -297,8 +297,8 @@ std::pair<size_t, size_t> NodeEdgeIndex<UseGPU>::get_edge_range(
    }
 }
 
-template<bool UseGPU>
-std::pair<size_t, size_t> NodeEdgeIndex<UseGPU>::get_timestamp_group_range(
+template<GPUUsageMode GPUUsage>
+std::pair<size_t, size_t> NodeEdgeIndex<GPUUsage>::get_timestamp_group_range(
    int dense_node_id,
    size_t group_idx,
    bool forward,
@@ -334,8 +334,8 @@ std::pair<size_t, size_t> NodeEdgeIndex<UseGPU>::get_timestamp_group_range(
    return {group_start, group_end};
 }
 
-template<bool UseGPU>
-size_t NodeEdgeIndex<UseGPU>::get_timestamp_group_count(
+template<GPUUsageMode GPUUsage>
+size_t NodeEdgeIndex<GPUUsage>::get_timestamp_group_count(
    int dense_node_id,
    bool forward,
    bool directed) const {
@@ -349,14 +349,15 @@ size_t NodeEdgeIndex<UseGPU>::get_timestamp_group_count(
    return offsets[dense_node_id + 1] - offsets[dense_node_id];
 }
 
-template<bool UseGPU>
-[[nodiscard]] typename NodeEdgeIndex<UseGPU>::SizeVector NodeEdgeIndex<UseGPU>::get_timestamp_offset_vector(
+template<GPUUsageMode GPUUsage>
+[[nodiscard]] typename NodeEdgeIndex<GPUUsage>::SizeVector NodeEdgeIndex<GPUUsage>::get_timestamp_offset_vector(
     bool forward,
     bool directed) const {
     return (directed && !forward) ? inbound_timestamp_group_offsets : outbound_timestamp_group_offsets;
 }
 
-template class NodeEdgeIndex<false>;
+template class NodeEdgeIndex<GPUUsageMode::ON_CPU>;
 #ifdef HAS_CUDA
-template class NodeEdgeIndex<true>;
+template class NodeEdgeIndex<GPUUsageMode::DATA_ON_GPU>;
+template class NodeEdgeIndex<GPUUsageMode::DATA_ON_HOST>;
 #endif
