@@ -53,7 +53,7 @@ WalkDirection walk_direction_from_string(const std::string& walk_direction_str)
 
 GPUUsageMode gpu_usage_mode_from_string(const std::string& gpu_usage_mode_str)
 {
-    if (gpu_usage_mode_str == "ON_GPU")
+    if (gpu_usage_mode_str == "ON_CPU")
     {
         return GPUUsageMode::ON_CPU;
     }
