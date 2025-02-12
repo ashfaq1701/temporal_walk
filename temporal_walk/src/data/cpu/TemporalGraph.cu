@@ -5,10 +5,6 @@
 #include "../../random/WeightBasedRandomPicker.cuh"
 #include "../../random/RandomPicker.h"
 
-#include "../cuda/NodeMappingCUDA.cuh"
-#include "../cuda/EdgeDataCUDA.cuh"
-#include "../cuda/NodeEdgeIndexCUDA.cuh"
-
 #include "../../utils/utils.h"
 
 #ifdef HAS_CUDA
@@ -95,7 +91,7 @@ void TemporalGraph<GPUUsage>::sort_and_merge_edges(const size_t start_idx) {
     }
 
     #ifdef HAS_CUDA
-    if constexpr (UseGPU) {
+    if constexpr (GPUUsage == GPUUsageMode::DATA_ON_GPU) {
         thrust::sort(thrust::device, indices.begin(), indices.end(),
             [ts = edges.timestamps.data().get()] __device__ (const size_t i, const size_t j) {
                 return compare_timestamps(ts, i, j);

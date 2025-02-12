@@ -10,10 +10,12 @@
 #include "../../random/RandomPicker.h"
 
 #include "NodeMapping.cuh"
-
 #include "EdgeData.cuh"
-
 #include "NodeEdgeIndex.cuh"
+
+#include "../cuda/NodeMappingCUDA.cuh"
+#include "../cuda/EdgeDataCUDA.cuh"
+#include "../cuda/NodeEdgeIndexCUDA.cuh"
 
 template<GPUUsageMode GPUUsage>
 class TemporalGraph

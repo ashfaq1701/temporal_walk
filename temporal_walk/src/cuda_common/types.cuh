@@ -19,7 +19,7 @@ enum class VectorStorageType {
 template <typename T, GPUUsageMode GPUUsage>
 struct SelectVectorType {
 #ifdef HAS_CUDA
-    using type = typename std::conditional
+    using type = typename std::conditional<
         GPUUsage != GPUUsageMode::ON_CPU,
         typename std::conditional<GPUUsage == GPUUsageMode::DATA_ON_GPU,
             thrust::device_vector<T>,
