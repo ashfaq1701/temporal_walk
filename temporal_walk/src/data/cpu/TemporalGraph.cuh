@@ -21,7 +21,7 @@ class TemporalGraph
 private:
     #ifdef HAS_CUDA
     using NodeIndexType = std::conditional_t<
-        (GPUUsage == ON_CPU), NodeEdgeIndex<GPUUsage>, NodeEdgeIndexCUDA<GPUUsageType>>;
+        (GPUUsage == ON_CPU), NodeEdgeIndex<GPUUsage>, NodeEdgeIndexCUDA<GPUUsage>>;
 
     using EdgeDataType = std::conditional_t<
         (GPUUsage == ON_CPU), EdgeData<GPUUsage>, EdgeDataCUDA<GPUUsage>>;

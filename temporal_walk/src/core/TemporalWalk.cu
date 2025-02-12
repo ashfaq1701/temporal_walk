@@ -21,6 +21,12 @@ TemporalWalk<GPUUsage>::TemporalWalk(
     n_threads(static_cast<int>(n_threads)), enable_weight_computation(enable_weight_computation),
     timescale_bound(timescale_bound), thread_pool(n_threads)
 {
+    #ifndef HAS_CUDA
+    if (GPUUsage != ON_CPU) {
+        throw std::runtime_error("GPU support is not available, only \"ON_CPU\" version is available.");
+    }
+    #endif
+
     #ifdef HAS_CUDA
     temporal_graph = std::make_unique<TemporalGraphCUDA<GPUUsage>>(
         is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
