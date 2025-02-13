@@ -57,7 +57,6 @@ std::vector<std::tuple<int, int, int64_t>> EdgeDataCUDA<GPUUsage>::get_edges() {
     return result;
 }
 
-template class EdgeDataCUDA<GPUUsageMode::ON_CPU>;
 template class EdgeDataCUDA<GPUUsageMode::DATA_ON_GPU>;
 template class EdgeDataCUDA<GPUUsageMode::DATA_ON_HOST>;
 #endif
