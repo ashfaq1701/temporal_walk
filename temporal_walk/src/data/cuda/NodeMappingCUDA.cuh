@@ -2,9 +2,10 @@
 #define NODEMAPPING_CUDA_H
 
 #include "../cpu/NodeMapping.cuh"
+#include "../../cuda_common/config.cuh"
 
 template<GPUUsageMode GPUUsage>
-class NodeMappingCUDA : public NodeMapping<GPUUsage> {
+class NodeMappingCUDA final : public NodeMapping<GPUUsage> {
 #ifdef HAS_CUDA
 
 #endif
