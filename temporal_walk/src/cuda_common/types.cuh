@@ -16,33 +16,40 @@ enum class VectorStorageType {
     THRUST_HOST_VECTOR
 };
 
+// Base template (default case: CPU only)
+template <typename T, GPUUsageMode GPUUsage, typename Enable = void>
+struct SelectVectorType;
+
+// Specialization for CPU mode
 template <typename T, GPUUsageMode GPUUsage>
-struct SelectVectorType {
-#ifdef HAS_CUDA
-    using type = typename std::conditional<
-        GPUUsage != GPUUsageMode::ON_CPU,
-        typename std::conditional<GPUUsage == GPUUsageMode::DATA_ON_GPU,
-            thrust::device_vector<T>,
-            thrust::host_vector<T>
-        >::type,
-        std::vector<T>
-    >::type;
-#else
+struct SelectVectorType<T, GPUUsage, std::enable_if_t<GPUUsage == GPUUsageMode::ON_CPU>> {
     using type = std::vector<T>;
-#endif
 
     static constexpr VectorStorageType get_vector_storage_type() {
-#ifdef HAS_CUDA
-        if (GPUUsage == GPUUsageMode::ON_CPU) {
-            return VectorStorageType::STD_VECTOR;
-        }
-        return GPUUsage == GPUUsageMode::DATA_ON_GPU ?
-            VectorStorageType::THRUST_DEVICE_VECTOR :
-            VectorStorageType::THRUST_HOST_VECTOR;
-#else
         return VectorStorageType::STD_VECTOR;
-#endif
     }
 };
+
+#ifdef HAS_CUDA
+// Specialization for GPU mode (Device memory)
+template <typename T, GPUUsageMode GPUUsage>
+struct SelectVectorType<T, GPUUsage, std::enable_if_t<GPUUsage == GPUUsageMode::DATA_ON_GPU>> {
+    using type = thrust::device_vector<T>;
+
+    static constexpr VectorStorageType get_vector_storage_type() {
+        return VectorStorageType::THRUST_DEVICE_VECTOR;
+    }
+};
+
+// Specialization for GPU mode (Host memory)
+template <typename T, GPUUsageMode GPUUsage>
+struct SelectVectorType<T, GPUUsage, std::enable_if_t<GPUUsage == GPUUsageMode::DATA_ON_HOST>> {
+    using type = thrust::host_vector<T>;
+
+    static constexpr VectorStorageType get_vector_storage_type() {
+        return VectorStorageType::THRUST_HOST_VECTOR;
+    }
+};
+#endif
 
 #endif // TYPES_H

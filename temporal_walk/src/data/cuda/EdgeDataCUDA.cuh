@@ -4,7 +4,8 @@
 #include "../cpu/EdgeData.cuh"
 
 template<GPUUsageMode GPUUsage>
-class EdgeDataCUDA : public EdgeData<GPUUsage> {
+class EdgeDataCUDA final : public EdgeData<GPUUsage> {
+public:
 #ifdef HAS_CUDA
 
 #endif

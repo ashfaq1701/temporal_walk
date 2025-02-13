@@ -11,13 +11,15 @@
 
 template<GPUUsageMode GPUUsage>
 class EdgeData {
-
+protected:
     using IntVector = typename SelectVectorType<int, GPUUsage>::type;
     using Int64Vector = typename SelectVectorType<int64_t, GPUUsage>::type;
     using SizeVector = typename SelectVectorType<size_t, GPUUsage>::type;
     using DoubleVector = typename SelectVectorType<double, GPUUsage>::type;
 
 public:
+    virtual ~EdgeData() = default;
+
     // Core edge data
     IntVector sources{};
     IntVector targets{};
@@ -37,7 +39,7 @@ public:
     void resize(size_t new_size);
     void push_back(int src, int tgt, int64_t ts);
 
-    std::vector<std::tuple<int, int, int64_t>> get_edges();
+    virtual std::vector<std::tuple<int, int, int64_t>> get_edges();
 
     // Group management
     void update_timestamp_groups();  // Call after sorting
