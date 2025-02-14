@@ -32,7 +32,7 @@ std::vector<std::tuple<int, int, int64_t>> EdgeDataCUDA<GPUUsage>::get_edges() {
         );
 
         thrust::copy(
-            DEVICE_POLICY,
+            this->get_policy(),
             d_tuples.begin(),
             d_tuples.end(),
             reinterpret_cast<thrust::tuple<int, int, int64_t>*>(result.data())

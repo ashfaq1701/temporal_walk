@@ -2,7 +2,6 @@
 #define NODEMAPPING_CUDA_H
 
 #include "../cpu/NodeMapping.cuh"
-#include "../../cuda_common/config.cuh"
 #include "PolicyProvider.cuh"
 
 template<GPUUsageMode GPUUsage>
