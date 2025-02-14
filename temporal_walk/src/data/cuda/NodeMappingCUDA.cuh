@@ -3,9 +3,10 @@
 
 #include "../cpu/NodeMapping.cuh"
 #include "../../cuda_common/config.cuh"
+#include "PolicyProvider.cuh"
 
 template<GPUUsageMode GPUUsage>
-class NodeMappingCUDA final : public NodeMapping<GPUUsage> {
+class NodeMappingCUDA final : public NodeMapping<GPUUsage>, public PolicyProvider<GPUUsage> {
 #ifdef HAS_CUDA
 
 #endif

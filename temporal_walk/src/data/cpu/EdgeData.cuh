@@ -42,7 +42,7 @@ public:
     virtual std::vector<std::tuple<int, int, int64_t>> get_edges();
 
     // Group management
-    void update_timestamp_groups();  // Call after sorting
+    virtual void update_timestamp_groups();  // Call after sorting
     void update_temporal_weights(double timescale_bound);
 
     [[nodiscard]] std::pair<size_t, size_t> get_timestamp_group_range(size_t group_idx) const;

@@ -2,10 +2,10 @@
 #define TEMPORALGRAPH_CUDA_H
 
 #include "../cpu/TemporalGraph.cuh"
-#include "../../cuda_common/config.cuh"
+#include "PolicyProvider.cuh"
 
 template<GPUUsageMode GPUUsage>
-class TemporalGraphCUDA final : public TemporalGraph<GPUUsage> {
+class TemporalGraphCUDA final : public TemporalGraph<GPUUsage>, public PolicyProvider<GPUUsage> {
 public:
     // Inherit constructors from base class
     using TemporalGraph<GPUUsage>::TemporalGraph;
