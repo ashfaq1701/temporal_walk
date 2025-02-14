@@ -3,7 +3,7 @@
 #define POLICY_PROVIDER_H
 
 #ifdef HAS_CUDA
-#include "../../config.cuh"
+#include "../../cuda_common/config.cuh"
 #endif
 
 template<GPUUsageMode GPUUsage>
