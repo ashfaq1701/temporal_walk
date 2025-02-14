@@ -43,14 +43,14 @@ public:
 
     // Group management
     virtual void update_timestamp_groups();  // Call after sorting
-    void update_temporal_weights(double timescale_bound);
+    virtual void update_temporal_weights(double timescale_bound);
 
-    [[nodiscard]] std::pair<size_t, size_t> get_timestamp_group_range(size_t group_idx) const;
+    [[nodiscard]] virtual std::pair<size_t, size_t> get_timestamp_group_range(size_t group_idx) const;
     [[nodiscard]] size_t get_timestamp_group_count() const;
 
     // Group lookup
-    [[nodiscard]] size_t find_group_after_timestamp(int64_t timestamp) const;  // For forward walks
-    [[nodiscard]] size_t find_group_before_timestamp(int64_t timestamp) const; // For backward walks
+    [[nodiscard]] virtual size_t find_group_after_timestamp(int64_t timestamp) const;  // For forward walks
+    [[nodiscard]] virtual size_t find_group_before_timestamp(int64_t timestamp) const; // For backward walks
 };
 
 #endif //EDGEDATA_H

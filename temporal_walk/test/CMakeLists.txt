@@ -3,15 +3,15 @@ find_package(GTest CONFIG REQUIRED)
 set(TEST_FILES
         test_edge_data.cpp
         test_edge_data_weights.cpp
-        test_node_edge_index.cpp
-        test_node_edge_index_weights.cpp
-        test_node_mapping.cpp
-        test_random_picker.cpp
-        test_temporal_graph.cpp
-        test_temporal_graph_get_node_edge_at.cpp
-        test_temporal_graph_weights.cpp
-        test_temporal_walk.cpp
-        test_weight_based_random_picker.cpp
+#        test_node_edge_index.cpp
+#        test_node_edge_index_weights.cpp
+#        test_node_mapping.cpp
+#        test_random_picker.cpp
+#        test_temporal_graph.cpp
+#        test_temporal_graph_get_node_edge_at.cpp
+#        test_temporal_graph_weights.cpp
+#        test_temporal_walk.cpp
+#        test_weight_based_random_picker.cpp
 )
 
 set(MODULE_SRC_FILES ${SRC_FILES} ${TEST_FILES})

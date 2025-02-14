@@ -351,8 +351,8 @@ size_t NodeEdgeIndex<GPUUsage>::get_timestamp_group_count(
 
 template<GPUUsageMode GPUUsage>
 [[nodiscard]] typename NodeEdgeIndex<GPUUsage>::SizeVector NodeEdgeIndex<GPUUsage>::get_timestamp_offset_vector(
-    bool forward,
-    bool directed) const {
+    const bool forward,
+    const bool directed) const {
     return (directed && !forward) ? inbound_timestamp_group_offsets : outbound_timestamp_group_offsets;
 }
 
