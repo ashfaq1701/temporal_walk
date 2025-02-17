@@ -45,7 +45,7 @@ public:
     virtual void update_timestamp_groups();  // Call after sorting
     virtual void update_temporal_weights(double timescale_bound);
 
-    [[nodiscard]] virtual std::pair<size_t, size_t> get_timestamp_group_range(size_t group_idx) const;
+    [[nodiscard]] std::pair<size_t, size_t> get_timestamp_group_range(size_t group_idx) const;
     [[nodiscard]] size_t get_timestamp_group_count() const;
 
     // Group lookup

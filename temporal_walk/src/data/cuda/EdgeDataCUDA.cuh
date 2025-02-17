@@ -14,8 +14,6 @@ public:
 
     void update_temporal_weights(double timescale_bound) override;
 
-    std::pair<size_t, size_t> get_timestamp_group_range(size_t group_idx) const override;
-
     [[nodiscard]] size_t find_group_after_timestamp(int64_t timestamp) const override;
 
     [[nodiscard]] size_t find_group_before_timestamp(int64_t timestamp) const override;

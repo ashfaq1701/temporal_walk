@@ -207,18 +207,6 @@ void EdgeDataCUDA<GPUUsage>::update_temporal_weights(double timescale_bound) {
 }
 
 template<GPUUsageMode GPUUsage>
-std::pair<size_t, size_t> EdgeDataCUDA<GPUUsage>::get_timestamp_group_range(size_t group_idx) const {
-    if (group_idx >= this->unique_timestamps.size()) {
-        return {0, 0};
-    }
-
-    return {
-        this->timestamp_group_offsets[group_idx],
-        this->timestamp_group_offsets[group_idx + 1]
-    };
-}
-
-template<GPUUsageMode GPUUsage>
 size_t EdgeDataCUDA<GPUUsage>::find_group_after_timestamp(int64_t timestamp) const {
     if (this->unique_timestamps.empty()) return 0;
 
