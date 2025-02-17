@@ -1,6 +1,6 @@
 #include "WeightBasedRandomPicker.cuh"
 
-#include "../cuda_common/cuda_random_functions.cuh"
+#include <cuda_common/config.cuh>
 
 #ifdef HAS_CUDA
 #include <thrust/binary_search.h>
@@ -31,9 +31,8 @@ int WeightBasedRandomPicker<GPUUsage>::pick_random(
     }
 
     // Generate random value between [start_sum, end_sum]
+    const double random_val = generate_random_value(start_sum, end_sum);
     if (GPUUsage == GPUUsageMode::ON_CPU) {
-        const double random_val = generate_random_value(start_sum, end_sum);
-
         // Find the group where random_val falls
         return static_cast<int>(std::lower_bound(
             cumulative_weights.begin() + group_start,
@@ -42,9 +41,8 @@ int WeightBasedRandomPicker<GPUUsage>::pick_random(
     } else {
         #ifdef HAS_CUDA
         // Find the group where random_val falls using thrust::lower_bound
-        const double random_val = generate_random_value_cuda(start_sum, end_sum);
         auto it = thrust::lower_bound(
-            thrust::device,
+            this->get_policy(),
             thrust::next(cumulative_weights.begin(), group_start),
             thrust::next(cumulative_weights.begin(), group_end),
             random_val);

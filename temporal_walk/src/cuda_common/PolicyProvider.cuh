@@ -2,8 +2,9 @@
 #ifndef POLICY_PROVIDER_H
 #define POLICY_PROVIDER_H
 
+#include "../core/structs.h"
 #ifdef HAS_CUDA
-#include "../../cuda_common/config.cuh"
+#include "cuda_common/config.cuh"
 #endif
 
 template<GPUUsageMode GPUUsage>

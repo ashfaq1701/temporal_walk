@@ -2,7 +2,7 @@
 #define NODEMAPPING_CUDA_H
 
 #include "../cpu/NodeMapping.cuh"
-#include "PolicyProvider.cuh"
+#include "../../cuda_common/PolicyProvider.cuh"
 
 template<GPUUsageMode GPUUsage>
 class NodeMappingCUDA final : public NodeMapping<GPUUsage>, public PolicyProvider<GPUUsage> {

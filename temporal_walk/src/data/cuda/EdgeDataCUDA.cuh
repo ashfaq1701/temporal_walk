@@ -2,7 +2,7 @@
 #define EDGEDATA_CUDA_H
 
 #include "../cpu/EdgeData.cuh"
-#include "PolicyProvider.cuh"
+#include "../../cuda_common/PolicyProvider.cuh"
 
 template<GPUUsageMode GPUUsage>
 class EdgeDataCUDA final : public EdgeData<GPUUsage>, public PolicyProvider<GPUUsage> {

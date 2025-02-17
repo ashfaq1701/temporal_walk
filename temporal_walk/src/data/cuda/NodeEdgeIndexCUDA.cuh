@@ -2,7 +2,7 @@
 #define NODEEDGEINDEX_CUDA_H
 
 #include "../cpu/NodeEdgeIndex.cuh"
-#include "PolicyProvider.cuh"
+#include "../../cuda_common/PolicyProvider.cuh"
 
 template<GPUUsageMode GPUUsage>
 class NodeEdgeIndexCUDA final : public NodeEdgeIndex<GPUUsage>, public PolicyProvider<GPUUsage> {

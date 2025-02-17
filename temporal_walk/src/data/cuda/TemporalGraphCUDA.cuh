@@ -2,7 +2,7 @@
 #define TEMPORALGRAPH_CUDA_H
 
 #include "../cpu/TemporalGraph.cuh"
-#include "PolicyProvider.cuh"
+#include "../../cuda_common/PolicyProvider.cuh"
 
 template<GPUUsageMode GPUUsage>
 class TemporalGraphCUDA final : public TemporalGraph<GPUUsage>, public PolicyProvider<GPUUsage> {

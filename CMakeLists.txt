@@ -35,6 +35,7 @@ endif()
 
 set(SRC_FILES
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/WeightBasedRandomPicker.cu
+        ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/WeightBasedRandomPickerGPU.cu
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/ExponentialIndexRandomPicker.cu
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/LinearRandomPicker.cu
         ${CMAKE_SOURCE_DIR}/temporal_walk/src/random/UniformRandomPicker.cu

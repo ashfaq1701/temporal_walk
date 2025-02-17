@@ -1,14 +1,15 @@
-#ifndef WEIGHTBASEDRANDOMPICKER_H
-#define WEIGHTBASEDRANDOMPICKER_H
+#ifndef WEIGHTBASEDRANDOMPICKERGPU_H
+#define WEIGHTBASEDRANDOMPICKERGPU_H
+
+#include <cuda_common/PolicyProvider.cuh>
 
 #include "RandomPicker.h"
+#include "../utils/utils.h"
 #include "../core/structs.h"
 #include "../cuda_common/types.cuh"
-#include "../cuda_common/PolicyProvider.cuh"
 
 template<GPUUsageMode GPUUsage>
-class WeightBasedRandomPicker final : public RandomPicker, public PolicyProvider<GPUUsage>
-{
+class WeightBasedRandomPickerGPU  final : public RandomPicker, public PolicyProvider<GPUUsage> {
 public:
     [[nodiscard]] int pick_random(
         const typename SelectVectorType<double, GPUUsage>::type& cumulative_weights,
@@ -16,4 +17,6 @@ public:
         int group_end);
 };
 
-#endif //WEIGHTBASEDRANDOMPICKER_H
+
+
+#endif //WEIGHTBASEDRANDOMPICKERGPU_H
