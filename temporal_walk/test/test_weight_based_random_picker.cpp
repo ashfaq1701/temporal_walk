@@ -1,12 +1,27 @@
 #include <gtest/gtest.h>
+#include <random/WeightBasedRandomPickerGPU.cuh>
+
 #include "../src/random/WeightBasedRandomPicker.cuh"
+#include "../src/cuda_common/CudaRandomStates.cuh"
 #include "../src/utils/utils.h"
 
 template<typename T>
 class WeightBasedRandomPickerTest : public ::testing::Test
 {
 protected:
-    WeightBasedRandomPicker<T::value> picker;
+    using WeightBasedRandomPickerType = std::conditional_t<
+        T::value == GPUUsageMode::DATA_ON_GPU,
+        WeightBasedRandomPickerGPU<T::value>,
+        WeightBasedRandomPicker<T::value>
+    >;
+
+    WeightBasedRandomPickerTest() {
+        if constexpr (T::value == GPUUsageMode::DATA_ON_GPU) {
+            CUDARandomStates::initialize();
+        }
+    }
+
+    WeightBasedRandomPickerType picker;
 
     // Helper to verify sampling is within correct range
     void verify_sampling_range(const std::vector<double>& weights,
@@ -20,7 +35,7 @@ protected:
             int picked = picker.pick_random(weights, start, end);
             EXPECT_GE(picked, start) << "Sampled index below start";
             EXPECT_LT(picked, end) << "Sampled index at or above end";
-            sample_counts[picked]++;
+            ++sample_counts[picked];
         }
 
         // Verify all valid indices were sampled
@@ -34,7 +49,9 @@ protected:
 
 #ifdef HAS_CUDA
 using GPU_USAGE_TYPES = ::testing::Types<
-    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_GPU>
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_GPU>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_HOST>
 >;
 #else
 using GPU_USAGE_TYPES = ::testing::Types<
