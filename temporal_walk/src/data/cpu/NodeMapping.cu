@@ -40,18 +40,23 @@ void NodeMapping<GPUUsage>::update(const EdgeData<GPUUsage>& edges, const size_t
         is_deleted.resize(max_node_id + 1, true);
     }
 
-    // Map unmapped nodes
-    for (size_t i = start_idx; i < end_idx; i++) {
-        is_deleted[edges.sources[i]] = false;
-        is_deleted[edges.targets[i]] = false;
+    std::vector<int> new_nodes;
+    new_nodes.reserve((end_idx - start_idx) * 2);
 
-        if (sparse_to_dense[edges.sources[i]] == -1) {
-            sparse_to_dense[edges.sources[i]] = static_cast<int>(dense_to_sparse.size());
-            dense_to_sparse.push_back(edges.sources[i]);
-        }
-        if (sparse_to_dense[edges.targets[i]] == -1) {
-            sparse_to_dense[edges.targets[i]] = static_cast<int>(dense_to_sparse.size());
-            dense_to_sparse.push_back(edges.targets[i]);
+    for (size_t i = start_idx; i < end_idx; i++) {
+        new_nodes.push_back(edges.sources[i]);
+        new_nodes.push_back(edges.targets[i]);
+    }
+
+    std::sort(new_nodes.begin(), new_nodes.end());
+
+    // Map unmapped nodes
+    for (int node : new_nodes) {
+        is_deleted[node] = false;
+
+        if (sparse_to_dense[node] == -1) {
+            sparse_to_dense[node] = static_cast<int>(dense_to_sparse.size());
+            dense_to_sparse.push_back(node);
         }
     }
 }
@@ -85,6 +90,7 @@ std::vector<int> NodeMapping<GPUUsage>::get_active_node_ids() const {
             active_ids.push_back(sparse_id);
         }
     }
+
     return active_ids;
 }
 

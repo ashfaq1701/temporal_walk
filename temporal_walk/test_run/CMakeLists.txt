@@ -12,9 +12,17 @@ function(add_test_executable target_name source_file)
                 LANGUAGE CUDA
         )
 
+        set_target_properties(${target_name} PROPERTIES
+                CUDA_SEPARABLE_COMPILATION ON
+                CUDA_RESOLVE_DEVICE_SYMBOLS ON
+        )
+
         target_link_libraries(${target_name} PRIVATE
                 CUDA::cudart
                 CUDA::cuda_driver
+                cuda
+                cudart
+                cudadevrt
         )
 
         target_include_directories(${target_name} PRIVATE

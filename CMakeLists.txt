@@ -59,6 +59,11 @@ if(HAS_CUDA AND CMAKE_CUDA_COMPILER)
             $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>
             $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-fPIC>
     )
+
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --extended-lambda --expt-relaxed-constexpr -rdc=true")
+    # For debug builds
+    set(CMAKE_CUDA_FLAGS_DEBUG "${CMAKE_CUDA_FLAGS_DEBUG} -G")
+
 endif()
 
 add_subdirectory(temporal_walk/py_interface)

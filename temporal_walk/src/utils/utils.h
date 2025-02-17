@@ -99,11 +99,6 @@ void shuffle_vector(std::vector<T>& vec) {
     std::shuffle(vec.begin(), vec.end(), rng);
 }
 
-inline std::mt19937& get_random_generator() {
-    thread_local std::mt19937 thread_local_gen(std::random_device{}());
-    return thread_local_gen;
-}
-
 template <typename T>
 T generate_random_value(T start, T end) {
     std::uniform_real_distribution<T> dist(start, end);

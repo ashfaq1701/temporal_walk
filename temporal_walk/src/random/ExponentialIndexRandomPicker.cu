@@ -1,8 +1,7 @@
 #include "ExponentialIndexRandomPicker.cuh"
-#include <random>
 #include <cmath>
-#include <iostream>
 #include <stdexcept>
+#include "../cuda_common/cuda_random_functions.cuh"
 
 // Derivation available in derivations folder
 template<GPUUsageMode GPUUsage>
@@ -14,7 +13,16 @@ int ExponentialIndexRandomPicker<GPUUsage>::pick_random(const int start, const i
     const int len_seq = end - start;
 
     // Generate uniform random number between 0 and 1
-    const double u = generate_random_value(0.0, 1.0);
+    double u;
+    if (GPUUsage == GPUUsageMode::ON_CPU) {
+        u = generate_random_value(0.0, 1.0);
+    } else {
+        #ifdef HAS_CUDA
+        u = generate_random_value_cuda(0.0, 1.0);
+        #else
+        throw std::runtime_error("GPU support is not available, only \"ON_CPU\" version is available.");
+        #endif
+    }
 
     double k;
     if (len_seq < 710) {

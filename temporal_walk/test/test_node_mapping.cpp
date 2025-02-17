@@ -33,6 +33,7 @@ protected:
 
 #ifdef HAS_CUDA
 using GPU_USAGE_TYPES = ::testing::Types<
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>,
     std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_GPU>,
     std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_HOST>
 >;
@@ -159,8 +160,8 @@ TYPED_TEST(NodeMappingTest, EdgeCasesTest) {
     this->edges.clear();
     this->edges.push_back(1000000, 1, 100);
     this->mapping.update(this->edges, 0, 1);
-    this->verify_mapping(1000000, 0);
-    this->verify_mapping(1, 1);
+    this->verify_mapping(1, 0);
+    this->verify_mapping(1000000, 1);
 
     // Test invalid dense indices
     EXPECT_EQ(this->mapping.to_sparse(-1), -1);

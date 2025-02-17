@@ -1,6 +1,6 @@
-#include <random>
 #include <cmath>
 #include <stdexcept>
+#include "../cuda_common/cuda_random_functions.cuh"
 #include "LinearRandomPicker.cuh"
 
 // Derivation available in derivations folder
@@ -20,7 +20,16 @@ int LinearRandomPicker<GPUUsage>::pick_random(const int start, const int end, co
                                    (static_cast<long double>(len_seq) + 1.0L) / 2.0L;
 
     // Generate random value in [0, total_weight)
-    const auto random_value = generate_random_value(0.0L, total_weight);
+    long double random_value;
+    if (GPUUsage == GPUUsageMode::ON_CPU) {
+        random_value = generate_random_value(0.0L, total_weight);
+    } else {
+        #ifdef HAS_CUDA
+        random_value = generate_random_value_cuda(0.0L, total_weight);
+        #else
+        throw std::runtime_error("GPU support is not available, only \"ON_CPU\" version is available.");
+        #endif
+    }
 
     // For both cases, we solve quadratic equation i² + i - 2r = 0
     // where r is our random value (or transformed random value)

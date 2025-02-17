@@ -19,10 +19,17 @@ void NodeMappingCUDA<GPUUsage>::update(const EdgeData<GPUUsage>& edges, const si
         edges.targets.begin() + end_idx
     );
 
+    auto max_source_element = *max_source;
+    auto max_target_element = *max_target;
+
     int max_node_id = std::max(
         max_source != edges.sources.end() ? *max_source : 0,
         max_target != edges.targets.end() ? *max_target : 0
     );
+
+    if (max_node_id < 0) {
+        return;
+    }
 
     // Extend vectors if needed
     if (max_node_id >= this->sparse_to_dense.size()) {
@@ -106,20 +113,25 @@ size_t NodeMappingCUDA<GPUUsage>::active_size() const {
 template<GPUUsageMode GPUUsage>
 std::vector<int> NodeMappingCUDA<GPUUsage>::get_active_node_ids() const {
     // Create temporary device vector for output
-    typename SelectVectorType<int, GPUUsage>::type temp_output;
+    typename SelectVectorType<int, GPUUsage>::type temp_output(this->dense_to_sparse.size());
 
     // Copy selected elements to temp device vector
-    thrust::copy_if(
-        PolicyProvider<GPUUsage>::get_policy(),
+    auto end = thrust::copy_if(
+        this->get_policy(),
         this->dense_to_sparse.begin(),
         this->dense_to_sparse.end(),
-        this->is_deleted.begin(),
-        temp_output.begin(),  // Output to device vector
-        [] __host__ __device__ (const bool is_deleted) { return !is_deleted; }
+        temp_output.begin(),
+        [this] __host__ __device__ (const int sparse_id) {
+            return !this->is_deleted[sparse_id];
+        }
     );
 
+    temp_output.resize(thrust::distance(temp_output.begin(), end));
+
     // Copy result back to host
-    std::vector<int> result(temp_output.begin(), temp_output.end());
+    std::vector<int> result(temp_output.size());
+    thrust::copy(temp_output.begin(), temp_output.end(), result.begin());
+
     return result;
 }
 
