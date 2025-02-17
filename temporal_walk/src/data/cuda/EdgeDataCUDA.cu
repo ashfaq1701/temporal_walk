@@ -120,8 +120,8 @@ void EdgeDataCUDA<GPUUsage>::update_temporal_weights(double timescale_bound) {
         return;
     }
 
-    const int64_t min_timestamp = thrust::raw_pointer_cast(this->timestamps.data())[0];
-    const int64_t max_timestamp = thrust::raw_pointer_cast(this->timestamps.data())[this->timestamps.size() - 1];
+    const int64_t min_timestamp = this->timestamps[0];
+    const int64_t max_timestamp = this->timestamps[this->timestamps.size() - 1];
 
     const auto time_diff = static_cast<double>(max_timestamp - min_timestamp);
     const double time_scale = (timescale_bound > 0 && time_diff > 0) ?
@@ -212,10 +212,9 @@ std::pair<size_t, size_t> EdgeDataCUDA<GPUUsage>::get_timestamp_group_range(size
         return {0, 0};
     }
 
-    const size_t* offsets_ptr = thrust::raw_pointer_cast(this->timestamp_group_offsets.data());
     return {
-        offsets_ptr[group_idx],
-        offsets_ptr[group_idx + 1]
+        this->timestamp_group_offsets[group_idx],
+        this->timestamp_group_offsets[group_idx + 1]
     };
 }
 

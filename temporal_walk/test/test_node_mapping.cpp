@@ -1,11 +1,26 @@
 #include <gtest/gtest.h>
 #include "../src/data/cpu/NodeMapping.cuh"
+#include "../src/data/cuda/NodeMappingCUDA.cuh"
+#include "../src/data/cpu/EdgeData.cuh"
+#include "../src/data/cuda/EdgeDataCUDA.cuh"
 
 template<typename T>
 class NodeMappingTest : public ::testing::Test {
 protected:
-    NodeMapping<T::value> mapping;
-    EdgeData<T::value> edges;
+    using NodeMappingType = std::conditional_t<
+        T::value == GPUUsageMode::ON_CPU,
+        NodeMapping<T::value>,
+        NodeMappingCUDA<T::value>
+    >;
+
+    using EdgeDataType = std::conditional_t<
+        T::value == GPUUsageMode::ON_CPU,
+        EdgeData<T::value>,
+        EdgeDataCUDA<T::value>
+    >;
+
+    NodeMappingType mapping;
+    EdgeDataType edges;
 
     // Helper to verify bidirectional mapping
     void verify_mapping(int sparse_id, int expected_dense_idx) const {
@@ -18,7 +33,6 @@ protected:
 
 #ifdef HAS_CUDA
 using GPU_USAGE_TYPES = ::testing::Types<
-    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>,
     std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_GPU>,
     std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_HOST>
 >;

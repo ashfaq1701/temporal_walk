@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "../src/data/cpu/EdgeData.cuh"
+#include "../src/data/cuda/EdgeDataCUDA.cuh"
 #include <cmath>
 
 template<typename T>
@@ -8,6 +9,12 @@ class EdgeDataWeightTest : public ::testing::Test {
     using DoubleVector = typename SelectVectorType<double, T::value>::type;
 
 protected:
+    using EdgeDataType = std::conditional_t<
+        T::value == GPUUsageMode::ON_CPU,
+        EdgeData<T::value>,
+        EdgeDataCUDA<T::value>
+    >;
+
     static void verify_cumulative_weights(const DoubleVector& weights) {
         ASSERT_FALSE(weights.empty());
         for (size_t i = 0; i < weights.size(); i++) {
@@ -55,7 +62,8 @@ using GPU_USAGE_TYPES = ::testing::Types<
 TYPED_TEST_SUITE(EdgeDataWeightTest, GPU_USAGE_TYPES);
 
 TYPED_TEST(EdgeDataWeightTest, SingleTimestampGroup) {
-   EdgeData<TypeParam::value> edges;  // CPU mode
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    EdgeDataType edges;
    edges.push_back(1, 2, 10);
    edges.push_back(2, 3, 10);
    edges.update_timestamp_groups();
@@ -70,50 +78,56 @@ TYPED_TEST(EdgeDataWeightTest, SingleTimestampGroup) {
 }
 
 TYPED_TEST(EdgeDataWeightTest, WeightNormalization) {
-   EdgeData<TypeParam::value> edges;  // CPU mode
-   this->add_test_edges(edges);
-   edges.update_temporal_weights(-1);
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    EdgeDataType edges;
+    this->add_test_edges(edges);
+    edges.update_temporal_weights(-1);
 
-   // Should have 4 timestamp groups (10,20,30,40)
-   ASSERT_EQ(edges.forward_cumulative_weights_exponential.size(), 4);
-   ASSERT_EQ(edges.backward_cumulative_weights_exponential.size(), 4);
+    // Should have 4 timestamp groups (10,20,30,40)
+    ASSERT_EQ(edges.forward_cumulative_weights_exponential.size(), 4);
+    ASSERT_EQ(edges.backward_cumulative_weights_exponential.size(), 4);
 
-   this->verify_cumulative_weights(edges.forward_cumulative_weights_exponential);
-   this->verify_cumulative_weights(edges.backward_cumulative_weights_exponential);
+    this->verify_cumulative_weights(edges.forward_cumulative_weights_exponential);
+    this->verify_cumulative_weights(edges.backward_cumulative_weights_exponential);
 }
 
 TYPED_TEST(EdgeDataWeightTest, ForwardWeightBias) {
-   EdgeData<TypeParam::value> edges;  // CPU mode
-   this->add_test_edges(edges);
-   edges.update_temporal_weights(-1);
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    EdgeDataType edges;
 
-   // Forward weights should be higher for earlier timestamps
-   const std::vector<double> forward_weights = this->get_individual_weights(edges.forward_cumulative_weights_exponential);
+    this->add_test_edges(edges);
+    edges.update_temporal_weights(-1);
 
-   // Earlier groups should have higher weights
-   for (size_t i = 0; i < forward_weights.size() - 1; i++) {
-       EXPECT_GT(forward_weights[i], forward_weights[i+1])
-           << "Forward weight at index " << i << " should be greater than weight at " << i+1;
-   }
+    // Forward weights should be higher for earlier timestamps
+    const std::vector<double> forward_weights = this->get_individual_weights(edges.forward_cumulative_weights_exponential);
+
+    // Earlier groups should have higher weights
+    for (size_t i = 0; i < forward_weights.size() - 1; i++) {
+        EXPECT_GT(forward_weights[i], forward_weights[i+1])
+            << "Forward weight at index " << i << " should be greater than weight at " << i+1;
+    }
 }
 
 TYPED_TEST(EdgeDataWeightTest, BackwardWeightBias) {
-   EdgeData<TypeParam::value> edges;  // CPU mode
-   this->add_test_edges(edges);
-   edges.update_temporal_weights(-1);
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    EdgeDataType edges;
+    this->add_test_edges(edges);
+    edges.update_temporal_weights(-1);
 
-   // Backward weights should be higher for later timestamps
-   const std::vector<double> backward_weights = this->get_individual_weights(edges.backward_cumulative_weights_exponential);
+    // Backward weights should be higher for later timestamps
+    const std::vector<double> backward_weights = this->get_individual_weights(edges.backward_cumulative_weights_exponential);
 
-   // Later groups should have higher weights
-   for (size_t i = 0; i < backward_weights.size() - 1; i++) {
-       EXPECT_LT(backward_weights[i], backward_weights[i+1])
-           << "Backward weight at index " << i << " should be less than weight at " << i+1;
-   }
+    // Later groups should have higher weights
+    for (size_t i = 0; i < backward_weights.size() - 1; i++) {
+        EXPECT_LT(backward_weights[i], backward_weights[i+1])
+            << "Backward weight at index " << i << " should be less than weight at " << i+1;
+    }
 }
 
 TYPED_TEST(EdgeDataWeightTest, WeightExponentialDecay) {
-    EdgeData<TypeParam::value> edges;  // CPU mode
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    EdgeDataType edges;
+
     edges.push_back(1, 2, 10);
     edges.push_back(2, 3, 20);
     edges.push_back(3, 4, 30);
@@ -145,7 +159,8 @@ TYPED_TEST(EdgeDataWeightTest, WeightExponentialDecay) {
 }
 
 TYPED_TEST(EdgeDataWeightTest, UpdateWeights) {
-   EdgeData<TypeParam::value> edges;
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    EdgeDataType edges;
    this->add_test_edges(edges);
    edges.update_temporal_weights(-1);
 
@@ -168,7 +183,8 @@ TYPED_TEST(EdgeDataWeightTest, UpdateWeights) {
 }
 
 TYPED_TEST(EdgeDataWeightTest, TimescaleBoundZero) {
-    EdgeData<TypeParam::value> edges;
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    EdgeDataType edges;
     this->add_test_edges(edges);
     edges.update_temporal_weights(0);  // Should behave like -1
 
@@ -177,7 +193,8 @@ TYPED_TEST(EdgeDataWeightTest, TimescaleBoundZero) {
 }
 
 TYPED_TEST(EdgeDataWeightTest, TimescaleBoundPositive) {
-    EdgeData<TypeParam::value> edges;
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    EdgeDataType edges;
     this->add_test_edges(edges);
     constexpr double timescale_bound = 30.0;
     edges.update_temporal_weights(timescale_bound);
@@ -209,7 +226,8 @@ TYPED_TEST(EdgeDataWeightTest, TimescaleBoundPositive) {
 }
 
 TYPED_TEST(EdgeDataWeightTest, ScalingComparison) {
-    EdgeData<TypeParam::value> edges;
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    EdgeDataType edges;
     this->add_test_edges(edges);
 
     // Test relative weight proportions are preserved
@@ -234,7 +252,8 @@ TYPED_TEST(EdgeDataWeightTest, ScalingComparison) {
 }
 
 TYPED_TEST(EdgeDataWeightTest, ScaledWeightBounds) {
-    EdgeData<TypeParam::value> edges;  // CPU mode
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    EdgeDataType edges;
     edges.push_back(1, 2, 100);
     edges.push_back(2, 3, 300);
     edges.push_back(3, 4, 700);
@@ -270,7 +289,8 @@ TYPED_TEST(EdgeDataWeightTest, ScaledWeightBounds) {
 }
 
 TYPED_TEST(EdgeDataWeightTest, DifferentTimescaleBounds) {
-    EdgeData<TypeParam::value> edges;
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    EdgeDataType edges;
     this->add_test_edges(edges);
 
     std::vector<double> bounds = {5.0, 10.0, 20.0};
@@ -297,7 +317,8 @@ TYPED_TEST(EdgeDataWeightTest, DifferentTimescaleBounds) {
 }
 
 TYPED_TEST(EdgeDataWeightTest, SingleTimestampWithBounds) {
-    EdgeData<TypeParam::value> edges;
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    EdgeDataType edges;
     // All edges have same timestamp
     edges.push_back(1, 2, 100);
     edges.push_back(2, 3, 100);
@@ -315,7 +336,8 @@ TYPED_TEST(EdgeDataWeightTest, SingleTimestampWithBounds) {
 }
 
 TYPED_TEST(EdgeDataWeightTest, WeightMonotonicity) {
-    EdgeData<TypeParam::value> edges;
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    EdgeDataType edges;
     this->add_test_edges(edges);
 
     const double timescale_bound = 20.0;
@@ -353,7 +375,8 @@ TYPED_TEST(EdgeDataWeightTest, WeightMonotonicity) {
 }
 
 TYPED_TEST(EdgeDataWeightTest, TimescaleScalingPrecision) {
-    EdgeData<TypeParam::value> edges;
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    EdgeDataType edges;
     // Use precise timestamps for exact validation
     edges.push_back(1, 2, 100);
     edges.push_back(2, 3, 300);

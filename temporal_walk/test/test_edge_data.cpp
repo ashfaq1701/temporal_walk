@@ -1,10 +1,17 @@
 #include <gtest/gtest.h>
 #include "../src/data/cpu/EdgeData.cuh"
+#include "../src/data/cuda/EdgeDataCUDA.cuh"
 
 template<typename T>
 class EdgeDataTest : public ::testing::Test {
 protected:
-    EdgeData<T::value> edges;
+    using EdgeDataType = std::conditional_t<
+        T::value == GPUUsageMode::ON_CPU,
+        EdgeData<T::value>,
+        EdgeDataCUDA<T::value>
+    >;
+
+    EdgeDataType edges;
 
    void verify_edge(const size_t index, const int expected_src, const int expected_tgt, const int64_t expected_ts) const {
        ASSERT_LT(index, this->edges.size());
