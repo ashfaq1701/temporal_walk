@@ -13,8 +13,7 @@ template<GPUUsageMode GPUUsage>
 void NodeEdgeIndexCUDA<GPUUsage>::rebuild(
     const EdgeData<GPUUsage>& edges,
     const NodeMapping<GPUUsage>& mapping,
-    const bool is_directed)
-{
+    const bool is_directed) {
     const size_t num_nodes = mapping.size();
     const size_t num_edges = edges.size();
 
@@ -59,22 +58,46 @@ void NodeEdgeIndexCUDA<GPUUsage>::rebuild(
     const int* d_tgt_ptr = thrust::raw_pointer_cast(d_tgt_indices.data());
 
     // Count edges per node
-    thrust::for_each(
-        this->get_policy(),
-        thrust::make_counting_iterator<size_t>(0),
-        thrust::make_counting_iterator<size_t>(num_edges),
-        [d_outbound_ptr, d_inbound_ptr, d_src_ptr, d_tgt_ptr, is_directed] __host__ __device__ (const size_t i) {
-            const int src_idx = d_src_ptr[i];
-            const int tgt_idx = d_tgt_ptr[i];
+    auto counter_device_lambda = [d_outbound_ptr, d_inbound_ptr, d_src_ptr, d_tgt_ptr, is_directed] __device__ (const size_t i) {
+        const int src_idx = d_src_ptr[i];
+        const int tgt_idx = d_tgt_ptr[i];
 
-            ++d_outbound_ptr[src_idx + 1];
-            if (is_directed) {
-                ++d_inbound_ptr[tgt_idx + 1];
-            } else {
-                ++d_outbound_ptr[tgt_idx + 1];
-            }
+        atomicAdd(reinterpret_cast<unsigned int *>(&d_outbound_ptr[src_idx + 1]), 1);
+        if (is_directed) {
+            atomicAdd(reinterpret_cast<unsigned int *>(&d_inbound_ptr[tgt_idx + 1]), 1);
+        } else {
+            atomicAdd(reinterpret_cast<unsigned int *>(&d_outbound_ptr[tgt_idx + 1]), 1);
         }
-    );
+    };
+
+    auto counter_host_device_lambda = [d_outbound_ptr, d_inbound_ptr, d_src_ptr, d_tgt_ptr, is_directed] __host__ __device__ (const size_t i) {
+        const int src_idx = d_src_ptr[i];
+        const int tgt_idx = d_tgt_ptr[i];
+
+        ++d_outbound_ptr[src_idx + 1];
+        if (is_directed) {
+            ++d_inbound_ptr[tgt_idx + 1];
+        } else {
+            ++d_outbound_ptr[tgt_idx + 1];
+        }
+    };
+
+
+    if constexpr (GPUUsage == GPUUsageMode::DATA_ON_GPU) {
+        thrust::for_each(
+            this->get_policy(),
+            thrust::make_counting_iterator<size_t>(0),
+            thrust::make_counting_iterator<size_t>(num_edges),
+            counter_device_lambda
+        );
+    } else {
+        thrust::for_each(
+            this->get_policy(),
+            thrust::make_counting_iterator<size_t>(0),
+            thrust::make_counting_iterator<size_t>(num_edges),
+            counter_host_device_lambda
+        );
+    }
 
     // Calculate prefix sums for edge offsets
     thrust::inclusive_scan(
@@ -115,29 +138,61 @@ void NodeEdgeIndexCUDA<GPUUsage>::rebuild(
     const size_t* d_inbound_offsets_ptr = is_directed ? thrust::raw_pointer_cast(this->inbound_offsets.data()) : nullptr;
 
     // Fill edge indices
-    thrust::for_each(
-        this->get_policy(),
-        thrust::make_counting_iterator<size_t>(0),
-        thrust::make_counting_iterator<size_t>(num_edges),
-        [d_src_ptr, d_tgt_ptr,
+    auto fill_device_lambda = [d_src_ptr, d_tgt_ptr,
+            d_outbound_offsets_ptr, d_inbound_offsets_ptr,
+            d_outbound_indices_ptr, d_inbound_indices_ptr,
+            d_outbound_current_ptr, d_inbound_current_ptr, is_directed] __device__ (const size_t i) {
+        const int src_idx = d_src_ptr[i];
+        const int tgt_idx = d_tgt_ptr[i];
+
+        const size_t out_pos = d_outbound_offsets_ptr[src_idx] + d_outbound_current_ptr[src_idx];
+        atomicAdd(reinterpret_cast<unsigned int *>(&d_outbound_current_ptr[src_idx]), 1);
+
+        d_outbound_indices_ptr[out_pos] = i;
+
+        if (is_directed) {
+            const size_t in_pos = d_inbound_offsets_ptr[tgt_idx] + d_inbound_current_ptr[tgt_idx];
+            atomicAdd(reinterpret_cast<unsigned int *>(&d_inbound_current_ptr[tgt_idx]), 1);
+            d_inbound_indices_ptr[in_pos] = i;
+        } else {
+            const size_t out_pos2 = d_outbound_offsets_ptr[tgt_idx] + d_outbound_current_ptr[tgt_idx];
+            atomicAdd(reinterpret_cast<unsigned int *>(&d_outbound_current_ptr[tgt_idx]), 1);
+            d_outbound_indices_ptr[out_pos2] = i;
+        }
+    };
+
+    auto fill_host_device_lambda = [d_src_ptr, d_tgt_ptr,
             d_outbound_offsets_ptr, d_inbound_offsets_ptr,
             d_outbound_indices_ptr, d_inbound_indices_ptr,
             d_outbound_current_ptr, d_inbound_current_ptr, is_directed] __host__ __device__ (const size_t i) {
-            const int src_idx = d_src_ptr[i];
-            const int tgt_idx = d_tgt_ptr[i];
+        const int src_idx = d_src_ptr[i];
+        const int tgt_idx = d_tgt_ptr[i];
 
-            const size_t out_pos = d_outbound_offsets_ptr[src_idx] + d_outbound_current_ptr[src_idx]++;
-            d_outbound_indices_ptr[out_pos] = i;
+        const size_t out_pos = d_outbound_offsets_ptr[src_idx] + d_outbound_current_ptr[src_idx]++;
+        d_outbound_indices_ptr[out_pos] = i;
 
-            if (is_directed) {
-                const size_t in_pos = d_inbound_offsets_ptr[tgt_idx] + d_inbound_current_ptr[tgt_idx]++;
-                d_inbound_indices_ptr[in_pos] = i;
-            } else {
-                const size_t out_pos2 = d_outbound_offsets_ptr[tgt_idx] + d_outbound_current_ptr[tgt_idx]++;
-                d_outbound_indices_ptr[out_pos2] = i;
-            }
+        if (is_directed) {
+            const size_t in_pos = d_inbound_offsets_ptr[tgt_idx] + d_inbound_current_ptr[tgt_idx]++;
+            d_inbound_indices_ptr[in_pos] = i;
+        } else {
+            const size_t out_pos2 = d_outbound_offsets_ptr[tgt_idx] + d_outbound_current_ptr[tgt_idx]++;
+            d_outbound_indices_ptr[out_pos2] = i;
         }
-    );
+    };
+
+    if constexpr (GPUUsage == GPUUsageMode::DATA_ON_GPU) {
+        thrust::for_each(
+            this->get_policy(),
+            thrust::make_counting_iterator<size_t>(0),
+            thrust::make_counting_iterator<size_t>(num_edges),
+            fill_device_lambda);
+    } else {
+        thrust::for_each(
+            this->get_policy(),
+            thrust::make_counting_iterator<size_t>(0),
+            thrust::make_counting_iterator<size_t>(num_edges),
+            fill_host_device_lambda);
+    }
 
     // Third pass: count timestamp groups
     typename SelectVectorType<size_t, GPUUsage>::type d_outbound_group_count(num_nodes, 0);
@@ -152,43 +207,86 @@ void NodeEdgeIndexCUDA<GPUUsage>::rebuild(
     size_t* d_inbound_group_count_ptr = is_directed ? thrust::raw_pointer_cast(d_inbound_group_count.data()) : nullptr;
 
     // Count timestamp groups for each node
-    thrust::for_each(
-        this->get_policy(),
-        thrust::make_counting_iterator<size_t>(0),
-        thrust::make_counting_iterator<size_t>(num_nodes),
-        [d_outbound_offsets_ptr, d_inbound_offsets_ptr,
-            d_outbound_indices_ptr, d_inbound_indices_ptr,
-            d_outbound_group_count_ptr, d_inbound_group_count_ptr,
-            d_timestamps_ptr, is_directed] __host__ __device__ (const size_t node) {
-            size_t start = d_outbound_offsets_ptr[node];
-            size_t end = d_outbound_offsets_ptr[node + 1];
+    auto fill_timestamp_groups_device_lambda = [d_outbound_offsets_ptr, d_inbound_offsets_ptr,
+                d_outbound_indices_ptr, d_inbound_indices_ptr,
+                d_outbound_group_count_ptr, d_inbound_group_count_ptr,
+                d_timestamps_ptr, is_directed] __device__ (const size_t node) {
+        size_t start = d_outbound_offsets_ptr[node];
+        size_t end = d_outbound_offsets_ptr[node + 1];
 
-            if (start < end) {
-                d_outbound_group_count_ptr[node] = 1;  // First group
-                for (size_t i = start + 1; i < end; ++i) {
-                    if (d_timestamps_ptr[d_outbound_indices_ptr[i]] !=
-                        d_timestamps_ptr[d_outbound_indices_ptr[i-1]]) {
-                        ++d_outbound_group_count_ptr[node];
-                    }
+        if (start < end) {
+            d_outbound_group_count_ptr[node] = 1; // First group
+            for (size_t i = start + 1; i < end; ++i) {
+                if (d_timestamps_ptr[d_outbound_indices_ptr[i]] !=
+                    d_timestamps_ptr[d_outbound_indices_ptr[i - 1]]) {
+                    atomicAdd(reinterpret_cast<unsigned int *>(&d_outbound_group_count_ptr[node]), 1);
                 }
             }
+        }
 
-            if (is_directed) {
-                start = d_inbound_offsets_ptr[node];
-                end = d_inbound_offsets_ptr[node + 1];
+        if (is_directed) {
+            start = d_inbound_offsets_ptr[node];
+            end = d_inbound_offsets_ptr[node + 1];
 
-                if (start < end) {
-                    d_inbound_group_count_ptr[node] = 1;  // First group
-                    for (size_t i = start + 1; i < end; ++i) {
-                        if (d_timestamps_ptr[d_inbound_indices_ptr[i]] !=
-                            d_timestamps_ptr[d_inbound_indices_ptr[i-1]]) {
-                            ++d_inbound_group_count_ptr[node];
-                        }
+            if (start < end) {
+                d_inbound_group_count_ptr[node] = 1; // First group
+                for (size_t i = start + 1; i < end; ++i) {
+                    if (d_timestamps_ptr[d_inbound_indices_ptr[i]] !=
+                        d_timestamps_ptr[d_inbound_indices_ptr[i - 1]]) {
+                        atomicAdd(reinterpret_cast<unsigned int *>(&d_inbound_group_count_ptr[node]), 1);
                     }
                 }
             }
         }
-    );
+    };
+
+    auto fill_timestamp_groups_host_device_lambda = [d_outbound_offsets_ptr, d_inbound_offsets_ptr,
+                d_outbound_indices_ptr, d_inbound_indices_ptr,
+                d_outbound_group_count_ptr, d_inbound_group_count_ptr,
+                d_timestamps_ptr, is_directed] __host__ __device__ (const size_t node) {
+        size_t start = d_outbound_offsets_ptr[node];
+        size_t end = d_outbound_offsets_ptr[node + 1];
+
+        if (start < end) {
+            d_outbound_group_count_ptr[node] = 1; // First group
+            for (size_t i = start + 1; i < end; ++i) {
+                if (d_timestamps_ptr[d_outbound_indices_ptr[i]] !=
+                    d_timestamps_ptr[d_outbound_indices_ptr[i - 1]]) {
+                    ++d_outbound_group_count_ptr[node];
+                }
+            }
+        }
+
+        if (is_directed) {
+            start = d_inbound_offsets_ptr[node];
+            end = d_inbound_offsets_ptr[node + 1];
+
+            if (start < end) {
+                d_inbound_group_count_ptr[node] = 1; // First group
+                for (size_t i = start + 1; i < end; ++i) {
+                    if (d_timestamps_ptr[d_inbound_indices_ptr[i]] !=
+                        d_timestamps_ptr[d_inbound_indices_ptr[i - 1]]) {
+                        ++d_inbound_group_count_ptr[node];
+                    }
+                }
+            }
+        }
+    };
+
+    if constexpr (GPUUsage == GPUUsageMode::DATA_ON_GPU) {
+        thrust::for_each(
+            this->get_policy(),
+            thrust::make_counting_iterator<size_t>(0),
+            thrust::make_counting_iterator<size_t>(num_nodes),
+            fill_timestamp_groups_device_lambda);
+    } else {
+        thrust::for_each(
+            this->get_policy(),
+            thrust::make_counting_iterator<size_t>(0),
+            thrust::make_counting_iterator<size_t>(num_nodes),
+            fill_timestamp_groups_host_device_lambda);
+    }
+
 
     // Calculate prefix sums for group offsets
     thrust::inclusive_scan(
@@ -226,46 +324,95 @@ void NodeEdgeIndexCUDA<GPUUsage>::rebuild(
     const size_t* d_inbound_group_offsets_ptr = is_directed ? thrust::raw_pointer_cast(this->inbound_timestamp_group_offsets.data()) : nullptr;
 
     // Fill group indices
-    thrust::for_each(
-        this->get_policy(),
-        thrust::make_counting_iterator<size_t>(0),
-        thrust::make_counting_iterator<size_t>(num_nodes),
-        [d_outbound_offsets_ptr, d_inbound_offsets_ptr,
+    auto fill_node_time_group_device_lambda = [d_outbound_offsets_ptr, d_inbound_offsets_ptr,
             d_outbound_indices_ptr, d_inbound_indices_ptr,
             d_outbound_group_offsets_ptr, d_inbound_group_offsets_ptr,
             d_outbound_group_indices_ptr, d_inbound_group_indices_ptr,
-            d_timestamps_ptr, is_directed] __host__ __device__ (const size_t node) {
-            size_t start = d_outbound_offsets_ptr[node];
-            size_t end = d_outbound_offsets_ptr[node + 1];
-            size_t group_pos = d_outbound_group_offsets_ptr[node];
+            d_timestamps_ptr, is_directed] __device__ (const size_t node) {
+        size_t start = d_outbound_offsets_ptr[node];
+        size_t end = d_outbound_offsets_ptr[node + 1];
+        size_t group_pos = d_outbound_group_offsets_ptr[node];
 
-            if (start < end) {
-                d_outbound_group_indices_ptr[group_pos++] = start;
-                for (size_t i = start + 1; i < end; ++i) {
-                    if (d_timestamps_ptr[d_outbound_indices_ptr[i]] !=
-                        d_timestamps_ptr[d_outbound_indices_ptr[i-1]]) {
-                        d_outbound_group_indices_ptr[group_pos++] = i;
-                    }
+        if (start < end) {
+            d_outbound_group_indices_ptr[group_pos++] = start;
+            for (size_t i = start + 1; i < end; ++i) {
+                if (d_timestamps_ptr[d_outbound_indices_ptr[i]] !=
+                    d_timestamps_ptr[d_outbound_indices_ptr[i-1]]) {
+                    d_outbound_group_indices_ptr[group_pos] = i;
+                    atomicAdd(reinterpret_cast<unsigned int *>(&d_outbound_group_indices_ptr[group_pos]), 1);
                 }
             }
+        }
 
-            if (is_directed) {
-                start = d_inbound_offsets_ptr[node];
-                end = d_inbound_offsets_ptr[node + 1];
-                group_pos = d_inbound_group_offsets_ptr[node];
+        if (is_directed) {
+            start = d_inbound_offsets_ptr[node];
+            end = d_inbound_offsets_ptr[node + 1];
+            group_pos = d_inbound_group_offsets_ptr[node];
 
-                if (start < end) {
-                    d_inbound_group_indices_ptr[group_pos++] = start;
-                    for (size_t i = start + 1; i < end; ++i) {
-                        if (d_timestamps_ptr[d_inbound_indices_ptr[i]] !=
-                            d_timestamps_ptr[d_inbound_indices_ptr[i-1]]) {
-                            d_inbound_group_indices_ptr[group_pos++] = i;
-                        }
+            if (start < end) {
+                d_inbound_group_indices_ptr[group_pos++] = start;
+                for (size_t i = start + 1; i < end; ++i) {
+                    if (d_timestamps_ptr[d_inbound_indices_ptr[i]] !=
+                        d_timestamps_ptr[d_inbound_indices_ptr[i-1]]) {
+                        d_inbound_group_indices_ptr[group_pos] = i;
+                        atomicAdd(reinterpret_cast<unsigned int *>(&d_inbound_group_indices_ptr[group_pos]), 1);
                     }
                 }
             }
         }
-    );
+    };
+
+    auto fill_node_time_group_host_device_lambda = [d_outbound_offsets_ptr, d_inbound_offsets_ptr,
+            d_outbound_indices_ptr, d_inbound_indices_ptr,
+            d_outbound_group_offsets_ptr, d_inbound_group_offsets_ptr,
+            d_outbound_group_indices_ptr, d_inbound_group_indices_ptr,
+            d_timestamps_ptr, is_directed] __host__ __device__ (const size_t node) {
+        size_t start = d_outbound_offsets_ptr[node];
+        size_t end = d_outbound_offsets_ptr[node + 1];
+        size_t group_pos = d_outbound_group_offsets_ptr[node];
+
+        if (start < end) {
+            d_outbound_group_indices_ptr[group_pos++] = start;
+            for (size_t i = start + 1; i < end; ++i) {
+                if (d_timestamps_ptr[d_outbound_indices_ptr[i]] !=
+                    d_timestamps_ptr[d_outbound_indices_ptr[i-1]]) {
+                    d_outbound_group_indices_ptr[group_pos++] = i;
+                }
+            }
+        }
+
+        if (is_directed) {
+            start = d_inbound_offsets_ptr[node];
+            end = d_inbound_offsets_ptr[node + 1];
+            group_pos = d_inbound_group_offsets_ptr[node];
+
+            if (start < end) {
+                d_inbound_group_indices_ptr[group_pos++] = start;
+                for (size_t i = start + 1; i < end; ++i) {
+                    if (d_timestamps_ptr[d_inbound_indices_ptr[i]] !=
+                        d_timestamps_ptr[d_inbound_indices_ptr[i-1]]) {
+                        d_inbound_group_indices_ptr[group_pos++] = i;
+                    }
+                }
+            }
+        }
+    };
+
+    if constexpr (GPUUsage == GPUUsageMode::DATA_ON_GPU) {
+        thrust::for_each(
+            this->get_policy(),
+            thrust::make_counting_iterator<size_t>(0),
+            thrust::make_counting_iterator<size_t>(num_nodes),
+            fill_node_time_group_device_lambda
+        );
+    } else {
+        thrust::for_each(
+            this->get_policy(),
+            thrust::make_counting_iterator<size_t>(0),
+            thrust::make_counting_iterator<size_t>(num_nodes),
+            fill_node_time_group_host_device_lambda
+        );
+    }
 }
 
 
