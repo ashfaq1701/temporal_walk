@@ -5,6 +5,10 @@
 #include <thrust/extrema.h>
 #include <thrust/count.h>
 
+__host__ __device__ int to_dense(const int* sparse_to_dense, const int sparse_id, const int size) {
+    return (sparse_id < size) ? sparse_to_dense[sparse_id] : -1;
+}
+
 template<GPUUsageMode GPUUsage>
 void NodeMappingCUDA<GPUUsage>::update(const EdgeData<GPUUsage>& edges, const size_t start_idx, const size_t end_idx) {
     auto max_source = thrust::max_element(

@@ -4,6 +4,12 @@
 #include "../cpu/NodeMapping.cuh"
 #include "../../cuda_common/PolicyProvider.cuh"
 
+#ifdef HAS_CUDA
+
+__host__ __device__ int to_dense(const int* sparse_to_dense, int sparse_id, int size);
+
+#endif
+
 template<GPUUsageMode GPUUsage>
 class NodeMappingCUDA final : public NodeMapping<GPUUsage>, public PolicyProvider<GPUUsage> {
 

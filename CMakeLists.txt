@@ -62,6 +62,13 @@ if(HAS_CUDA AND CMAKE_CUDA_COMPILER)
             $<$<COMPILE_LANGUAGE:CUDA>:-Xcompiler=-fPIC>
     )
 
+    set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}
+            -maxrregcount=64           # Limit register usage
+            --default-stream per-thread # Better stream handling
+            --ptxas-options=-v         # Verbose PTX assembly
+            -Xptxas -dlcm=ca          # Cache all operations
+    )
+
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --extended-lambda --expt-relaxed-constexpr -rdc=true")
     # For debug builds
     set(CMAKE_CUDA_FLAGS_DEBUG "${CMAKE_CUDA_FLAGS_DEBUG} -G")

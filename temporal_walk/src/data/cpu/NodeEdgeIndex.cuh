@@ -10,6 +10,7 @@ template<GPUUsageMode GPUUsage>
 class NodeEdgeIndex
 {
 public:
+    virtual ~NodeEdgeIndex() = default;
 
     using SizeVector = typename SelectVectorType<size_t, GPUUsage>::type;
     using DoubleVector = typename SelectVectorType<double, GPUUsage>::type;
@@ -43,7 +44,7 @@ public:
 
     virtual void update_temporal_weights(const EdgeData<GPUUsage>& edges, double timescale_bound);
 
-private:
+protected:
     SizeVector get_timestamp_offset_vector(bool forward, bool directed) const;
 };
 

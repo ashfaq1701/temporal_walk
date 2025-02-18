@@ -1,12 +1,33 @@
 #include <gtest/gtest.h>
 
-#include "../src/data/cpu/NodeEdgeIndex.cuh"
-#include "../src/data/cpu/NodeMapping.cuh"
 #include "../src/data/cpu/EdgeData.cuh"
+#include "../src/data/cuda/EdgeDataCUDA.cuh"
+#include "../src/data/cpu/NodeMapping.cuh"
+#include "../src/data/cuda/NodeMappingCUDA.cuh"
+#include "../src/data/cpu/NodeEdgeIndex.cuh"
+#include "../src/data/cuda/NodeEdgeIndexCUDA.cuh"
 
 template<typename T>
 class NodeEdgeIndexWeightTest : public ::testing::Test {
 protected:
+
+    using EdgeDataType = std::conditional_t<
+        T::value == GPUUsageMode::ON_CPU,
+        EdgeData<T::value>,
+        EdgeDataCUDA<T::value>
+    >;
+
+    using NodeMappingType = std::conditional_t<
+        T::value == GPUUsageMode::ON_CPU,
+        NodeMapping<T::value>,
+        NodeMappingCUDA<T::value>
+    >;
+
+    using NodeEdgeIndexType = std::conditional_t<
+        T::value == GPUUsageMode::ON_CPU,
+        NodeEdgeIndex<T::value>,
+        NodeEdgeIndexCUDA<T::value>
+    >;
 
     using DoubleVector = typename SelectVectorType<double, T::value>::type;
     using SizeTVector = typename SelectVectorType<size_t, T::value>::type;
@@ -39,17 +60,34 @@ protected:
         const DoubleVector &cumulative,
         const SizeTVector &offsets,
         const size_t node) {
+
+        std::vector<double> cumulative_vector;
+        std::vector<size_t> offsets_vector;
+
         // First get host data
+        if (T::value == GPUUsageMode::ON_CPU) {
+            cumulative_vector = std::vector(cumulative.begin(), cumulative.end());
+            offsets_vector = std::vector(offsets.begin(), offsets.end());
+        } else {
+            std::vector<double> c_vec(cumulative.size());
+            std::vector<size_t> o_vec(offsets.size());
+
+            thrust::copy(cumulative.begin(), cumulative.end(), c_vec.begin());
+            thrust::copy(offsets.begin(), offsets.end(), o_vec.begin());
+
+            cumulative_vector = c_vec;
+            offsets_vector = o_vec;
+        }
 
         // Get node's range
-        const size_t start = offsets[node];
-        const size_t end = offsets[node + 1];
+        const size_t start = offsets_vector[node];
+        const size_t end = offsets_vector[node + 1];
 
         // Calculate individual weights
         std::vector<double> weights;
-        weights.push_back(cumulative[start]);
+        weights.push_back(cumulative_vector[start]);
         for (size_t i = start; i < end; i++) {
-            weights.push_back(cumulative[i] - cumulative[i - 1]);
+            weights.push_back(cumulative_vector[i] - cumulative_vector[i - 1]);
         }
 
         return weights;
@@ -69,12 +107,12 @@ protected:
         NodeMapping<T::value> mapping;  // CPU mode
         mapping.update(edges, 0, edges.size());
 
-        index = NodeEdgeIndex<T::value>();  // CPU mode
+        index = NodeEdgeIndexType();  // CPU mode
         index.rebuild(edges, mapping, directed);
         index.update_temporal_weights(edges, -1);
     }
 
-    NodeEdgeIndex<T::value> index;
+    NodeEdgeIndexType index;
 };
 
 #ifdef HAS_CUDA
@@ -92,9 +130,13 @@ using GPU_USAGE_TYPES = ::testing::Types<
 TYPED_TEST_SUITE(NodeEdgeIndexWeightTest, GPU_USAGE_TYPES);
 
 TYPED_TEST(NodeEdgeIndexWeightTest, EmptyGraph) {
-    EdgeData<TypeParam::value> empty_edges;
-    NodeMapping<TypeParam::value> empty_mapping;
-    this->index = NodeEdgeIndex<TypeParam::value>();
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    using NodeMappingType = typename TestFixture::NodeMappingType;
+    using NodeEdgeIndexType = typename TestFixture::NodeEdgeIndexType;
+
+    EdgeDataType empty_edges;
+    NodeMappingType empty_mapping;
+    this->index = NodeEdgeIndexType();
     this->index.rebuild(empty_edges, empty_mapping, true);
     this->index.update_temporal_weights(empty_edges, -1);
 
@@ -116,16 +158,20 @@ TYPED_TEST(NodeEdgeIndexWeightTest, DirectedWeightNormalization) {
 }
 
 TYPED_TEST(NodeEdgeIndexWeightTest, WeightBiasPerNode) {
-    EdgeData<TypeParam::value> edges;
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    using NodeMappingType = typename TestFixture::NodeMappingType;
+    using NodeEdgeIndexType = typename TestFixture::NodeEdgeIndexType;
+
+    EdgeDataType edges;
     edges.push_back(1, 2, 100);  // Known timestamps for precise verification
     edges.push_back(1, 3, 200);
     edges.push_back(1, 4, 300);
     edges.update_timestamp_groups();
 
-    NodeMapping<TypeParam::value> mapping;
+    NodeMappingType mapping;
     mapping.update(edges, 0, edges.size());
 
-    this->index = NodeEdgeIndex<TypeParam::value>();
+    this->index = NodeEdgeIndexType();
     this->index.rebuild(edges, mapping, true);
     this->index.update_temporal_weights(edges, -1); // No scaling
 
@@ -151,16 +197,20 @@ TYPED_TEST(NodeEdgeIndexWeightTest, WeightBiasPerNode) {
 }
 
 TYPED_TEST(NodeEdgeIndexWeightTest, ScaledWeightRatios) {
-    EdgeData<TypeParam::value> edges;
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    using NodeMappingType = typename TestFixture::NodeMappingType;
+    using NodeEdgeIndexType = typename TestFixture::NodeEdgeIndexType;
+
+    EdgeDataType edges;
     edges.push_back(1, 2, 100);
     edges.push_back(1, 3, 300);
     edges.push_back(1, 4, 500);
     edges.update_timestamp_groups();
 
-    NodeMapping<TypeParam::value> mapping;
+    NodeMappingType mapping;
     mapping.update(edges, 0, edges.size());
 
-    this->index = NodeEdgeIndex<TypeParam::value>();
+    this->index = NodeEdgeIndexType();
     this->index.rebuild(edges, mapping, true);
 
     constexpr double timescale_bound = 2.0;
@@ -205,6 +255,9 @@ TYPED_TEST(NodeEdgeIndexWeightTest, UndirectedWeightNormalization) {
 }
 
 TYPED_TEST(NodeEdgeIndexWeightTest, WeightConsistencyAcrossUpdates) {
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    using NodeMappingType = typename TestFixture::NodeMappingType;
+
    this->setup_test_graph(true);
 
    // Store original weights
@@ -213,12 +266,12 @@ TYPED_TEST(NodeEdgeIndexWeightTest, WeightConsistencyAcrossUpdates) {
    auto original_in_backward = this->index.inbound_backward_cumulative_weights_exponential;
 
    // Rebuild and update weights again
-   EdgeData<TypeParam::value> edges;
+   EdgeDataType edges;
    edges.push_back(1, 2, 10);
    edges.push_back(1, 3, 10);
    edges.update_timestamp_groups();
 
-   NodeMapping<TypeParam::value> mapping;
+   NodeMappingType mapping;
    mapping.update(edges, 0, edges.size());
 
    this->index.rebuild(edges, mapping, true);
@@ -231,14 +284,17 @@ TYPED_TEST(NodeEdgeIndexWeightTest, WeightConsistencyAcrossUpdates) {
 }
 
 TYPED_TEST(NodeEdgeIndexWeightTest, SingleTimestampGroupPerNode) {
-   EdgeData<TypeParam::value> edges;
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    using NodeMappingType = typename TestFixture::NodeMappingType;
+
+   EdgeDataType edges;
    // All edges in same timestamp group
    edges.push_back(1, 2, 10);
    edges.push_back(1, 3, 10);
    edges.push_back(2, 3, 10);
    edges.update_timestamp_groups();
 
-   NodeMapping<TypeParam::value> mapping;
+   NodeMappingType mapping;
    mapping.update(edges, 0, edges.size());
 
    this->index.rebuild(edges, mapping, true);
@@ -257,13 +313,16 @@ TYPED_TEST(NodeEdgeIndexWeightTest, SingleTimestampGroupPerNode) {
 }
 
 TYPED_TEST(NodeEdgeIndexWeightTest, TimescaleBoundZero) {
-    EdgeData<TypeParam::value> edges;
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    using NodeMappingType = typename TestFixture::NodeMappingType;
+
+    EdgeDataType edges;
     edges.push_back(1, 2, 10);
     edges.push_back(1, 3, 20);
     edges.push_back(1, 4, 30);
     edges.update_timestamp_groups();
 
-    NodeMapping<TypeParam::value> mapping;
+    NodeMappingType mapping;
     mapping.update(edges, 0, edges.size());
 
     this->index.rebuild(edges, mapping, true);
@@ -276,7 +335,10 @@ TYPED_TEST(NodeEdgeIndexWeightTest, TimescaleBoundZero) {
 }
 
 TYPED_TEST(NodeEdgeIndexWeightTest, TimescaleBoundWithSingleTimestamp) {
-    EdgeData<TypeParam::value> edges;
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    using NodeMappingType = typename TestFixture::NodeMappingType;
+
+    EdgeDataType edges;
     // All edges for node 1 have same timestamp
     constexpr int node_id = 1;  // Original node ID
     edges.push_back(node_id, 2, 10);
@@ -284,7 +346,7 @@ TYPED_TEST(NodeEdgeIndexWeightTest, TimescaleBoundWithSingleTimestamp) {
     edges.push_back(node_id, 4, 10);
     edges.update_timestamp_groups();
 
-    NodeMapping<TypeParam::value> mapping;
+    NodeMappingType mapping;
     mapping.update(edges, 0, edges.size());
 
     // Get the dense index for node_id
@@ -307,13 +369,16 @@ TYPED_TEST(NodeEdgeIndexWeightTest, TimescaleBoundWithSingleTimestamp) {
 }
 
 TYPED_TEST(NodeEdgeIndexWeightTest, WeightOrderPreservation) {
-    EdgeData<TypeParam::value> edges;
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    using NodeMappingType = typename TestFixture::NodeMappingType;
+
+    EdgeDataType edges;
     edges.push_back(1, 2, 10);
     edges.push_back(1, 3, 20);
     edges.push_back(1, 4, 30);
     edges.update_timestamp_groups();
 
-    NodeMapping<TypeParam::value> mapping;
+    NodeMappingType mapping;
     mapping.update(edges, 0, edges.size());
     this->index.rebuild(edges, mapping, true);
 
@@ -338,7 +403,11 @@ TYPED_TEST(NodeEdgeIndexWeightTest, WeightOrderPreservation) {
 }
 
 TYPED_TEST(NodeEdgeIndexWeightTest, TimescaleNormalizationTest) {
-    EdgeData<TypeParam::value> edges;  // CPU mode
+    using EdgeDataType = typename TestFixture::EdgeDataType;
+    using NodeMappingType = typename TestFixture::NodeMappingType;
+    using NodeEdgeIndexType = typename TestFixture::NodeEdgeIndexType;
+
+    EdgeDataType edges;  // CPU mode
     // Create edges with widely varying time differences
     edges.push_back(1, 2, 100);       // Small gap
     edges.push_back(1, 3, 200);       // 100 units
@@ -346,10 +415,10 @@ TYPED_TEST(NodeEdgeIndexWeightTest, TimescaleNormalizationTest) {
     edges.push_back(1, 5, 100000);    // Large gap
     edges.update_timestamp_groups();
 
-    NodeMapping<TypeParam::value> mapping;  // CPU mode
+    NodeMappingType mapping;  // CPU mode
     mapping.update(edges, 0, edges.size());
 
-    this->index = NodeEdgeIndex<TypeParam::value>();  // CPU mode
+    this->index = NodeEdgeIndexType();  // CPU mode
     this->index.rebuild(edges, mapping, true);
 
     constexpr double timescale_bound = 5.0;
