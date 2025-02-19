@@ -53,7 +53,7 @@ size_t TemporalGraphCUDA<GPUUsage>::count_node_timestamps_less_than(int node_id,
         timestamp_group_indices.begin() + static_cast<int>(group_start),
         timestamp_group_indices.begin() + static_cast<int>(group_end),
         timestamp,
-        [timestamps_ptr, edge_indices_ptr](const size_t group_pos, const int64_t ts)
+        [timestamps_ptr, edge_indices_ptr] __host__ __device__ (const size_t group_pos, const int64_t ts)
         {
             return timestamps_ptr[edge_indices_ptr[group_pos]] < ts;
         });
@@ -83,14 +83,13 @@ size_t TemporalGraphCUDA<GPUUsage>::count_node_timestamps_greater_than(int node_
         timestamp_group_indices.begin() + static_cast<int>(group_start),
         timestamp_group_indices.begin() + static_cast<int>(group_end),
         timestamp,
-        [timestamps_ptr, edge_indices_ptr](const int64_t ts, const size_t group_pos)
+        [timestamps_ptr, edge_indices_ptr] __host__ __device__ (const int64_t ts, const size_t group_pos)
         {
             return ts < timestamps_ptr[edge_indices_ptr[group_pos]];
         });
 
     return std::distance(it, timestamp_group_indices.begin() + static_cast<int>(group_end));
 }
-
 
 template class TemporalGraphCUDA<GPUUsageMode::DATA_ON_GPU>;
 template class TemporalGraphCUDA<GPUUsageMode::DATA_ON_HOST>;
