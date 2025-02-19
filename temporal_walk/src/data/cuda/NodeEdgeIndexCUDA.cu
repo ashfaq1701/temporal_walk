@@ -142,22 +142,19 @@ void NodeEdgeIndexCUDA<GPUUsage>::rebuild(
         d_outbound_offsets_ptr, d_inbound_offsets_ptr,
         d_outbound_indices_ptr, d_inbound_indices_ptr,
         d_outbound_current_ptr, d_inbound_current_ptr, is_directed] __device__ (const size_t i) {
+
         const int src_idx = d_src_ptr[i];
         const int tgt_idx = d_tgt_ptr[i];
 
-        const size_t out_pos = d_outbound_offsets_ptr[src_idx] + d_outbound_current_ptr[src_idx];
-        atomicAdd(reinterpret_cast<unsigned int *>(&d_outbound_current_ptr[src_idx]), 1);
-
-        d_outbound_indices_ptr[out_pos] = i;
+        const size_t out_pos = atomicAdd(reinterpret_cast<unsigned int *>(&d_outbound_current_ptr[src_idx]), 1);
+        d_outbound_indices_ptr[d_outbound_offsets_ptr[src_idx] + out_pos] = i;
 
         if (is_directed) {
-            const size_t in_pos = d_inbound_offsets_ptr[tgt_idx] + d_inbound_current_ptr[tgt_idx];
-            atomicAdd(reinterpret_cast<unsigned int *>(&d_inbound_current_ptr[tgt_idx]), 1);
-            d_inbound_indices_ptr[in_pos] = i;
+            const size_t in_pos = atomicAdd(reinterpret_cast<unsigned int *>(&d_inbound_current_ptr[tgt_idx]), 1);
+            d_inbound_indices_ptr[d_inbound_offsets_ptr[tgt_idx] + in_pos] = i;
         } else {
-            const size_t out_pos2 = d_outbound_offsets_ptr[tgt_idx] + d_outbound_current_ptr[tgt_idx];
-            atomicAdd(reinterpret_cast<unsigned int *>(&d_outbound_current_ptr[tgt_idx]), 1);
-            d_outbound_indices_ptr[out_pos2] = i;
+            const size_t out_pos2 = atomicAdd(reinterpret_cast<unsigned int *>(&d_outbound_current_ptr[tgt_idx]), 1);
+            d_outbound_indices_ptr[d_outbound_offsets_ptr[tgt_idx] + out_pos2] = i;
         }
     };
 
