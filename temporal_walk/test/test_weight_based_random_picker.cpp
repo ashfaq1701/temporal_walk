@@ -17,7 +17,9 @@ protected:
 
     WeightBasedRandomPickerTest() {
         if constexpr (T::value == GPUUsageMode::DATA_ON_GPU) {
+            #ifdef HAS_CUDA
             CUDARandomStates::initialize();
+            #endif
         }
     }
 

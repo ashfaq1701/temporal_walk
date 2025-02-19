@@ -72,8 +72,13 @@ protected:
             std::vector<double> c_vec(cumulative.size());
             std::vector<size_t> o_vec(offsets.size());
 
+            #ifdef HAS_CUDA
             thrust::copy(cumulative.begin(), cumulative.end(), c_vec.begin());
             thrust::copy(offsets.begin(), offsets.end(), o_vec.begin());
+            #else
+            std::copy(cumulative.begin(), cumulative.end(), c_vec.begin());
+            std::copy(offsets.begin(), offsets.end(), o_vec.begin());
+            #endif
 
             cumulative_vector = c_vec;
             offsets_vector = o_vec;
