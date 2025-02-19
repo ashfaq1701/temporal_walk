@@ -153,6 +153,27 @@ TYPED_TEST(NodeEdgeIndexTest, DirectedTimestampGroupTest) {
     EXPECT_EQ(this->edges.timestamps[edge_idx], 200);
     EXPECT_EQ(this->edges.sources[edge_idx], 10);
     EXPECT_EQ(this->edges.targets[edge_idx], 20);
+
+    // For testing
+    thrust::host_vector<int64_t> h_timestamps = this->edges.timestamps;
+    thrust::host_vector<size_t> h_outbound_indices = this->index.outbound_indices;
+    thrust::host_vector<size_t> h_outbound_offsets = this->index.outbound_offsets;
+
+    // Print node 10's edges
+    size_t start = h_outbound_offsets[dense_node10];
+    size_t end = h_outbound_offsets[dense_node10 + 1];
+
+    std::cout << "Node 10 edges (" << dense_node10 << "):" << std::endl;
+    for (size_t i = start; i < end; i++) {
+        std::cout << "Edge " << i << ": timestamp=" << h_timestamps[h_outbound_indices[i]] << std::endl;
+    }
+
+    std::cout << "Original edges:" << std::endl;
+    for (size_t i = 0; i < this->edges.timestamps.size(); i++) {
+        std::cout << "Edge " << i << ": src=" << this->edges.sources[i]
+                  << " tgt=" << this->edges.targets[i]
+                  << " ts=" << this->edges.timestamps[i] << std::endl;
+    }
 }
 
 // Test edge ranges in undirected graph

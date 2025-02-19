@@ -139,9 +139,9 @@ void NodeEdgeIndexCUDA<GPUUsage>::rebuild(
 
     // Fill edge indices
     auto fill_device_lambda = [d_src_ptr, d_tgt_ptr,
-            d_outbound_offsets_ptr, d_inbound_offsets_ptr,
-            d_outbound_indices_ptr, d_inbound_indices_ptr,
-            d_outbound_current_ptr, d_inbound_current_ptr, is_directed] __device__ (const size_t i) {
+        d_outbound_offsets_ptr, d_inbound_offsets_ptr,
+        d_outbound_indices_ptr, d_inbound_indices_ptr,
+        d_outbound_current_ptr, d_inbound_current_ptr, is_directed] __device__ (const size_t i) {
         const int src_idx = d_src_ptr[i];
         const int tgt_idx = d_tgt_ptr[i];
 
@@ -324,45 +324,7 @@ void NodeEdgeIndexCUDA<GPUUsage>::rebuild(
     const size_t* d_inbound_group_offsets_ptr = is_directed ? thrust::raw_pointer_cast(this->inbound_timestamp_group_offsets.data()) : nullptr;
 
     // Fill group indices
-    auto fill_node_time_group_device_lambda = [d_outbound_offsets_ptr, d_inbound_offsets_ptr,
-            d_outbound_indices_ptr, d_inbound_indices_ptr,
-            d_outbound_group_offsets_ptr, d_inbound_group_offsets_ptr,
-            d_outbound_group_indices_ptr, d_inbound_group_indices_ptr,
-            d_timestamps_ptr, is_directed] __device__ (const size_t node) {
-        size_t start = d_outbound_offsets_ptr[node];
-        size_t end = d_outbound_offsets_ptr[node + 1];
-        size_t group_pos = d_outbound_group_offsets_ptr[node];
-
-        if (start < end) {
-            d_outbound_group_indices_ptr[group_pos++] = start;
-            for (size_t i = start + 1; i < end; ++i) {
-                if (d_timestamps_ptr[d_outbound_indices_ptr[i]] !=
-                    d_timestamps_ptr[d_outbound_indices_ptr[i-1]]) {
-                    d_outbound_group_indices_ptr[group_pos] = i;
-                    atomicAdd(reinterpret_cast<unsigned int *>(&d_outbound_group_indices_ptr[group_pos]), 1);
-                }
-            }
-        }
-
-        if (is_directed) {
-            start = d_inbound_offsets_ptr[node];
-            end = d_inbound_offsets_ptr[node + 1];
-            group_pos = d_inbound_group_offsets_ptr[node];
-
-            if (start < end) {
-                d_inbound_group_indices_ptr[group_pos++] = start;
-                for (size_t i = start + 1; i < end; ++i) {
-                    if (d_timestamps_ptr[d_inbound_indices_ptr[i]] !=
-                        d_timestamps_ptr[d_inbound_indices_ptr[i-1]]) {
-                        d_inbound_group_indices_ptr[group_pos] = i;
-                        atomicAdd(reinterpret_cast<unsigned int *>(&d_inbound_group_indices_ptr[group_pos]), 1);
-                    }
-                }
-            }
-        }
-    };
-
-    auto fill_node_time_group_host_device_lambda = [d_outbound_offsets_ptr, d_inbound_offsets_ptr,
+    auto fill_node_time_group_lambda = [d_outbound_offsets_ptr, d_inbound_offsets_ptr,
             d_outbound_indices_ptr, d_inbound_indices_ptr,
             d_outbound_group_offsets_ptr, d_inbound_group_offsets_ptr,
             d_outbound_group_indices_ptr, d_inbound_group_indices_ptr,
@@ -398,21 +360,11 @@ void NodeEdgeIndexCUDA<GPUUsage>::rebuild(
         }
     };
 
-    if constexpr (GPUUsage == GPUUsageMode::DATA_ON_GPU) {
-        thrust::for_each(
-            this->get_policy(),
-            thrust::make_counting_iterator<size_t>(0),
-            thrust::make_counting_iterator<size_t>(num_nodes),
-            fill_node_time_group_device_lambda
-        );
-    } else {
-        thrust::for_each(
-            this->get_policy(),
-            thrust::make_counting_iterator<size_t>(0),
-            thrust::make_counting_iterator<size_t>(num_nodes),
-            fill_node_time_group_host_device_lambda
-        );
-    }
+    thrust::for_each(
+        this->get_policy(),
+        thrust::make_counting_iterator<size_t>(0),
+        thrust::make_counting_iterator<size_t>(num_nodes),
+        fill_node_time_group_lambda);
 }
 
 
