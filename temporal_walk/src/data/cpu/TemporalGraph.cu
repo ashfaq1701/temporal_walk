@@ -290,7 +290,7 @@ template<GPUUsageMode GPUUsage>
 std::tuple<int, int, int64_t> TemporalGraph<GPUUsage>::get_edge_at(
     RandomPicker& picker,
     int64_t timestamp,
-    bool forward) const {
+    const bool forward) const {
 
     if (edges.empty()) return {-1, -1, -1};
 

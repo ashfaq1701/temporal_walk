@@ -9,6 +9,12 @@ __host__ __device__ int to_dense(const int* sparse_to_dense, const int sparse_id
     return (sparse_id < size) ? sparse_to_dense[sparse_id] : -1;
 }
 
+__host__ __device__ void mark_node_deleted(bool* is_deleted, const int sparse_id, const int size) {
+    if (sparse_id < size) {
+        is_deleted[sparse_id] = true;
+    }
+}
+
 template<GPUUsageMode GPUUsage>
 void NodeMappingCUDA<GPUUsage>::update(const EdgeData<GPUUsage>& edges, const size_t start_idx, const size_t end_idx) {
     auto max_source = thrust::max_element(

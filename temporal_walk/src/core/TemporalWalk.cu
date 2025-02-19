@@ -27,7 +27,7 @@ TemporalWalk<GPUUsage>::TemporalWalk(
     #endif
 
     #ifdef HAS_CUDA
-    temporal_graph = std::make_unique<TemporalGraphCUDA<GPUUsage>>(
+    temporal_graph = std::make_unique<TemporalGraphType>(
         is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
     #else
     temporal_graph = std::make_unique<TemporalGraph<GPUUsageMode::ON_CPU>>(
@@ -35,7 +35,7 @@ TemporalWalk<GPUUsage>::TemporalWalk(
     #endif
 }
 
-bool get_should_walk_forward(WalkDirection walk_direction) {
+bool get_should_walk_forward(const WalkDirection walk_direction) {
     switch (walk_direction)
     {
     case WalkDirection::Forward_In_Time:
@@ -535,7 +535,7 @@ bool TemporalWalk<GPUUsage>::get_is_directed() const {
 template<GPUUsageMode GPUUsage>
 void TemporalWalk<GPUUsage>::clear() {
     #ifdef HAS_CUDA
-    temporal_graph = std::make_unique<TemporalGraphCUDA<GPUUsage>>(
+    temporal_graph = std::make_unique<TemporalGraphType>(
         is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
     #else
     temporal_graph = std::make_unique<TemporalGraph<GPUUsageMode::ON_CPU>>(

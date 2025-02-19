@@ -36,17 +36,17 @@ private:
     using NodeMappingType = NodeMapping<GPUUsage>;
     #endif
 
+protected:
     using SizeVector = typename SelectVectorType<size_t, GPUUsage>::type;
     using IntVector = typename SelectVectorType<int, GPUUsage>::type;
     using Int64TVector = typename SelectVectorType<int64_t, GPUUsage>::type;
     using BoolVector = typename SelectVectorType<bool, GPUUsage>::type;
 
+protected:
     int64_t time_window; // Time duration to keep edges (-1 means keep all)
     bool enable_weight_computation;
     double timescale_bound;
     int64_t latest_timestamp; // Track latest edge timestamp
-
-    void delete_old_edges();
 
 public:
     virtual ~TemporalGraph() = default;
@@ -63,12 +63,14 @@ public:
         bool enable_weight_computation = false,
         double timescale_bound=-1);
 
-    void sort_and_merge_edges(size_t start_idx);
+    virtual void sort_and_merge_edges(size_t start_idx);
 
     // Edge addition
     void add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& new_edges);
 
     void update_temporal_weights();
+
+    virtual void delete_old_edges();
 
     // Timestamp group counting
     [[nodiscard]] virtual size_t count_timestamps_less_than(int64_t timestamp) const;
@@ -81,7 +83,7 @@ public:
         RandomPicker& picker, int64_t timestamp = -1,
         bool forward = true) const;
 
-    [[nodiscard]] std::tuple<int, int, int64_t> get_node_edge_at(int node_id,
+    [[nodiscard]] virtual std::tuple<int, int, int64_t> get_node_edge_at(int node_id,
                                                                  RandomPicker& picker,
                                                                  int64_t timestamp = -1,
                                                                  bool forward = true) const;

@@ -35,7 +35,11 @@ class TemporalWalk {
 
     // In TemporalWalk.h, change the type declaration:
     #ifdef HAS_CUDA
-    using TemporalGraphType = TemporalGraph<GPUUsage>;
+    using TemporalGraphType = std::conditional_t<
+        GPUUsage == GPUUsageMode::ON_CPU,
+        TemporalGraph<GPUUsage>,
+        TemporalGraphCUDA<GPUUsage>
+    >;
     using WeightBasedRandomPickerType = std::conditional_t<
         GPUUsage == GPUUsageMode::DATA_ON_GPU,
         WeightBasedRandomPickerGPU<GPUUsage>,
@@ -45,8 +49,6 @@ class TemporalWalk {
     using TemporalGraphType = TemporalGraph<GPUUsageMode::ON_CPU>;
     using WeightBasedRandomPickerType = WeightBasedRandomPicker<GPUUsageMode::ON_CPU>;
     #endif
-
-
 
     std::unique_ptr<TemporalGraphType> temporal_graph;
 
