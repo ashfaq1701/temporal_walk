@@ -242,8 +242,8 @@ size_t TemporalGraph<GPUUsage>::count_node_timestamps_less_than(int node_id, int
     const auto& timestamp_group_indices = is_directed ? node_index.inbound_timestamp_group_indices : node_index.outbound_timestamp_group_indices;
     const auto& edge_indices = is_directed ? node_index.inbound_indices : node_index.outbound_indices;
 
-    size_t group_start = timestamp_group_offsets[dense_idx];
-    size_t group_end = timestamp_group_offsets[dense_idx + 1];
+    const size_t group_start = timestamp_group_offsets[dense_idx];
+    const size_t group_end = timestamp_group_offsets[dense_idx + 1];
     if (group_start == group_end) return 0;
 
     // Binary search on group indices

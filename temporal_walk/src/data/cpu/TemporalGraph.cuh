@@ -41,7 +41,6 @@ private:
     using Int64TVector = typename SelectVectorType<int64_t, GPUUsage>::type;
     using BoolVector = typename SelectVectorType<bool, GPUUsage>::type;
 
-    bool is_directed;
     int64_t time_window; // Time duration to keep edges (-1 means keep all)
     bool enable_weight_computation;
     double timescale_bound;
@@ -50,6 +49,10 @@ private:
     void delete_old_edges();
 
 public:
+    virtual ~TemporalGraph() = default;
+
+    bool is_directed;
+
     NodeIndexType node_index; // Node to edge mappings
     EdgeDataType edges; // Main edge storage
     NodeMappingType node_mapping; // Sparse to dense node ID mapping
@@ -68,10 +71,10 @@ public:
     void update_temporal_weights();
 
     // Timestamp group counting
-    [[nodiscard]] size_t count_timestamps_less_than(int64_t timestamp) const;
-    [[nodiscard]] size_t count_timestamps_greater_than(int64_t timestamp) const;
-    [[nodiscard]] size_t count_node_timestamps_less_than(int node_id, int64_t timestamp) const;
-    [[nodiscard]] size_t count_node_timestamps_greater_than(int node_id, int64_t timestamp) const;
+    [[nodiscard]] virtual size_t count_timestamps_less_than(int64_t timestamp) const;
+    [[nodiscard]] virtual size_t count_timestamps_greater_than(int64_t timestamp) const;
+    [[nodiscard]] virtual size_t count_node_timestamps_less_than(int node_id, int64_t timestamp) const;
+    [[nodiscard]] virtual size_t count_node_timestamps_greater_than(int node_id, int64_t timestamp) const;
 
     // Edge selection
     [[nodiscard]] std::tuple<int, int, int64_t> get_edge_at(
