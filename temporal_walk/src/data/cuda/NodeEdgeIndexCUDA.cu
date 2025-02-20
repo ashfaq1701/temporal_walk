@@ -82,7 +82,6 @@ void NodeEdgeIndexCUDA<GPUUsage>::rebuild(
         }
     };
 
-
     if constexpr (GPUUsage == GPUUsageMode::DATA_ON_GPU) {
         thrust::for_each(
             this->get_policy(),
