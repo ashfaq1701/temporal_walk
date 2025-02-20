@@ -410,7 +410,7 @@ std::tuple<int, int, int64_t> TemporalGraph<GPUUsage>::get_node_edge_at(
                 static_cast<int>(group_end_offset) - it;
             if (available == 0) return {-1, -1, -1};
 
-            const size_t start_pos = thrust::distance(timestamp_group_indices.begin(), it);
+            const size_t start_pos = std::distance(timestamp_group_indices.begin(), it);
             if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
                 const size_t index = index_picker->pick_random(0, static_cast<int>(available), false);
                 if (index >= available) return {-1, -1, -1};
