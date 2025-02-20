@@ -210,9 +210,9 @@ void TemporalGraphCUDA<GPUUsage>::sort_and_merge_edges(const size_t start_idx) {
         );
 
         // Move merged results back
-        this->edges.sources = std::move(merged_sources);
-        this->edges.targets = std::move(merged_targets);
-        this->edges.timestamps = std::move(merged_timestamps);
+        this->edges.sources.swap(merged_sources);
+        this->edges.targets.swap(merged_targets);
+        this->edges.timestamps.swap(merged_timestamps);
     }
 }
 
@@ -270,7 +270,7 @@ size_t TemporalGraphCUDA<GPUUsage>::count_node_timestamps_less_than(int node_id,
             return timestamps_ptr[edge_indices_ptr[group_pos]] < ts;
         });
 
-    return std::distance(timestamp_group_indices.begin() + static_cast<int>(group_start), it);
+    return thrust::distance(timestamp_group_indices.begin() + static_cast<int>(group_start), it);
 }
 
 template<GPUUsageMode GPUUsage>
@@ -291,7 +291,7 @@ size_t TemporalGraphCUDA<GPUUsage>::count_node_timestamps_greater_than(int node_
     const unsigned long* edge_indices_ptr = thrust::raw_pointer_cast(edge_indices.data());
 
     // Binary search on group indices
-    const auto it = std::upper_bound(
+    const auto it = thrust::upper_bound(
         timestamp_group_indices.begin() + static_cast<int>(group_start),
         timestamp_group_indices.begin() + static_cast<int>(group_end),
         timestamp,
@@ -300,7 +300,7 @@ size_t TemporalGraphCUDA<GPUUsage>::count_node_timestamps_greater_than(int node_
             return ts < timestamps_ptr[edge_indices_ptr[group_pos]];
         });
 
-    return std::distance(it, timestamp_group_indices.begin() + static_cast<int>(group_end));
+    return thrust::distance(it, timestamp_group_indices.begin() + static_cast<int>(group_end));
 }
 
 template<GPUUsageMode GPUUsage>
@@ -332,23 +332,23 @@ std::tuple<int, int, int64_t> TemporalGraphCUDA<GPUUsage>::get_node_edge_at(
     if (group_start_offset == group_end_offset) return {-1, -1, -1};
 
     const int64_t* timestamps_ptr = thrust::raw_pointer_cast(this->edges.timestamps.data());
-    const unsigned long* edge_indices_ptr = thrust::raw_pointer_cast(edge_indices.data());
+    const size_t* edge_indices_ptr = thrust::raw_pointer_cast(edge_indices.data());
 
     size_t group_pos;
     if (timestamp != -1) {
         if (forward) {
             // Find first group after timestamp
             auto it = thrust::upper_bound(
+                this->get_policy(),
                 timestamp_group_indices.begin() + static_cast<int>(group_start_offset),
                 timestamp_group_indices.begin() + static_cast<int>(group_end_offset),
                 timestamp,
-                [timestamps_ptr, edge_indices_ptr] __host__ __device__ (const int64_t ts, const size_t pos) {
+                [timestamps_ptr, edge_indices_ptr]__host__ __device__ (const int64_t ts, const size_t pos) {
                     return ts < timestamps_ptr[edge_indices_ptr[pos]];
                 });
 
             // Count available groups after timestamp
-            const size_t available = timestamp_group_indices.begin() +
-                static_cast<int>(group_end_offset) - it;
+            const size_t available = thrust::distance(it, timestamp_group_indices.begin() + static_cast<int>(group_end_offset));
             if (available == 0) return {-1, -1, -1};
 
             const size_t start_pos = it - timestamp_group_indices.begin();
@@ -368,15 +368,16 @@ std::tuple<int, int, int64_t> TemporalGraphCUDA<GPUUsage>::get_node_edge_at(
         } else {
             // Find first group >= timestamp
             auto it = thrust::lower_bound(
+                this->get_policy(),
                 timestamp_group_indices.begin() + static_cast<int>(group_start_offset),
                 timestamp_group_indices.begin() + static_cast<int>(group_end_offset),
                 timestamp,
-                [timestamps_ptr, edge_indices_ptr] __host__ __device__ (const size_t pos, const int64_t ts) {
+                [timestamps_ptr, edge_indices_ptr] __device__ __host__ (const size_t pos, const int64_t ts) {
                     return timestamps_ptr[edge_indices_ptr[pos]] < ts;
                 });
 
-            const size_t available = it - (timestamp_group_indices.begin() +
-                static_cast<int>(group_start_offset));
+            const size_t available = thrust::distance(timestamp_group_indices.begin() + static_cast<int>(group_start_offset), it);
+
             if (available == 0) return {-1, -1, -1};
 
             if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {

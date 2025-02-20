@@ -1,3 +1,4 @@
+#include "../src/data/cuda/TemporalGraphCUDA.cuh"
 #include <gtest/gtest.h>
 #include "../src/data/cpu/TemporalGraph.cuh"
 #include "../src/random/IndexBasedRandomPicker.h"
@@ -21,13 +22,19 @@ public:
 template<typename T>
 class TemporalGraphTest : public ::testing::Test {
 protected:
-    std::unique_ptr<TemporalGraph<T::value>> graph;
+    using TemporalGraphType = std::conditional_t<
+        T::value == GPUUsageMode::ON_CPU,
+        TemporalGraph<T::value>,
+        TemporalGraphCUDA<T::value>
+    >;
+
+    std::unique_ptr<TemporalGraphType> graph;
     std::unique_ptr<FirstIndexPicker> first_picker;
     std::unique_ptr<LastIndexPicker> last_picker;
 
     void SetUp() override {
         // Create directed graph by default
-        graph = std::make_unique<TemporalGraph<T::value>>(true);
+        graph = std::make_unique<TemporalGraphType>(true);
         first_picker = std::make_unique<FirstIndexPicker>();
         last_picker = std::make_unique<LastIndexPicker>();
     }
@@ -129,8 +136,10 @@ TYPED_TEST(TemporalGraphTest, MaintainSortedOrderTest) {
 
 // Test time window functionality
 TYPED_TEST(TemporalGraphTest, TimeWindowTest) {
+    using TemporalGraphType = typename TestFixture::TemporalGraphType;
+
     // Create graph with 100 time unit window
-    this->graph = std::make_unique<TemporalGraph<TypeParam::value>>(true, 100);
+    this->graph = std::make_unique<TemporalGraphType>(true, 100);
 
     // Add edges spanning the time window
     auto edges = this->create_edges({
@@ -177,7 +186,8 @@ TYPED_TEST(TemporalGraphTest, EdgeAdditionEdgeCasesTest) {
 
 // Test deletion of nodes when all their edges are removed
 TYPED_TEST(TemporalGraphTest, NodeDeletionTest) {
-    this->graph = std::make_unique<TemporalGraph<TypeParam::value>>(true, 100);  // 100 time unit window
+    using TemporalGraphType = typename TestFixture::TemporalGraphType;
+    this->graph = std::make_unique<TemporalGraphType>(true, 100);  // 100 time unit window
 
     // Add initial edges
     auto edges1 = this->create_edges({
@@ -202,7 +212,8 @@ TYPED_TEST(TemporalGraphTest, NodeDeletionTest) {
 
 // Test undirected graph behavior
 TYPED_TEST(TemporalGraphTest, UndirectedGraphEdgeAdditionTest) {
-    this->graph = std::make_unique<TemporalGraph<TypeParam::value>>(false);  // Undirected
+    using TemporalGraphType = typename TestFixture::TemporalGraphType;
+    this->graph = std::make_unique<TemporalGraphType>(false);  // Undirected
 
     auto edges = this->create_edges({
         {2, 1, 100},  // Should be stored as (1,2,100)
@@ -220,6 +231,7 @@ TYPED_TEST(TemporalGraphTest, UndirectedGraphEdgeAdditionTest) {
 }
 
 TYPED_TEST(TemporalGraphTest, CountTimestampsTest) {
+    using TemporalGraphType = typename TestFixture::TemporalGraphType;
    // Set up a graph with carefully chosen timestamps
    auto edges = this->create_edges({
        {1, 2, 100},  // t0
@@ -250,7 +262,7 @@ TYPED_TEST(TemporalGraphTest, CountTimestampsTest) {
    EXPECT_EQ(this->graph->count_timestamps_greater_than(500), 0);  // After last timestamp
 
    // Test empty graph
-   this->graph = std::make_unique<TemporalGraph<TypeParam::value>>(true);
+   this->graph = std::make_unique<TemporalGraphType>(true);
    EXPECT_EQ(this->graph->count_timestamps_less_than(100), 0);
    EXPECT_EQ(this->graph->count_timestamps_greater_than(100), 0);
 }
@@ -301,8 +313,9 @@ TYPED_TEST(TemporalGraphTest, CountNodeTimestampsDirectedTest) {
 }
 
 TYPED_TEST(TemporalGraphTest, CountNodeTimestampsUndirectedTest) {
+    using TemporalGraphType = typename TestFixture::TemporalGraphType;
    // Create undirected graph
-   this->graph = std::make_unique<TemporalGraph<TypeParam::value>>(false);
+   this->graph = std::make_unique<TemporalGraphType>(false);
 
    // Add edges - note that order will be normalized (smaller ID becomes source)
    auto edges = this->create_edges({
@@ -358,6 +371,8 @@ TYPED_TEST(TemporalGraphTest, CountNodeTimestampsDuplicatesTest) {
 }
 
 TYPED_TEST(TemporalGraphTest, GetEdgeAtTest) {
+    using TemporalGraphType = typename TestFixture::TemporalGraphType;
+
     // Set up test graph with carefully structured timestamps
     const auto edges = this->create_edges({
         {10, 20, 100},  // Group 0: timestamp 100
@@ -402,7 +417,7 @@ TYPED_TEST(TemporalGraphTest, GetEdgeAtTest) {
     EXPECT_EQ(ts8, -1);
 
     // Test with empty graph
-    this->graph = std::make_unique<TemporalGraph<TypeParam::value>>(true);
+    this->graph = std::make_unique<TemporalGraphType>(true);
     auto [src9, tgt9, ts9] = this->graph->get_edge_at(*this->first_picker, 100, true);
     EXPECT_EQ(ts9, -1);
 }

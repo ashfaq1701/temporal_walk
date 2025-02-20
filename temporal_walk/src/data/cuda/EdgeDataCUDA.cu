@@ -7,58 +7,6 @@
 #include <thrust/binary_search.h>
 #include <thrust/execution_policy.h>
 
-template<GPUUsageMode GPUUsage>
-std::vector<std::tuple<int, int, int64_t>> EdgeDataCUDA<GPUUsage>::get_edges() {
-    const size_t n = this->sources.size();
-    std::vector<std::tuple<int, int, int64_t>> result(n);
-
-    if constexpr (GPUUsage == GPUUsageMode::DATA_ON_GPU) {
-        thrust::device_vector<thrust::tuple<int, int, int64_t>> d_tuples(n);
-
-        thrust::copy(
-            this->get_policy(),
-            thrust::make_zip_iterator(
-                thrust::make_tuple(
-                    this->sources.begin(),
-                    this->targets.begin(),
-                    this->timestamps.begin()
-                )),
-            thrust::make_zip_iterator(
-                thrust::make_tuple(
-                    this->sources.end(),
-                    this->targets.end(),
-                    this->timestamps.end()
-                )),
-                d_tuples.begin()
-        );
-
-        thrust::copy(
-            this->get_policy(),
-            d_tuples.begin(),
-            d_tuples.end(),
-            reinterpret_cast<thrust::tuple<int, int, int64_t>*>(result.data())
-        );
-    }
-    else if constexpr (GPUUsage == GPUUsageMode::DATA_ON_HOST) {
-        thrust::copy(
-            this->get_policy(),
-            thrust::make_zip_iterator(thrust::make_tuple(
-                this->sources.begin(),
-                this->targets.begin(),
-                this->timestamps.begin()
-            )),
-            thrust::make_zip_iterator(thrust::make_tuple(
-                this->sources.end(),
-                this->targets.end(),
-                this->timestamps.end()
-            )),
-            reinterpret_cast<thrust::tuple<int, int, int64_t>*>(result.data())
-        );
-    }
-
-    return result;
-}
-
 template <GPUUsageMode GPUUsage>
 void EdgeDataCUDA<GPUUsage>::update_timestamp_groups() {
     if (this->timestamps.empty()) {
@@ -230,6 +178,29 @@ size_t EdgeDataCUDA<GPUUsage>::find_group_before_timestamp(int64_t timestamp) co
         timestamp
     );
     return (it - this->unique_timestamps.begin()) - 1;
+}
+
+template<GPUUsageMode GPUUsage>
+std::vector<std::tuple<int, int, int64_t>> EdgeDataCUDA<GPUUsage>::get_edges() {
+    std::vector<std::tuple<int, int, int64_t>> edges;
+    edges.reserve(this->sources.size());
+
+    if constexpr (GPUUsage == GPUUsageMode::DATA_ON_GPU) {
+        // Copy data from device to host
+        thrust::host_vector<int> h_sources = this->sources;
+        thrust::host_vector<int> h_targets = this->targets;
+        thrust::host_vector<int64_t> h_timestamps = this->timestamps;
+
+        for (int i = 0; i < h_sources.size(); i++) {
+            edges.emplace_back(h_sources[i], h_targets[i], h_timestamps[i]);
+        }
+    } else {
+        for (int i = 0; i < this->sources.size(); i++) {
+            edges.emplace_back(this->sources[i], this->targets[i], this->timestamps[i]);
+        }
+    }
+
+    return edges;
 }
 
 template class EdgeDataCUDA<GPUUsageMode::DATA_ON_GPU>;

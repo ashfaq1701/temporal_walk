@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "../src/data/cpu/TemporalGraph.cuh"
+#include "../src/data/cuda/TemporalGraphCUDA.cuh"
 #include "../src/random/IndexBasedRandomPicker.h"
 
 // Test-specific picker implementations
@@ -20,12 +21,18 @@ public:
 template<typename T>
 class TemporalGraphGetNodeEdgeAtTest : public ::testing::Test {
 protected:
-    std::unique_ptr<TemporalGraph<T::value>> graph;
+    using TemporalGraphType = std::conditional_t<
+        T::value == GPUUsageMode::ON_CPU,
+        TemporalGraph<T::value>,
+        TemporalGraphCUDA<T::value>
+    >;
+
+    std::unique_ptr<TemporalGraphType> graph;
     std::unique_ptr<FirstIndexPicker> first_picker;
     std::unique_ptr<LastIndexPicker> last_picker;
 
     void SetUp() override {
-        graph = std::make_unique<TemporalGraph<T::value>>(true); // directed graph
+        graph = std::make_unique<TemporalGraphType>(true); // directed graph
         first_picker = std::make_unique<FirstIndexPicker>();
         last_picker = std::make_unique<LastIndexPicker>();
     }
@@ -140,6 +147,8 @@ TYPED_TEST(TemporalGraphGetNodeEdgeAtTest, BackwardWalkTest) {
 
 // Test edge cases and invalid inputs
 TYPED_TEST(TemporalGraphGetNodeEdgeAtTest, EdgeCasesTest) {
+    using TemporalGraphType = typename TestFixture::TemporalGraphType;
+
     auto edges = std::vector<std::tuple<int, int, int64_t>>{
         {10, 20, 100}, // Node 10 outbound: ts 100,101
         {10, 30, 101}, // Node 10 -> Nodes 20,30
@@ -163,7 +172,7 @@ TYPED_TEST(TemporalGraphGetNodeEdgeAtTest, EdgeCasesTest) {
     this->verify_edge(edge, -1, -1, -1);
 
     // Test empty graph
-    this->graph = std::make_unique<TemporalGraph<TypeParam::value>>(true);
+    this->graph = std::make_unique<TemporalGraphType>(true);
     edge = this->graph->get_node_edge_at(10, *this->first_picker, -1, true);
     this->verify_edge(edge, -1, -1, -1);
 }
@@ -217,8 +226,9 @@ TYPED_TEST(TemporalGraphGetNodeEdgeAtTest, ExactTimestampTest) {
 
 // Test exact timestamp matching for undirected graphs
 TYPED_TEST(TemporalGraphGetNodeEdgeAtTest, ExactTimestampUndirectedTest) {
+    using TemporalGraphType = typename TestFixture::TemporalGraphType;
     // Create undirected graph
-    this->graph = std::make_unique<TemporalGraph<TypeParam::value>>(false);
+    this->graph = std::make_unique<TemporalGraphType>(false);
 
     auto edges = std::vector<std::tuple<int, int, int64_t>>{
         // Edges connecting to node 10

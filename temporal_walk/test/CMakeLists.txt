@@ -7,8 +7,8 @@ set(TEST_FILES
         test_node_edge_index_weights.cpp
         test_node_mapping.cpp
         test_random_picker.cpp
-#        test_temporal_graph.cpp
-#        test_temporal_graph_get_node_edge_at.cpp
+        test_temporal_graph.cpp
+        test_temporal_graph_get_node_edge_at.cpp
 #        test_temporal_graph_weights.cpp
 #        test_temporal_walk.cpp
         test_weight_based_random_picker.cpp
