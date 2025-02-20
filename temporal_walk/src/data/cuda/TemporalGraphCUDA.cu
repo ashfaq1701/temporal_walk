@@ -341,60 +341,29 @@ std::tuple<int, int, int64_t> TemporalGraphCUDA<GPUUsage>::get_node_edge_at(
     const int64_t *timestamps_ptr = thrust::raw_pointer_cast(this->edges.timestamps.data());
     const size_t *edge_indices_ptr = thrust::raw_pointer_cast(edge_indices.data());
 
-    std::cout << "\nDEBUG: All edges for node 20:" << std::endl;
-    for (size_t i = group_start_offset; i < group_end_offset; i++) {
-        const size_t group_idx = timestamp_group_indices[i];
-        const size_t edge_idx = edge_indices[group_idx];
-        std::cout << "Group " << i
-                << " -> group_idx=" << group_idx
-                << ", edge_idx=" << edge_idx
-                << ", src=" << this->edges.sources[edge_idx]
-                << ", tgt=" << this->edges.targets[edge_idx]
-                << ", ts=" << this->edges.timestamps[edge_idx] << std::endl;
-    }
-
     size_t group_pos;
     if (timestamp != -1) {
         if (forward) {
-            std::cout << "\nForward search for node " << node_id << " from timestamp " << timestamp << std::endl;
-            std::cout << "Searching in groups from " << group_start_offset << " to " << group_end_offset << std::endl;
-
-            // Print group info before search
-            for (size_t i = group_start_offset; i < group_end_offset; i++) {
-                const size_t group_idx = timestamp_group_indices[i];
-                std::cout << "Group " << i << ": index=" << group_idx
-                        << ", edge_idx=" << edge_indices[group_idx]
-                        << ", timestamp=" << this->edges.timestamps[edge_indices[group_idx]] << std::endl;
-            }
-
             const auto it = thrust::upper_bound(
                 this->get_policy(),
                 timestamp_group_indices.begin() + static_cast<int>(group_start_offset),
                 timestamp_group_indices.begin() + static_cast<int>(group_end_offset),
                 timestamp,
-                [timestamps_ptr, edge_indices_ptr] __host__ __device__ (const int64_t ts, const size_t group_pos) {
+                [timestamps_ptr, edge_indices_ptr] __device__ __host__ (const int64_t ts, const size_t group_pos) {
                     return ts < timestamps_ptr[edge_indices_ptr[group_pos]];
                 });
 
             const size_t available = thrust::distance(it,
                                                       timestamp_group_indices.begin() + static_cast<int>(
                                                           group_end_offset));
-            std::cout << "After upper_bound: " << std::endl;
-            std::cout << "Iterator position from begin: " << thrust::distance(timestamp_group_indices.begin(), it) <<
-                    std::endl;
-            std::cout << "Available: " << available << std::endl;
-
             if (available == 0) {
-                std::cout << "No available groups after timestamp" << std::endl;
                 return {-1, -1, -1};
             }
 
             const size_t start_pos = it - timestamp_group_indices.begin();
-            std::cout << "Start position: " << start_pos << std::endl;
 
             if (auto *index_picker = dynamic_cast<IndexBasedRandomPicker *>(&picker)) {
                 const size_t index = index_picker->pick_random(0, static_cast<int>(available), false);
-                std::cout << "Index picker - selected index: " << index << std::endl;
                 if (index >= available) return {-1, -1, -1};
                 group_pos = start_pos + index;
             } else {
@@ -403,45 +372,26 @@ std::tuple<int, int, int64_t> TemporalGraphCUDA<GPUUsage>::get_node_edge_at(
                     this->node_index.outbound_forward_cumulative_weights_exponential,
                     static_cast<int>(start_pos),
                     static_cast<int>(group_end_offset));
-                std::cout << "Weight picker - selected group_pos: " << group_pos << std::endl;
             }
         } else {
-            std::cout << "\nBackward search for node " << node_id << " from timestamp " << timestamp << std::endl;
-            std::cout << "Searching in groups from " << group_start_offset << " to " << group_end_offset << std::endl;
-
-            // Print group info before search
-            for (size_t i = group_start_offset; i < group_end_offset; i++) {
-                const size_t group_idx = timestamp_group_indices[i];
-                std::cout << "Group " << i << ": index=" << group_idx
-                        << ", edge_idx=" << edge_indices[group_idx]
-                        << ", timestamp=" << this->edges.timestamps[edge_indices[group_idx]] << std::endl;
-            }
-
-            auto it = thrust::lower_bound(
+            const auto it = thrust::lower_bound(
                 this->get_policy(),
                 timestamp_group_indices.begin() + static_cast<int>(group_start_offset),
                 timestamp_group_indices.begin() + static_cast<int>(group_end_offset),
                 timestamp,
-                [timestamps_ptr, edge_indices_ptr] __host__ __device__ (const size_t group_pos, const int64_t ts) {
+                [timestamps_ptr, edge_indices_ptr] __device__ __host__ (const size_t group_pos, const int64_t ts) {
                     return timestamps_ptr[edge_indices_ptr[group_pos]] < ts;
                 });
 
             const size_t available = thrust::distance(
                 timestamp_group_indices.begin() + static_cast<int>(group_start_offset), it);
 
-            std::cout << "After lower_bound: " << std::endl;
-            std::cout << "Iterator position from begin: " << thrust::distance(timestamp_group_indices.begin(), it) <<
-                    std::endl;
-            std::cout << "Available: " << available << std::endl;
-
             if (available == 0) {
-                std::cout << "No available groups before timestamp" << std::endl;
                 return {-1, -1, -1};
             }
 
             if (auto *index_picker = dynamic_cast<IndexBasedRandomPicker *>(&picker)) {
                 const size_t index = index_picker->pick_random(0, static_cast<int>(available), true);
-                std::cout << "Index picker - selected index: " << index << std::endl;
                 if (index >= available) return {-1, -1, -1};
                 group_pos = (it - timestamp_group_indices.begin()) - 1 - (available - index - 1);
             } else {
@@ -453,7 +403,6 @@ std::tuple<int, int, int64_t> TemporalGraphCUDA<GPUUsage>::get_node_edge_at(
                     static_cast<int>(group_start_offset),
                     static_cast<int>(it - timestamp_group_indices.begin())
                 );
-                std::cout << "Weight picker - selected group_pos: " << group_pos << std::endl;
             }
         }
     } else {
