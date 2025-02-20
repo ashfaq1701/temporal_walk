@@ -4,20 +4,26 @@
 #include "test_utils.h"
 #include "../test/test_utils.h"
 
-constexpr GPUUsageMode GPU_USAGE_MODE = GPUUsageMode::ON_CPU;
+constexpr GPUUsageMode GPU_USAGE_MODE = GPUUsageMode::DATA_ON_GPU;
 
 int main() {
     const auto edge_infos = read_edges_from_csv("../../data/sample_data.csv");
     std::cout << edge_infos.size() << std::endl;
 
+    auto start = std::chrono::high_resolution_clock::now();
     TemporalWalk<GPU_USAGE_MODE> temporal_walk(false, -1, true, 34);
     temporal_walk.add_multiple_edges(edge_infos);
+    auto end = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double> duration = end - start;
+    std::cout << "Edge addition time: " << duration.count() << " seconds" << std::endl;
+
 
     constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;
-    constexpr RandomPickerType exponential_picker_type = RandomPickerType::ExponentialWeight;
+    constexpr RandomPickerType exponential_picker_type = RandomPickerType::ExponentialIndex;
     constexpr RandomPickerType uniform_picker_type = RandomPickerType::Uniform;
 
-    auto start = std::chrono::high_resolution_clock::now();
+    start = std::chrono::high_resolution_clock::now();
 
     const auto walks_backward_with_specific_number_of_contexts = temporal_walk.get_random_walks_and_times_with_specific_number_of_contexts(
         80,
@@ -40,8 +46,8 @@ int main() {
 
     std::cout << "Walks backward (with specific number of contexts): " << walks_backward_with_specific_number_of_contexts.size() << ", average length " << get_average_walk_length(walks_backward_with_specific_number_of_contexts) << std::endl;
 
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> duration = end - start;
+    end = std::chrono::high_resolution_clock::now();
+    duration = end - start;
     std::cout << "Runtime (with specific number of contexts): " << duration.count() << " seconds" << std::endl;
 
     start = std::chrono::high_resolution_clock::now();

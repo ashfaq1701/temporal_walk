@@ -9,6 +9,54 @@
 #include <thrust/scan.h>
 #include <thrust/transform.h>
 
+void populate_edge_indices_cpu(
+    const size_t edge_size, const bool is_directed,
+    const int* sources_ptr, const int* targets_ptr,
+    size_t* outbound_indices, size_t* inbound_indices,
+    const size_t* outbound_offsets, const size_t* inbound_offsets,
+    size_t* outbound_current, size_t* inbound_current) {
+    for (size_t i = 0; i < edge_size; i++) {
+        const int src_idx = sources_ptr[i];
+        const int tgt_idx = targets_ptr[i];
+
+        const size_t out_pos = outbound_offsets[src_idx] + outbound_current[src_idx]++;
+        outbound_indices[out_pos] = i;
+
+        if (is_directed) {
+            const size_t in_pos = inbound_offsets[tgt_idx] + inbound_current[tgt_idx]++;
+            inbound_indices[in_pos] = i;
+        } else {
+            const size_t out_pos2 = outbound_offsets[tgt_idx] + outbound_current[tgt_idx]++;
+            outbound_indices[out_pos2] = i;
+        }
+    }
+}
+
+__global__ void populate_edge_indices_cuda(
+    const size_t edge_size, const bool is_directed,
+    const int* sources_ptr, const int* targets_ptr,
+    size_t* outbound_indices, size_t* inbound_indices,
+    const size_t* outbound_offsets, const size_t* inbound_offsets,
+    size_t* outbound_current, size_t* inbound_current) {
+    if (threadIdx.x == 0 && blockIdx.x == 0) {
+        for (size_t i = 0; i < edge_size; i++) {
+            const int src_idx = sources_ptr[i];
+            const int tgt_idx = targets_ptr[i];
+
+            const size_t out_pos = outbound_offsets[src_idx] + outbound_current[src_idx]++;
+            outbound_indices[out_pos] = i;
+
+            if (is_directed) {
+                const size_t in_pos = inbound_offsets[tgt_idx] + inbound_current[tgt_idx]++;
+                inbound_indices[in_pos] = i;
+            } else {
+                const size_t out_pos2 = outbound_offsets[tgt_idx] + outbound_current[tgt_idx]++;
+                outbound_indices[out_pos2] = i;
+            }
+        }
+    }
+}
+
 template<GPUUsageMode GPUUsage>
 void NodeEdgeIndexCUDA<GPUUsage>::rebuild(
     const EdgeData<GPUUsage>& edges,
@@ -52,33 +100,37 @@ void NodeEdgeIndexCUDA<GPUUsage>::rebuild(
         });
 
     // Get raw pointers for counter updates
-    size_t* d_outbound_ptr = thrust::raw_pointer_cast(this->outbound_offsets.data());
-    size_t* d_inbound_ptr = thrust::raw_pointer_cast(this->inbound_offsets.data());
+    size_t* d_outbound_offsets_ptr = thrust::raw_pointer_cast(this->outbound_offsets.data());
+    size_t* d_inbound_offsets_ptr = is_directed ? thrust::raw_pointer_cast(this->inbound_offsets.data()) : nullptr;
     const int* d_src_ptr = thrust::raw_pointer_cast(d_src_indices.data());
     const int* d_tgt_ptr = thrust::raw_pointer_cast(d_tgt_indices.data());
 
-    // Count edges per node
-    auto counter_device_lambda = [d_outbound_ptr, d_inbound_ptr, d_src_ptr, d_tgt_ptr, is_directed] __device__ (const size_t i) {
+    // First pass: count edges per node
+    auto counter_device_lambda = [
+        d_outbound_offsets_ptr, d_inbound_offsets_ptr,
+        d_src_ptr, d_tgt_ptr, is_directed] __device__ (const size_t i) {
         const int src_idx = d_src_ptr[i];
         const int tgt_idx = d_tgt_ptr[i];
 
-        atomicAdd(reinterpret_cast<unsigned int *>(&d_outbound_ptr[src_idx + 1]), 1);
+        atomicAdd(reinterpret_cast<unsigned int *>(&d_outbound_offsets_ptr[src_idx + 1]), 1);
         if (is_directed) {
-            atomicAdd(reinterpret_cast<unsigned int *>(&d_inbound_ptr[tgt_idx + 1]), 1);
+            atomicAdd(reinterpret_cast<unsigned int *>(&d_inbound_offsets_ptr[tgt_idx + 1]), 1);
         } else {
-            atomicAdd(reinterpret_cast<unsigned int *>(&d_outbound_ptr[tgt_idx + 1]), 1);
+            atomicAdd(reinterpret_cast<unsigned int *>(&d_outbound_offsets_ptr[tgt_idx + 1]), 1);
         }
     };
 
-    auto counter_host_device_lambda = [d_outbound_ptr, d_inbound_ptr, d_src_ptr, d_tgt_ptr, is_directed] __host__ __device__ (const size_t i) {
+    auto counter_host_device_lambda = [
+        d_outbound_offsets_ptr, d_inbound_offsets_ptr,
+        d_src_ptr, d_tgt_ptr, is_directed] __host__ __device__ (const size_t i) {
         const int src_idx = d_src_ptr[i];
         const int tgt_idx = d_tgt_ptr[i];
 
-        ++d_outbound_ptr[src_idx + 1];
+        ++d_outbound_offsets_ptr[src_idx + 1];
         if (is_directed) {
-            ++d_inbound_ptr[tgt_idx + 1];
+            ++d_inbound_offsets_ptr[tgt_idx + 1];
         } else {
-            ++d_outbound_ptr[tgt_idx + 1];
+            ++d_outbound_offsets_ptr[tgt_idx + 1];
         }
     };
 
@@ -115,6 +167,7 @@ void NodeEdgeIndexCUDA<GPUUsage>::rebuild(
         );
     }
 
+    // Second pass: fill edge indices
     // Allocate edge index arrays
     this->outbound_indices.resize(this->outbound_offsets.back());
     if (is_directed) {
@@ -128,66 +181,22 @@ void NodeEdgeIndexCUDA<GPUUsage>::rebuild(
         d_inbound_current.resize(num_nodes, 0);
     }
 
-    // Get raw pointers for filling indices
     size_t* d_outbound_current_ptr = thrust::raw_pointer_cast(d_outbound_current.data());
     size_t* d_inbound_current_ptr = is_directed ? thrust::raw_pointer_cast(d_inbound_current.data()) : nullptr;
     size_t* d_outbound_indices_ptr = thrust::raw_pointer_cast(this->outbound_indices.data());
     size_t* d_inbound_indices_ptr = is_directed ? thrust::raw_pointer_cast(this->inbound_indices.data()) : nullptr;
-    const size_t* d_outbound_offsets_ptr = thrust::raw_pointer_cast(this->outbound_offsets.data());
-    const size_t* d_inbound_offsets_ptr = is_directed ? thrust::raw_pointer_cast(this->inbound_offsets.data()) : nullptr;
-
-    // Fill edge indices
-    auto fill_device_lambda = [d_src_ptr, d_tgt_ptr,
-        d_outbound_offsets_ptr, d_inbound_offsets_ptr,
-        d_outbound_indices_ptr, d_inbound_indices_ptr,
-        d_outbound_current_ptr, d_inbound_current_ptr, is_directed] __device__ (const size_t i) {
-
-        const int src_idx = d_src_ptr[i];
-        const int tgt_idx = d_tgt_ptr[i];
-
-        const size_t out_pos = atomicAdd(reinterpret_cast<unsigned int *>(&d_outbound_current_ptr[src_idx]), 1);
-        d_outbound_indices_ptr[d_outbound_offsets_ptr[src_idx] + out_pos] = i;
-
-        if (is_directed) {
-            const size_t in_pos = atomicAdd(reinterpret_cast<unsigned int *>(&d_inbound_current_ptr[tgt_idx]), 1);
-            d_inbound_indices_ptr[d_inbound_offsets_ptr[tgt_idx] + in_pos] = i;
-        } else {
-            const size_t out_pos2 = atomicAdd(reinterpret_cast<unsigned int *>(&d_outbound_current_ptr[tgt_idx]), 1);
-            d_outbound_indices_ptr[d_outbound_offsets_ptr[tgt_idx] + out_pos2] = i;
-        }
-    };
-
-    auto fill_host_device_lambda = [d_src_ptr, d_tgt_ptr,
-            d_outbound_offsets_ptr, d_inbound_offsets_ptr,
-            d_outbound_indices_ptr, d_inbound_indices_ptr,
-            d_outbound_current_ptr, d_inbound_current_ptr, is_directed] __host__ __device__ (const size_t i) {
-        const int src_idx = d_src_ptr[i];
-        const int tgt_idx = d_tgt_ptr[i];
-
-        const size_t out_pos = d_outbound_offsets_ptr[src_idx] + d_outbound_current_ptr[src_idx]++;
-        d_outbound_indices_ptr[out_pos] = i;
-
-        if (is_directed) {
-            const size_t in_pos = d_inbound_offsets_ptr[tgt_idx] + d_inbound_current_ptr[tgt_idx]++;
-            d_inbound_indices_ptr[in_pos] = i;
-        } else {
-            const size_t out_pos2 = d_outbound_offsets_ptr[tgt_idx] + d_outbound_current_ptr[tgt_idx]++;
-            d_outbound_indices_ptr[out_pos2] = i;
-        }
-    };
 
     if constexpr (GPUUsage == GPUUsageMode::DATA_ON_GPU) {
-        thrust::for_each(
-            this->get_policy(),
-            thrust::make_counting_iterator<size_t>(0),
-            thrust::make_counting_iterator<size_t>(num_edges),
-            fill_device_lambda);
+        populate_edge_indices_cuda<<<1, 1>>>(edges.size(), is_directed, d_src_ptr, d_tgt_ptr,
+            d_outbound_indices_ptr, d_inbound_indices_ptr,
+            d_outbound_offsets_ptr, d_inbound_offsets_ptr,
+            d_outbound_current_ptr, d_inbound_current_ptr);
+        cudaDeviceSynchronize();
     } else {
-        thrust::for_each(
-            this->get_policy(),
-            thrust::make_counting_iterator<size_t>(0),
-            thrust::make_counting_iterator<size_t>(num_edges),
-            fill_host_device_lambda);
+        populate_edge_indices_cpu(edges.size(), is_directed, d_src_ptr, d_tgt_ptr,
+            d_outbound_indices_ptr, d_inbound_indices_ptr,
+            d_outbound_offsets_ptr, d_inbound_offsets_ptr,
+            d_outbound_current_ptr, d_inbound_current_ptr);
     }
 
     // Third pass: count timestamp groups
