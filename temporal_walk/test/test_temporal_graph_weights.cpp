@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "../src/data/cpu/TemporalGraph.cuh"
+#include "../src/data/cuda/TemporalGraphCUDA.cuh"
 #include "../src/random/WeightBasedRandomPicker.cuh"
 
 template<typename T>
@@ -7,6 +8,12 @@ class TemporalGraphWeightTest : public ::testing::Test {
     using DoubleVector = typename SelectVectorType<double, T::value>::type;
 
 protected:
+    using TemporalGraphType = std::conditional_t<
+        T::value == GPUUsageMode::ON_CPU,
+        TemporalGraph<T::value>,
+        TemporalGraphCUDA<T::value>
+    >;
+
     void SetUp() override {
         // Will be used in multiple tests
         test_edges = {
@@ -59,7 +66,9 @@ using GPU_USAGE_TYPES = ::testing::Types<
 TYPED_TEST_SUITE(TemporalGraphWeightTest, GPU_USAGE_TYPES);
 
 TYPED_TEST(TemporalGraphWeightTest, EdgeWeightComputation) {
-    TemporalGraph<TypeParam::value> graph(/*directed=*/false, /*window=*/-1, /*enable_weight_computation=*/true, -1);
+    using TemporalGraphType = typename TestFixture::TemporalGraphType;
+
+    TemporalGraphType graph(/*directed=*/false, /*window=*/-1, /*enable_weight_computation=*/true, -1);
     graph.add_multiple_edges(this->test_edges);
 
     // Should have 4 timestamp groups (10,20,30,40)
@@ -88,7 +97,9 @@ TYPED_TEST(TemporalGraphWeightTest, EdgeWeightComputation) {
 }
 
 TYPED_TEST(TemporalGraphWeightTest, NodeWeightComputation) {
-    TemporalGraph<TypeParam::value> graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true);
+    using TemporalGraphType = typename TestFixture::TemporalGraphType;
+
+    TemporalGraphType graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true);
     graph.add_multiple_edges(this->test_edges);
 
     const auto& node_index = graph.node_index;
@@ -125,7 +136,9 @@ TYPED_TEST(TemporalGraphWeightTest, NodeWeightComputation) {
 }
 
 TYPED_TEST(TemporalGraphWeightTest, WeightBasedSampling) {
-    TemporalGraph<TypeParam::value> graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, -1);
+    using TemporalGraphType = typename TestFixture::TemporalGraphType;
+
+    TemporalGraphType graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, -1);
     graph.add_multiple_edges(this->test_edges);
 
     WeightBasedRandomPicker<TypeParam::value> picker;
@@ -160,16 +173,18 @@ TYPED_TEST(TemporalGraphWeightTest, WeightBasedSampling) {
 }
 
 TYPED_TEST(TemporalGraphWeightTest, EdgeCases) {
+    using TemporalGraphType = typename TestFixture::TemporalGraphType;
+
     // Empty graph test
     {
-        const TemporalGraph<TypeParam::value> empty_graph(false, -1, true);
+        const TemporalGraphType empty_graph(false, -1, true);
         EXPECT_TRUE(empty_graph.edges.forward_cumulative_weights_exponential.empty());
         EXPECT_TRUE(empty_graph.edges.backward_cumulative_weights_exponential.empty());
     }
 
     // Single edge graph test
     {
-        TemporalGraph<TypeParam::value> single_edge_graph(false, -1, true);
+        TemporalGraphType single_edge_graph(false, -1, true);
         single_edge_graph.add_multiple_edges({{1, 2, 10}});
 
         EXPECT_EQ(single_edge_graph.edges.forward_cumulative_weights_exponential.size(), 1);
@@ -180,7 +195,9 @@ TYPED_TEST(TemporalGraphWeightTest, EdgeCases) {
 }
 
 TYPED_TEST(TemporalGraphWeightTest, TimescaleBoundZero) {
-    TemporalGraph<TypeParam::value> graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, 0);
+    using TemporalGraphType = typename TestFixture::TemporalGraphType;
+
+    TemporalGraphType graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, 0);
     graph.add_multiple_edges(this->test_edges);
 
     // Should behave like -1 (unscaled)
@@ -189,8 +206,10 @@ TYPED_TEST(TemporalGraphWeightTest, TimescaleBoundZero) {
 }
 
 TYPED_TEST(TemporalGraphWeightTest, TimescaleBoundSampling) {
-    TemporalGraph<TypeParam::value> scaled_graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, 10.0);
-    TemporalGraph<TypeParam::value> unscaled_graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, -1);
+    using TemporalGraphType = typename TestFixture::TemporalGraphType;
+
+    TemporalGraphType scaled_graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, 10.0);
+    TemporalGraphType unscaled_graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, -1);
 
     scaled_graph.add_multiple_edges(this->test_edges);
     unscaled_graph.add_multiple_edges(this->test_edges);
@@ -217,7 +236,9 @@ TYPED_TEST(TemporalGraphWeightTest, TimescaleBoundSampling) {
 }
 
 TYPED_TEST(TemporalGraphWeightTest, WeightScalingPrecision) {
-    TemporalGraph<TypeParam::value> graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, 2.0);
+    using TemporalGraphType = typename TestFixture::TemporalGraphType;
+
+    TemporalGraphType graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, 2.0);
 
     // Use exact timestamps for precise validation
     graph.add_multiple_edges({
@@ -263,13 +284,15 @@ TYPED_TEST(TemporalGraphWeightTest, WeightScalingPrecision) {
 }
 
 TYPED_TEST(TemporalGraphWeightTest, DifferentTimescaleBounds) {
+    using TemporalGraphType = typename TestFixture::TemporalGraphType;
+
     const std::vector<double> bounds = {2.0, 5.0, 10.};
     WeightBasedRandomPicker<TypeParam::value> picker;
 
     for (double bound : bounds) {
         constexpr int num_samples = 10000;
 
-        TemporalGraph<TypeParam::value> graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, bound);
+        TemporalGraphType graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, bound);
         graph.add_multiple_edges(this->test_edges);
 
         std::map<int64_t, int> samples;
@@ -293,6 +316,8 @@ TYPED_TEST(TemporalGraphWeightTest, DifferentTimescaleBounds) {
 }
 
 TYPED_TEST(TemporalGraphWeightTest, SingleTimestampWithBounds) {
+    using TemporalGraphType = typename TestFixture::TemporalGraphType;
+
     const std::vector<std::tuple<int, int, int64_t>> single_ts_edges = {
         {1, 2, 100},
         {2, 3, 100},
@@ -301,7 +326,7 @@ TYPED_TEST(TemporalGraphWeightTest, SingleTimestampWithBounds) {
 
     // Test with different bounds
     for (double bound : {-1.0, 0.0, 10.0, 50.0}) {
-        TemporalGraph<TypeParam::value> graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, bound);
+        TemporalGraphType graph(/*directed=*/true, /*window=*/-1, /*enable_weight_computation=*/true, bound);
         graph.add_multiple_edges(single_ts_edges);
 
         ASSERT_EQ(graph.edges.forward_cumulative_weights_exponential.size(), 1);
