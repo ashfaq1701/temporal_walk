@@ -185,7 +185,7 @@ std::vector<std::tuple<int, int, int64_t>> EdgeDataCUDA<GPUUsage>::get_edges() {
     std::vector<std::tuple<int, int, int64_t>> edges;
     edges.reserve(this->sources.size());
 
-    if constexpr (GPUUsage == GPUUsageMode::DATA_ON_GPU) {
+    if constexpr (GPUUsage == GPUUsageMode::ON_GPU_USING_CUDA) {
         // Copy data from device to host
         thrust::host_vector<int> h_sources = this->sources;
         thrust::host_vector<int> h_targets = this->targets;
@@ -203,6 +203,6 @@ std::vector<std::tuple<int, int, int64_t>> EdgeDataCUDA<GPUUsage>::get_edges() {
     return edges;
 }
 
-template class EdgeDataCUDA<GPUUsageMode::DATA_ON_GPU>;
-template class EdgeDataCUDA<GPUUsageMode::DATA_ON_HOST>;
+template class EdgeDataCUDA<GPUUsageMode::ON_GPU_USING_CUDA>;
+template class EdgeDataCUDA<GPUUsageMode::ON_HOST_USING_THRUST>;
 #endif

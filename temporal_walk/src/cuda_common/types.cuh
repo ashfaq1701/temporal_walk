@@ -33,7 +33,7 @@ struct SelectVectorType<T, GPUUsage, std::enable_if_t<GPUUsage == GPUUsageMode::
 #ifdef HAS_CUDA
 // Specialization for GPU mode (Device memory)
 template <typename T, GPUUsageMode GPUUsage>
-struct SelectVectorType<T, GPUUsage, std::enable_if_t<GPUUsage == GPUUsageMode::DATA_ON_GPU>> {
+struct SelectVectorType<T, GPUUsage, std::enable_if_t<GPUUsage == GPUUsageMode::ON_GPU_USING_CUDA>> {
     using type = thrust::device_vector<T>;
 
     static constexpr VectorStorageType get_vector_storage_type() {
@@ -43,7 +43,7 @@ struct SelectVectorType<T, GPUUsage, std::enable_if_t<GPUUsage == GPUUsageMode::
 
 // Specialization for GPU mode (Host memory)
 template <typename T, GPUUsageMode GPUUsage>
-struct SelectVectorType<T, GPUUsage, std::enable_if_t<GPUUsage == GPUUsageMode::DATA_ON_HOST>> {
+struct SelectVectorType<T, GPUUsage, std::enable_if_t<GPUUsage == GPUUsageMode::ON_HOST_USING_THRUST>> {
     using type = thrust::host_vector<T>;
 
     static constexpr VectorStorageType get_vector_storage_type() {

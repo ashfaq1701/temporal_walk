@@ -358,6 +358,6 @@ template<GPUUsageMode GPUUsage>
 
 template class NodeEdgeIndex<GPUUsageMode::ON_CPU>;
 #ifdef HAS_CUDA
-template class NodeEdgeIndex<GPUUsageMode::DATA_ON_GPU>;
-template class NodeEdgeIndex<GPUUsageMode::DATA_ON_HOST>;
+template class NodeEdgeIndex<GPUUsageMode::ON_GPU_USING_CUDA>;
+template class NodeEdgeIndex<GPUUsageMode::ON_HOST_USING_THRUST>;
 #endif

@@ -460,6 +460,6 @@ std::tuple<int, int, int64_t> TemporalGraphCUDA<GPUUsage>::get_node_edge_at(
     };
 }
 
-template class TemporalGraphCUDA<GPUUsageMode::DATA_ON_GPU>;
-template class TemporalGraphCUDA<GPUUsageMode::DATA_ON_HOST>;
+template class TemporalGraphCUDA<GPUUsageMode::ON_GPU_USING_CUDA>;
+template class TemporalGraphCUDA<GPUUsageMode::ON_HOST_USING_THRUST>;
 #endif

@@ -24,8 +24,8 @@ protected:
 #ifdef HAS_CUDA
 using GPU_USAGE_TYPES = ::testing::Types<
     std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>,
-    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_GPU>,
-    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_HOST>
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_GPU_USING_CUDA>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_HOST_USING_THRUST>
 >;
 #else
 using GPU_USAGE_TYPES = ::testing::Types<

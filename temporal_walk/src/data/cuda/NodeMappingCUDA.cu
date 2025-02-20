@@ -145,6 +145,6 @@ std::vector<int> NodeMappingCUDA<GPUUsage>::get_active_node_ids() const {
     return result;
 }
 
-template class NodeMappingCUDA<GPUUsageMode::DATA_ON_GPU>;
-template class NodeMappingCUDA<GPUUsageMode::DATA_ON_HOST>;
+template class NodeMappingCUDA<GPUUsageMode::ON_GPU_USING_CUDA>;
+template class NodeMappingCUDA<GPUUsageMode::ON_HOST_USING_THRUST>;
 #endif

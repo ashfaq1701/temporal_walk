@@ -13,8 +13,8 @@ private:
     GPUUsageMode gpu_usage;
     #ifdef HAS_CUDA
     std::unique_ptr<ExponentialIndexRandomPicker<GPUUsageMode::ON_CPU>> cpu_impl;
-    std::unique_ptr<ExponentialIndexRandomPicker<GPUUsageMode::DATA_ON_GPU>> gpu_impl;
-    std::unique_ptr<ExponentialIndexRandomPicker<GPUUsageMode::DATA_ON_HOST>> host_impl;
+    std::unique_ptr<ExponentialIndexRandomPicker<GPUUsageMode::ON_GPU_USING_CUDA>> gpu_impl;
+    std::unique_ptr<ExponentialIndexRandomPicker<GPUUsageMode::ON_HOST_USING_THRUST>> host_impl;
     #else
     std::unique_ptr<ExponentialIndexRandomPicker<GPUUsageMode::ON_CPU>> cpu_impl;
     #endif
@@ -31,11 +31,11 @@ public:
 
         #ifdef HAS_CUDA
         switch(gpu_usage) {
-        case GPUUsageMode::DATA_ON_GPU:
-            gpu_impl = std::make_unique<ExponentialIndexRandomPicker<GPUUsageMode::DATA_ON_GPU>>();
+        case GPUUsageMode::ON_GPU_USING_CUDA:
+            gpu_impl = std::make_unique<ExponentialIndexRandomPicker<GPUUsageMode::ON_GPU_USING_CUDA>>();
             break;
-        case GPUUsageMode::DATA_ON_HOST:
-            host_impl = std::make_unique<ExponentialIndexRandomPicker<GPUUsageMode::DATA_ON_HOST>>();
+        case GPUUsageMode::ON_HOST_USING_THRUST:
+            host_impl = std::make_unique<ExponentialIndexRandomPicker<GPUUsageMode::ON_HOST_USING_THRUST>>();
             break;
         default:  // ON_CPU
             cpu_impl = std::make_unique<ExponentialIndexRandomPicker<GPUUsageMode::ON_CPU>>();
@@ -49,9 +49,9 @@ public:
     {
         #ifdef HAS_CUDA
         switch(gpu_usage) {
-        case GPUUsageMode::DATA_ON_GPU:
+        case GPUUsageMode::ON_GPU_USING_CUDA:
             return gpu_impl->pick_random(start, end, prioritize_end);
-        case GPUUsageMode::DATA_ON_HOST:
+        case GPUUsageMode::ON_HOST_USING_THRUST:
             return host_impl->pick_random(start, end, prioritize_end);
         default:  // ON_CPU
             return cpu_impl->pick_random(start, end, prioritize_end);
@@ -69,8 +69,8 @@ private:
     GPUUsageMode gpu_usage;
     #ifdef HAS_CUDA
     std::unique_ptr<LinearRandomPicker<GPUUsageMode::ON_CPU>> cpu_impl;
-    std::unique_ptr<LinearRandomPicker<GPUUsageMode::DATA_ON_GPU>> gpu_impl;
-    std::unique_ptr<LinearRandomPicker<GPUUsageMode::DATA_ON_HOST>> host_impl;
+    std::unique_ptr<LinearRandomPicker<GPUUsageMode::ON_GPU_USING_CUDA>> gpu_impl;
+    std::unique_ptr<LinearRandomPicker<GPUUsageMode::ON_HOST_USING_THRUST>> host_impl;
     #else
     std::unique_ptr<LinearRandomPicker<GPUUsageMode::ON_CPU>> cpu_impl;
     #endif
@@ -87,11 +87,11 @@ public:
 
         #ifdef HAS_CUDA
         switch(gpu_usage) {
-        case GPUUsageMode::DATA_ON_GPU:
-            gpu_impl = std::make_unique<LinearRandomPicker<GPUUsageMode::DATA_ON_GPU>>();
+        case GPUUsageMode::ON_GPU_USING_CUDA:
+            gpu_impl = std::make_unique<LinearRandomPicker<GPUUsageMode::ON_GPU_USING_CUDA>>();
             break;
-        case GPUUsageMode::DATA_ON_HOST:
-            host_impl = std::make_unique<LinearRandomPicker<GPUUsageMode::DATA_ON_HOST>>();
+        case GPUUsageMode::ON_HOST_USING_THRUST:
+            host_impl = std::make_unique<LinearRandomPicker<GPUUsageMode::ON_HOST_USING_THRUST>>();
             break;
         default:  // ON_CPU
             cpu_impl = std::make_unique<LinearRandomPicker<GPUUsageMode::ON_CPU>>();
@@ -105,9 +105,9 @@ public:
     {
         #ifdef HAS_CUDA
         switch(gpu_usage) {
-        case GPUUsageMode::DATA_ON_GPU:
+        case GPUUsageMode::ON_GPU_USING_CUDA:
             return gpu_impl->pick_random(start, end, prioritize_end);
-        case GPUUsageMode::DATA_ON_HOST:
+        case GPUUsageMode::ON_HOST_USING_THRUST:
             return host_impl->pick_random(start, end, prioritize_end);
         default:  // ON_CPU
             return cpu_impl->pick_random(start, end, prioritize_end);
@@ -125,8 +125,8 @@ private:
     GPUUsageMode gpu_usage;
     #ifdef HAS_CUDA
     std::unique_ptr<UniformRandomPicker<GPUUsageMode::ON_CPU>> cpu_impl;
-    std::unique_ptr<UniformRandomPicker<GPUUsageMode::DATA_ON_GPU>> gpu_impl;
-    std::unique_ptr<UniformRandomPicker<GPUUsageMode::DATA_ON_HOST>> host_impl;
+    std::unique_ptr<UniformRandomPicker<GPUUsageMode::ON_GPU_USING_CUDA>> gpu_impl;
+    std::unique_ptr<UniformRandomPicker<GPUUsageMode::ON_HOST_USING_THRUST>> host_impl;
     #else
     std::unique_ptr<UniformRandomPicker<GPUUsageMode::ON_CPU>> cpu_impl;
     #endif
@@ -143,11 +143,11 @@ public:
 
         #ifdef HAS_CUDA
         switch(gpu_usage) {
-        case GPUUsageMode::DATA_ON_GPU:
-            gpu_impl = std::make_unique<UniformRandomPicker<GPUUsageMode::DATA_ON_GPU>>();
+        case GPUUsageMode::ON_GPU_USING_CUDA:
+            gpu_impl = std::make_unique<UniformRandomPicker<GPUUsageMode::ON_GPU_USING_CUDA>>();
             break;
-        case GPUUsageMode::DATA_ON_HOST:
-            host_impl = std::make_unique<UniformRandomPicker<GPUUsageMode::DATA_ON_HOST>>();
+        case GPUUsageMode::ON_HOST_USING_THRUST:
+            host_impl = std::make_unique<UniformRandomPicker<GPUUsageMode::ON_HOST_USING_THRUST>>();
             break;
         default:  // ON_CPU
             cpu_impl = std::make_unique<UniformRandomPicker<GPUUsageMode::ON_CPU>>();
@@ -161,9 +161,9 @@ public:
     {
         #ifdef HAS_CUDA
         switch(gpu_usage) {
-        case GPUUsageMode::DATA_ON_GPU:
+        case GPUUsageMode::ON_GPU_USING_CUDA:
             return gpu_impl->pick_random(start, end, prioritize_end);
-        case GPUUsageMode::DATA_ON_HOST:
+        case GPUUsageMode::ON_HOST_USING_THRUST:
             return host_impl->pick_random(start, end, prioritize_end);
         default:  // ON_CPU
             return cpu_impl->pick_random(start, end, prioritize_end);
@@ -179,8 +179,8 @@ private:
     GPUUsageMode gpu_usage;
     #ifdef HAS_CUDA
     std::unique_ptr<WeightBasedRandomPicker<GPUUsageMode::ON_CPU>> cpu_impl;
-    std::unique_ptr<WeightBasedRandomPicker<GPUUsageMode::DATA_ON_GPU>> gpu_impl;
-    std::unique_ptr<WeightBasedRandomPicker<GPUUsageMode::DATA_ON_HOST>> host_impl;
+    std::unique_ptr<WeightBasedRandomPicker<GPUUsageMode::ON_GPU_USING_CUDA>> gpu_impl;
+    std::unique_ptr<WeightBasedRandomPicker<GPUUsageMode::ON_HOST_USING_THRUST>> host_impl;
     #else
     std::unique_ptr<WeightBasedRandomPicker<GPUUsageMode::ON_CPU>> cpu_impl;
     #endif
@@ -196,11 +196,11 @@ public:
 
         #ifdef HAS_CUDA
         switch(gpu_usage) {
-        case GPUUsageMode::DATA_ON_GPU:
-            gpu_impl = std::make_unique<WeightBasedRandomPicker<GPUUsageMode::DATA_ON_GPU>>();
+        case GPUUsageMode::ON_GPU_USING_CUDA:
+            gpu_impl = std::make_unique<WeightBasedRandomPicker<GPUUsageMode::ON_GPU_USING_CUDA>>();
             break;
-        case GPUUsageMode::DATA_ON_HOST:
-            host_impl = std::make_unique<WeightBasedRandomPicker<GPUUsageMode::DATA_ON_HOST>>();
+        case GPUUsageMode::ON_HOST_USING_THRUST:
+            host_impl = std::make_unique<WeightBasedRandomPicker<GPUUsageMode::ON_HOST_USING_THRUST>>();
             break;
         default:  // ON_CPU
             cpu_impl = std::make_unique<WeightBasedRandomPicker<GPUUsageMode::ON_CPU>>();

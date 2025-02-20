@@ -57,13 +57,13 @@ GPUUsageMode gpu_usage_mode_from_string(const std::string& gpu_usage_mode_str)
     {
         return GPUUsageMode::ON_CPU;
     }
-    else if (gpu_usage_mode_str == "DATA_ON_GPU")
+    else if (gpu_usage_mode_str == "ON_GPU_USING_CUDA")
     {
-        return GPUUsageMode::DATA_ON_GPU;
+        return GPUUsageMode::ON_GPU_USING_CUDA;
     }
-    else if (gpu_usage_mode_str == "DATA_ON_HOST")
+    else if (gpu_usage_mode_str == "ON_HOST_USING_THRUST")
     {
-        return GPUUsageMode::DATA_ON_HOST;
+        return GPUUsageMode::ON_HOST_USING_THRUST;
     } else
     {
         throw std::invalid_argument("Invalid usage mode: " + gpu_usage_mode_str);
@@ -89,7 +89,7 @@ PYBIND11_MODULE(_temporal_walk, m)
 
             Args:
             is_directed (bool): Whether to create a directed graph.
-            gpu_usage_mode (str, optional): GPU usage mode ("ON_CPU", "DATA_ON_GPU", or "DATA_ON_HOST"). Default: "ON_CPU".
+            gpu_usage_mode (str, optional): GPU usage mode ("ON_CPU", "ON_GPU_USING_CUDA", or "ON_HOST_USING_THRUST"). Default: "ON_CPU".
             max_time_capacity (int, optional): Maximum time window for edges. Edges older than (latest_time - max_time_capacity) are removed. Use -1 for no limit. Defaults to -1.
             enable_weight_computation (bool, optional): Enable CTDNE weight computation. Required for ExponentialWeight picker. Defaults to False.
             timescale_bound (float, optional): Scale factor for temporal differences. Used to prevent numerical issues with large time differences. Defaults to 50.0.
@@ -595,7 +595,7 @@ PYBIND11_MODULE(_temporal_walk, m)
             Initialize linear time decay random picker.
 
             Args:
-                gpu_usage_mode (str, optional): GPU usage mode ("ON_CPU", "DATA_ON_GPU", or "DATA_ON_HOST"). Default: "ON_CPU"
+                gpu_usage_mode (str, optional): GPU usage mode ("ON_CPU", "ON_GPU_USING_CUDA", or "ON_HOST_USING_THRUST"). Default: "ON_CPU"
             )",
              py::arg("gpu_usage_mode") = "ON_CPU")
 
@@ -623,7 +623,7 @@ PYBIND11_MODULE(_temporal_walk, m)
             Initialize index based exponential time decay random picker.
 
             Args:
-                gpu_usage_mode (str, optional): GPU usage mode ("ON_CPU", "DATA_ON_GPU", or "DATA_ON_HOST"). Default: "ON_CPU"
+                gpu_usage_mode (str, optional): GPU usage mode ("ON_CPU", "ON_GPU_USING_CUDA", or "ON_HOST_USING_THRUST"). Default: "ON_CPU"
             )",
              py::arg("gpu_usage_mode") = "ON_CPU")
 
@@ -651,7 +651,7 @@ PYBIND11_MODULE(_temporal_walk, m)
             Initialize uniform random picker.
 
             Args:
-                gpu_usage_mode (str, optional): GPU usage mode ("ON_CPU", "DATA_ON_GPU", or "DATA_ON_HOST"). Default: "ON_CPU"
+                gpu_usage_mode (str, optional): GPU usage mode ("ON_CPU", "ON_GPU_USING_CUDA", or "ON_HOST_USING_THRUST"). Default: "ON_CPU"
             )",
              py::arg("gpu_usage_mode") = "ON_CPU")
 

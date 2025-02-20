@@ -14,7 +14,7 @@ public:
 
     #ifdef HAS_CUDA
     static constexpr auto get_policy() {
-        if constexpr (GPUUsage == GPUUsageMode::DATA_ON_GPU) {
+        if constexpr (GPUUsage == GPUUsageMode::ON_GPU_USING_CUDA) {
             return DEVICE_POLICY;
         } else {
             return HOST_POLICY;

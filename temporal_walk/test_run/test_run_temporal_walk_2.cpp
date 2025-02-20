@@ -4,7 +4,7 @@
 #include "test_utils.h"
 #include "../test/test_utils.h"
 
-constexpr GPUUsageMode GPU_USAGE_MODE = GPUUsageMode::DATA_ON_GPU;
+constexpr GPUUsageMode GPU_USAGE_MODE = GPUUsageMode::ON_GPU_USING_CUDA;
 
 int main() {
     const auto edge_infos = read_edges_from_csv("../../data/sample_data.csv");

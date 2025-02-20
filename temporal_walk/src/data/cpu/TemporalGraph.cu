@@ -84,7 +84,7 @@ void TemporalGraph<GPUUsage>::sort_and_merge_edges(const size_t start_idx) {
     }
 
     #ifdef HAS_CUDA
-    if constexpr (GPUUsage == GPUUsageMode::DATA_ON_GPU) {
+    if constexpr (GPUUsage == GPUUsageMode::ON_GPU_USING_CUDA) {
         thrust::sort(thrust::device, indices.begin(), indices.end(),
             [ts = edges.timestamps.data().get()] __device__ (const size_t i, const size_t j) {
                 return ts[i] < ts[j];
@@ -524,6 +524,6 @@ std::vector<std::tuple<int, int, int64_t>> TemporalGraph<GPUUsage>::get_edges() 
 
 template class TemporalGraph<GPUUsageMode::ON_CPU>;
 #ifdef HAS_CUDA
-template class TemporalGraph<GPUUsageMode::DATA_ON_GPU>;
-template class TemporalGraph<GPUUsageMode::DATA_ON_HOST>;
+template class TemporalGraph<GPUUsageMode::ON_GPU_USING_CUDA>;
+template class TemporalGraph<GPUUsageMode::ON_HOST_USING_THRUST>;
 #endif

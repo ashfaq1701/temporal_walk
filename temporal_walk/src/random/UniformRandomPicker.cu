@@ -12,6 +12,6 @@ int UniformRandomPicker<GPUUsage>::pick_random(const int start, const int end, c
 
 template class UniformRandomPicker<GPUUsageMode::ON_CPU>;
 #ifdef HAS_CUDA
-template class UniformRandomPicker<GPUUsageMode::DATA_ON_GPU>;
-template class UniformRandomPicker<GPUUsageMode::DATA_ON_HOST>;
+template class UniformRandomPicker<GPUUsageMode::ON_GPU_USING_CUDA>;
+template class UniformRandomPicker<GPUUsageMode::ON_HOST_USING_THRUST>;
 #endif

@@ -10,13 +10,13 @@ class WeightBasedRandomPickerTest : public ::testing::Test
 {
 protected:
     using WeightBasedRandomPickerType = std::conditional_t<
-        T::value == GPUUsageMode::DATA_ON_GPU,
+        T::value == GPUUsageMode::ON_GPU_USING_CUDA,
         WeightBasedRandomPickerGPU<T::value>,
         WeightBasedRandomPicker<T::value>
     >;
 
     WeightBasedRandomPickerTest() {
-        if constexpr (T::value == GPUUsageMode::DATA_ON_GPU) {
+        if constexpr (T::value == GPUUsageMode::ON_GPU_USING_CUDA) {
             #ifdef HAS_CUDA
             CUDARandomStates::initialize();
             #endif
@@ -52,8 +52,8 @@ protected:
 #ifdef HAS_CUDA
 using GPU_USAGE_TYPES = ::testing::Types<
     std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>,
-    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_GPU>,
-    std::integral_constant<GPUUsageMode, GPUUsageMode::DATA_ON_HOST>
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_GPU_USING_CUDA>,
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_HOST_USING_THRUST>
 >;
 #else
 using GPU_USAGE_TYPES = ::testing::Types<

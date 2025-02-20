@@ -134,7 +134,7 @@ void NodeEdgeIndexCUDA<GPUUsage>::rebuild(
         }
     };
 
-    if constexpr (GPUUsage == GPUUsageMode::DATA_ON_GPU) {
+    if constexpr (GPUUsage == GPUUsageMode::ON_GPU_USING_CUDA) {
         thrust::for_each(
             this->get_policy(),
             thrust::make_counting_iterator<size_t>(0),
@@ -186,7 +186,7 @@ void NodeEdgeIndexCUDA<GPUUsage>::rebuild(
     size_t* d_outbound_indices_ptr = thrust::raw_pointer_cast(this->outbound_indices.data());
     size_t* d_inbound_indices_ptr = is_directed ? thrust::raw_pointer_cast(this->inbound_indices.data()) : nullptr;
 
-    if constexpr (GPUUsage == GPUUsageMode::DATA_ON_GPU) {
+    if constexpr (GPUUsage == GPUUsageMode::ON_GPU_USING_CUDA) {
         populate_edge_indices_cuda<<<1, 1>>>(edges.size(), is_directed, d_src_ptr, d_tgt_ptr,
             d_outbound_indices_ptr, d_inbound_indices_ptr,
             d_outbound_offsets_ptr, d_inbound_offsets_ptr,
@@ -278,7 +278,7 @@ void NodeEdgeIndexCUDA<GPUUsage>::rebuild(
         }
     };
 
-    if constexpr (GPUUsage == GPUUsageMode::DATA_ON_GPU) {
+    if constexpr (GPUUsage == GPUUsageMode::ON_GPU_USING_CUDA) {
         thrust::for_each(
             this->get_policy(),
             thrust::make_counting_iterator<size_t>(0),
@@ -551,6 +551,6 @@ void NodeEdgeIndexCUDA<GPUUsage>::update_temporal_weights(
     }
 }
 
-template class NodeEdgeIndexCUDA<GPUUsageMode::DATA_ON_GPU>;
-template class NodeEdgeIndexCUDA<GPUUsageMode::DATA_ON_HOST>;
+template class NodeEdgeIndexCUDA<GPUUsageMode::ON_GPU_USING_CUDA>;
+template class NodeEdgeIndexCUDA<GPUUsageMode::ON_HOST_USING_THRUST>;
 #endif

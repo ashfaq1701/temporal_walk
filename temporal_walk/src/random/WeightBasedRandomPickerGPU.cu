@@ -83,5 +83,5 @@ int WeightBasedRandomPickerGPU<GPUUsage>::pick_random(
 }
 
 
-template class WeightBasedRandomPickerGPU<GPUUsageMode::DATA_ON_GPU>;
+template class WeightBasedRandomPickerGPU<GPUUsageMode::ON_GPU_USING_CUDA>;
 #endif

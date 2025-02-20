@@ -545,6 +545,6 @@ void TemporalWalk<GPUUsage>::clear() {
 
 template class TemporalWalk<GPUUsageMode::ON_CPU>;
 #ifdef HAS_CUDA
-template class TemporalWalk<GPUUsageMode::DATA_ON_GPU>;
-template class TemporalWalk<GPUUsageMode::DATA_ON_HOST>;
+template class TemporalWalk<GPUUsageMode::ON_GPU_USING_CUDA>;
+template class TemporalWalk<GPUUsageMode::ON_HOST_USING_THRUST>;
 #endif

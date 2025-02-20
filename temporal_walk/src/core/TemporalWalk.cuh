@@ -17,7 +17,7 @@
  * Supports both CPU and GPU computation for generating random walks on temporal graphs.
  * The walks respect temporal causality and can be biased using different strategies.
  *
- * @tparam GPUUsageMode enum to control data placement and computation between CPU and GPU. Possible values are ON_CPU, DATA_ON_GPU, DATA_ON_HOST.
+ * @tparam GPUUsageMode enum to control data placement and computation between CPU and GPU. Possible values are ON_CPU, ON_GPU_USING_CUDA, ON_HOST_USING_THRUST.
  */
 template<GPUUsageMode GPUUsage>
 class TemporalWalk {
@@ -41,7 +41,7 @@ class TemporalWalk {
         TemporalGraphCUDA<GPUUsage>
     >;
     using WeightBasedRandomPickerType = std::conditional_t<
-        GPUUsage == GPUUsageMode::DATA_ON_GPU,
+        GPUUsage == GPUUsageMode::ON_GPU_USING_CUDA,
         WeightBasedRandomPickerGPU<GPUUsage>,
         WeightBasedRandomPicker<GPUUsage>
     >;
