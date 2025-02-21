@@ -510,6 +510,3 @@ std::vector<std::tuple<int, int, int64_t>> TemporalGraph<GPUUsage>::get_edges() 
 }
 
 template class TemporalGraph<GPUUsageMode::ON_CPU>;
-#ifdef HAS_CUDA
-template class TemporalGraph<GPUUsageMode::ON_GPU>;
-#endif

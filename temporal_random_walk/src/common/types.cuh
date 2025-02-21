@@ -2,6 +2,7 @@
 #define TYPES_H
 
 #include <vector>
+#include "common_vector.cuh"
 #include "../core/structs.h"
 
 enum class VectorStorageType {

@@ -105,6 +105,3 @@ typename NodeMapping<GPUUsage>::IntVector NodeMapping<GPUUsage>::get_all_sparse_
 }
 
 template class NodeMapping<GPUUsageMode::ON_CPU>;
-#ifdef HAS_CUDA
-template class NodeMapping<GPUUsageMode::ON_GPU>;
-#endif

@@ -167,6 +167,3 @@ size_t EdgeData<GPUUsage>::find_group_before_timestamp(int64_t timestamp) const 
 }
 
 template class EdgeData<GPUUsageMode::ON_CPU>;
-#ifdef HAS_CUDA
-template class EdgeData<GPUUsageMode::ON_GPU>;
-#endif
