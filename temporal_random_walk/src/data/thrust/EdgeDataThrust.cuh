@@ -5,7 +5,7 @@
 #include "../../cuda_common/PolicyProvider.cuh"
 
 template<GPUUsageMode GPUUsage>
-class EdgeDataThrust final : public EdgeData<GPUUsage>, public PolicyProvider<GPUUsage> {
+class EdgeDataThrust : public EdgeData<GPUUsage>, public PolicyProvider<GPUUsage> {
 public:
 #ifdef HAS_CUDA
     std::vector<std::tuple<int, int, int64_t>> get_edges() override;

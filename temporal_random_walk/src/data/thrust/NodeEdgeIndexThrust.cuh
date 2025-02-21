@@ -5,7 +5,7 @@
 #include "../../cuda_common/PolicyProvider.cuh"
 
 template<GPUUsageMode GPUUsage>
-class NodeEdgeIndexThrust final : public NodeEdgeIndex<GPUUsage>, public PolicyProvider<GPUUsage> {
+class NodeEdgeIndexThrust : public NodeEdgeIndex<GPUUsage>, public PolicyProvider<GPUUsage> {
 public:
 #ifdef HAS_CUDA
     void rebuild(const EdgeData<GPUUsage>& edges, const NodeMapping<GPUUsage>& mapping, bool is_directed) override;

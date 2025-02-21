@@ -5,7 +5,7 @@
 #include "../../cuda_common/PolicyProvider.cuh"
 
 template<GPUUsageMode GPUUsage>
-class TemporalGraphThrust final : public TemporalGraph<GPUUsage>, public PolicyProvider<GPUUsage> {
+class TemporalGraphThrust : public TemporalGraph<GPUUsage>, public PolicyProvider<GPUUsage> {
 
     static_assert(GPUUsage != GPUUsageMode::ON_CPU, "TemporalGraphThrust cannot be used with ON_CPU mode");
 

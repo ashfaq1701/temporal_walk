@@ -12,7 +12,7 @@ __host__ __device__ void mark_node_deleted(bool* is_deleted, int sparse_id, int 
 #endif
 
 template<GPUUsageMode GPUUsage>
-class NodeMappingThrust final : public NodeMapping<GPUUsage>, public PolicyProvider<GPUUsage> {
+class NodeMappingThrust : public NodeMapping<GPUUsage>, public PolicyProvider<GPUUsage> {
 
 public:
 #ifdef HAS_CUDA
