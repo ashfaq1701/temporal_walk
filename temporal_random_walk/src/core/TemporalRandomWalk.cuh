@@ -1,5 +1,5 @@
-#ifndef TEMPORAL_WALK_H
-#define TEMPORAL_WALK_H
+#ifndef TEMPORAL_RANDOM_WALK_H
+#define TEMPORAL_RANDOM_WALK_H
 
 #include<vector>
 #include "structs.h"
@@ -20,7 +20,7 @@
  * @tparam GPUUsageMode enum to control data placement and computation between CPU and GPU. Possible values are ON_CPU, ON_GPU_USING_CUDA, ON_HOST_USING_THRUST.
  */
 template<GPUUsageMode GPUUsage>
-class TemporalWalk {
+class TemporalRandomWalk {
     bool is_directed;
 
     int64_t max_time_capacity;
@@ -33,7 +33,7 @@ class TemporalWalk {
 
     int64_t max_edge_time = 0;
 
-    // In TemporalWalk.h, change the type declaration:
+    // In TemporalRandomWalk.h, change the type declaration:
     #ifdef HAS_CUDA
     using TemporalGraphType = std::conditional_t<
         GPUUsage == GPUUsageMode::ON_CPU,
@@ -69,7 +69,7 @@ class TemporalWalk {
 public:
 
     /**
-     * @brief Construct a temporal walk generator
+     * @brief Construct a temporal random walk generator
      *
      * @param is_directed Whether the graph is directed
      * @param max_time_capacity Maximum time window for edges (-1 for no limit)
@@ -77,7 +77,7 @@ public:
      * @param timescale_bound Scale factor for temporal differences
      * @param n_threads Number of threads for parallel walk generation
      */
-    explicit TemporalWalk(
+    explicit TemporalRandomWalk(
         bool is_directed,
         int64_t max_time_capacity=-1,
         bool enable_weight_computation=false,
@@ -85,7 +85,7 @@ public:
         size_t n_threads=std::thread::hardware_concurrency());
 
     /**
-     * @brief Generate temporal walks starting from all nodes with timestamps
+     * @brief Generate temporal random walks starting from all nodes with timestamps
      *
      * @param max_walk_len Maximum length of each walk
      * @param walk_bias Random selection strategy for next edges
@@ -102,7 +102,7 @@ public:
         WalkDirection walk_direction=WalkDirection::Forward_In_Time);
 
     /**
-     * @brief Generate temporal walks from all nodes (without timestamps)
+     * @brief Generate temporal random walks from all nodes (without timestamps)
      * Similar to get_random_walks_and_times_for_all_nodes but returns only node IDs.
      *
      * @param max_walk_len Maximum length of each walk
@@ -120,7 +120,7 @@ public:
         WalkDirection walk_direction=WalkDirection::Forward_In_Time);
 
     /**
-     * @brief Generate temporal walks starting from random nodes with timestamps
+     * @brief Generate temporal random walks starting from random nodes with timestamps
      *
      * @param max_walk_len Maximum length of each walk
      * @param walk_bias Random selection strategy for next edges
@@ -137,7 +137,7 @@ public:
         WalkDirection walk_direction=WalkDirection::Forward_In_Time);
 
     /**
-     * @brief Generate temporal walks starting from random nodes (without timestamps)
+     * @brief Generate temporal random walks starting from random nodes (without timestamps)
      * Similar to get_random_walks_and_times but returns only node IDs.
      *
      * @param max_walk_len Maximum length of each walk
@@ -226,4 +226,4 @@ public:
     void clear();
 };
 
-#endif //TEMPORAL_WALK_H
+#endif //TEMPORAL_RANDOM_WALK_H

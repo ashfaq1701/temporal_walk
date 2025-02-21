@@ -1,13 +1,13 @@
-# 🚀 Temporal Walk
+# 🚀 Temporal Random Walk
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/temporal-walk.svg)](https://pypi.org/project/temporal-walk/)
 [![PyPI Downloads](https://img.shields.io/pypi/dm/temporal-walk.svg)](https://pypi.org/project/temporal-walk/)
 
-**A high-performance temporal walk sampler for dynamic networks with GPU acceleration. Built for scale.**
+**A high-performance temporal random walk sampler for dynamic networks with GPU acceleration. Built for scale.**
 
 ---
 
-## 🔥 Why Temporal Walk?
+## 🔥 Why Temporal Random Walk?
 ✅ **Performance First** – GPU-accelerated sampling for massive networks (development in progress)<br>
 ✅ **Memory Efficient** – Smart memory management for large graphs  
 ✅ **Flexible Integration** – Easy Python bindings with **NumPy/NetworkX** support  
@@ -19,10 +19,10 @@
 ## ⚡ Quick Start
 
 ```python
-from temporal_walk import TemporalWalk
+from temporal_random_walk import TemporalRandomWalk
 
 # Create a directed temporal graph
-walker = TemporalWalk(is_directed=True, gpu_usage_mode="ON_CPU")
+walker = TemporalRandomWalk(is_directed=True, gpu_usage_mode="ON_CPU")
 
 # Add edges: (source, target, timestamp)
 edges = [
@@ -73,8 +73,8 @@ pip install temporal-walk
 
 ## 📖 Documentation
 
-📌 **[C++ Documentation →](https://htmlpreview.github.io/?https://github.com/ashfaq1701/temporal_walk/blob/master/docs/html/class_temporal_walk.html)**<br>
-📌 **[Python Interface Documentation →](docs/_temporal_walk.md)**
+📌 **[C++ Documentation →](https://htmlpreview.github.io/?https://github.com/ashfaq1701/temporal-random-walk/blob/master/docs/html/class_temporal_random_walk.html)**<br>
+📌 **[Python Interface Documentation →](docs/_temporal_random_walk.md)**
 
 ---
 

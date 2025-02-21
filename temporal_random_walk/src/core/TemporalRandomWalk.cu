@@ -1,4 +1,4 @@
-#include "TemporalWalk.cuh"
+#include "TemporalRandomWalk.cuh"
 
 #include <iostream>
 #include "../utils/utils.h"
@@ -10,7 +10,7 @@
 constexpr int DEFAULT_CONTEXT_WINDOW_LEN = 2;
 
 template<GPUUsageMode GPUUsage>
-TemporalWalk<GPUUsage>::TemporalWalk(
+TemporalRandomWalk<GPUUsage>::TemporalRandomWalk(
     bool is_directed,
     int64_t max_time_capacity,
     bool enable_weight_computation,
@@ -48,7 +48,7 @@ bool get_should_walk_forward(const WalkDirection walk_direction) {
 }
 
 template<GPUUsageMode GPUUsage>
-std::shared_ptr<RandomPicker> TemporalWalk<GPUUsage>::get_random_picker(const RandomPickerType* picker_type) const {
+std::shared_ptr<RandomPicker> TemporalRandomWalk<GPUUsage>::get_random_picker(const RandomPickerType* picker_type) const {
     if (!picker_type) {
         throw std::invalid_argument("picker_type cannot be nullptr");
     }
@@ -71,7 +71,7 @@ std::shared_ptr<RandomPicker> TemporalWalk<GPUUsage>::get_random_picker(const Ra
 }
 
 template<GPUUsageMode GPUUsage>
-std::vector<std::vector<NodeWithTime>> TemporalWalk<GPUUsage>::get_random_walks_and_times_for_all_nodes(
+std::vector<std::vector<NodeWithTime>> TemporalRandomWalk<GPUUsage>::get_random_walks_and_times_for_all_nodes(
     const int max_walk_len,
     const RandomPickerType* walk_bias,
     const int num_walks_per_node,
@@ -146,7 +146,7 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk<GPUUsage>::get_random_walks_
 }
 
 template<GPUUsageMode GPUUsage>
-std::vector<std::vector<int>> TemporalWalk<GPUUsage>::get_random_walks_for_all_nodes(
+std::vector<std::vector<int>> TemporalRandomWalk<GPUUsage>::get_random_walks_for_all_nodes(
         const int max_walk_len,
         const RandomPickerType* walk_bias,
         const int num_walks_per_node,
@@ -178,7 +178,7 @@ std::vector<std::vector<int>> TemporalWalk<GPUUsage>::get_random_walks_for_all_n
 }
 
 template<GPUUsageMode GPUUsage>
-std::vector<std::vector<NodeWithTime>> TemporalWalk<GPUUsage>::get_random_walks_and_times(
+std::vector<std::vector<NodeWithTime>> TemporalRandomWalk<GPUUsage>::get_random_walks_and_times(
     const int max_walk_len,
     const RandomPickerType* walk_bias,
     const int num_walks_total,
@@ -251,7 +251,7 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk<GPUUsage>::get_random_walks_
 }
 
 template<GPUUsageMode GPUUsage>
-std::vector<std::vector<int>> TemporalWalk<GPUUsage>::get_random_walks(
+std::vector<std::vector<int>> TemporalRandomWalk<GPUUsage>::get_random_walks(
         int max_walk_len,
         const RandomPickerType* walk_bias,
         int num_walks_total,
@@ -283,7 +283,7 @@ std::vector<std::vector<int>> TemporalWalk<GPUUsage>::get_random_walks(
 }
 
 template<GPUUsageMode GPUUsage>
-std::vector<std::vector<NodeWithTime>> TemporalWalk<GPUUsage>::get_random_walks_and_times_with_specific_number_of_contexts(
+std::vector<std::vector<NodeWithTime>> TemporalRandomWalk<GPUUsage>::get_random_walks_and_times_with_specific_number_of_contexts(
     const int max_walk_len,
     const RandomPickerType* walk_bias,
     const long num_cw,
@@ -388,7 +388,7 @@ std::vector<std::vector<NodeWithTime>> TemporalWalk<GPUUsage>::get_random_walks_
 }
 
 template<GPUUsageMode GPUUsage>
-std::vector<std::vector<int>> TemporalWalk<GPUUsage>::get_random_walks_with_specific_number_of_contexts(
+std::vector<std::vector<int>> TemporalRandomWalk<GPUUsage>::get_random_walks_with_specific_number_of_contexts(
     const int max_walk_len,
     const RandomPickerType* walk_bias,
     const long num_cw,
@@ -417,7 +417,7 @@ std::vector<std::vector<int>> TemporalWalk<GPUUsage>::get_random_walks_with_spec
 }
 
 template<GPUUsageMode GPUUsage>
-void TemporalWalk<GPUUsage>::generate_random_walk_and_time(
+void TemporalRandomWalk<GPUUsage>::generate_random_walk_and_time(
     std::vector<NodeWithTime>* walk,
     const std::shared_ptr<RandomPicker>& edge_picker,
     const std::shared_ptr<RandomPicker>& start_picker,
@@ -494,17 +494,17 @@ void TemporalWalk<GPUUsage>::generate_random_walk_and_time(
 }
 
 template<GPUUsageMode GPUUsage>
-void TemporalWalk<GPUUsage>::add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& edge_infos) const {
+void TemporalRandomWalk<GPUUsage>::add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& edge_infos) const {
     temporal_graph->add_multiple_edges(edge_infos);
 }
 
 template<GPUUsageMode GPUUsage>
-size_t TemporalWalk<GPUUsage>::get_node_count() const {
+size_t TemporalRandomWalk<GPUUsage>::get_node_count() const {
     return temporal_graph->get_node_count();
 }
 
 template<GPUUsageMode GPUUsage>
-long TemporalWalk<GPUUsage>::estimate_cw_count(
+long TemporalRandomWalk<GPUUsage>::estimate_cw_count(
     const int num_walks_per_node,
     const int max_walk_len,
     const int min_walk_len) const {
@@ -513,27 +513,27 @@ long TemporalWalk<GPUUsage>::estimate_cw_count(
 }
 
 template<GPUUsageMode GPUUsage>
-size_t TemporalWalk<GPUUsage>::get_edge_count() const {
+size_t TemporalRandomWalk<GPUUsage>::get_edge_count() const {
     return temporal_graph->get_total_edges();
 }
 
 template<GPUUsageMode GPUUsage>
-std::vector<int> TemporalWalk<GPUUsage>::get_node_ids() const {
+std::vector<int> TemporalRandomWalk<GPUUsage>::get_node_ids() const {
     return temporal_graph->get_node_ids();
 }
 
 template<GPUUsageMode GPUUsage>
-std::vector<std::tuple<int, int, int64_t>> TemporalWalk<GPUUsage>::get_edges() const {
+std::vector<std::tuple<int, int, int64_t>> TemporalRandomWalk<GPUUsage>::get_edges() const {
     return temporal_graph->get_edges();
 }
 
 template<GPUUsageMode GPUUsage>
-bool TemporalWalk<GPUUsage>::get_is_directed() const {
+bool TemporalRandomWalk<GPUUsage>::get_is_directed() const {
     return is_directed;
 }
 
 template<GPUUsageMode GPUUsage>
-void TemporalWalk<GPUUsage>::clear() {
+void TemporalRandomWalk<GPUUsage>::clear() {
     #ifdef HAS_CUDA
     temporal_graph = std::make_unique<TemporalGraphType>(
         is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
@@ -543,8 +543,8 @@ void TemporalWalk<GPUUsage>::clear() {
     #endif
 }
 
-template class TemporalWalk<GPUUsageMode::ON_CPU>;
+template class TemporalRandomWalk<GPUUsageMode::ON_CPU>;
 #ifdef HAS_CUDA
-template class TemporalWalk<GPUUsageMode::ON_GPU_USING_CUDA>;
-template class TemporalWalk<GPUUsageMode::ON_HOST_USING_THRUST>;
+template class TemporalRandomWalk<GPUUsageMode::ON_GPU_USING_CUDA>;
+template class TemporalRandomWalk<GPUUsageMode::ON_HOST_USING_THRUST>;
 #endif

@@ -1,6 +1,6 @@
 #include <vector>
 
-#include "../src/core/TemporalWalk.cuh"
+#include "../src/core/TemporalRandomWalk.cuh"
 #include "test_utils.h"
 
 constexpr GPUUsageMode GPU_USAGE_MODE = GPUUsageMode::ON_CPU;
@@ -24,19 +24,19 @@ int main() {
         {5, 4, 32}
     };
 
-    TemporalWalk<GPU_USAGE_MODE> temporal_walk(true);
-    temporal_walk.add_multiple_edges(edges);
+    TemporalRandomWalk<GPU_USAGE_MODE> temporal_random_walk(true);
+    temporal_random_walk.add_multiple_edges(edges);
 
     constexpr RandomPickerType linear_picker_type = RandomPickerType::Linear;
     constexpr RandomPickerType exponential_picker_type = RandomPickerType::ExponentialIndex;
 
-    const auto walks_forward = temporal_walk.get_random_walks_and_times_for_all_nodes(20, &linear_picker_type, 10, &exponential_picker_type, WalkDirection::Forward_In_Time);
+    const auto walks_forward = temporal_random_walk.get_random_walks_and_times_for_all_nodes(20, &linear_picker_type, 10, &exponential_picker_type, WalkDirection::Forward_In_Time);
     std::cout << "Forward walks:" << std::endl;
-    print_temporal_walks_with_times(walks_forward);
+    print_temporal_random_walks_with_times(walks_forward);
 
-    const auto walks_backward = temporal_walk.get_random_walks_and_times_for_all_nodes(20, &linear_picker_type, 10, &exponential_picker_type, WalkDirection::Backward_In_Time);
+    const auto walks_backward = temporal_random_walk.get_random_walks_and_times_for_all_nodes(20, &linear_picker_type, 10, &exponential_picker_type, WalkDirection::Backward_In_Time);
     std::cout << "Backward walks:" << std::endl;
-    print_temporal_walks_with_times(walks_backward);
+    print_temporal_random_walks_with_times(walks_backward);
 
     return 0;
 }

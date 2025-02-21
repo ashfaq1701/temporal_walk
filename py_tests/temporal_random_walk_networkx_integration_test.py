@@ -1,5 +1,5 @@
 import networkx as nx
-from temporal_walk import TemporalWalk
+from temporal_random_walk import TemporalRandomWalk
 import pytest
 
 GPU_USAGE_MODE = "ON_CPU"
@@ -18,8 +18,8 @@ def test_networkx_integration():
     ]
     nx_graph.add_edges_from(edges_with_timestamps)
 
-    # Create TemporalWalk instance
-    tw = TemporalWalk(True, GPU_USAGE_MODE)
+    # Create TemporalRandomWalk instance
+    tw = TemporalRandomWalk(True, GPU_USAGE_MODE)
 
     # Test importing from NetworkX
     tw.add_edges_from_networkx(nx_graph)
@@ -43,7 +43,7 @@ def test_networkx_integration():
 def test_networkx_integration_empty_graph():
     # Test with empty graph
     G = nx.DiGraph()
-    tw = TemporalWalk(True, GPU_USAGE_MODE)
+    tw = TemporalRandomWalk(True, GPU_USAGE_MODE)
 
     # Should work with empty graph
     tw.add_edges_from_networkx(G)
@@ -55,15 +55,15 @@ def test_networkx_integration_invalid_timestamp():
     # Add edge with missing timestamp
     G.add_edge(0, 1)
 
-    tw = TemporalWalk(True, GPU_USAGE_MODE)
+    tw = TemporalRandomWalk(True, GPU_USAGE_MODE)
 
     # Should raise an error when timestamp is missing
     with pytest.raises(KeyError):
         tw.add_edges_from_networkx(G)
 
 def test_networkx_integration_with_existing_edges():
-    # Create TemporalWalk instance
-    tw = TemporalWalk(True, GPU_USAGE_MODE)
+    # Create TemporalRandomWalk instance
+    tw = TemporalRandomWalk(True, GPU_USAGE_MODE)
 
     # Add some initial edges directly
     initial_edges = [
@@ -125,7 +125,7 @@ def test_networkx_integration_with_existing_edges():
 
 def test_networkx_integration_directed_undirected():
     # Test directed graph
-    tw_directed = TemporalWalk(True, GPU_USAGE_MODE)  # is_directed = True
+    tw_directed = TemporalRandomWalk(True, GPU_USAGE_MODE)  # is_directed = True
     tw_directed.add_multiple_edges([
         (0, 1, 100),
         (1, 2, 200),
@@ -141,7 +141,7 @@ def test_networkx_integration_directed_undirected():
     assert nx_directed.has_edge(2, 0) and not nx_directed.has_edge(0, 2)
 
     # Test undirected graph
-    tw_undirected = TemporalWalk(False, GPU_USAGE_MODE)  # is_directed = False
+    tw_undirected = TemporalRandomWalk(False, GPU_USAGE_MODE)  # is_directed = False
     tw_undirected.add_multiple_edges([
         (0, 1, 100),
         (1, 2, 200),

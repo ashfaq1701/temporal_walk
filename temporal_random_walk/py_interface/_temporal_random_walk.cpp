@@ -2,11 +2,11 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 #include <optional>
-#include "temporal_walk_proxy.h"
+#include "temporal_random_walk_proxy.h"
 #include "random_picker_proxies.h"
 #include <stdexcept>
 #include "../src/core/structs.h"
-#include "../src/core/TemporalWalk.cuh"
+#include "../src/core/TemporalRandomWalk.cuh"
 
 
 namespace py = pybind11;
@@ -70,14 +70,14 @@ GPUUsageMode gpu_usage_mode_from_string(const std::string& gpu_usage_mode_str)
     }
 }
 
-PYBIND11_MODULE(_temporal_walk, m)
+PYBIND11_MODULE(_temporal_random_walk, m)
 {
-    py::class_<TemporalWalkProxy>(m, "TemporalWalk")
+    py::class_<TemporalRandomWalkProxy>(m, "TemporalRandomWalk")
         .def(py::init([](const bool is_directed, const std::optional<std::string>& gpu_usage_mode,
                          const std::optional<int64_t> max_time_capacity, std::optional<bool> enable_weight_computation,
                          std::optional<double> timescale_bound)
              {
-                 return std::make_unique<TemporalWalkProxy>(
+                 return std::make_unique<TemporalRandomWalkProxy>(
                      is_directed,
                      gpu_usage_mode_from_string(gpu_usage_mode.value_or("ON_CPU")),
                      max_time_capacity.value_or(-1),
@@ -85,7 +85,7 @@ PYBIND11_MODULE(_temporal_walk, m)
                      timescale_bound.value_or(DEFAULT_TIMESCALE_BOUND));
              }),
              R"(
-            Initialize a temporal walk generator.
+            Initialize a temporal random walk generator.
 
             Args:
             is_directed (bool): Whether to create a directed graph.
@@ -99,7 +99,7 @@ PYBIND11_MODULE(_temporal_walk, m)
              py::arg("max_time_capacity") = py::none(),
              py::arg("enable_weight_computation") = py::none(),
              py::arg("timescale_bound") = py::none())
-        .def("add_multiple_edges", [](TemporalWalkProxy& tw, const std::vector<std::tuple<int, int, int64_t>>& edge_infos)
+        .def("add_multiple_edges", [](TemporalRandomWalkProxy& tw, const std::vector<std::tuple<int, int, int64_t>>& edge_infos)
              {
                  tw.add_multiple_edges(edge_infos);
              },
@@ -111,7 +111,7 @@ PYBIND11_MODULE(_temporal_walk, m)
             )",
             py::arg("edge_infos")
         )
-        .def("get_random_walks_for_all_nodes", [](TemporalWalkProxy& tw,
+        .def("get_random_walks_for_all_nodes", [](TemporalRandomWalkProxy& tw,
                                                   const int max_walk_len,
                                                   const std::string& walk_bias,
                                                   const int num_walks_per_node,
@@ -149,7 +149,7 @@ PYBIND11_MODULE(_temporal_walk, m)
                 num_walks_per_node (int): Number of walks per starting node.
                 initial_edge_bias (str, optional): Bias type for first edge selection.
                     Uses walk_bias if not specified.
-                walk_direction (str, optional): Direction of temporal walks.
+                walk_direction (str, optional): Direction of temporal random walks.
                     Either "Forward_In_Time" (default) or "Backward_In_Time".
 
             Returns:
@@ -161,7 +161,7 @@ PYBIND11_MODULE(_temporal_walk, m)
              py::arg("initial_edge_bias") = py::none(),
              py::arg("walk_direction") = "Forward_In_Time")
 
-        .def("get_random_walks_and_times_for_all_nodes", [](TemporalWalkProxy& tw,
+        .def("get_random_walks_and_times_for_all_nodes", [](TemporalRandomWalkProxy& tw,
                                                const int max_walk_len,
                                                const std::string& walk_bias,
                                                const int num_walks_per_node,
@@ -202,7 +202,7 @@ PYBIND11_MODULE(_temporal_walk, m)
                 return result;
              },
              R"(
-            Generate temporal walks with timestamps starting from all nodes.
+            Generate temporal random walks with timestamps starting from all nodes.
 
             Args:
                 max_walk_len (int): Maximum length of each random walk.
@@ -215,7 +215,7 @@ PYBIND11_MODULE(_temporal_walk, m)
                 num_walks_per_node (int): Number of walks per starting node.
                 initial_edge_bias (str, optional): Bias type for first edge selection.
                     Uses walk_bias if not specified.
-                walk_direction (str, optional): Direction of temporal walks.
+                walk_direction (str, optional): Direction of temporal random walks.
                     Either "Forward_In_Time" (default) or "Backward_In_Time".
 
             Returns:
@@ -227,7 +227,7 @@ PYBIND11_MODULE(_temporal_walk, m)
              py::arg("initial_edge_bias") = py::none(),
              py::arg("walk_direction") = "Forward_In_Time")
 
-        .def("get_random_walks", [](TemporalWalkProxy& tw,
+        .def("get_random_walks", [](TemporalRandomWalkProxy& tw,
                                     const int max_walk_len,
                                     const std::string& walk_bias,
                                     const int num_walks_per_node,
@@ -265,7 +265,7 @@ PYBIND11_MODULE(_temporal_walk, m)
                 num_walks_per_node (int): Number of walks to generate per node
                 initial_edge_bias (str, optional): Bias type for selecting first edge.
                     Uses walk_bias if not specified.
-                walk_direction (str, optional): Direction of temporal walk.
+                walk_direction (str, optional): Direction of temporal random walk.
                     Either "Forward_In_Time" (default) or "Backward_In_Time"
 
             Returns:
@@ -273,7 +273,7 @@ PYBIND11_MODULE(_temporal_walk, m)
                     representing a temporal path through the network.
             )")
 
-        .def("get_random_walks_and_times", [](TemporalWalkProxy& tw,
+        .def("get_random_walks_and_times", [](TemporalRandomWalkProxy& tw,
                                                const int max_walk_len,
                                                const std::string& walk_bias,
                                                const int num_walks_per_node,
@@ -327,7 +327,7 @@ PYBIND11_MODULE(_temporal_walk, m)
                 num_walks_per_node (int): Number of walks per starting node.
                 initial_edge_bias (str, optional): Bias type for first edge selection.
                     Uses walk_bias if not specified.
-                walk_direction (str, optional): Direction of temporal walks.
+                walk_direction (str, optional): Direction of temporal random walks.
                     Either "Forward_In_Time" (default) or "Backward_In_Time".
 
             Returns:
@@ -340,7 +340,7 @@ PYBIND11_MODULE(_temporal_walk, m)
              py::arg("initial_edge_bias") = py::none(),
              py::arg("walk_direction") = "Forward_In_Time")
 
-        .def("get_random_walks_with_specific_number_of_contexts", [](TemporalWalkProxy& tw,
+        .def("get_random_walks_with_specific_number_of_contexts", [](TemporalRandomWalkProxy& tw,
                                     const int max_walk_len,
                                     const std::string& walk_bias,
                                     const std::optional<long> num_cw = std::nullopt,
@@ -390,7 +390,7 @@ PYBIND11_MODULE(_temporal_walk, m)
                     Only used if num_cw is not specified.
                 initial_edge_bias (str, optional): Bias type for first edge selection.
                     Uses walk_bias if not specified.
-                walk_direction (str, optional): Direction of temporal walks.
+                walk_direction (str, optional): Direction of temporal random walks.
                     Either "Forward_In_Time" (default) or "Backward_In_Time".
                 context_window_len (int, optional): Minimum length of each walk.
                     Defaults to 2 if not specified.
@@ -410,7 +410,7 @@ PYBIND11_MODULE(_temporal_walk, m)
              py::arg("context_window_len") = py::none(),
              py::arg("p_walk_success_threshold") = DEFAULT_SUCCESS_THRESHOLD)
 
-        .def("get_random_walks_and_times_with_specific_number_of_contexts", [](TemporalWalkProxy& tw,
+        .def("get_random_walks_and_times_with_specific_number_of_contexts", [](TemporalRandomWalkProxy& tw,
                                                const int max_walk_len,
                                                const std::string& walk_bias,
                                                const std::optional<long> num_cw = std::nullopt,
@@ -475,7 +475,7 @@ PYBIND11_MODULE(_temporal_walk, m)
                     Only used if num_cw is not specified.
                 initial_edge_bias (str, optional): Bias type for first edge selection.
                     Uses walk_bias if not specified.
-                walk_direction (str, optional): Direction of temporal walks.
+                walk_direction (str, optional): Direction of temporal random walks.
                     Either "Forward_In_Time" (default) or "Backward_In_Time".
                 context_window_len (int, optional): Minimum length of each walk.
                     Defaults to 2 if not specified.
@@ -495,21 +495,21 @@ PYBIND11_MODULE(_temporal_walk, m)
              py::arg("context_window_len") = py::none(),
              py::arg("p_walk_success_threshold") = DEFAULT_SUCCESS_THRESHOLD)
 
-        .def("get_node_count", &TemporalWalkProxy::get_node_count,
+        .def("get_node_count", &TemporalRandomWalkProxy::get_node_count,
             R"(
             Get total number of nodes in the graph.
 
             Returns:
                 int: Number of active nodes.
             )")
-        .def("get_edge_count", &TemporalWalkProxy::get_edge_count,
+        .def("get_edge_count", &TemporalRandomWalkProxy::get_edge_count,
              R"(
              Returns the total number of directed edges in the temporal graph.
 
              Returns:
                 int: The total number of directed edges.
              )")
-        .def("get_node_ids", [](const TemporalWalkProxy& tw)
+        .def("get_node_ids", [](const TemporalRandomWalkProxy& tw)
              {
                  const auto& node_ids = tw.get_node_ids();
                  py::array_t<int> py_node_ids(static_cast<long>(node_ids.size()));
@@ -529,12 +529,12 @@ PYBIND11_MODULE(_temporal_walk, m)
                 np.ndarray: A NumPy array with all node IDs.
             )"
         )
-        .def("clear", &TemporalWalkProxy::clear,
+        .def("clear", &TemporalRandomWalkProxy::clear,
              R"(
             Clears and reinitiates the underlying graph.
             )"
         )
-        .def("add_edges_from_networkx", [](TemporalWalkProxy& tw, const py::object& nx_graph)
+        .def("add_edges_from_networkx", [](TemporalRandomWalkProxy& tw, const py::object& nx_graph)
              {
                  const py::object edges = nx_graph.attr("edges")(py::arg("data") = true);
 
@@ -559,7 +559,7 @@ PYBIND11_MODULE(_temporal_walk, m)
                 nx_graph (networkx.Graph): NetworkX graph with timestamp edge attributes.
             )"
         )
-        .def("to_networkx", [](const TemporalWalkProxy& tw)
+        .def("to_networkx", [](const TemporalRandomWalkProxy& tw)
              {
                  const auto edges = tw.get_edges();
 
@@ -675,7 +675,7 @@ PYBIND11_MODULE(_temporal_walk, m)
             R"(
             Initialize exponential time decay random picker with weight-based sampling.
 
-            For use with CTDNE temporal walks where edge selection probabilities are weighted
+            For use with CTDNE temporal random walks where edge selection probabilities are weighted
             by temporal differences.
             )")
         .def("pick_random", py::overload_cast<const std::vector<double>&, int, int>(&WeightBasedRandomPickerProxy::pick_random),

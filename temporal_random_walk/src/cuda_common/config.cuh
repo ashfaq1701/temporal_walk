@@ -1,5 +1,5 @@
-#ifndef TEMPORAL_WALK_CUDA_MACROS_H
-#define TEMPORAL_WALK_CUDA_MACROS_H
+#ifndef TEMPORAL_RANDOM_WALK_CUDA_MACROS_H
+#define TEMPORAL_RANDOM_WALK_CUDA_MACROS_H
 
 // CUDA function attributes
 #ifdef HAS_CUDA
@@ -11,4 +11,4 @@ constexpr auto HOST_POLICY = thrust::host;
 
 #endif
 
-#endif // TEMPORAL_WALK_CUDA_MACROS_H
+#endif // TEMPORAL_RANDOM_WALK_CUDA_MACROS_H

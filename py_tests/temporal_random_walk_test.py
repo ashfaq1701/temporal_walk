@@ -1,5 +1,5 @@
 import csv
-from temporal_walk import TemporalWalk
+from temporal_random_walk import TemporalRandomWalk
 
 
 GPU_USAGE_MODE = "ON_CPU"
@@ -9,7 +9,7 @@ def print_walks_for_nodes(walks):
         print(f"Walk {idx}: {','.join(map(str, walk))}")
 
 if __name__ == '__main__':
-    temporal_walk_obj = TemporalWalk(False, GPU_USAGE_MODE)
+    temporal_random_walk_obj = TemporalRandomWalk(False, GPU_USAGE_MODE)
 
     data_file_path = '../data/sample_data.csv'
 
@@ -24,12 +24,12 @@ if __name__ == '__main__':
             ts = int(row[2])
             data_tuples.append((u, i, ts))
 
-    temporal_walk_obj.add_multiple_edges(data_tuples)
+    temporal_random_walk_obj.add_multiple_edges(data_tuples)
 
-    print(f'Total edges: {temporal_walk_obj.get_edge_count()}')
-    print(f'Total nodes: {temporal_walk_obj.get_node_count()}')
+    print(f'Total edges: {temporal_random_walk_obj.get_edge_count()}')
+    print(f'Total nodes: {temporal_random_walk_obj.get_node_count()}')
 
-    walks = temporal_walk_obj.get_random_walks_and_times_for_all_nodes(
+    walks = temporal_random_walk_obj.get_random_walks_and_times_for_all_nodes(
         max_walk_len=20,
         walk_bias="ExponentialIndex",
         num_walks_per_node=10,

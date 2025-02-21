@@ -1,22 +1,22 @@
-#ifndef TEMPORAL_WALK_PROXY_H
-#define TEMPORAL_WALK_PROXY_H
+#ifndef TEMPORAL_RANDOM_WALK_PROXY_H
+#define TEMPORAL_RANDOM_WALK_PROXY_H
 
 #include "../src/core/structs.h"
-#include "../src/core/TemporalWalk.cuh"
+#include "../src/core/TemporalRandomWalk.cuh"
 
-class TemporalWalkProxy {
+class TemporalRandomWalkProxy {
 
     GPUUsageMode gpu_usage;
     #ifdef HAS_CUDA
-    std::unique_ptr<TemporalWalk<GPUUsageMode::ON_CPU>> cpu_impl;
-    std::unique_ptr<TemporalWalk<GPUUsageMode::ON_GPU_USING_CUDA>> gpu_impl;
-    std::unique_ptr<TemporalWalk<GPUUsageMode::ON_HOST_USING_THRUST>> host_impl;
+    std::unique_ptr<TemporalRandomWalk<GPUUsageMode::ON_CPU>> cpu_impl;
+    std::unique_ptr<TemporalRandomWalk<GPUUsageMode::ON_GPU_USING_CUDA>> gpu_impl;
+    std::unique_ptr<TemporalRandomWalk<GPUUsageMode::ON_HOST_USING_THRUST>> host_impl;
     #else
-    std::unique_ptr<TemporalWalk<GPUUsageMode::ON_CPU>> cpu_impl;
+    std::unique_ptr<TemporalRandomWalk<GPUUsageMode::ON_CPU>> cpu_impl;
     #endif
 
 public:
-    explicit TemporalWalkProxy(
+    explicit TemporalRandomWalkProxy(
        bool is_directed,
        GPUUsageMode gpu_usage=GPUUsageMode::ON_CPU,
        int64_t max_time_capacity=-1,
@@ -32,19 +32,19 @@ public:
         #ifdef HAS_CUDA
         switch(gpu_usage) {
         case GPUUsageMode::ON_GPU_USING_CUDA:
-            gpu_impl = std::make_unique<TemporalWalk<GPUUsageMode::ON_GPU_USING_CUDA>>(
+            gpu_impl = std::make_unique<TemporalRandomWalk<GPUUsageMode::ON_GPU_USING_CUDA>>(
                 is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
             break;
         case GPUUsageMode::ON_HOST_USING_THRUST:
-            host_impl = std::make_unique<TemporalWalk<GPUUsageMode::ON_HOST_USING_THRUST>>(
+            host_impl = std::make_unique<TemporalRandomWalk<GPUUsageMode::ON_HOST_USING_THRUST>>(
                 is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
             break;
         default:  // ON_CPU
-            cpu_impl = std::make_unique<TemporalWalk<GPUUsageMode::ON_CPU>>(
+            cpu_impl = std::make_unique<TemporalRandomWalk<GPUUsageMode::ON_CPU>>(
                 is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
         }
         #else
-        cpu_impl = std::make_unique<TemporalWalk<GPUUsageMode::ON_CPU>>(
+        cpu_impl = std::make_unique<TemporalRandomWalk<GPUUsageMode::ON_CPU>>(
             is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
         #endif
     }

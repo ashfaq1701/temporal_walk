@@ -26,7 +26,7 @@ function(add_test_executable target_name source_file)
         )
 
         target_include_directories(${target_name} PRIVATE
-                ${CMAKE_SOURCE_DIR}/temporal_walk/src
+                ${CMAKE_SOURCE_DIR}/temporal_random_walk/src
                 ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
         )
     else()
@@ -37,7 +37,7 @@ function(add_test_executable target_name source_file)
         )
 
         target_include_directories(${target_name} PRIVATE
-                ${CMAKE_SOURCE_DIR}/temporal_walk/src
+                ${CMAKE_SOURCE_DIR}/temporal_random_walk/src
         )
     endif()
 
@@ -48,6 +48,6 @@ function(add_test_executable target_name source_file)
     )
 endfunction()
 
-add_test_executable(test_run_temporal_walk test_run_temporal_walk.cpp)
-add_test_executable(test_run_temporal_walk_2 test_run_temporal_walk_2.cpp)
+add_test_executable(test_run_temporal_random_walk test_run_temporal_random_walk.cpp)
+add_test_executable(test_run_temporal_random_walk_2 test_run_temporal_random_walk_2.cpp)
 add_test_executable(test_run_exponential_random_picker test_run_exponential_picker.cpp)

@@ -1,5 +1,5 @@
-#ifndef TEMPORAL_WALK_STRUCTS_H
-#define TEMPORAL_WALK_STRUCTS_H
+#ifndef TEMPORAL_RANDOM_WALK_STRUCTS_H
+#define TEMPORAL_RANDOM_WALK_STRUCTS_H
 
 #include <cstdint>
 
@@ -26,4 +26,4 @@ struct NodeWithTime {
     int64_t timestamp;
 };
 
-#endif //TEMPORAL_WALK_STRUCTS_H
+#endif //TEMPORAL_RANDOM_WALK_STRUCTS_H
