@@ -1,7 +1,7 @@
 # 🚀 Temporal Random Walk
 
-[![PyPI Latest Release](https://img.shields.io/pypi/v/temporal-walk.svg)](https://pypi.org/project/temporal-walk/)
-[![PyPI Downloads](https://img.shields.io/pypi/dm/temporal-walk.svg)](https://pypi.org/project/temporal-walk/)
+[![PyPI Latest Release](https://img.shields.io/pypi/v/temporal-random-walk.svg)](https://pypi.org/project/temporal-random-walk/)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/temporal-random-walk.svg)](https://pypi.org/project/temporal-random-walk/)
 
 **A high-performance temporal random walk sampler for dynamic networks with GPU acceleration. Built for scale.**
 
@@ -68,7 +68,7 @@ walks = walker.get_random_walks_for_all_nodes(
 ## 📦 Installation
 
 ```sh
-pip install temporal-walk
+pip install temporal-random-walk
 ```
 
 ## 📖 Documentation

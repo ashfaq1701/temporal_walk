@@ -61,7 +61,7 @@ setup(
     },
     include_package_data=True,
     long_description_content_type="text/markdown",
-    url="https://github.com/ashfaq1701/temporal_random_walk",
+    url="https://github.com/ashfaq1701/temporal-random-walk",
     ext_modules=[CMakeExtension('_temporal_random_walk')],
     cmdclass={"build_ext": CMakeBuild},
     zip_safe=False,
