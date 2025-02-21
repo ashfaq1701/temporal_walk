@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.13.2"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Temporal Walk: TemporalWalk&lt; GPUUsage &gt; Class Template Reference</title>
+<title>Temporal Random Walk: TemporalRandomWalk&lt; GPUUsage &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -32,9 +32,9 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Temporal Walk
+   <div id="projectname">Temporal Random Walk
    </div>
-   <div id="projectbrief">Documentation for Temporal Walk library</div>
+   <div id="projectbrief">Documentation for Temporal Random Walk library</div>
   </td>
     <td>        <div id="MSearchBox" class="MSearchBoxInactive">
         <span class="left">
@@ -77,7 +77,7 @@ $(function() { codefold.init(0); });
 </div>
 <script type="text/javascript">
 /* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
-$(function(){initNavTree('class_temporal_walk.html',''); initResizable(true); });
+$(function(){initNavTree('class_temporal_random_walk.html',''); initResizable(true); });
 /* @license-end */
 </script>
 <div id="doc-content">
@@ -105,8 +105,8 @@ $(function(){initNavTree('class_temporal_walk.html',''); initResizable(true); })
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="class_temporal_walk-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">TemporalWalk&lt; GPUUsage &gt; Class Template Reference</div></div>
+<a href="class_temporal_random_walk-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">TemporalRandomWalk&lt; GPUUsage &gt; Class Template Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -115,58 +115,58 @@ $(function(){initNavTree('class_temporal_walk.html',''); initResizable(true); })
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a1434369292a1dd9dcc9a38b62008945d" id="r_a1434369292a1dd9dcc9a38b62008945d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1434369292a1dd9dcc9a38b62008945d">TemporalWalk</a> (bool is_directed, int64_t max_time_capacity=-1, bool enable_weight_computation=false, double timescale_bound=DEFAULT_TIMESCALE_BOUND, size_t n_threads=std::thread::hardware_concurrency())</td></tr>
-<tr class="memdesc:a1434369292a1dd9dcc9a38b62008945d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a temporal walk generator.  <br /></td></tr>
-<tr class="separator:a1434369292a1dd9dcc9a38b62008945d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab91b86470390a7015dbda6fe9f66b822" id="r_ab91b86470390a7015dbda6fe9f66b822"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::vector&lt; NodeWithTime &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab91b86470390a7015dbda6fe9f66b822">get_random_walks_and_times_for_all_nodes</a> (int max_walk_len, const RandomPickerType *walk_bias, int num_walks_per_node, const RandomPickerType *initial_edge_bias=nullptr, WalkDirection walk_direction=WalkDirection::Forward_In_Time)</td></tr>
-<tr class="memdesc:ab91b86470390a7015dbda6fe9f66b822"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate temporal walks starting from all nodes with timestamps.  <br /></td></tr>
-<tr class="separator:ab91b86470390a7015dbda6fe9f66b822"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a609ebfd371f8a2121e2cf8d42ce7f4e1" id="r_a609ebfd371f8a2121e2cf8d42ce7f4e1"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::vector&lt; int &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a609ebfd371f8a2121e2cf8d42ce7f4e1">get_random_walks_for_all_nodes</a> (int max_walk_len, const RandomPickerType *walk_bias, int num_walks_per_node, const RandomPickerType *initial_edge_bias=nullptr, WalkDirection walk_direction=WalkDirection::Forward_In_Time)</td></tr>
-<tr class="memdesc:a609ebfd371f8a2121e2cf8d42ce7f4e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate temporal walks from all nodes (without timestamps) Similar to get_random_walks_and_times_for_all_nodes but returns only node IDs.  <br /></td></tr>
-<tr class="separator:a609ebfd371f8a2121e2cf8d42ce7f4e1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9643aaf2a679d03f8d640413cc2ef57e" id="r_a9643aaf2a679d03f8d640413cc2ef57e"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::vector&lt; NodeWithTime &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9643aaf2a679d03f8d640413cc2ef57e">get_random_walks_and_times</a> (int max_walk_len, const RandomPickerType *walk_bias, int num_walks_total, const RandomPickerType *initial_edge_bias=nullptr, WalkDirection walk_direction=WalkDirection::Forward_In_Time)</td></tr>
-<tr class="memdesc:a9643aaf2a679d03f8d640413cc2ef57e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate temporal walks starting from random nodes with timestamps.  <br /></td></tr>
-<tr class="separator:a9643aaf2a679d03f8d640413cc2ef57e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9a8d5b349ee2de868f90702c8a19a0a8" id="r_a9a8d5b349ee2de868f90702c8a19a0a8"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::vector&lt; int &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9a8d5b349ee2de868f90702c8a19a0a8">get_random_walks</a> (int max_walk_len, const RandomPickerType *walk_bias, int num_walks_total, const RandomPickerType *initial_edge_bias=nullptr, WalkDirection walk_direction=WalkDirection::Forward_In_Time)</td></tr>
-<tr class="memdesc:a9a8d5b349ee2de868f90702c8a19a0a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate temporal walks starting from random nodes (without timestamps) Similar to get_random_walks_and_times but returns only node IDs.  <br /></td></tr>
-<tr class="separator:a9a8d5b349ee2de868f90702c8a19a0a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acd0f46190ea20ccdbd51b48ad36fdcb3" id="r_acd0f46190ea20ccdbd51b48ad36fdcb3"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::vector&lt; NodeWithTime &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acd0f46190ea20ccdbd51b48ad36fdcb3">get_random_walks_and_times_with_specific_number_of_contexts</a> (int max_walk_len, const RandomPickerType *walk_bias, long num_cw=-1, int num_walks_per_node=-1, const RandomPickerType *initial_edge_bias=nullptr, WalkDirection walk_direction=WalkDirection::Forward_In_Time, int context_window_len=-1, float p_walk_success_threshold=DEFAULT_SUCCESS_THRESHOLD)</td></tr>
-<tr class="memdesc:acd0f46190ea20ccdbd51b48ad36fdcb3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate walks with fixed number of context windows.  <br /></td></tr>
-<tr class="separator:acd0f46190ea20ccdbd51b48ad36fdcb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab75bfd8721db757121bd141655b45dd2" id="r_ab75bfd8721db757121bd141655b45dd2"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::vector&lt; int &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab75bfd8721db757121bd141655b45dd2">get_random_walks_with_specific_number_of_contexts</a> (int max_walk_len, const RandomPickerType *walk_bias, long num_cw=-1, int num_walks_per_node=-1, const RandomPickerType *initial_edge_bias=nullptr, WalkDirection walk_direction=WalkDirection::Forward_In_Time, int context_window_len=-1, float p_walk_success_threshold=DEFAULT_SUCCESS_THRESHOLD)</td></tr>
-<tr class="memdesc:ab75bfd8721db757121bd141655b45dd2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate walks with fixed number of context windows (without timestamps) Similar to get_random_walks_and_times_with_specific_number_of_contexts but returns only node IDs.  <br /></td></tr>
-<tr class="separator:ab75bfd8721db757121bd141655b45dd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca14969f024ff538bd4d298a742de5a0" id="r_aca14969f024ff538bd4d298a742de5a0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aca14969f024ff538bd4d298a742de5a0">add_multiple_edges</a> (const std::vector&lt; std::tuple&lt; int, int, int64_t &gt; &gt; &amp;edge_infos) const</td></tr>
-<tr class="memdesc:aca14969f024ff538bd4d298a742de5a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add multiple edges to the graph.  <br /></td></tr>
-<tr class="separator:aca14969f024ff538bd4d298a742de5a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3387c1744dbba590f934547a3b9ad73d" id="r_a3387c1744dbba590f934547a3b9ad73d"><td class="memItemLeft" align="right" valign="top"><a id="a3387c1744dbba590f934547a3b9ad73d" name="a3387c1744dbba590f934547a3b9ad73d"></a>
+<tr class="memitem:a8ff7c15b3f27ba50a39a27131c5bf0ff" id="r_a8ff7c15b3f27ba50a39a27131c5bf0ff"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8ff7c15b3f27ba50a39a27131c5bf0ff">TemporalRandomWalk</a> (bool is_directed, int64_t max_time_capacity=-1, bool enable_weight_computation=false, double timescale_bound=DEFAULT_TIMESCALE_BOUND, size_t n_threads=std::thread::hardware_concurrency())</td></tr>
+<tr class="memdesc:a8ff7c15b3f27ba50a39a27131c5bf0ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a temporal random walk generator.  <br /></td></tr>
+<tr class="separator:a8ff7c15b3f27ba50a39a27131c5bf0ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a64c0386eb9f45f34d18ec36fea74e862" id="r_a64c0386eb9f45f34d18ec36fea74e862"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::vector&lt; NodeWithTime &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a64c0386eb9f45f34d18ec36fea74e862">get_random_walks_and_times_for_all_nodes</a> (int max_walk_len, const RandomPickerType *walk_bias, int num_walks_per_node, const RandomPickerType *initial_edge_bias=nullptr, WalkDirection walk_direction=WalkDirection::Forward_In_Time)</td></tr>
+<tr class="memdesc:a64c0386eb9f45f34d18ec36fea74e862"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate temporal random walks starting from all nodes with timestamps.  <br /></td></tr>
+<tr class="separator:a64c0386eb9f45f34d18ec36fea74e862"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aac5c7bbe286efe847c31286f3fb845de" id="r_aac5c7bbe286efe847c31286f3fb845de"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::vector&lt; int &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aac5c7bbe286efe847c31286f3fb845de">get_random_walks_for_all_nodes</a> (int max_walk_len, const RandomPickerType *walk_bias, int num_walks_per_node, const RandomPickerType *initial_edge_bias=nullptr, WalkDirection walk_direction=WalkDirection::Forward_In_Time)</td></tr>
+<tr class="memdesc:aac5c7bbe286efe847c31286f3fb845de"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate temporal random walks from all nodes (without timestamps) Similar to get_random_walks_and_times_for_all_nodes but returns only node IDs.  <br /></td></tr>
+<tr class="separator:aac5c7bbe286efe847c31286f3fb845de"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b8163f5cd13cd23ea2958d191a07f74" id="r_a9b8163f5cd13cd23ea2958d191a07f74"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::vector&lt; NodeWithTime &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9b8163f5cd13cd23ea2958d191a07f74">get_random_walks_and_times</a> (int max_walk_len, const RandomPickerType *walk_bias, int num_walks_total, const RandomPickerType *initial_edge_bias=nullptr, WalkDirection walk_direction=WalkDirection::Forward_In_Time)</td></tr>
+<tr class="memdesc:a9b8163f5cd13cd23ea2958d191a07f74"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate temporal random walks starting from random nodes with timestamps.  <br /></td></tr>
+<tr class="separator:a9b8163f5cd13cd23ea2958d191a07f74"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a76ecfae4a9c1d4cc91f1f5a84368d01f" id="r_a76ecfae4a9c1d4cc91f1f5a84368d01f"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::vector&lt; int &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a76ecfae4a9c1d4cc91f1f5a84368d01f">get_random_walks</a> (int max_walk_len, const RandomPickerType *walk_bias, int num_walks_total, const RandomPickerType *initial_edge_bias=nullptr, WalkDirection walk_direction=WalkDirection::Forward_In_Time)</td></tr>
+<tr class="memdesc:a76ecfae4a9c1d4cc91f1f5a84368d01f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate temporal random walks starting from random nodes (without timestamps) Similar to get_random_walks_and_times but returns only node IDs.  <br /></td></tr>
+<tr class="separator:a76ecfae4a9c1d4cc91f1f5a84368d01f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a83d8bc767b7bb518ce4f4cdae4eb54c8" id="r_a83d8bc767b7bb518ce4f4cdae4eb54c8"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::vector&lt; NodeWithTime &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a83d8bc767b7bb518ce4f4cdae4eb54c8">get_random_walks_and_times_with_specific_number_of_contexts</a> (int max_walk_len, const RandomPickerType *walk_bias, long num_cw=-1, int num_walks_per_node=-1, const RandomPickerType *initial_edge_bias=nullptr, WalkDirection walk_direction=WalkDirection::Forward_In_Time, int context_window_len=-1, float p_walk_success_threshold=DEFAULT_SUCCESS_THRESHOLD)</td></tr>
+<tr class="memdesc:a83d8bc767b7bb518ce4f4cdae4eb54c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate walks with fixed number of context windows.  <br /></td></tr>
+<tr class="separator:a83d8bc767b7bb518ce4f4cdae4eb54c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a112f25520d89d423bac81802df1b712d" id="r_a112f25520d89d423bac81802df1b712d"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::vector&lt; int &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a112f25520d89d423bac81802df1b712d">get_random_walks_with_specific_number_of_contexts</a> (int max_walk_len, const RandomPickerType *walk_bias, long num_cw=-1, int num_walks_per_node=-1, const RandomPickerType *initial_edge_bias=nullptr, WalkDirection walk_direction=WalkDirection::Forward_In_Time, int context_window_len=-1, float p_walk_success_threshold=DEFAULT_SUCCESS_THRESHOLD)</td></tr>
+<tr class="memdesc:a112f25520d89d423bac81802df1b712d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generate walks with fixed number of context windows (without timestamps) Similar to get_random_walks_and_times_with_specific_number_of_contexts but returns only node IDs.  <br /></td></tr>
+<tr class="separator:a112f25520d89d423bac81802df1b712d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4337892323d38bb04a0288b45137d9fb" id="r_a4337892323d38bb04a0288b45137d9fb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4337892323d38bb04a0288b45137d9fb">add_multiple_edges</a> (const std::vector&lt; std::tuple&lt; int, int, int64_t &gt; &gt; &amp;edge_infos) const</td></tr>
+<tr class="memdesc:a4337892323d38bb04a0288b45137d9fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add multiple edges to the graph.  <br /></td></tr>
+<tr class="separator:a4337892323d38bb04a0288b45137d9fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a27d17d43a08fd22dad3149ee42080257" id="r_a27d17d43a08fd22dad3149ee42080257"><td class="memItemLeft" align="right" valign="top"><a id="a27d17d43a08fd22dad3149ee42080257" name="a27d17d43a08fd22dad3149ee42080257"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>get_node_count</b> () const</td></tr>
-<tr class="memdesc:a3387c1744dbba590f934547a3b9ad73d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get number of nodes in the graph. <br /></td></tr>
-<tr class="separator:a3387c1744dbba590f934547a3b9ad73d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acd4d00924c4620139811b690a5ed7e1d" id="r_acd4d00924c4620139811b690a5ed7e1d"><td class="memItemLeft" align="right" valign="top"><a id="acd4d00924c4620139811b690a5ed7e1d" name="acd4d00924c4620139811b690a5ed7e1d"></a>
+<tr class="memdesc:a27d17d43a08fd22dad3149ee42080257"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get number of nodes in the graph. <br /></td></tr>
+<tr class="separator:a27d17d43a08fd22dad3149ee42080257"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ce83780c883348adf207e23f3e47132" id="r_a5ce83780c883348adf207e23f3e47132"><td class="memItemLeft" align="right" valign="top"><a id="a5ce83780c883348adf207e23f3e47132" name="a5ce83780c883348adf207e23f3e47132"></a>
 size_t&#160;</td><td class="memItemRight" valign="bottom"><b>get_edge_count</b> () const</td></tr>
-<tr class="memdesc:acd4d00924c4620139811b690a5ed7e1d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get number of edges in the graph. <br /></td></tr>
-<tr class="separator:acd4d00924c4620139811b690a5ed7e1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a048b3469f589927517f115d379d9c535" id="r_a048b3469f589927517f115d379d9c535"><td class="memItemLeft" align="right" valign="top"><a id="a048b3469f589927517f115d379d9c535" name="a048b3469f589927517f115d379d9c535"></a>
+<tr class="memdesc:a5ce83780c883348adf207e23f3e47132"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get number of edges in the graph. <br /></td></tr>
+<tr class="separator:a5ce83780c883348adf207e23f3e47132"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af8490d2a9523ab0fdfc3805085d017e6" id="r_af8490d2a9523ab0fdfc3805085d017e6"><td class="memItemLeft" align="right" valign="top"><a id="af8490d2a9523ab0fdfc3805085d017e6" name="af8490d2a9523ab0fdfc3805085d017e6"></a>
 std::vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>get_node_ids</b> () const</td></tr>
-<tr class="memdesc:a048b3469f589927517f115d379d9c535"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get IDs of all nodes. <br /></td></tr>
-<tr class="separator:a048b3469f589927517f115d379d9c535"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a69a57ed0207fae3e8f951b11b2abec90" id="r_a69a57ed0207fae3e8f951b11b2abec90"><td class="memItemLeft" align="right" valign="top"><a id="a69a57ed0207fae3e8f951b11b2abec90" name="a69a57ed0207fae3e8f951b11b2abec90"></a>
+<tr class="memdesc:af8490d2a9523ab0fdfc3805085d017e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get IDs of all nodes. <br /></td></tr>
+<tr class="separator:af8490d2a9523ab0fdfc3805085d017e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad1dc5cec6b35b604f920e6ef9f94651d" id="r_ad1dc5cec6b35b604f920e6ef9f94651d"><td class="memItemLeft" align="right" valign="top"><a id="ad1dc5cec6b35b604f920e6ef9f94651d" name="ad1dc5cec6b35b604f920e6ef9f94651d"></a>
 std::vector&lt; std::tuple&lt; int, int, int64_t &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>get_edges</b> () const</td></tr>
-<tr class="memdesc:a69a57ed0207fae3e8f951b11b2abec90"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all edges as (source, target, timestamp) tuples. <br /></td></tr>
-<tr class="separator:a69a57ed0207fae3e8f951b11b2abec90"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a71f1371c870b9083b2c390a80a032a10" id="r_a71f1371c870b9083b2c390a80a032a10"><td class="memItemLeft" align="right" valign="top"><a id="a71f1371c870b9083b2c390a80a032a10" name="a71f1371c870b9083b2c390a80a032a10"></a>
+<tr class="memdesc:ad1dc5cec6b35b604f920e6ef9f94651d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get all edges as (source, target, timestamp) tuples. <br /></td></tr>
+<tr class="separator:ad1dc5cec6b35b604f920e6ef9f94651d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a285b9f291c805144fd2af017e2982613" id="r_a285b9f291c805144fd2af017e2982613"><td class="memItemLeft" align="right" valign="top"><a id="a285b9f291c805144fd2af017e2982613" name="a285b9f291c805144fd2af017e2982613"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>get_is_directed</b> () const</td></tr>
-<tr class="memdesc:a71f1371c870b9083b2c390a80a032a10"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if graph is directed. <br /></td></tr>
-<tr class="separator:a71f1371c870b9083b2c390a80a032a10"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0f7a427aaf9f805eda418119b203f98d" id="r_a0f7a427aaf9f805eda418119b203f98d"><td class="memItemLeft" align="right" valign="top"><a id="a0f7a427aaf9f805eda418119b203f98d" name="a0f7a427aaf9f805eda418119b203f98d"></a>
+<tr class="memdesc:a285b9f291c805144fd2af017e2982613"><td class="mdescLeft">&#160;</td><td class="mdescRight">Check if graph is directed. <br /></td></tr>
+<tr class="separator:a285b9f291c805144fd2af017e2982613"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2e906904d96a4e45a25f77edca66f664" id="r_a2e906904d96a4e45a25f77edca66f664"><td class="memItemLeft" align="right" valign="top"><a id="a2e906904d96a4e45a25f77edca66f664" name="a2e906904d96a4e45a25f77edca66f664"></a>
 void&#160;</td><td class="memItemRight" valign="bottom"><b>clear</b> ()</td></tr>
-<tr class="memdesc:a0f7a427aaf9f805eda418119b203f98d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clear all edges and nodes from the graph. <br /></td></tr>
-<tr class="separator:a0f7a427aaf9f805eda418119b203f98d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memdesc:a2e906904d96a4e45a25f77edca66f664"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clear all edges and nodes from the graph. <br /></td></tr>
+<tr class="separator:a2e906904d96a4e45a25f77edca66f664"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><div class="compoundTemplParams">template&lt;GPUUsageMode GPUUsage&gt;<br />
-class TemporalWalk&lt; GPUUsage &gt;</div><p>Main class for generating temporal random walks. </p>
+class TemporalRandomWalk&lt; GPUUsage &gt;</div><p>Main class for generating temporal random walks. </p>
 <p>Supports both CPU and GPU computation for generating random walks on temporal graphs. The walks respect temporal causality and can be biased using different strategies.</p>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
@@ -175,10 +175,10 @@ class TemporalWalk&lt; GPUUsage &gt;</div><p>Main class for generating temporal 
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_temporal_walk_8cuh_source.html#l00021">21</a> of file <a class="el" href="_temporal_walk_8cuh_source.html">TemporalWalk.cuh</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_temporal_random_walk_8cuh_source.html#l00023">23</a> of file <a class="el" href="_temporal_random_walk_8cuh_source.html">TemporalRandomWalk.cuh</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a1434369292a1dd9dcc9a38b62008945d" name="a1434369292a1dd9dcc9a38b62008945d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1434369292a1dd9dcc9a38b62008945d">&#9670;&#160;</a></span>TemporalWalk()</h2>
+<a id="a8ff7c15b3f27ba50a39a27131c5bf0ff" name="a8ff7c15b3f27ba50a39a27131c5bf0ff"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8ff7c15b3f27ba50a39a27131c5bf0ff">&#9670;&#160;</a></span>TemporalRandomWalk()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -189,7 +189,7 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="class_temporal_walk.html">TemporalWalk</a>&lt; GPUUsage &gt;<a class="el" href="class_temporal_walk.html">::TemporalWalk</a> </td>
+          <td class="memname"><a class="el" href="class_temporal_random_walk.html">TemporalRandomWalk</a>&lt; GPUUsage &gt;<a class="el" href="class_temporal_random_walk.html">::TemporalRandomWalk</a> </td>
           <td>(</td>
           <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>is_directed</em></span>, </td>
         </tr>
@@ -221,7 +221,7 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Construct a temporal walk generator. </p>
+<p>Construct a temporal random walk generator. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">is_directed</td><td>Whether the graph is directed </td></tr>
@@ -236,8 +236,8 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="aca14969f024ff538bd4d298a742de5a0" name="aca14969f024ff538bd4d298a742de5a0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aca14969f024ff538bd4d298a742de5a0">&#9670;&#160;</a></span>add_multiple_edges()</h2>
+<a id="a4337892323d38bb04a0288b45137d9fb" name="a4337892323d38bb04a0288b45137d9fb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4337892323d38bb04a0288b45137d9fb">&#9670;&#160;</a></span>add_multiple_edges()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -245,7 +245,7 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
 template&lt;GPUUsageMode GPUUsage&gt; </div>
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="class_temporal_walk.html">TemporalWalk</a>&lt; GPUUsage &gt;::add_multiple_edges </td>
+          <td class="memname">void <a class="el" href="class_temporal_random_walk.html">TemporalRandomWalk</a>&lt; GPUUsage &gt;::add_multiple_edges </td>
           <td>(</td>
           <td class="paramtype">const std::vector&lt; std::tuple&lt; int, int, int64_t &gt; &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>edge_infos</em></span></td><td>)</td>
           <td> const</td>
@@ -263,8 +263,8 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
 
 </div>
 </div>
-<a id="a9a8d5b349ee2de868f90702c8a19a0a8" name="a9a8d5b349ee2de868f90702c8a19a0a8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9a8d5b349ee2de868f90702c8a19a0a8">&#9670;&#160;</a></span>get_random_walks()</h2>
+<a id="a76ecfae4a9c1d4cc91f1f5a84368d01f" name="a76ecfae4a9c1d4cc91f1f5a84368d01f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a76ecfae4a9c1d4cc91f1f5a84368d01f">&#9670;&#160;</a></span>get_random_walks()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -275,7 +275,7 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt; std::vector&lt; int &gt; &gt; <a class="el" href="class_temporal_walk.html">TemporalWalk</a>&lt; GPUUsage &gt;::get_random_walks </td>
+          <td class="memname">std::vector&lt; std::vector&lt; int &gt; &gt; <a class="el" href="class_temporal_random_walk.html">TemporalRandomWalk</a>&lt; GPUUsage &gt;::get_random_walks </td>
           <td>(</td>
           <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>max_walk_len</em></span>, </td>
         </tr>
@@ -307,7 +307,7 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Generate temporal walks starting from random nodes (without timestamps) Similar to get_random_walks_and_times but returns only node IDs. </p>
+<p>Generate temporal random walks starting from random nodes (without timestamps) Similar to get_random_walks_and_times but returns only node IDs. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">max_walk_len</td><td>Maximum length of each walk </td></tr>
@@ -322,8 +322,8 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
 
 </div>
 </div>
-<a id="a9643aaf2a679d03f8d640413cc2ef57e" name="a9643aaf2a679d03f8d640413cc2ef57e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9643aaf2a679d03f8d640413cc2ef57e">&#9670;&#160;</a></span>get_random_walks_and_times()</h2>
+<a id="a9b8163f5cd13cd23ea2958d191a07f74" name="a9b8163f5cd13cd23ea2958d191a07f74"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9b8163f5cd13cd23ea2958d191a07f74">&#9670;&#160;</a></span>get_random_walks_and_times()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -334,7 +334,7 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt; std::vector&lt; NodeWithTime &gt; &gt; <a class="el" href="class_temporal_walk.html">TemporalWalk</a>&lt; GPUUsage &gt;::get_random_walks_and_times </td>
+          <td class="memname">std::vector&lt; std::vector&lt; NodeWithTime &gt; &gt; <a class="el" href="class_temporal_random_walk.html">TemporalRandomWalk</a>&lt; GPUUsage &gt;::get_random_walks_and_times </td>
           <td>(</td>
           <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>max_walk_len</em></span>, </td>
         </tr>
@@ -366,7 +366,7 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Generate temporal walks starting from random nodes with timestamps. </p>
+<p>Generate temporal random walks starting from random nodes with timestamps. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">max_walk_len</td><td>Maximum length of each walk </td></tr>
@@ -381,8 +381,8 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
 
 </div>
 </div>
-<a id="ab91b86470390a7015dbda6fe9f66b822" name="ab91b86470390a7015dbda6fe9f66b822"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab91b86470390a7015dbda6fe9f66b822">&#9670;&#160;</a></span>get_random_walks_and_times_for_all_nodes()</h2>
+<a id="a64c0386eb9f45f34d18ec36fea74e862" name="a64c0386eb9f45f34d18ec36fea74e862"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a64c0386eb9f45f34d18ec36fea74e862">&#9670;&#160;</a></span>get_random_walks_and_times_for_all_nodes()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -393,7 +393,7 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt; std::vector&lt; NodeWithTime &gt; &gt; <a class="el" href="class_temporal_walk.html">TemporalWalk</a>&lt; GPUUsage &gt;::get_random_walks_and_times_for_all_nodes </td>
+          <td class="memname">std::vector&lt; std::vector&lt; NodeWithTime &gt; &gt; <a class="el" href="class_temporal_random_walk.html">TemporalRandomWalk</a>&lt; GPUUsage &gt;::get_random_walks_and_times_for_all_nodes </td>
           <td>(</td>
           <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>max_walk_len</em></span>, </td>
         </tr>
@@ -425,7 +425,7 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Generate temporal walks starting from all nodes with timestamps. </p>
+<p>Generate temporal random walks starting from all nodes with timestamps. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">max_walk_len</td><td>Maximum length of each walk </td></tr>
@@ -440,8 +440,8 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
 
 </div>
 </div>
-<a id="acd0f46190ea20ccdbd51b48ad36fdcb3" name="acd0f46190ea20ccdbd51b48ad36fdcb3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acd0f46190ea20ccdbd51b48ad36fdcb3">&#9670;&#160;</a></span>get_random_walks_and_times_with_specific_number_of_contexts()</h2>
+<a id="a83d8bc767b7bb518ce4f4cdae4eb54c8" name="a83d8bc767b7bb518ce4f4cdae4eb54c8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a83d8bc767b7bb518ce4f4cdae4eb54c8">&#9670;&#160;</a></span>get_random_walks_and_times_with_specific_number_of_contexts()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -452,7 +452,7 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt; std::vector&lt; NodeWithTime &gt; &gt; <a class="el" href="class_temporal_walk.html">TemporalWalk</a>&lt; GPUUsage &gt;::get_random_walks_and_times_with_specific_number_of_contexts </td>
+          <td class="memname">std::vector&lt; std::vector&lt; NodeWithTime &gt; &gt; <a class="el" href="class_temporal_random_walk.html">TemporalRandomWalk</a>&lt; GPUUsage &gt;::get_random_walks_and_times_with_specific_number_of_contexts </td>
           <td>(</td>
           <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>max_walk_len</em></span>, </td>
         </tr>
@@ -517,8 +517,8 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
 
 </div>
 </div>
-<a id="a609ebfd371f8a2121e2cf8d42ce7f4e1" name="a609ebfd371f8a2121e2cf8d42ce7f4e1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a609ebfd371f8a2121e2cf8d42ce7f4e1">&#9670;&#160;</a></span>get_random_walks_for_all_nodes()</h2>
+<a id="aac5c7bbe286efe847c31286f3fb845de" name="aac5c7bbe286efe847c31286f3fb845de"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aac5c7bbe286efe847c31286f3fb845de">&#9670;&#160;</a></span>get_random_walks_for_all_nodes()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -529,7 +529,7 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt; std::vector&lt; int &gt; &gt; <a class="el" href="class_temporal_walk.html">TemporalWalk</a>&lt; GPUUsage &gt;::get_random_walks_for_all_nodes </td>
+          <td class="memname">std::vector&lt; std::vector&lt; int &gt; &gt; <a class="el" href="class_temporal_random_walk.html">TemporalRandomWalk</a>&lt; GPUUsage &gt;::get_random_walks_for_all_nodes </td>
           <td>(</td>
           <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>max_walk_len</em></span>, </td>
         </tr>
@@ -561,7 +561,7 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Generate temporal walks from all nodes (without timestamps) Similar to get_random_walks_and_times_for_all_nodes but returns only node IDs. </p>
+<p>Generate temporal random walks from all nodes (without timestamps) Similar to get_random_walks_and_times_for_all_nodes but returns only node IDs. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">max_walk_len</td><td>Maximum length of each walk </td></tr>
@@ -576,8 +576,8 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
 
 </div>
 </div>
-<a id="ab75bfd8721db757121bd141655b45dd2" name="ab75bfd8721db757121bd141655b45dd2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab75bfd8721db757121bd141655b45dd2">&#9670;&#160;</a></span>get_random_walks_with_specific_number_of_contexts()</h2>
+<a id="a112f25520d89d423bac81802df1b712d" name="a112f25520d89d423bac81802df1b712d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a112f25520d89d423bac81802df1b712d">&#9670;&#160;</a></span>get_random_walks_with_specific_number_of_contexts()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -588,7 +588,7 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt; std::vector&lt; int &gt; &gt; <a class="el" href="class_temporal_walk.html">TemporalWalk</a>&lt; GPUUsage &gt;::get_random_walks_with_specific_number_of_contexts </td>
+          <td class="memname">std::vector&lt; std::vector&lt; int &gt; &gt; <a class="el" href="class_temporal_random_walk.html">TemporalRandomWalk</a>&lt; GPUUsage &gt;::get_random_walks_with_specific_number_of_contexts </td>
           <td>(</td>
           <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>max_walk_len</em></span>, </td>
         </tr>
@@ -654,14 +654,14 @@ template&lt;GPUUsageMode GPUUsage&gt; </div>
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>temporal_walk/src/core/<a class="el" href="_temporal_walk_8cuh_source.html">TemporalWalk.cuh</a></li>
+<li>temporal_random_walk/src/core/<a class="el" href="_temporal_random_walk_8cuh_source.html">TemporalRandomWalk.cuh</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="class_temporal_walk.html">TemporalWalk</a></li>
+    <li class="navelem"><a class="el" href="class_temporal_random_walk.html">TemporalRandomWalk</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.13.2 </li>
   </ul>
 </div>

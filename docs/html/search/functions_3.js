@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['temporalwalk_0',['TemporalWalk',['../class_temporal_walk.html#a1434369292a1dd9dcc9a38b62008945d',1,'TemporalWalk']]]
+  ['temporalrandomwalk_0',['TemporalRandomWalk',['../class_temporal_random_walk.html#a8ff7c15b3f27ba50a39a27131c5bf0ff',1,'TemporalRandomWalk']]]
 ];
