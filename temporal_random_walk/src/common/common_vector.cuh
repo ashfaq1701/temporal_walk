@@ -19,14 +19,28 @@ struct CommonVector {
     size_t initial_capacity;
     T default_value;
 
-    // Constructor
-    HOST DEVICE explicit CommonVector(size_t initial_cap = 100, T default_val = T())
+    HOST DEVICE CommonVector()
         : data(nullptr)
-        , data_size(0)
-        , capacity(0)
-        , initial_capacity(initial_cap)
-        , default_value(default_val) {
-        allocate(initial_cap);
+          , data_size(0)
+          , capacity(0)
+          , initial_capacity(100) // Default initial capacity
+          , default_value(T())
+    {
+        allocate(initial_capacity);
+    }
+
+    // Constructor
+    HOST DEVICE explicit CommonVector(size_t count, const T& fill_value = T(), size_t initial_cap = 100)
+        : data(nullptr)
+          , data_size(0)
+          , capacity(0)
+          , initial_capacity(initial_cap)
+          , default_value(fill_value)
+    {
+        // Allocate at least the larger of count or initial_capacity
+        const size_t alloc_size = std::max(count, initial_cap);
+        allocate(alloc_size);
+        resize(count, fill_value); // This will fill the elements with fill_value
     }
 
     // Destructor
@@ -110,16 +124,37 @@ struct CommonVector {
 
         #ifdef HAS_CUDA
         if constexpr (GPUUsage == GPUUsageMode::ON_GPU) {
+            // Allocate GPU memory
             cudaError_t err = cudaMalloc(&data, n * sizeof(T));
             if (err != cudaSuccess) {
                 throw std::runtime_error("CUDA malloc failed!");
             }
+
+            // Initialize with default value
+            if (std::is_trivially_copyable<T>::value) {
+                T default_val = T();
+                fill_kernel<<<(n + 255)/256, 256>>>(data, default_val, n);
+                err = cudaGetLastError();
+                if (err != cudaSuccess) {
+                    cudaFree(data);  // Clean up on error
+                    throw std::runtime_error("CUDA fill kernel failed in allocate!");
+                }
+            } else {
+                cudaFree(data);
+                throw std::runtime_error("Non-trivially copyable type initialization requires custom kernel!");
+            }
         } else
         #endif
         {
+            // Allocate CPU memory
             data = static_cast<T*>(malloc(n * sizeof(T)));
             if (!data) {
                 throw std::runtime_error("Host malloc failed!");
+            }
+
+            // Initialize with default value
+            for (size_t i = 0; i < n; i++) {
+                new (&data[i]) T();  // Placement new for proper initialization
             }
         }
         capacity = n;
@@ -166,6 +201,28 @@ struct CommonVector {
         #endif
         {
             std::fill(data, data + data_size, value);
+        }
+    }
+
+    HOST DEVICE void assign(size_t count, const T& fill_value) {
+        resize(count);
+
+        #ifdef HAS_CUDA
+        if constexpr (GPUUsage == GPUUsageMode::ON_GPU) {
+            if (std::is_trivially_copyable<T>::value) {
+                // Use fill kernel for GPU
+                fill_kernel<<<(count + 255)/256, 256>>>(data, fill_value, count);
+                cudaError_t err = cudaGetLastError();
+                if (err != cudaSuccess) {
+                    throw std::runtime_error("CUDA fill kernel failed in assign!");
+                }
+            } else {
+                throw std::runtime_error("Non-trivially copyable type assign requires custom kernel!");
+            }
+        } else
+        #endif
+        {
+            std::fill(data, data + count, fill_value);
         }
     }
 
@@ -251,11 +308,94 @@ struct CommonVector {
         capacity = new_size;
     }
 
+    // Resize with fill value
+    HOST DEVICE void resize(size_t new_size, const T& fill_value)
+    {
+        // Remember old size for filling new elements
+        size_t old_size = data_size;
+
+        // Do the basic resize
+        if (new_size == data_size) return;
+
+        // Always allocate new memory of exactly the requested size
+        T* new_data = nullptr;
+
+        #ifdef HAS_CUDA
+        if constexpr (GPUUsage == GPUUsageMode::ON_GPU) {
+            // Allocate new GPU memory
+            cudaError_t err = cudaMalloc(&new_data, new_size * sizeof(T));
+            if (err != cudaSuccess) {
+                throw std::runtime_error("CUDA malloc failed in resize!");
+            }
+
+            // Copy existing data if we have any
+            if (data && size > 0) {
+                // Copy the minimum of old and new size
+                size_t copy_size = std::min(size, new_size);
+                err = cudaMemcpy(new_data, data, copy_size * sizeof(T), cudaMemcpyDeviceToDevice);
+                if (err != cudaSuccess) {
+                    cudaFree(new_data);  // Clean up on error
+                    throw std::runtime_error("CUDA memcpy failed in resize!");
+                }
+            }
+
+            // Fill new elements with provided value
+            if (new_size > old_size) {
+                if (std::is_trivially_copyable<T>::value) {
+                    fill_kernel<<<(new_size - old_size + 255)/256, 256>>>(
+                        new_data + old_size,
+                        fill_value,
+                        new_size - old_size
+                    );
+                    cudaError_t err = cudaGetLastError();
+                    if (err != cudaSuccess) {
+                        cudaFree(new_data);
+                        throw std::runtime_error("CUDA fill kernel failed in resize!");
+                    }
+                } else {
+                    cudaFree(new_data);
+                    throw std::runtime_error("Non-trivially copyable type resize requires custom kernel!");
+                }
+            }
+        } else
+        #endif
+        {
+            // Allocate new host memory
+            new_data = static_cast<T*>(malloc(new_size * sizeof(T)));
+            if (!new_data)
+            {
+                throw std::runtime_error("Host malloc failed in resize!");
+            }
+
+            // Copy existing data if we have any
+            if (data && data_size > 0)
+            {
+                // Copy the minimum of old and new size
+                size_t copy_size = std::min(data_size, new_size);
+                std::copy(data, data + copy_size, new_data);
+            }
+
+            // Fill new elements with provided value
+            if (new_size > old_size)
+            {
+                std::fill(new_data + old_size, new_data + new_size, fill_value);
+            }
+        }
+
+        // Free old memory
+        deallocate();
+
+        // Update member variables
+        data = new_data;
+        data_size = new_size;
+        capacity = new_size;
+    }
+
     // Add element to the end
     HOST DEVICE void push_back(const T& value) {
         if (data_size >= capacity) {
             const size_t new_capacity = (capacity == 0) ? initial_capacity : capacity * 2;
-            resize(new_capacity);
+            allocate(new_capacity);
         }
         data[data_size++] = value;
     }
@@ -323,6 +463,26 @@ struct CommonVector {
             throw std::out_of_range("Cannot access back() of empty vector");
         }
         return data[data_size - 1];
+    }
+
+    // Get pointer to beginning of data
+    HOST DEVICE T* begin() {
+        return data;
+    }
+
+    // Get const pointer to beginning of data
+    HOST DEVICE const T* begin() const {
+        return data;
+    }
+
+    // Get pointer to end of data (one past last element)
+    HOST DEVICE T* end() {
+        return data + data_size;
+    }
+
+    // Get const pointer to end of data
+    HOST DEVICE const T* end() const {
+        return data + data_size;
     }
 
     // Utility methods

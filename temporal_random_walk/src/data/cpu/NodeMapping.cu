@@ -10,9 +10,9 @@ void NodeMapping<GPUUsage>::clear() {
 
 template<GPUUsageMode GPUUsage>
 void NodeMapping<GPUUsage>::reserve(const size_t size) {
-    sparse_to_dense.reserve(size);
-    dense_to_sparse.reserve(size);
-    is_deleted.reserve(size);
+    sparse_to_dense.allocate(size);
+    dense_to_sparse.allocate(size);
+    is_deleted.allocate(size);
 }
 
 template<GPUUsageMode GPUUsage>
@@ -40,8 +40,8 @@ void NodeMapping<GPUUsage>::update(const EdgeData<GPUUsage>& edges, const size_t
         is_deleted.resize(max_node_id + 1, true);
     }
 
-    std::vector<int> new_nodes;
-    new_nodes.reserve((end_idx - start_idx) * 2);
+    IntVector new_nodes;
+    new_nodes.allocate((end_idx - start_idx) * 2);
 
     for (size_t i = start_idx; i < end_idx; i++) {
         new_nodes.push_back(edges.sources[i]);

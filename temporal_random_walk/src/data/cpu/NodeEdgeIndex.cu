@@ -62,8 +62,8 @@ void NodeEdgeIndex<GPUUsage>::rebuild(
    }
 
    // Second pass: fill edge indices
-   std::vector<size_t> outbound_current(num_nodes, 0);
-   std::vector<size_t> inbound_current;
+   SizeVector outbound_current(num_nodes, 0);
+   SizeVector inbound_current;
    if (is_directed) {
        inbound_current.resize(num_nodes, 0);
    }
@@ -85,8 +85,8 @@ void NodeEdgeIndex<GPUUsage>::rebuild(
    }
 
    // Third pass: count timestamp groups
-   std::vector<size_t> outbound_group_count(num_nodes, 0);
-   std::vector<size_t> inbound_group_count;
+   SizeVector outbound_group_count(num_nodes, 0);
+   SizeVector inbound_group_count;
    if (is_directed) {
        inbound_group_count.resize(num_nodes, 0);
    }
@@ -100,7 +100,7 @@ void NodeEdgeIndex<GPUUsage>::rebuild(
            for (size_t i = start + 1; i < end; i++) {
                if (edges.timestamps[outbound_indices[i]] !=
                    edges.timestamps[outbound_indices[i-1]]) {
-                   outbound_group_count[node]++;
+                   ++outbound_group_count[node];
                }
            }
        }
@@ -114,7 +114,7 @@ void NodeEdgeIndex<GPUUsage>::rebuild(
                for (size_t i = start + 1; i < end; i++) {
                    if (edges.timestamps[inbound_indices[i]] !=
                        edges.timestamps[inbound_indices[i-1]]) {
-                       inbound_group_count[node]++;
+                       ++inbound_group_count[node];
                    }
                }
            }
