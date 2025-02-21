@@ -22,7 +22,7 @@ void EdgeData<GPUUsage>::clear() {
 
 template<GPUUsageMode GPUUsage>
 size_t EdgeData<GPUUsage>::size() const {
-    return timestamps.get_size();
+    return timestamps.size();
 }
 
 template<GPUUsageMode GPUUsage>
@@ -47,9 +47,9 @@ void EdgeData<GPUUsage>::add_edges(int* src, int* tgt, int64_t* ts, size_t size)
 template<GPUUsageMode GPUUsage>
 std::vector<std::tuple<int, int, int64_t>> EdgeData<GPUUsage>::get_edges() {
     std::vector<std::tuple<int, int, int64_t>> edges;
-    edges.reserve(sources.get_size());
+    edges.reserve(sources.size());
 
-    for (int i = 0; i < sources.get_size(); i++) {
+    for (int i = 0; i < sources.size(); i++) {
         edges.emplace_back(sources[i], targets[i], timestamps[i]);
     }
 
@@ -154,16 +154,24 @@ template<GPUUsageMode GPUUsage>
 size_t EdgeData<GPUUsage>::find_group_after_timestamp(int64_t timestamp) const {
     if (unique_timestamps.empty()) return 0;
 
-    auto it = std::upper_bound(unique_timestamps.begin(), unique_timestamps.end(), timestamp);
-    return it - unique_timestamps.begin();
+    // Get raw pointer to data and use std::upper_bound directly
+    const int64_t* begin = unique_timestamps.data;
+    const int64_t* end = unique_timestamps.data + unique_timestamps.size();
+
+    const auto it = std::upper_bound(begin, end, timestamp);
+    return it - begin;
 }
 
 template<GPUUsageMode GPUUsage>
 size_t EdgeData<GPUUsage>::find_group_before_timestamp(int64_t timestamp) const {
     if (unique_timestamps.empty()) return 0;
 
-    auto it = std::lower_bound(unique_timestamps.begin(), unique_timestamps.end(), timestamp);
-    return (it - unique_timestamps.begin()) - 1;
+    // Get raw pointer to data and use std::lower_bound directly
+    const int64_t* begin = unique_timestamps.data;
+    const int64_t* end = unique_timestamps.data + unique_timestamps.size();
+
+    auto it = std::lower_bound(begin, end, timestamp);
+    return (it - begin) - 1;
 }
 
 template class EdgeData<GPUUsageMode::ON_CPU>;
