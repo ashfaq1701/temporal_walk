@@ -1,4 +1,4 @@
-#include "TemporalGraphCUDA.cuh"
+#include "TemporalGraphThrust.cuh"
 
 #ifdef HAS_CUDA
 
@@ -9,10 +9,10 @@
 
 #include "../../random/IndexBasedRandomPicker.h"
 #include "../../random/WeightBasedRandomPicker.cuh"
-#include "NodeMappingCUDA.cuh"
+#include "NodeMappingThrust.cuh"
 
 template<GPUUsageMode GPUUsage>
-void TemporalGraphCUDA<GPUUsage>::delete_old_edges() {
+void TemporalGraphThrust<GPUUsage>::delete_old_edges() {
     if (this->time_window <= 0 || this->edges.empty()) return;
 
     const int64_t cutoff_time = this->latest_timestamp - this->time_window;
@@ -93,7 +93,7 @@ void TemporalGraphCUDA<GPUUsage>::delete_old_edges() {
 }
 
 template<GPUUsageMode GPUUsage>
-void TemporalGraphCUDA<GPUUsage>::sort_and_merge_edges(const size_t start_idx) {
+void TemporalGraphThrust<GPUUsage>::sort_and_merge_edges(const size_t start_idx) {
     if (start_idx >= this->edges.size()) return;
 
     // Create index array
@@ -217,7 +217,7 @@ void TemporalGraphCUDA<GPUUsage>::sort_and_merge_edges(const size_t start_idx) {
 }
 
 template<GPUUsageMode GPUUsage>
-size_t TemporalGraphCUDA<GPUUsage>::count_timestamps_less_than(int64_t timestamp) const {
+size_t TemporalGraphThrust<GPUUsage>::count_timestamps_less_than(int64_t timestamp) const {
     if (this->edges.empty()) return 0;
 
     const auto it = thrust::lower_bound(
@@ -229,7 +229,7 @@ size_t TemporalGraphCUDA<GPUUsage>::count_timestamps_less_than(int64_t timestamp
 }
 
 template<GPUUsageMode GPUUsage>
-size_t TemporalGraphCUDA<GPUUsage>::count_timestamps_greater_than(int64_t timestamp) const {
+size_t TemporalGraphThrust<GPUUsage>::count_timestamps_greater_than(int64_t timestamp) const {
     if (this->edges.empty()) return 0;
 
     auto it = thrust::upper_bound(
@@ -241,7 +241,7 @@ size_t TemporalGraphCUDA<GPUUsage>::count_timestamps_greater_than(int64_t timest
 }
 
 template<GPUUsageMode GPUUsage>
-size_t TemporalGraphCUDA<GPUUsage>::count_node_timestamps_less_than(int node_id, int64_t timestamp) const {
+size_t TemporalGraphThrust<GPUUsage>::count_node_timestamps_less_than(int node_id, int64_t timestamp) const {
     // Used for backward walks
     const int dense_idx = this->node_mapping.to_dense(node_id);
     if (dense_idx < 0) return 0;
@@ -275,7 +275,7 @@ size_t TemporalGraphCUDA<GPUUsage>::count_node_timestamps_less_than(int node_id,
 }
 
 template<GPUUsageMode GPUUsage>
-size_t TemporalGraphCUDA<GPUUsage>::count_node_timestamps_greater_than(int node_id, int64_t timestamp) const {
+size_t TemporalGraphThrust<GPUUsage>::count_node_timestamps_greater_than(int node_id, int64_t timestamp) const {
     // Used for forward walks
     int dense_idx = this->node_mapping.to_dense(node_id);
     if (dense_idx < 0) return 0;
@@ -306,7 +306,7 @@ size_t TemporalGraphCUDA<GPUUsage>::count_node_timestamps_greater_than(int node_
 }
 
 template<GPUUsageMode GPUUsage>
-std::tuple<int, int, int64_t> TemporalGraphCUDA<GPUUsage>::get_node_edge_at(
+std::tuple<int, int, int64_t> TemporalGraphThrust<GPUUsage>::get_node_edge_at(
     const int node_id,
     RandomPicker &picker,
     const int64_t timestamp,
@@ -460,6 +460,6 @@ std::tuple<int, int, int64_t> TemporalGraphCUDA<GPUUsage>::get_node_edge_at(
     };
 }
 
-template class TemporalGraphCUDA<GPUUsageMode::ON_GPU_USING_CUDA>;
-template class TemporalGraphCUDA<GPUUsageMode::ON_HOST_USING_THRUST>;
+template class TemporalGraphThrust<GPUUsageMode::ON_GPU_USING_CUDA>;
+template class TemporalGraphThrust<GPUUsageMode::ON_HOST_USING_THRUST>;
 #endif

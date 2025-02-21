@@ -13,9 +13,9 @@
 #include "EdgeData.cuh"
 #include "NodeEdgeIndex.cuh"
 
-#include "../cuda/NodeMappingCUDA.cuh"
-#include "../cuda/EdgeDataCUDA.cuh"
-#include "../cuda/NodeEdgeIndexCUDA.cuh"
+#include "../thrust/NodeMappingThrust.cuh"
+#include "../thrust/EdgeDataThrust.cuh"
+#include "../thrust/NodeEdgeIndexThrust.cuh"
 
 template<GPUUsageMode GPUUsage>
 class TemporalGraph
@@ -23,13 +23,13 @@ class TemporalGraph
 private:
     #ifdef HAS_CUDA
     using NodeIndexType = std::conditional_t<
-        (GPUUsage == ON_CPU), NodeEdgeIndex<GPUUsage>, NodeEdgeIndexCUDA<GPUUsage>>;
+        (GPUUsage == ON_CPU), NodeEdgeIndex<GPUUsage>, NodeEdgeIndexThrust<GPUUsage>>;
 
     using EdgeDataType = std::conditional_t<
-        (GPUUsage == ON_CPU), EdgeData<GPUUsage>, EdgeDataCUDA<GPUUsage>>;
+        (GPUUsage == ON_CPU), EdgeData<GPUUsage>, EdgeDataThrust<GPUUsage>>;
 
     using NodeMappingType = std::conditional_t<
-        (GPUUsage == ON_CPU), NodeMapping<GPUUsage>, NodeMappingCUDA<GPUUsage>>;
+        (GPUUsage == ON_CPU), NodeMapping<GPUUsage>, NodeMappingThrust<GPUUsage>>;
     #else
     using NodeIndexType = NodeEdgeIndex<GPUUsage>;
     using EdgeDataType = EdgeData<GPUUsage>;

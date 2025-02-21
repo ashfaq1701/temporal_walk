@@ -1,11 +1,11 @@
-#ifndef NODEEDGEINDEX_CUDA_H
-#define NODEEDGEINDEX_CUDA_H
+#ifndef NODEEDGEINDEX_THRUST_H
+#define NODEEDGEINDEX_THRUST_H
 
 #include "../cpu/NodeEdgeIndex.cuh"
 #include "../../cuda_common/PolicyProvider.cuh"
 
 template<GPUUsageMode GPUUsage>
-class NodeEdgeIndexCUDA final : public NodeEdgeIndex<GPUUsage>, public PolicyProvider<GPUUsage> {
+class NodeEdgeIndexThrust final : public NodeEdgeIndex<GPUUsage>, public PolicyProvider<GPUUsage> {
 public:
 #ifdef HAS_CUDA
     void rebuild(const EdgeData<GPUUsage>& edges, const NodeMapping<GPUUsage>& mapping, bool is_directed) override;
@@ -15,4 +15,4 @@ public:
 #endif
 };
 
-#endif //NODEEDGEINDEX_CUDA_H
+#endif //NODEEDGEINDEX_THRUST_H

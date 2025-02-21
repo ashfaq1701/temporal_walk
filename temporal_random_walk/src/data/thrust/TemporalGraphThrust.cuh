@@ -1,13 +1,13 @@
-#ifndef TEMPORALGRAPH_CUDA_H
-#define TEMPORALGRAPH_CUDA_H
+#ifndef TEMPORALGRAPH_THRUST_H
+#define TEMPORALGRAPH_THRUST_H
 
 #include "../cpu/TemporalGraph.cuh"
 #include "../../cuda_common/PolicyProvider.cuh"
 
 template<GPUUsageMode GPUUsage>
-class TemporalGraphCUDA final : public TemporalGraph<GPUUsage>, public PolicyProvider<GPUUsage> {
+class TemporalGraphThrust final : public TemporalGraph<GPUUsage>, public PolicyProvider<GPUUsage> {
 
-    static_assert(GPUUsage != GPUUsageMode::ON_CPU, "TemporalGraphCUDA cannot be used with ON_CPU mode");
+    static_assert(GPUUsage != GPUUsageMode::ON_CPU, "TemporalGraphThrust cannot be used with ON_CPU mode");
 
 public:
     // Inherit constructors from base class
@@ -30,4 +30,4 @@ public:
 #endif
 };
 
-#endif //TEMPORALGRAPH_CUDA_H
+#endif //TEMPORALGRAPH_THRUST_H

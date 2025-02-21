@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 
 #include "../src/data/cpu/EdgeData.cuh"
-#include "../src/data/cuda/EdgeDataCUDA.cuh"
+#include "../src/data/thrust/EdgeDataThrust.cuh"
 #include "../src/data/cpu/NodeMapping.cuh"
-#include "../src/data/cuda/NodeMappingCUDA.cuh"
+#include "../src/data/thrust/NodeMappingThrust.cuh"
 #include "../src/data/cpu/NodeEdgeIndex.cuh"
-#include "../src/data/cuda/NodeEdgeIndexCUDA.cuh"
+#include "../src/data/thrust/NodeEdgeIndexThrust.cuh"
 
 template<typename T>
 class NodeEdgeIndexWeightTest : public ::testing::Test {
@@ -14,19 +14,19 @@ protected:
     using EdgeDataType = std::conditional_t<
         T::value == GPUUsageMode::ON_CPU,
         EdgeData<T::value>,
-        EdgeDataCUDA<T::value>
+        EdgeDataThrust<T::value>
     >;
 
     using NodeMappingType = std::conditional_t<
         T::value == GPUUsageMode::ON_CPU,
         NodeMapping<T::value>,
-        NodeMappingCUDA<T::value>
+        NodeMappingThrust<T::value>
     >;
 
     using NodeEdgeIndexType = std::conditional_t<
         T::value == GPUUsageMode::ON_CPU,
         NodeEdgeIndex<T::value>,
-        NodeEdgeIndexCUDA<T::value>
+        NodeEdgeIndexThrust<T::value>
     >;
 
     using DoubleVector = typename SelectVectorType<double, T::value>::type;

@@ -1,4 +1,4 @@
-#include "EdgeDataCUDA.cuh"
+#include "EdgeDataThrust.cuh"
 
 #ifdef HAS_CUDA
 
@@ -8,7 +8,7 @@
 #include <thrust/execution_policy.h>
 
 template <GPUUsageMode GPUUsage>
-void EdgeDataCUDA<GPUUsage>::update_timestamp_groups() {
+void EdgeDataThrust<GPUUsage>::update_timestamp_groups() {
     if (this->timestamps.empty()) {
         this->timestamp_group_offsets.clear();
         this->unique_timestamps.clear();
@@ -61,7 +61,7 @@ void EdgeDataCUDA<GPUUsage>::update_timestamp_groups() {
 }
 
 template <GPUUsageMode GPUUsage>
-void EdgeDataCUDA<GPUUsage>::update_temporal_weights(double timescale_bound) {
+void EdgeDataThrust<GPUUsage>::update_temporal_weights(double timescale_bound) {
     if (this->timestamps.empty()) {
         this->forward_cumulative_weights_exponential.clear();
         this->backward_cumulative_weights_exponential.clear();
@@ -155,7 +155,7 @@ void EdgeDataCUDA<GPUUsage>::update_temporal_weights(double timescale_bound) {
 }
 
 template<GPUUsageMode GPUUsage>
-size_t EdgeDataCUDA<GPUUsage>::find_group_after_timestamp(int64_t timestamp) const {
+size_t EdgeDataThrust<GPUUsage>::find_group_after_timestamp(int64_t timestamp) const {
     if (this->unique_timestamps.empty()) return 0;
 
     auto it = thrust::upper_bound(
@@ -168,7 +168,7 @@ size_t EdgeDataCUDA<GPUUsage>::find_group_after_timestamp(int64_t timestamp) con
 }
 
 template<GPUUsageMode GPUUsage>
-size_t EdgeDataCUDA<GPUUsage>::find_group_before_timestamp(int64_t timestamp) const {
+size_t EdgeDataThrust<GPUUsage>::find_group_before_timestamp(int64_t timestamp) const {
     if (this->unique_timestamps.empty()) return 0;
 
     auto it = thrust::lower_bound(
@@ -181,7 +181,7 @@ size_t EdgeDataCUDA<GPUUsage>::find_group_before_timestamp(int64_t timestamp) co
 }
 
 template<GPUUsageMode GPUUsage>
-std::vector<std::tuple<int, int, int64_t>> EdgeDataCUDA<GPUUsage>::get_edges() {
+std::vector<std::tuple<int, int, int64_t>> EdgeDataThrust<GPUUsage>::get_edges() {
     std::vector<std::tuple<int, int, int64_t>> edges;
     edges.reserve(this->sources.size());
 
@@ -203,6 +203,6 @@ std::vector<std::tuple<int, int, int64_t>> EdgeDataCUDA<GPUUsage>::get_edges() {
     return edges;
 }
 
-template class EdgeDataCUDA<GPUUsageMode::ON_GPU_USING_CUDA>;
-template class EdgeDataCUDA<GPUUsageMode::ON_HOST_USING_THRUST>;
+template class EdgeDataThrust<GPUUsageMode::ON_GPU_USING_CUDA>;
+template class EdgeDataThrust<GPUUsageMode::ON_HOST_USING_THRUST>;
 #endif

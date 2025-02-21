@@ -7,7 +7,7 @@
 #include "../../libs/thread-pool/ThreadPool.h"
 #include "../random/RandomPicker.h"
 #include "../data/cpu/TemporalGraph.cuh"
-#include "../data/cuda/TemporalGraphCUDA.cuh"
+#include "../data/thrust/TemporalGraphThrust.cuh"
 #include "../random/WeightBasedRandomPicker.cuh"
 #include "../random/WeightBasedRandomPickerGPU.cuh"
 
@@ -38,7 +38,7 @@ class TemporalRandomWalk {
     using TemporalGraphType = std::conditional_t<
         GPUUsage == GPUUsageMode::ON_CPU,
         TemporalGraph<GPUUsage>,
-        TemporalGraphCUDA<GPUUsage>
+        TemporalGraphThrust<GPUUsage>
     >;
     using WeightBasedRandomPickerType = std::conditional_t<
         GPUUsage == GPUUsageMode::ON_GPU_USING_CUDA,

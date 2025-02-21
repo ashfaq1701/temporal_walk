@@ -1,4 +1,4 @@
-#include "NodeMappingCUDA.cuh"
+#include "NodeMappingThrust.cuh"
 
 #ifdef HAS_CUDA
 
@@ -16,7 +16,7 @@ __host__ __device__ void mark_node_deleted(bool* is_deleted, const int sparse_id
 }
 
 template<GPUUsageMode GPUUsage>
-void NodeMappingCUDA<GPUUsage>::update(const EdgeData<GPUUsage>& edges, const size_t start_idx, const size_t end_idx) {
+void NodeMappingThrust<GPUUsage>::update(const EdgeData<GPUUsage>& edges, const size_t start_idx, const size_t end_idx) {
     auto max_source = thrust::max_element(
         PolicyProvider<GPUUsage>::get_policy(),
         edges.sources.begin() + start_idx,
@@ -111,7 +111,7 @@ void NodeMappingCUDA<GPUUsage>::update(const EdgeData<GPUUsage>& edges, const si
 }
 
 template<GPUUsageMode GPUUsage>
-size_t NodeMappingCUDA<GPUUsage>::active_size() const {
+size_t NodeMappingThrust<GPUUsage>::active_size() const {
     return thrust::count(
         this->get_policy(),
         this->is_deleted.begin(),
@@ -121,7 +121,7 @@ size_t NodeMappingCUDA<GPUUsage>::active_size() const {
 }
 
 template<GPUUsageMode GPUUsage>
-std::vector<int> NodeMappingCUDA<GPUUsage>::get_active_node_ids() const {
+std::vector<int> NodeMappingThrust<GPUUsage>::get_active_node_ids() const {
     // Create temporary device vector for output
     typename SelectVectorType<int, GPUUsage>::type temp_output(this->dense_to_sparse.size());
 
@@ -145,6 +145,6 @@ std::vector<int> NodeMappingCUDA<GPUUsage>::get_active_node_ids() const {
     return result;
 }
 
-template class NodeMappingCUDA<GPUUsageMode::ON_GPU_USING_CUDA>;
-template class NodeMappingCUDA<GPUUsageMode::ON_HOST_USING_THRUST>;
+template class NodeMappingThrust<GPUUsageMode::ON_GPU_USING_CUDA>;
+template class NodeMappingThrust<GPUUsageMode::ON_HOST_USING_THRUST>;
 #endif

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "../src/data/cpu/EdgeData.cuh"
-#include "../src/data/cuda/EdgeDataCUDA.cuh"
+#include "../src/data/thrust/EdgeDataThrust.cuh"
 #include <cmath>
 
 template<typename T>
@@ -12,7 +12,7 @@ protected:
     using EdgeDataType = std::conditional_t<
         T::value == GPUUsageMode::ON_CPU,
         EdgeData<T::value>,
-        EdgeDataCUDA<T::value>
+        EdgeDataThrust<T::value>
     >;
 
     static void verify_cumulative_weights(const DoubleVector& weights) {

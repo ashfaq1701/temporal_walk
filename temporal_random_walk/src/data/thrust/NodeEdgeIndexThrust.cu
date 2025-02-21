@@ -1,5 +1,5 @@
-#include "NodeEdgeIndexCUDA.cuh"
-#include "NodeMappingCUDA.cuh"
+#include "NodeEdgeIndexThrust.cuh"
+#include "NodeMappingThrust.cuh"
 
 #ifdef HAS_CUDA
 
@@ -58,7 +58,7 @@ __global__ void populate_edge_indices_cuda(
 }
 
 template<GPUUsageMode GPUUsage>
-void NodeEdgeIndexCUDA<GPUUsage>::rebuild(
+void NodeEdgeIndexThrust<GPUUsage>::rebuild(
     const EdgeData<GPUUsage>& edges,
     const NodeMapping<GPUUsage>& mapping,
     const bool is_directed) {
@@ -374,7 +374,7 @@ void NodeEdgeIndexCUDA<GPUUsage>::rebuild(
 
 
 template<GPUUsageMode GPUUsage>
-void NodeEdgeIndexCUDA<GPUUsage>::update_temporal_weights(
+void NodeEdgeIndexThrust<GPUUsage>::update_temporal_weights(
     const EdgeData<GPUUsage>& edges,
     const double timescale_bound)
 {
@@ -551,6 +551,6 @@ void NodeEdgeIndexCUDA<GPUUsage>::update_temporal_weights(
     }
 }
 
-template class NodeEdgeIndexCUDA<GPUUsageMode::ON_GPU_USING_CUDA>;
-template class NodeEdgeIndexCUDA<GPUUsageMode::ON_HOST_USING_THRUST>;
+template class NodeEdgeIndexThrust<GPUUsageMode::ON_GPU_USING_CUDA>;
+template class NodeEdgeIndexThrust<GPUUsageMode::ON_HOST_USING_THRUST>;
 #endif

@@ -1,11 +1,11 @@
-#ifndef EDGEDATA_CUDA_H
-#define EDGEDATA_CUDA_H
+#ifndef EDGEDATA_THRUST_H
+#define EDGEDATA_THRUST_H
 
 #include "../cpu/EdgeData.cuh"
 #include "../../cuda_common/PolicyProvider.cuh"
 
 template<GPUUsageMode GPUUsage>
-class EdgeDataCUDA final : public EdgeData<GPUUsage>, public PolicyProvider<GPUUsage> {
+class EdgeDataThrust final : public EdgeData<GPUUsage>, public PolicyProvider<GPUUsage> {
 public:
 #ifdef HAS_CUDA
     std::vector<std::tuple<int, int, int64_t>> get_edges() override;
@@ -21,4 +21,4 @@ public:
 #endif
 };
 
-#endif //EDGEDATA_CUDA_H
+#endif //EDGEDATA_THRUST_H

@@ -1,5 +1,5 @@
-#ifndef NODEMAPPING_CUDA_H
-#define NODEMAPPING_CUDA_H
+#ifndef NODEMAPPING_THRUST_H
+#define NODEMAPPING_THRUST_H
 
 #include "../cpu/NodeMapping.cuh"
 #include "../../cuda_common/PolicyProvider.cuh"
@@ -12,7 +12,7 @@ __host__ __device__ void mark_node_deleted(bool* is_deleted, int sparse_id, int 
 #endif
 
 template<GPUUsageMode GPUUsage>
-class NodeMappingCUDA final : public NodeMapping<GPUUsage>, public PolicyProvider<GPUUsage> {
+class NodeMappingThrust final : public NodeMapping<GPUUsage>, public PolicyProvider<GPUUsage> {
 
 public:
 #ifdef HAS_CUDA
@@ -25,4 +25,4 @@ public:
 #endif
 };
 
-#endif //NODEMAPPING_CUDA_H
+#endif //NODEMAPPING_THRUST_H

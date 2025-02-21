@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include "../src/data/cpu/TemporalGraph.cuh"
-#include "../src/data/cuda/TemporalGraphCUDA.cuh"
+#include "../src/data/thrust/TemporalGraphThrust.cuh"
 #include "../src/random/WeightBasedRandomPicker.cuh"
 
 template<typename T>
@@ -11,7 +11,7 @@ protected:
     using TemporalGraphType = std::conditional_t<
         T::value == GPUUsageMode::ON_CPU,
         TemporalGraph<T::value>,
-        TemporalGraphCUDA<T::value>
+        TemporalGraphThrust<T::value>
     >;
 
     void SetUp() override {

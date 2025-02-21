@@ -1,4 +1,4 @@
-#include "../src/data/cuda/TemporalGraphCUDA.cuh"
+#include "../src/data/thrust/TemporalGraphThrust.cuh"
 #include <gtest/gtest.h>
 #include "../src/data/cpu/TemporalGraph.cuh"
 #include "../src/random/IndexBasedRandomPicker.h"
@@ -25,7 +25,7 @@ protected:
     using TemporalGraphType = std::conditional_t<
         T::value == GPUUsageMode::ON_CPU,
         TemporalGraph<T::value>,
-        TemporalGraphCUDA<T::value>
+        TemporalGraphThrust<T::value>
     >;
 
     std::unique_ptr<TemporalGraphType> graph;

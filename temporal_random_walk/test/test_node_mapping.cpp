@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include "../src/data/cpu/NodeMapping.cuh"
-#include "../src/data/cuda/NodeMappingCUDA.cuh"
+#include "../src/data/thrust/NodeMappingThrust.cuh"
 #include "../src/data/cpu/EdgeData.cuh"
-#include "../src/data/cuda/EdgeDataCUDA.cuh"
+#include "../src/data/thrust/EdgeDataThrust.cuh"
 
 template<typename T>
 class NodeMappingTest : public ::testing::Test {
@@ -10,13 +10,13 @@ protected:
     using NodeMappingType = std::conditional_t<
         T::value == GPUUsageMode::ON_CPU,
         NodeMapping<T::value>,
-        NodeMappingCUDA<T::value>
+        NodeMappingThrust<T::value>
     >;
 
     using EdgeDataType = std::conditional_t<
         T::value == GPUUsageMode::ON_CPU,
         EdgeData<T::value>,
-        EdgeDataCUDA<T::value>
+        EdgeDataThrust<T::value>
     >;
 
     NodeMappingType mapping;
