@@ -4,11 +4,11 @@
 
 template<GPUUsageMode GPUUsage>
 void EdgeData<GPUUsage>::reserve(size_t size) {
-    sources.reserve(size);
-    targets.reserve(size);
-    timestamps.reserve(size);
-    timestamp_group_offsets.reserve(size/4 + 1);  // Estimate for group count
-    unique_timestamps.reserve(size/4);
+    sources.allocate(size);
+    targets.allocate(size);
+    timestamps.allocate(size);
+    timestamp_group_offsets.allocate(size);  // Estimate for group count
+    unique_timestamps.allocate(size);
 }
 
 template<GPUUsageMode GPUUsage>
@@ -22,7 +22,7 @@ void EdgeData<GPUUsage>::clear() {
 
 template<GPUUsageMode GPUUsage>
 size_t EdgeData<GPUUsage>::size() const {
-    return timestamps.size();
+    return timestamps.get_size();
 }
 
 template<GPUUsageMode GPUUsage>
@@ -38,18 +38,18 @@ void EdgeData<GPUUsage>::resize(size_t new_size) {
 }
 
 template<GPUUsageMode GPUUsage>
-void EdgeData<GPUUsage>::push_back(int src, int tgt, int64_t ts) {
-    sources.push_back(src);
-    targets.push_back(tgt);
-    timestamps.push_back(ts);
+void EdgeData<GPUUsage>::add_edges(int* src, int* tgt, int64_t* ts, size_t size) {
+    sources.write_from_pointer(src, size);
+    targets.write_from_pointer(tgt, size);
+    timestamps.write_from_pointer(ts, size);
 }
 
 template<GPUUsageMode GPUUsage>
 std::vector<std::tuple<int, int, int64_t>> EdgeData<GPUUsage>::get_edges() {
     std::vector<std::tuple<int, int, int64_t>> edges;
-    edges.reserve(sources.size());
+    edges.reserve(sources.get_size());
 
-    for (int i = 0; i < sources.size(); i++) {
+    for (int i = 0; i < sources.get_size(); i++) {
         edges.emplace_back(sources[i], targets[i], timestamps[i]);
     }
 

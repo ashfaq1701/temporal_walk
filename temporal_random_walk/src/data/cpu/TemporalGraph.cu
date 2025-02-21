@@ -30,15 +30,19 @@ void TemporalGraph<GPUUsage>::add_multiple_edges(const std::vector<std::tuple<in
     const size_t start_idx = edges.size();
     edges.reserve(start_idx + new_edges.size());
 
-    // Add new edges and track max timestamp
+    std::vector<int> sources;
+    std::vector<int> targets;
+    std::vector<int64_t> timestamps;
+
     for (const auto& [src, tgt, ts] : new_edges) {
-        if (!is_directed && src > tgt) {
-            edges.push_back(tgt, src, ts);
-        } else {
-            edges.push_back(src, tgt, ts);
-        }
+        sources.push_back(src);
+        targets.push_back(tgt);
+        timestamps.push_back(ts);
+
         latest_timestamp = std::max(latest_timestamp, ts);
     }
+
+    edges.add_edges(sources.data(), targets.data(), timestamps.data(), new_edges.size());
 
     // Update node mappings
     node_mapping.update(edges, start_idx, edges.size());
