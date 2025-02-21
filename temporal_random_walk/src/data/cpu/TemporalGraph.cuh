@@ -13,10 +13,6 @@
 #include "EdgeData.cuh"
 #include "NodeEdgeIndex.cuh"
 
-#include "../thrust/NodeMappingThrust.cuh"
-#include "../thrust/EdgeDataThrust.cuh"
-#include "../thrust/NodeEdgeIndexThrust.cuh"
-
 template<GPUUsageMode GPUUsage>
 class TemporalGraph
 {

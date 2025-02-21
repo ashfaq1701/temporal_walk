@@ -41,6 +41,5 @@ int LinearRandomPicker<GPUUsage>::pick_random(const int start, const int end, co
 
 template class LinearRandomPicker<GPUUsageMode::ON_CPU>;
 #ifdef HAS_CUDA
-template class LinearRandomPicker<GPUUsageMode::ON_GPU_USING_CUDA>;
-template class LinearRandomPicker<GPUUsageMode::ON_HOST_USING_THRUST>;
+template class LinearRandomPicker<GPUUsageMode::ON_GPU>;
 #endif

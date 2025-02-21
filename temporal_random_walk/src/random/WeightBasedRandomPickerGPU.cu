@@ -3,7 +3,6 @@
 #ifdef HAS_CUDA
 
 #include "../cuda_common/CudaRandomStates.cuh"
-#include <thrust/binary_search.h>
 
 __global__ void generate_random_kernel(
     double* random_val,
@@ -57,7 +56,7 @@ int WeightBasedRandomPickerGPU<GPUUsage>::pick_random(
     // Generate random value using kernel
     generate_random_kernel<<<1, 1>>>(
         d_random_val,
-        thrust::raw_pointer_cast(cumulative_weights.data()),
+        cumulative_weights.data(),
         group_start,
         group_end,
         CUDARandomStates::get_states()
@@ -71,17 +70,12 @@ int WeightBasedRandomPickerGPU<GPUUsage>::pick_random(
         return -1;
     }
 
-    // Use thrust::lower_bound for parallel binary search
-    auto it = thrust::lower_bound(
-        this->get_policy(),
-        thrust::next(cumulative_weights.begin(), group_start),
-        thrust::next(cumulative_weights.begin(), group_end),
-        random_val
-    );
-
-    return static_cast<int>(thrust::distance(cumulative_weights.begin(), it));
+    return static_cast<int>(std::lower_bound(
+            cumulative_weights.begin() + group_start,
+            cumulative_weights.begin() + group_end,
+            random_val) - cumulative_weights.begin());
 }
 
 
-template class WeightBasedRandomPickerGPU<GPUUsageMode::ON_GPU_USING_CUDA>;
+template class WeightBasedRandomPickerGPU<GPUUsageMode::ON_GPU>;
 #endif

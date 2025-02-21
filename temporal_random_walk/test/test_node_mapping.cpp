@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include "../src/data/cpu/NodeMapping.cuh"
-#include "../src/data/thrust/NodeMappingThrust.cuh"
+#include "../src/data/cuda/NodeMappingCUDA.cuh"
 #include "../src/data/cpu/EdgeData.cuh"
-#include "../src/data/thrust/EdgeDataThrust.cuh"
+#include "../src/data/cuda/EdgeDataCUDA.cuh"
 
 template<typename T>
 class NodeMappingTest : public ::testing::Test {
@@ -10,13 +10,13 @@ protected:
     using NodeMappingType = std::conditional_t<
         T::value == GPUUsageMode::ON_CPU,
         NodeMapping<T::value>,
-        NodeMappingThrust<T::value>
+        NodeMappingCUDA<T::value>
     >;
 
     using EdgeDataType = std::conditional_t<
         T::value == GPUUsageMode::ON_CPU,
         EdgeData<T::value>,
-        EdgeDataThrust<T::value>
+        EdgeDataCUDA<T::value>
     >;
 
     NodeMappingType mapping;
@@ -34,8 +34,7 @@ protected:
 #ifdef HAS_CUDA
 using GPU_USAGE_TYPES = ::testing::Types<
     std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>,
-    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_GPU_USING_CUDA>,
-    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_HOST_USING_THRUST>
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_GPU>
 >;
 #else
 using GPU_USAGE_TYPES = ::testing::Types<

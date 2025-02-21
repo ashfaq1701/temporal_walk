@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 
 #include "../src/data/cpu/EdgeData.cuh"
-#include "../src/data/thrust/EdgeDataThrust.cuh"
+#include "../src/data/cuda/EdgeDataCUDA.cuh"
 #include "../src/data/cpu/NodeMapping.cuh"
-#include "../src/data/thrust/NodeMappingThrust.cuh"
+#include "../src/data/cuda/NodeMappingCUDA.cuh"
 #include "../src/data/cpu/NodeEdgeIndex.cuh"
-#include "../src/data/thrust/NodeEdgeIndexThrust.cuh"
+#include "../src/data/cuda/NodeEdgeIndexCUDA.cuh"
 
 template<typename T>
 class NodeEdgeIndexWeightTest : public ::testing::Test {
@@ -14,19 +14,19 @@ protected:
     using EdgeDataType = std::conditional_t<
         T::value == GPUUsageMode::ON_CPU,
         EdgeData<T::value>,
-        EdgeDataThrust<T::value>
+        EdgeDataCUDA<T::value>
     >;
 
     using NodeMappingType = std::conditional_t<
         T::value == GPUUsageMode::ON_CPU,
         NodeMapping<T::value>,
-        NodeMappingThrust<T::value>
+        NodeMappingCUDA<T::value>
     >;
 
     using NodeEdgeIndexType = std::conditional_t<
         T::value == GPUUsageMode::ON_CPU,
         NodeEdgeIndex<T::value>,
-        NodeEdgeIndexThrust<T::value>
+        NodeEdgeIndexCUDA<T::value>
     >;
 
     using DoubleVector = typename SelectVectorType<double, T::value>::type;
@@ -72,13 +72,8 @@ protected:
             std::vector<double> c_vec(cumulative.size());
             std::vector<size_t> o_vec(offsets.size());
 
-            #ifdef HAS_CUDA
-            thrust::copy(cumulative.begin(), cumulative.end(), c_vec.begin());
-            thrust::copy(offsets.begin(), offsets.end(), o_vec.begin());
-            #else
             std::copy(cumulative.begin(), cumulative.end(), c_vec.begin());
             std::copy(offsets.begin(), offsets.end(), o_vec.begin());
-            #endif
 
             cumulative_vector = c_vec;
             offsets_vector = o_vec;
@@ -123,8 +118,7 @@ protected:
 #ifdef HAS_CUDA
 using GPU_USAGE_TYPES = ::testing::Types<
     std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>,
-    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_GPU_USING_CUDA>,
-    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_HOST_USING_THRUST>
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_GPU>
 >;
 #else
 using GPU_USAGE_TYPES = ::testing::Types<

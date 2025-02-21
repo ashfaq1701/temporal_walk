@@ -1,6 +1,6 @@
+#include <data/cuda/EdgeDataCUDA.cuh>
 #include <gtest/gtest.h>
 #include "../src/data/cpu/EdgeData.cuh"
-#include "../src/data/thrust/EdgeDataThrust.cuh"
 
 template<typename T>
 class EdgeDataTest : public ::testing::Test {
@@ -8,7 +8,7 @@ protected:
     using EdgeDataType = std::conditional_t<
         T::value == GPUUsageMode::ON_CPU,
         EdgeData<T::value>,
-        EdgeDataThrust<T::value>
+        EdgeDataCUDA<T::value>
     >;
 
     EdgeDataType edges;
@@ -24,8 +24,7 @@ protected:
 #ifdef HAS_CUDA
 using GPU_USAGE_TYPES = ::testing::Types<
     std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>,
-    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_GPU_USING_CUDA>,
-    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_HOST_USING_THRUST>
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_GPU>
 >;
 #else
 using GPU_USAGE_TYPES = ::testing::Types<

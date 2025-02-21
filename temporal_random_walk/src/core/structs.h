@@ -17,8 +17,7 @@ enum WalkDirection {
 
 enum GPUUsageMode {
     ON_CPU,
-    ON_HOST_USING_THRUST,
-    ON_GPU_USING_CUDA
+    ON_GPU
 };
 
 struct NodeWithTime {

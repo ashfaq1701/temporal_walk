@@ -7,7 +7,7 @@
 #include "../../libs/thread-pool/ThreadPool.h"
 #include "../random/RandomPicker.h"
 #include "../data/cpu/TemporalGraph.cuh"
-#include "../data/thrust/TemporalGraphThrust.cuh"
+#include "../data/cuda/TemporalGraphCUDA.cuh"
 #include "../random/WeightBasedRandomPicker.cuh"
 #include "../random/WeightBasedRandomPickerGPU.cuh"
 
@@ -17,7 +17,7 @@
  * Supports both CPU and GPU computation for generating random walks on temporal graphs.
  * The walks respect temporal causality and can be biased using different strategies.
  *
- * @tparam GPUUsage enum to control data placement and computation between CPU and GPU. Possible values are ON_CPU, ON_GPU_USING_CUDA, ON_HOST_USING_THRUST.
+ * @tparam GPUUsage enum to control data placement and computation between CPU and GPU. Possible values are ON_CPU, ON_GPU.
  */
 template<GPUUsageMode GPUUsage>
 class TemporalRandomWalk {
@@ -38,10 +38,10 @@ class TemporalRandomWalk {
     using TemporalGraphType = std::conditional_t<
         GPUUsage == GPUUsageMode::ON_CPU,
         TemporalGraph<GPUUsage>,
-        TemporalGraphThrust<GPUUsage>
+        TemporalGraphCUDA<GPUUsage>
     >;
     using WeightBasedRandomPickerType = std::conditional_t<
-        GPUUsage == GPUUsageMode::ON_GPU_USING_CUDA,
+        GPUUsage == GPUUsageMode::ON_GPU,
         WeightBasedRandomPickerGPU<GPUUsage>,
         WeightBasedRandomPicker<GPUUsage>
     >;

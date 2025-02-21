@@ -39,6 +39,5 @@ int ExponentialIndexRandomPicker<GPUUsage>::pick_random(const int start, const i
 
 template class ExponentialIndexRandomPicker<GPUUsageMode::ON_CPU>;
 #ifdef HAS_CUDA
-template class ExponentialIndexRandomPicker<GPUUsageMode::ON_GPU_USING_CUDA>;
-template class ExponentialIndexRandomPicker<GPUUsageMode::ON_HOST_USING_THRUST>;
+template class ExponentialIndexRandomPicker<GPUUsageMode::ON_GPU>;
 #endif

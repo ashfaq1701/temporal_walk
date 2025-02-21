@@ -1,4 +1,4 @@
-#include "../src/data/thrust/TemporalGraphThrust.cuh"
+#include "../src/data/cuda/TemporalGraphCUDA.cuh"
 #include <gtest/gtest.h>
 #include "../src/data/cpu/TemporalGraph.cuh"
 #include "../src/random/IndexBasedRandomPicker.h"
@@ -25,7 +25,7 @@ protected:
     using TemporalGraphType = std::conditional_t<
         T::value == GPUUsageMode::ON_CPU,
         TemporalGraph<T::value>,
-        TemporalGraphThrust<T::value>
+        TemporalGraphCUDA<T::value>
     >;
 
     std::unique_ptr<TemporalGraphType> graph;
@@ -49,8 +49,7 @@ protected:
 #ifdef HAS_CUDA
 using GPU_USAGE_TYPES = ::testing::Types<
     std::integral_constant<GPUUsageMode, GPUUsageMode::ON_CPU>,
-    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_GPU_USING_CUDA>,
-    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_HOST_USING_THRUST>
+    std::integral_constant<GPUUsageMode, GPUUsageMode::ON_GPU>
 >;
 #else
 using GPU_USAGE_TYPES = ::testing::Types<

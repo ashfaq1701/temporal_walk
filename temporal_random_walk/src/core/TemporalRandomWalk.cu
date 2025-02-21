@@ -545,6 +545,5 @@ void TemporalRandomWalk<GPUUsage>::clear() {
 
 template class TemporalRandomWalk<GPUUsageMode::ON_CPU>;
 #ifdef HAS_CUDA
-template class TemporalRandomWalk<GPUUsageMode::ON_GPU_USING_CUDA>;
-template class TemporalRandomWalk<GPUUsageMode::ON_HOST_USING_THRUST>;
+template class TemporalRandomWalk<GPUUsageMode::ON_GPU>;
 #endif

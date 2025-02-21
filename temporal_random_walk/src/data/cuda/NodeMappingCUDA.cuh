@@ -1,10 +1,10 @@
 #ifndef NODEMAPPINGCUDA_H
 #define NODEMAPPINGCUDA_H
 
-#include "../thrust/NodeMappingThrust.cuh"
+#include "../cpu/NodeMapping.cuh"
 
 template<GPUUsageMode GPUUsage>
-class NodeMappingCUDA : public NodeMappingThrust<GPUUsage> {
+class NodeMappingCUDA : public NodeMapping<GPUUsage> {
 #ifdef HAS_CUDA
 
 #endif

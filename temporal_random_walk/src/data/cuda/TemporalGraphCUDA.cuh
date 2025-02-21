@@ -1,10 +1,10 @@
 #ifndef TEMPORALGRAPHCUDA_H
 #define TEMPORALGRAPHCUDA_H
 
-#include <data/thrust/TemporalGraphThrust.cuh>
+#include <data/cpu/TemporalGraph.cuh>
 
 template<GPUUsageMode GPUUsage>
-class TemporalGraphCUDA : public TemporalGraphThrust<GPUUsage> {
+class TemporalGraphCUDA : public TemporalGraph<GPUUsage> {
     static_assert(GPUUsage != GPUUsageMode::ON_CPU, "TemporalGraphCUDA cannot be used with ON_CPU mode");
 
 public:

@@ -7,11 +7,6 @@
 
 #include "../../utils/utils.h"
 
-#ifdef HAS_CUDA
-#include <thrust/sort.h>
-#include <thrust/execution_policy.h>
-#endif
-
 template<GPUUsageMode GPUUsage>
 TemporalGraph<GPUUsage>::TemporalGraph(
     const bool directed,
@@ -83,20 +78,10 @@ void TemporalGraph<GPUUsage>::sort_and_merge_edges(const size_t start_idx) {
         indices[i] = start_idx + i;
     }
 
-    #ifdef HAS_CUDA
-    if constexpr (GPUUsage == GPUUsageMode::ON_GPU_USING_CUDA) {
-        thrust::sort(thrust::device, indices.begin(), indices.end(),
-            [ts = edges.timestamps.data().get()] __device__ (const size_t i, const size_t j) {
-                return ts[i] < ts[j];
-            });
-    } else
-    #endif
-    {
-        std::sort(indices.begin(), indices.end(),
-            [this](const size_t i, const size_t j) {
-                return edges.timestamps[i] < edges.timestamps[j];
-            });
-    }
+    std::sort(indices.begin(), indices.end(),
+        [this](const size_t i, const size_t j) {
+            return edges.timestamps[i] < edges.timestamps[j];
+    });
 
     // Apply permutation in-place using temporary vectors
     IntVector sorted_sources(edges.size() - start_idx);
@@ -526,6 +511,5 @@ std::vector<std::tuple<int, int, int64_t>> TemporalGraph<GPUUsage>::get_edges() 
 
 template class TemporalGraph<GPUUsageMode::ON_CPU>;
 #ifdef HAS_CUDA
-template class TemporalGraph<GPUUsageMode::ON_GPU_USING_CUDA>;
-template class TemporalGraph<GPUUsageMode::ON_HOST_USING_THRUST>;
+template class TemporalGraph<GPUUsageMode::ON_GPU>;
 #endif

@@ -1,10 +1,10 @@
 #ifndef EDGEDATACUDA_H
 #define EDGEDATACUDA_H
 
-#include "../thrust/EdgeDataThrust.cuh"
+#include "../cpu/EdgeData.cuh"
 
 template<GPUUsageMode GPUUsage>
-class EdgeDataCUDA : public EdgeDataThrust<GPUUsage> {
+class EdgeDataCUDA : public EdgeData<GPUUsage> {
 #ifdef HAS_CUDA
 
 #endif
