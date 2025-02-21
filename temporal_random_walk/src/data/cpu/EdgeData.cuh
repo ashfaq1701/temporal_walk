@@ -7,7 +7,7 @@
 #include <cmath>
 
 #include "../../core/structs.h"
-#include "../../cuda_common/types.cuh"
+#include "../../common/types.cuh"
 
 template<GPUUsageMode GPUUsage>
 class EdgeData {

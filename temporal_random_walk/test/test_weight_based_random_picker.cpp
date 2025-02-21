@@ -2,7 +2,7 @@
 #include <random/WeightBasedRandomPickerGPU.cuh>
 
 #include "../src/random/WeightBasedRandomPicker.cuh"
-#include "../src/cuda_common/CudaRandomStates.cuh"
+#include "../src/common/CudaRandomStates.cuh"
 #include "../src/utils/utils.h"
 
 template<typename T>

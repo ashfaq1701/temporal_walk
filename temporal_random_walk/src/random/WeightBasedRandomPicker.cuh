@@ -3,11 +3,10 @@
 
 #include "RandomPicker.h"
 #include "../core/structs.h"
-#include "../cuda_common/types.cuh"
-#include "../cuda_common/PolicyProvider.cuh"
+#include "../common/types.cuh"
 
 template<GPUUsageMode GPUUsage>
-class WeightBasedRandomPicker final : public RandomPicker, public PolicyProvider<GPUUsage>
+class WeightBasedRandomPicker final : public RandomPicker
 {
 public:
     [[nodiscard]] int pick_random(

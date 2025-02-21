@@ -11,6 +11,4 @@ class NodeEdgeIndexCUDA : public NodeEdgeIndex<GPUUsage> {
 #endif
 };
 
-
-
 #endif //NODEEDGEINDEXCUDA_H
