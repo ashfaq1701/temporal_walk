@@ -37,7 +37,9 @@ public:
     [[nodiscard]] size_t size() const;
     [[nodiscard]] bool empty() const;
     void resize(size_t new_size);
+
     void add_edges(int* src, int* tgt, int64_t* ts, size_t size);
+    void push_back(int src, int tgt, int64_t ts);
 
     virtual std::vector<std::tuple<int, int, int64_t>> get_edges();
 

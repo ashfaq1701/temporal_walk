@@ -40,8 +40,8 @@ void NodeMapping<GPUUsage>::update(const EdgeData<GPUUsage>& edges, const size_t
         is_deleted.resize(max_node_id + 1, true);
     }
 
-    IntVector new_nodes;
-    new_nodes.allocate((end_idx - start_idx) * 2);
+    std::vector<int> new_nodes;
+    new_nodes.reserve((end_idx - start_idx) * 2);
 
     for (size_t i = start_idx; i < end_idx; i++) {
         new_nodes.push_back(edges.sources[i]);

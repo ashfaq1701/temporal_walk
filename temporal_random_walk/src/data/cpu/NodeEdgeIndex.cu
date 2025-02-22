@@ -68,6 +68,7 @@ void NodeEdgeIndex<GPUUsage>::rebuild(
        inbound_current.resize(num_nodes, 0);
    }
 
+    auto edges_size = edges.size();
    for (size_t i = 0; i < edges.size(); i++) {
        const int src_idx = mapping.to_dense(edges.sources[i]);
        const int tgt_idx = mapping.to_dense(edges.targets[i]);

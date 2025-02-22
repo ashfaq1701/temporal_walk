@@ -39,10 +39,18 @@ void EdgeData<GPUUsage>::resize(size_t new_size) {
 
 template<GPUUsageMode GPUUsage>
 void EdgeData<GPUUsage>::add_edges(int* src, int* tgt, int64_t* ts, size_t size) {
-    sources.write_from_pointer(src, size);
-    targets.write_from_pointer(tgt, size);
-    timestamps.write_from_pointer(ts, size);
+    sources.append_from_pointer(src, size);
+    targets.append_from_pointer(tgt, size);
+    timestamps.append_from_pointer(ts, size);
 }
+
+template<GPUUsageMode GPUUsage>
+void EdgeData<GPUUsage>::push_back(int src, int tgt, int64_t ts) {
+    sources.push_back(src);
+    targets.push_back(tgt);
+    timestamps.push_back(ts);
+}
+
 
 template<GPUUsageMode GPUUsage>
 std::vector<std::tuple<int, int, int64_t>> EdgeData<GPUUsage>::get_edges() {

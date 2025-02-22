@@ -15,6 +15,9 @@ protected:
         WeightBasedRandomPicker<T::value>
     >;
 
+    template <typename U>
+    using VectorType = CommonVector<U, T::value>;
+
     WeightBasedRandomPickerTest() {
         if constexpr (T::value == GPUUsageMode::ON_GPU) {
             #ifdef HAS_CUDA
@@ -26,7 +29,7 @@ protected:
     WeightBasedRandomPickerType picker;
 
     // Helper to verify sampling is within correct range
-    void verify_sampling_range(const std::vector<double>& weights,
+    void verify_sampling_range(CommonVector<double, T::value>& weights,
                                const int start,
                                const int end,
                                const int num_samples = 1000)
@@ -64,7 +67,7 @@ TYPED_TEST_SUITE(WeightBasedRandomPickerTest, GPU_USAGE_TYPES);
 
 TYPED_TEST(WeightBasedRandomPickerTest, ValidationChecks)
 {
-    const std::vector<double> weights = {0.2, 0.5, 0.7, 1.0};
+    typename TestFixture::template VectorType<double> weights = {0.2, 0.5, 0.7, 1.0};
 
     // Invalid start index
     EXPECT_EQ(this->picker.pick_random(weights, -1, 2), -1);
@@ -79,20 +82,22 @@ TYPED_TEST(WeightBasedRandomPickerTest, ValidationChecks)
 
 TYPED_TEST(WeightBasedRandomPickerTest, FullRangeSampling)
 {
-    this->verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 0, 4);
+    typename TestFixture::template VectorType<double> weights = {0.2, 0.5, 0.7, 1.0};
+    this->verify_sampling_range(weights, 0, 4);
 }
 
 TYPED_TEST(WeightBasedRandomPickerTest, SubrangeSampling)
 {
+    typename TestFixture::template VectorType<double> weights = {0.2, 0.5, 0.7, 1.0};
     // Test all subranges with the same weight vector
-    this->verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 1, 3);  // middle range
-    this->verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 0, 2);  // start range
-    this->verify_sampling_range({0.2, 0.5, 0.7, 1.0}, 2, 4);  // end range
+    this->verify_sampling_range(weights, 1, 3);  // middle range
+    this->verify_sampling_range(weights, 0, 2);  // start range
+    this->verify_sampling_range(weights, 2, 4);  // end range
 }
 
 TYPED_TEST(WeightBasedRandomPickerTest, SingleElementRange)
 {
-    const std::vector<double> weights = {0.2, 0.5, 0.7, 1.0};
+    typename TestFixture::template VectorType<double> weights = {0.2, 0.5, 0.7, 1.0};
 
     // When sampling single element, should always return that index
     for (int i = 0; i < 100; i++)
@@ -104,7 +109,7 @@ TYPED_TEST(WeightBasedRandomPickerTest, SingleElementRange)
 TYPED_TEST(WeightBasedRandomPickerTest, WeightDistributionTest)
 {
     // Create weights with known distribution
-    const std::vector<double> weights = {0.25, 0.5, 0.75, 1.0}; // Equal increments
+    typename TestFixture::template VectorType<double> weights = {0.25, 0.5, 0.75, 1.0}; // Equal increments
 
     std::map<int, int> sample_counts;
     constexpr int num_samples = 100000;
@@ -128,10 +133,10 @@ TYPED_TEST(WeightBasedRandomPickerTest, WeightDistributionTest)
 TYPED_TEST(WeightBasedRandomPickerTest, EdgeCaseWeights)
 {
     // Test with very small weight differences
-    const std::vector<double> small_diffs = {0.1, 0.100001, 0.100002, 0.100003};
+    typename TestFixture::template VectorType<double> small_diffs = {0.1, 0.100001, 0.100002, 0.100003};
     EXPECT_NE(this->picker.pick_random(small_diffs, 0, 4), -1);
 
     // Test with very large weight differences
-    const std::vector<double> large_diffs = {0.1, 0.5, 0.9, 1000.0};
+    typename TestFixture::template VectorType<double> large_diffs = {0.1, 0.5, 0.9, 1000.0};
     EXPECT_NE(this->picker.pick_random(large_diffs, 0, 4), -1);
 }

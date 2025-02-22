@@ -19,6 +19,9 @@ struct CommonVector {
     size_t initial_capacity;
     T default_value;
 
+    T* get_data() const __attribute__((used)) { return data; }
+    size_t get_size() const __attribute__((used)) { return data_size; }
+
     HOST DEVICE CommonVector()
         : data(nullptr)
           , data_size(0)
@@ -41,6 +44,35 @@ struct CommonVector {
         const size_t alloc_size = std::max(count, initial_cap);
         allocate(alloc_size);
         resize(count, fill_value); // This will fill the elements with fill_value
+    }
+
+    // Constructor taking initializer list
+    HOST DEVICE CommonVector(std::initializer_list<T> init)
+        : data(nullptr)
+        , data_size(0)
+        , capacity(0)
+        , initial_capacity(init.size())
+        , default_value(T())
+    {
+        allocate(init.size());
+
+        #ifdef HAS_CUDA
+        if constexpr (GPUUsage == GPUUsageMode::ON_GPU) {
+            // For GPU, need to copy through host memory first
+            cudaError_t err = cudaMemcpy(data,
+                                       init.begin(),
+                                       init.size() * sizeof(T),
+                                       cudaMemcpyHostToDevice);
+            if (err != cudaSuccess) {
+                throw std::runtime_error("CUDA memcpy failed in initializer list constructor!");
+            }
+        } else
+        #endif
+        {
+            // For CPU, direct copy
+            std::copy(init.begin(), init.end(), data);
+        }
+        data_size = init.size();
     }
 
     // Destructor
@@ -119,44 +151,82 @@ struct CommonVector {
     }
 
     // Allocate memory
-    HOST DEVICE void allocate(size_t n) {
+    HOST DEVICE void allocate(size_t n)
+    {
         if (n == 0) return;
+        if (n <= capacity) return; // Only grow, never shrink
+
+        T* new_data = nullptr;
+        size_t old_size = data_size; // Save current size
 
         #ifdef HAS_CUDA
         if constexpr (GPUUsage == GPUUsageMode::ON_GPU) {
-            // Allocate GPU memory
-            cudaError_t err = cudaMalloc(&data, n * sizeof(T));
+            // Allocate new GPU memory
+            cudaError_t err = cudaMalloc(&new_data, n * sizeof(T));
             if (err != cudaSuccess) {
                 throw std::runtime_error("CUDA malloc failed!");
             }
 
-            // Initialize with default value
+            // Copy existing data if we have any
+            if (data && data_size > 0) {
+                err = cudaMemcpy(new_data, data, data_size * sizeof(T), cudaMemcpyDeviceToDevice);
+                if (err != cudaSuccess) {
+                    cudaFree(new_data);
+                    throw std::runtime_error("CUDA memcpy failed!");
+                }
+            }
+
+            // Initialize any extra space with default value
             if (std::is_trivially_copyable<T>::value) {
-                T default_val = T();
-                fill_kernel<<<(n + 255)/256, 256>>>(data, default_val, n);
+                fill_kernel<<<(n - old_size + 255)/256, 256>>>(
+                    new_data + old_size,
+                    default_value,
+                    n - old_size
+                );
                 err = cudaGetLastError();
                 if (err != cudaSuccess) {
-                    cudaFree(data);  // Clean up on error
-                    throw std::runtime_error("CUDA fill kernel failed in allocate!");
+                    cudaFree(new_data);
+                    throw std::runtime_error("CUDA fill kernel failed!");
                 }
             } else {
-                cudaFree(data);
-                throw std::runtime_error("Non-trivially copyable type initialization requires custom kernel!");
+                cudaFree(new_data);
+                throw std::runtime_error("Non-trivially copyable type requires custom kernel!");
             }
         } else
         #endif
         {
-            // Allocate CPU memory
-            data = static_cast<T*>(malloc(n * sizeof(T)));
-            if (!data) {
+            // Allocate new host memory
+            new_data = static_cast<T*>(malloc(n * sizeof(T)));
+            if (!new_data)
+            {
                 throw std::runtime_error("Host malloc failed!");
             }
 
-            // Initialize with default value
-            for (size_t i = 0; i < n; i++) {
-                new (&data[i]) T();  // Placement new for proper initialization
+            // Copy existing data if we have any
+            if (data && data_size > 0)
+            {
+                std::memcpy(new_data, data, data_size * sizeof(T));
+            }
+
+            // Initialize extra space with default value
+            std::fill(new_data + old_size, new_data + n, default_value);
+        }
+
+        // Free old memory
+        if (data)
+        {
+            #ifdef HAS_CUDA
+            if constexpr (GPUUsage == GPUUsageMode::ON_GPU) {
+                cudaFree(data);
+            } else
+            #endif
+            {
+                free(data);
             }
         }
+
+        // Update pointer and capacity
+        data = new_data;
         capacity = n;
     }
 
@@ -415,6 +485,39 @@ struct CommonVector {
         #endif
         {
             std::copy(ptr, ptr + data_size, data);
+        }
+    }
+
+    HOST DEVICE void append_from_pointer(const T* ptr, size_t append_size) {
+        if (!ptr) {
+            throw std::invalid_argument("Null pointer in append_from_pointer");
+        }
+
+        // Calculate new total size needed
+        size_t new_size = data_size + append_size;
+
+        // Store old size for later use
+        size_t old_size = data_size;
+
+        // Resize to accommodate new elements
+        resize(new_size);
+
+        // Copy new elements to the end
+        #ifdef HAS_CUDA
+        if constexpr (GPUUsage == GPUUsageMode::ON_GPU) {
+            cudaError_t err = cudaMemcpy(
+                data + old_size,          // Destination: end of existing data
+                ptr,                      // Source: new data
+                append_size * sizeof(T),  // Size of new data
+                cudaMemcpyHostToDevice
+            );
+            if (err != cudaSuccess) {
+                throw std::runtime_error("CUDA memcpy failed in append_from_pointer!");
+            }
+        } else
+        #endif
+        {
+            std::copy(ptr, ptr + append_size, data + old_size);
         }
     }
 
