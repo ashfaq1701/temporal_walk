@@ -12,8 +12,8 @@ struct HostVector {
     T* data;
     size_t data_size;
     size_t capacity;
-    size_t initial_capacity;
-    T default_value;
+    size_t initial_capacity = 100;
+    T default_value = T();
     mutable bool has_error = false;
 
     T* get_data() const __attribute__((used)) { return data; }
@@ -23,24 +23,20 @@ struct HostVector {
         : data(nullptr)
           , data_size(0)
           , capacity(0)
-          , initial_capacity(100) // Default initial capacity
-          , default_value(T())
     {
         allocate(initial_capacity);
     }
 
     // Constructor
-    HOST DEVICE explicit HostVector(size_t count, const T& fill_value = T(), size_t initial_cap = 100)
+    HOST DEVICE explicit HostVector(size_t count)
         : data(nullptr)
           , data_size(0)
           , capacity(0)
-          , initial_capacity(initial_cap)
-          , default_value(fill_value)
     {
         // Allocate at least the larger of count or initial_capacity
-        const size_t alloc_size = std::max(count, initial_cap);
+        const size_t alloc_size = std::max(count, initial_capacity);
         allocate(alloc_size);
-        resize(count, fill_value); // This will fill the elements with fill_value
+        resize(count); // This will fill the elements with fill_value
     }
 
     // Constructor taking initializer list
@@ -48,8 +44,6 @@ struct HostVector {
         : data(nullptr)
         , data_size(0)
         , capacity(0)
-        , initial_capacity(init.size())
-        , default_value(T())
     {
         allocate(init.size());
         std::copy(init.begin(), init.end(), data);
@@ -65,9 +59,7 @@ struct HostVector {
     HOST DEVICE HostVector(const HostVector& other)
         : data(nullptr)
         , data_size(0)
-        , capacity(0)
-        , initial_capacity(other.initial_capacity)
-        , default_value(other.default_value) {
+        , capacity(0) {
         allocate(other.capacity);
         data_size = other.data_size;
 
@@ -78,9 +70,7 @@ struct HostVector {
     HOST DEVICE HostVector(HostVector&& other) noexcept
         : data(other.data)
         , data_size(other.data_size)
-        , capacity(other.capacity)
-        , initial_capacity(other.initial_capacity)
-        , default_value(other.default_value) {
+        , capacity(other.capacity) {
         other.data = nullptr;
         other.data_size = 0;
         other.capacity = 0;
@@ -92,8 +82,6 @@ struct HostVector {
             deallocate();
             allocate(other.capacity);
             data_size = other.data_size;
-            initial_capacity = other.initial_capacity;
-            default_value = other.default_value;
 
             std::copy(other.data, other.data + data_size, data);
         }
@@ -107,8 +95,6 @@ struct HostVector {
             data = other.data;
             data_size = other.data_size;
             capacity = other.capacity;
-            initial_capacity = other.initial_capacity;
-            default_value = other.default_value;
 
             other.data = nullptr;
             other.data_size = 0;
@@ -141,7 +127,7 @@ struct HostVector {
         }
 
         // Initialize extra space with default value
-        std::fill(new_data + old_size, new_data + n, default_value);
+        std::fill(new_data + old_size, new_data + n, 0);
 
         // Free old memory
         if (data)
@@ -168,16 +154,6 @@ struct HostVector {
     HOST DEVICE void clear() {
         deallocate();
         allocate(initial_capacity);
-    }
-
-    // Assign value to all elements
-    HOST DEVICE void assign(const T& value) {
-        std::fill(data, data + data_size, value);
-    }
-
-    HOST DEVICE void assign(size_t count, const T& fill_value) {
-        resize(count);
-        std::fill(data, data + count, fill_value);
     }
 
     HOST DEVICE void resize(size_t new_size)
@@ -210,7 +186,7 @@ struct HostVector {
         // Initialize any new elements if growing
         if (new_size > data_size)
         {
-            std::fill(new_data + data_size, new_data + new_size, default_value);
+            std::fill(new_data + data_size, new_data + new_size, 0);
         }
 
         // Free old memory
@@ -376,6 +352,10 @@ struct HostVector {
     // Get const pointer to end of data
     HOST DEVICE const T* end() const {
         return data + data_size;
+    }
+
+    HOST DEVICE void fill(T value) {
+        std::fill(data, data + data_size, value);
     }
 
     // Utility methods

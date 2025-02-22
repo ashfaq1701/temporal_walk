@@ -174,7 +174,7 @@ void TemporalGraph<GPUUsage>::delete_old_edges() {
     const size_t remaining = edges.size() - delete_count;
 
     // Track which nodes still have edges
-    BoolVector has_edges(node_mapping.sparse_to_dense.size(), false);
+    BoolVector has_edges(node_mapping.sparse_to_dense.size());
 
     if (remaining > 0) {
         std::move(edges.sources.begin() + delete_count, edges.sources.end(), edges.sources.begin());

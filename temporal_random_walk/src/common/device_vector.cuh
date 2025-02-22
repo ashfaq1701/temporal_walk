@@ -8,50 +8,35 @@
 
 #include <cstddef>
 #include <algorithm>
-#include "../core/structs.h"
 #include "macros.cuh"
-
-#ifdef HAS_CUDA
-template<typename T>
-__global__ void fill_kernel(T* data, T value, const size_t n) {
-    size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx < n) {
-        data[idx] = value;
-    }
-}
-#endif
 
 template <typename T>
 struct DeviceVector {
     T* data;
     size_t data_size;
     size_t capacity;
-    size_t initial_capacity;
-    T default_value;
+    size_t initial_capacity = 100;
+    T default_value = T();
     mutable bool has_error = false;
 
     HOST DEVICE DeviceVector()
         : data(nullptr)
           , data_size(0)
           , capacity(0)
-          , initial_capacity(100) // Default initial capacity
-          , default_value(T())
     {
         allocate(initial_capacity);
     }
 
     // Constructor
-    HOST DEVICE explicit DeviceVector(size_t count, const T& fill_value = T(), size_t initial_cap = 100)
+    HOST DEVICE explicit DeviceVector(const size_t count)
         : data(nullptr)
           , data_size(0)
           , capacity(0)
-          , initial_capacity(initial_cap)
-          , default_value(fill_value)
     {
         // Allocate at least the larger of count or initial_capacity
-        const size_t alloc_size = std::max(count, initial_cap);
+        const size_t alloc_size = std::max(count, initial_capacity);
         allocate(alloc_size);
-        resize(count, fill_value); // This will fill the elements with fill_value
+        resize(count); // This will fill the elements with fill_value
     }
 
     // Constructor taking initializer list
@@ -59,8 +44,6 @@ struct DeviceVector {
         : data(nullptr)
         , data_size(0)
         , capacity(0)
-        , initial_capacity(init.size())
-        , default_value(T())
     {
         allocate(init.size());
 
@@ -88,9 +71,7 @@ struct DeviceVector {
     HOST DEVICE DeviceVector(const DeviceVector& other)
         : data(nullptr)
         , data_size(0)
-        , capacity(0)
-        , initial_capacity(other.initial_capacity)
-        , default_value(other.default_value) {
+        , capacity(0) {
         allocate(other.capacity);
         data_size = other.data_size;
 
@@ -103,9 +84,7 @@ struct DeviceVector {
     HOST DEVICE DeviceVector(DeviceVector&& other) noexcept
         : data(other.data)
         , data_size(other.data_size)
-        , capacity(other.capacity)
-        , initial_capacity(other.initial_capacity)
-        , default_value(other.default_value) {
+        , capacity(other.capacity) {
         other.data = nullptr;
         other.data_size = 0;
         other.capacity = 0;
@@ -117,8 +96,6 @@ struct DeviceVector {
             deallocate();
             allocate(other.capacity);
             data_size = other.data_size;
-            initial_capacity = other.initial_capacity;
-            default_value = other.default_value;
 
             #ifdef HAS_CUDA
             cudaMemcpy(data, other.data, data_size * sizeof(T), cudaMemcpyDeviceToDevice);
@@ -134,8 +111,6 @@ struct DeviceVector {
             data = other.data;
             data_size = other.data_size;
             capacity = other.capacity;
-            initial_capacity = other.initial_capacity;
-            default_value = other.default_value;
 
             other.data = nullptr;
             other.data_size = 0;
@@ -172,8 +147,8 @@ struct DeviceVector {
         }
 
         // Initialize any extra space with default value
-        if (std::is_trivially_copyable<T>::value) {
-            fill(new_data + old_size, default_value, n - old_size);
+        if (std::is_trivially_copyable_v<T>) {
+            cudaMemset(new_data + old_size, 0, (n - old_size) * sizeof(T));
             err = cudaGetLastError();
             if (err != cudaSuccess) {
                 cudaFree(new_data);
@@ -218,39 +193,6 @@ struct DeviceVector {
         allocate(initial_capacity);
     }
 
-    // Assign value to all elements
-    HOST DEVICE void assign(const T& value) {
-        #ifdef HAS_CUDA
-        if (std::is_trivially_copyable<T>::value) {
-            // Launch a CUDA kernel to fill the array
-            fill(data, value, data_size);
-            cudaError_t err = cudaGetLastError();
-            if (err != cudaSuccess) {
-                throw std::runtime_error("Fill kernel launch failed!");
-            }
-        } else {
-            throw std::runtime_error("Non-trivial type assignment requires custom kernel");
-        }
-        #endif
-    }
-
-    HOST DEVICE void assign(size_t count, const T& fill_value) {
-        resize(count);
-
-        #ifdef HAS_CUDA
-        if (std::is_trivially_copyable<T>::value) {
-            // Use fill kernel for GPU
-            fill(data, fill_value, count);
-            cudaError_t err = cudaGetLastError();
-            if (err != cudaSuccess) {
-                has_error = true;
-            }
-        } else {
-            has_error = true;
-        }
-        #endif
-    }
-
     HOST DEVICE void resize(size_t new_size)
     {
         // If size is the same, no action needed
@@ -284,69 +226,9 @@ struct DeviceVector {
 
         // Initialize any new elements if growing
         if (new_size > data_size) {
-            if (std::is_trivially_copyable<T>::value) {
-                fill(new_data + data_size, default_value, new_size - data_size);
-                cudaError_t err = cudaGetLastError();
-                if (err != cudaSuccess) {
-                    cudaFree(new_data);
-                    has_error = true;
-                    return;
-                }
-            } else {
-                cudaFree(new_data);
-                has_error = true;
-                return;
-            }
-        }
-        #endif
-
-        // Free old memory
-        deallocate();
-
-        // Update member variables
-        data = new_data;
-        data_size = new_size;
-        capacity = new_size;
-    }
-
-    // Resize with fill value
-    HOST DEVICE void resize(size_t new_size, const T& fill_value)
-    {
-        // Remember old size for filling new elements
-        size_t old_size = data_size;
-
-        // Do the basic resize
-        if (new_size == data_size) return;
-
-        // Always allocate new memory of exactly the requested size
-        T* new_data = nullptr;
-
-        #ifdef HAS_CUDA
-        // Allocate new GPU memory
-        cudaError_t err = cudaMalloc(&new_data, new_size * sizeof(T));
-        if (err != cudaSuccess) {
-            has_error = true;
-            return;
-        }
-
-        // Copy existing data if we have any
-        if (data && data_size > 0) {
-            // Copy the minimum of old and new size
-            const size_t copy_size = std::min(data_size, new_size);
-            err = cudaMemcpy(new_data, data, copy_size * sizeof(T), cudaMemcpyDeviceToDevice);
-            if (err != cudaSuccess) {
-                cudaFree(new_data);  // Clean up on error
-                has_error = true;
-                return;
-            }
-        }
-
-        // Fill new elements with provided value
-        if (new_size > old_size) {
-            if (std::is_trivially_copyable<T>::value) {
-                fill(new_data + old_size, fill_value, new_size - old_size);
-                cudaError_t err = cudaGetLastError();
-                if (err != cudaSuccess) {
+            if (std::is_trivially_copyable_v<T>) {
+                cudaMemset(new_data + data_size, 0, (new_size - data_size) * sizeof(T));
+                if (cudaGetLastError() != cudaSuccess) {
                     cudaFree(new_data);
                     has_error = true;
                     return;
@@ -493,26 +375,17 @@ struct DeviceVector {
         return data + data_size;
     }
 
+    HOST DEVICE void fill(T value) {
+        for (size_t i = 0; i < data_size; i++) {
+            data[i] = value;
+        }
+    }
+
     // Utility methods
     HOST DEVICE [[nodiscard]] bool empty() const { return data_size == 0; }
     HOST DEVICE [[nodiscard]] size_t size() const { return data_size; }
     HOST DEVICE [[nodiscard]] size_t get_capacity() const { return capacity; }
     HOST DEVICE T* data_ptr() { return data; }
-
-    HOST void fill(T* arr, T value, size_t n) {
-        #if HAS_CUDA
-        fill_kernel<<<(n + 255)/256, 256>>>(arr, value, n);
-        cudaDeviceSynchronize();
-        #endif
-    }
-
-    #ifdef HAS_CUDA
-    DEVICE fill(T* arr, T value, size_t n)
-    {
-        fill_kernel<<<(n + 255)/256, 256>>>(arr, value, n);
-        __syncthreads();
-    }
-    #endif
 };
 
 #endif // COMMON_VECTOR_H

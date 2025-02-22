@@ -36,8 +36,11 @@ void NodeMapping<GPUUsage>::update(const EdgeData<GPUUsage>& edges, const size_t
 
     // Extend sparse_to_dense if needed
     if (max_node_id >= sparse_to_dense.size()) {
-        sparse_to_dense.resize(max_node_id + 1, -1);
-        is_deleted.resize(max_node_id + 1, true);
+        sparse_to_dense.resize(max_node_id + 1);
+        is_deleted.resize(max_node_id + 1);
+
+        sparse_to_dense.fill(-1);
+        is_deleted.fill(true);
     }
 
     IntVector new_nodes;

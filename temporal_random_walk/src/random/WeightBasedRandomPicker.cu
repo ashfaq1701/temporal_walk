@@ -32,3 +32,6 @@ int WeightBasedRandomPicker<GPUUsage>::pick_random(
 }
 
 template class WeightBasedRandomPicker<GPUUsageMode::ON_CPU>;
+#ifdef HAS_CUDA
+template class WeightBasedRandomPicker<GPUUsageMode::ON_GPU>;
+#endif
