@@ -4,7 +4,9 @@
 #include <vector>
 #include <cstdint>
 #include <tuple>
-#include <functional>
+#include "../cuda/NodeEdgeIndexCUDA.cuh"
+#include "../cuda/EdgeDataCUDA.cuh"
+#include "../cuda/NodeMappingCUDA.cuh"
 
 #include "../../core/structs.h"
 #include "../../random/RandomPicker.h"
@@ -19,13 +21,13 @@ class TemporalGraph
 private:
     #ifdef HAS_CUDA
     using NodeIndexType = std::conditional_t<
-        (GPUUsage == ON_CPU), NodeEdgeIndex<GPUUsage>, NodeEdgeIndexThrust<GPUUsage>>;
+        (GPUUsage == ON_CPU), NodeEdgeIndex<GPUUsage>, NodeEdgeIndexCUDA<GPUUsage>>;
 
     using EdgeDataType = std::conditional_t<
-        (GPUUsage == ON_CPU), EdgeData<GPUUsage>, EdgeDataThrust<GPUUsage>>;
+        (GPUUsage == ON_CPU), EdgeData<GPUUsage>, EdgeDataCUDA<GPUUsage>>;
 
     using NodeMappingType = std::conditional_t<
-        (GPUUsage == ON_CPU), NodeMapping<GPUUsage>, NodeMappingThrust<GPUUsage>>;
+        (GPUUsage == ON_CPU), NodeMapping<GPUUsage>, NodeMappingCUDA<GPUUsage>>;
     #else
     using NodeIndexType = NodeEdgeIndex<GPUUsage>;
     using EdgeDataType = EdgeData<GPUUsage>;

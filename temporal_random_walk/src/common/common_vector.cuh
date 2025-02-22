@@ -1,6 +1,7 @@
 #ifndef COMMON_VECTOR_H
 #define COMMON_VECTOR_H
 
+#include <cstring>
 #ifdef HAS_CUDA
 #include <cuda_runtime.h>
 #endif
@@ -11,6 +12,16 @@
 #include "../core/structs.h"
 #include "macros.cuh"
 
+#ifdef HAS_CUDA
+template<typename T>
+__global__ void fill_kernel(T* data, T value, const size_t n) {
+    size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < n) {
+        data[idx] = value;
+    }
+}
+#endif
+
 template <typename T, GPUUsageMode GPUUsage>
 struct CommonVector {
     T* data;
@@ -18,6 +29,7 @@ struct CommonVector {
     size_t capacity;
     size_t initial_capacity;
     T default_value;
+    mutable bool has_error;
 
     T* get_data() const __attribute__((used)) { return data; }
     size_t get_size() const __attribute__((used)) { return data_size; }
@@ -64,7 +76,8 @@ struct CommonVector {
                                        init.size() * sizeof(T),
                                        cudaMemcpyHostToDevice);
             if (err != cudaSuccess) {
-                throw std::runtime_error("CUDA memcpy failed in initializer list constructor!");
+                has_error = true;
+                return;
             }
         } else
         #endif
@@ -164,7 +177,8 @@ struct CommonVector {
             // Allocate new GPU memory
             cudaError_t err = cudaMalloc(&new_data, n * sizeof(T));
             if (err != cudaSuccess) {
-                throw std::runtime_error("CUDA malloc failed!");
+                has_error = true;
+                return;
             }
 
             // Copy existing data if we have any
@@ -172,7 +186,8 @@ struct CommonVector {
                 err = cudaMemcpy(new_data, data, data_size * sizeof(T), cudaMemcpyDeviceToDevice);
                 if (err != cudaSuccess) {
                     cudaFree(new_data);
-                    throw std::runtime_error("CUDA memcpy failed!");
+                    has_error = true;
+                    return;
                 }
             }
 
@@ -186,11 +201,13 @@ struct CommonVector {
                 err = cudaGetLastError();
                 if (err != cudaSuccess) {
                     cudaFree(new_data);
-                    throw std::runtime_error("CUDA fill kernel failed!");
+                    has_error = true;
+                    return;
                 }
             } else {
                 cudaFree(new_data);
-                throw std::runtime_error("Non-trivially copyable type requires custom kernel!");
+                has_error = true;
+                return;
             }
         } else
         #endif
@@ -199,7 +216,8 @@ struct CommonVector {
             new_data = static_cast<T*>(malloc(n * sizeof(T)));
             if (!new_data)
             {
-                throw std::runtime_error("Host malloc failed!");
+                has_error = true;
+                return;
             }
 
             // Copy existing data if we have any
@@ -284,10 +302,10 @@ struct CommonVector {
                 fill_kernel<<<(count + 255)/256, 256>>>(data, fill_value, count);
                 cudaError_t err = cudaGetLastError();
                 if (err != cudaSuccess) {
-                    throw std::runtime_error("CUDA fill kernel failed in assign!");
+                    has_error = true;
                 }
             } else {
-                throw std::runtime_error("Non-trivially copyable type assign requires custom kernel!");
+                has_error = true;
             }
         } else
         #endif
@@ -312,7 +330,8 @@ struct CommonVector {
             // Allocate new GPU memory
             cudaError_t err = cudaMalloc(&new_data, new_size * sizeof(T));
             if (err != cudaSuccess) {
-                throw std::runtime_error("CUDA malloc failed in resize!");
+                has_error = true;
+                return;
             }
 
             // Copy existing data if we have any
@@ -322,7 +341,8 @@ struct CommonVector {
                 err = cudaMemcpy(new_data, data, copy_size * sizeof(T), cudaMemcpyDeviceToDevice);
                 if (err != cudaSuccess) {
                     cudaFree(new_data);  // Clean up on error
-                    throw std::runtime_error("CUDA memcpy failed in resize!");
+                    has_error = true;
+                    return;
                 }
             }
 
@@ -337,11 +357,13 @@ struct CommonVector {
                     cudaError_t err = cudaGetLastError();
                     if (err != cudaSuccess) {
                         cudaFree(new_data);
-                        throw std::runtime_error("CUDA fill kernel failed in resize!");
+                        has_error = true;
+                        return;
                     }
                 } else {
                     cudaFree(new_data);
-                    throw std::runtime_error("Non-trivially copyable type resize requires custom kernel!");
+                    has_error = true;
+                    return;
                 }
             }
         } else
@@ -351,7 +373,8 @@ struct CommonVector {
             new_data = static_cast<T*>(malloc(new_size * sizeof(T)));
             if (!new_data)
             {
-                throw std::runtime_error("Host malloc failed in resize!");
+                has_error = true;
+                return;
             }
 
             // Copy existing data if we have any
@@ -395,17 +418,19 @@ struct CommonVector {
             // Allocate new GPU memory
             cudaError_t err = cudaMalloc(&new_data, new_size * sizeof(T));
             if (err != cudaSuccess) {
-                throw std::runtime_error("CUDA malloc failed in resize!");
+                has_error = true;
+                return;
             }
 
             // Copy existing data if we have any
-            if (data && size > 0) {
+            if (data && data_size > 0) {
                 // Copy the minimum of old and new size
-                size_t copy_size = std::min(size, new_size);
+                const size_t copy_size = std::min(data_size, new_size);
                 err = cudaMemcpy(new_data, data, copy_size * sizeof(T), cudaMemcpyDeviceToDevice);
                 if (err != cudaSuccess) {
                     cudaFree(new_data);  // Clean up on error
-                    throw std::runtime_error("CUDA memcpy failed in resize!");
+                    has_error = true;
+                    return;
                 }
             }
 
@@ -420,11 +445,13 @@ struct CommonVector {
                     cudaError_t err = cudaGetLastError();
                     if (err != cudaSuccess) {
                         cudaFree(new_data);
-                        throw std::runtime_error("CUDA fill kernel failed in resize!");
+                        has_error = true;
+                        return;
                     }
                 } else {
                     cudaFree(new_data);
-                    throw std::runtime_error("Non-trivially copyable type resize requires custom kernel!");
+                    has_error = true;
+                    return;
                 }
             }
         } else
@@ -434,7 +461,8 @@ struct CommonVector {
             new_data = static_cast<T*>(malloc(new_size * sizeof(T)));
             if (!new_data)
             {
-                throw std::runtime_error("Host malloc failed in resize!");
+                has_error = true;
+                return;
             }
 
             // Copy existing data if we have any
@@ -473,7 +501,8 @@ struct CommonVector {
     // Write from pointer
     HOST DEVICE void write_from_pointer(const T* ptr, size_t data_size) {
         if (!ptr) {
-            throw std::invalid_argument("Null pointer in write_from_pointer");
+            has_error = true;
+            return;
         }
 
         resize(data_size);
@@ -490,7 +519,8 @@ struct CommonVector {
 
     HOST DEVICE void append_from_pointer(const T* ptr, size_t append_size) {
         if (!ptr) {
-            throw std::invalid_argument("Null pointer in append_from_pointer");
+            has_error = true;
+            return;
         }
 
         // Calculate new total size needed
@@ -512,7 +542,7 @@ struct CommonVector {
                 cudaMemcpyHostToDevice
             );
             if (err != cudaSuccess) {
-                throw std::runtime_error("CUDA memcpy failed in append_from_pointer!");
+                has_error = true;
             }
         } else
         #endif
@@ -524,14 +554,16 @@ struct CommonVector {
     // Array access operators
     HOST DEVICE T& operator[](size_t i) {
         if (i >= data_size) {
-            throw std::out_of_range("Index out of bounds");
+            has_error = true;
+            return default_value;
         }
         return data[i];
     }
 
     HOST DEVICE const T& operator[](size_t i) const {
         if (i >= data_size) {
-            throw std::out_of_range("Index out of bounds");
+            has_error = true;
+            return default_value;
         }
         return data[i];
     }
@@ -539,7 +571,8 @@ struct CommonVector {
     // Get reference to first element
     HOST DEVICE T& front() {
         if (empty()) {
-            throw std::out_of_range("Cannot access front() of empty vector");
+            has_error = true;
+            return default_value;
         }
         return data[0];
     }
@@ -547,7 +580,8 @@ struct CommonVector {
     // Get const reference to first element
     HOST DEVICE const T& front() const {
         if (empty()) {
-            throw std::out_of_range("Cannot access front() of empty vector");
+            has_error = true;
+            return default_value;
         }
         return data[0];
     }
@@ -555,7 +589,8 @@ struct CommonVector {
     // Get reference to last element
     HOST DEVICE T& back() {
         if (empty()) {
-            throw std::out_of_range("Cannot access back() of empty vector");
+            has_error = true;
+            return default_value;
         }
         return data[data_size - 1];
     }
@@ -563,7 +598,8 @@ struct CommonVector {
     // Get const reference to last element
     HOST DEVICE const T& back() const {
         if (empty()) {
-            throw std::out_of_range("Cannot access back() of empty vector");
+            has_error = true;
+            return default_value;
         }
         return data[data_size - 1];
     }

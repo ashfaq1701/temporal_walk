@@ -56,7 +56,7 @@ int WeightBasedRandomPickerGPU<GPUUsage>::pick_random(
     // Generate random value using kernel
     generate_random_kernel<<<1, 1>>>(
         d_random_val,
-        cumulative_weights.data(),
+        cumulative_weights.data,
         group_start,
         group_end,
         CUDARandomStates::get_states()
