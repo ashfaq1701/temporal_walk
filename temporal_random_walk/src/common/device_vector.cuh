@@ -173,11 +173,7 @@ struct DeviceVector {
 
         // Initialize any extra space with default value
         if (std::is_trivially_copyable<T>::value) {
-            fill_kernel<<<(n - old_size + 255)/256, 256>>>(
-                new_data + old_size,
-                default_value,
-                n - old_size
-            );
+            fill(new_data + old_size, default_value, n - old_size);
             err = cudaGetLastError();
             if (err != cudaSuccess) {
                 cudaFree(new_data);
@@ -227,7 +223,7 @@ struct DeviceVector {
         #ifdef HAS_CUDA
         if (std::is_trivially_copyable<T>::value) {
             // Launch a CUDA kernel to fill the array
-            fill_kernel<<<(data_size + 255)/256, 256>>>(data, value, data_size);
+            fill(data, value, data_size);
             cudaError_t err = cudaGetLastError();
             if (err != cudaSuccess) {
                 throw std::runtime_error("Fill kernel launch failed!");
@@ -244,7 +240,7 @@ struct DeviceVector {
         #ifdef HAS_CUDA
         if (std::is_trivially_copyable<T>::value) {
             // Use fill kernel for GPU
-            fill_kernel<<<(count + 255)/256, 256>>>(data, fill_value, count);
+            fill(data, fill_value, count);
             cudaError_t err = cudaGetLastError();
             if (err != cudaSuccess) {
                 has_error = true;
@@ -289,11 +285,7 @@ struct DeviceVector {
         // Initialize any new elements if growing
         if (new_size > data_size) {
             if (std::is_trivially_copyable<T>::value) {
-                fill_kernel<<<(new_size - data_size + 255)/256, 256>>>(
-                    new_data + data_size,
-                    default_value,
-                    new_size - data_size
-                );
+                fill(new_data + data_size, default_value, new_size - data_size);
                 cudaError_t err = cudaGetLastError();
                 if (err != cudaSuccess) {
                     cudaFree(new_data);
@@ -352,11 +344,7 @@ struct DeviceVector {
         // Fill new elements with provided value
         if (new_size > old_size) {
             if (std::is_trivially_copyable<T>::value) {
-                fill_kernel<<<(new_size - old_size + 255)/256, 256>>>(
-                    new_data + old_size,
-                    fill_value,
-                    new_size - old_size
-                );
+                fill(new_data + old_size, fill_value, new_size - old_size);
                 cudaError_t err = cudaGetLastError();
                 if (err != cudaSuccess) {
                     cudaFree(new_data);
@@ -510,6 +498,21 @@ struct DeviceVector {
     HOST DEVICE [[nodiscard]] size_t size() const { return data_size; }
     HOST DEVICE [[nodiscard]] size_t get_capacity() const { return capacity; }
     HOST DEVICE T* data_ptr() { return data; }
+
+    HOST void fill(T* arr, T value, size_t n) {
+        #if HAS_CUDA
+        fill_kernel<<<(n + 255)/256, 256>>>(arr, value, n);
+        cudaDeviceSynchronize();
+        #endif
+    }
+
+    #ifdef HAS_CUDA
+    DEVICE fill(T* arr, T value, size_t n)
+    {
+        fill_kernel<<<(n + 255)/256, 256>>>(arr, value, n);
+        __syncthreads();
+    }
+    #endif
 };
 
 #endif // COMMON_VECTOR_H
