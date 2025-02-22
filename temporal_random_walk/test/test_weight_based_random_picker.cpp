@@ -16,7 +16,11 @@ protected:
     >;
 
     template <typename U>
-    using VectorType = CommonVector<U, T::value>;
+    using VectorType = std::conditional_t<
+        T::value == GPUUsageMode::ON_GPU,
+        DeviceVector<U>,
+        HostVector<U>
+    >;
 
     WeightBasedRandomPickerTest() {
         if constexpr (T::value == GPUUsageMode::ON_GPU) {
@@ -29,7 +33,7 @@ protected:
     WeightBasedRandomPickerType picker;
 
     // Helper to verify sampling is within correct range
-    void verify_sampling_range(CommonVector<double, T::value>& weights,
+    void verify_sampling_range(VectorType<double>& weights,
                                const int start,
                                const int end,
                                const int num_samples = 1000)
