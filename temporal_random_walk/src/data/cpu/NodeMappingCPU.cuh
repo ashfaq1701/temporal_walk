@@ -1,21 +1,22 @@
-#ifndef NODEMAPPING_H
-#define NODEMAPPING_H
+#ifndef NODEMAPPING_CPU_H
+#define NODEMAPPING_CPU_H
 
 #include <vector>
 #include <cstdint>
 #include <tuple>
-#include "EdgeData.cuh"
+#include "../interfaces/EdgeData.cuh"
+#include "../interfaces/NodeMapping.cuh"
 #include "../../common/types.cuh"
 
 template<GPUUsageMode GPUUsage>
-class NodeMapping {
+class NodeMappingCPU {
 
 protected:
    using IntVector = typename SelectVectorType<int, GPUUsage>::type;
    using BoolVector = typename SelectVectorType<bool, GPUUsage>::type;
 
 public:
-   virtual ~NodeMapping() = default;
+   virtual ~NodeMappingCPU() = default;
 
    IntVector sparse_to_dense{};    // Maps sparse ID to dense index
    IntVector dense_to_sparse{};    // Maps dense index back to sparse ID
@@ -37,4 +38,4 @@ public:
    [[nodiscard]] IntVector get_all_sparse_ids() const;
 };
 
-#endif //NODEMAPPING_H
+#endif //NODEMAPPING_CPU_H

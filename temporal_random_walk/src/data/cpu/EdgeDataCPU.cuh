@@ -1,16 +1,16 @@
-#ifndef EDGEDATA_H
-#define EDGEDATA_H
+#ifndef EDGEDATA_CPU_H
+#define EDGEDATA_CPU_H
 
 #include <vector>
 #include <cstdint>
 #include <tuple>
-#include <cmath>
 
+#include "../interfaces/EdgeData.cuh"
 #include "../../core/structs.h"
 #include "../../common/types.cuh"
 
 template<GPUUsageMode GPUUsage>
-class EdgeData {
+class EdgeDataCPU {
 protected:
     using IntVector = typename SelectVectorType<int, GPUUsage>::type;
     using Int64Vector = typename SelectVectorType<int64_t, GPUUsage>::type;
@@ -18,7 +18,7 @@ protected:
     using DoubleVector = typename SelectVectorType<double, GPUUsage>::type;
 
 public:
-    virtual ~EdgeData() = default;
+    virtual ~EdgeDataCPU() = default;
 
     // Core edge data
     IntVector sources{};
@@ -55,4 +55,4 @@ public:
     [[nodiscard]] virtual size_t find_group_before_timestamp(int64_t timestamp) const; // For backward walks
 };
 
-#endif //EDGEDATA_H
+#endif //EDGEDATA_CPU_H

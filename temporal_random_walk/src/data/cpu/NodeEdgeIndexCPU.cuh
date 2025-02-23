@@ -1,16 +1,17 @@
-#ifndef NODEEDGEINDEX_H
-#define NODEEDGEINDEX_H
+#ifndef NODEEDGEINDEX_CPU_H
+#define NODEEDGEINDEX_CPU_H
 
 #include <vector>
 #include <cstdint>
 #include <tuple>
-#include "NodeMapping.cuh"
+#include "../interfaces/NodeEdgeIndex.cuh"
+#include "../interfaces/NodeMapping.cuh"
 
 template<GPUUsageMode GPUUsage>
-class NodeEdgeIndex
+class NodeEdgeIndexCPU
 {
 public:
-    virtual ~NodeEdgeIndex() = default;
+    virtual ~NodeEdgeIndexCPU() = default;
 
     using SizeVector = typename SelectVectorType<size_t, GPUUsage>::type;
     using DoubleVector = typename SelectVectorType<double, GPUUsage>::type;
@@ -48,4 +49,4 @@ protected:
     SizeVector get_timestamp_offset_vector(bool forward, bool directed) const;
 };
 
-#endif //NODEEDGEINDEX_H
+#endif //NODEEDGEINDEX_CPU_H

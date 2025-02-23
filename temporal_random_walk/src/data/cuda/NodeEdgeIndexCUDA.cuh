@@ -2,7 +2,7 @@
 #define NODEEDGEINDEXCUDA_H
 
 #include "../../core/structs.h"
-#include "../cpu/NodeEdgeIndex.cuh"
+#include "../interfaces/NodeEdgeIndex.cuh"
 
 template<GPUUsageMode GPUUsage>
 class NodeEdgeIndexCUDA : public NodeEdgeIndex<GPUUsage> {

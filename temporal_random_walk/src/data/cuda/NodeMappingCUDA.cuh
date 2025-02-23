@@ -1,7 +1,7 @@
 #ifndef NODEMAPPINGCUDA_H
 #define NODEMAPPINGCUDA_H
 
-#include "../cpu/NodeMapping.cuh"
+#include "../interfaces/NodeMapping.cuh"
 
 template<GPUUsageMode GPUUsage>
 class NodeMappingCUDA : public NodeMapping<GPUUsage> {

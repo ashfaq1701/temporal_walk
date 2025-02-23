@@ -1,7 +1,7 @@
 #ifndef TEMPORALGRAPHCUDA_H
 #define TEMPORALGRAPHCUDA_H
 
-#include <data/cpu/TemporalGraph.cuh>
+#include <data/interfaces/TemporalGraph.cuh>
 
 template<GPUUsageMode GPUUsage>
 class TemporalGraphCUDA : public TemporalGraph<GPUUsage> {

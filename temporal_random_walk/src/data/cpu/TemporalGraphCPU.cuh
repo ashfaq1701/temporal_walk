@@ -1,5 +1,5 @@
-#ifndef TEMPORALGRAPH_H
-#define TEMPORALGRAPH_H
+#ifndef TEMPORALGRAPH_CPU_H
+#define TEMPORALGRAPH_CPU_H
 
 #include <vector>
 #include <cstdint>
@@ -11,12 +11,13 @@
 #include "../../core/structs.h"
 #include "../../random/RandomPicker.h"
 
-#include "NodeMapping.cuh"
-#include "EdgeData.cuh"
-#include "NodeEdgeIndex.cuh"
+#include "../interfaces/TemporalGraph.cuh"
+#include "../interfaces/NodeMapping.cuh"
+#include "../interfaces/EdgeData.cuh"
+#include "../interfaces/NodeEdgeIndex.cuh"
 
 template<GPUUsageMode GPUUsage>
-class TemporalGraph
+class TemporalGraphCPU
 {
 private:
     #ifdef HAS_CUDA
@@ -47,7 +48,7 @@ protected:
     int64_t latest_timestamp; // Track latest edge timestamp
 
 public:
-    virtual ~TemporalGraph() = default;
+    virtual ~TemporalGraphCPU() = default;
 
     bool is_directed;
 
@@ -55,7 +56,7 @@ public:
     EdgeDataType edges; // Main edge storage
     NodeMappingType node_mapping; // Sparse to dense node ID mapping
 
-    explicit TemporalGraph(
+    explicit TemporalGraphCPU(
         bool directed,
         int64_t window = -1,
         bool enable_weight_computation = false,
@@ -94,4 +95,4 @@ public:
     [[nodiscard]] std::vector<std::tuple<int, int, int64_t>> get_edges();
 };
 
-#endif //TEMPORALGRAPH_H
+#endif //TEMPORALGRAPH_CPU_H

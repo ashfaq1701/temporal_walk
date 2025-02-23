@@ -1,7 +1,7 @@
 #ifndef EDGEDATACUDA_H
 #define EDGEDATACUDA_H
 
-#include "../cpu/EdgeData.cuh"
+#include "../interfaces/EdgeData.cuh"
 
 template<GPUUsageMode GPUUsage>
 class EdgeDataCUDA : public EdgeData<GPUUsage> {
