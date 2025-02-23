@@ -166,13 +166,7 @@ struct CommonVector {
             }
 
             // Initialize any extra space with default value
-            if (std::is_trivially_copyable<T>::value) {
-                cudaMemset(new_data + old_size, 0, (n - old_size) * sizeof(T));
-            } else {
-                cudaFree(new_data);
-                has_error = true;
-                return;
-            }
+            cudaMemset(new_data + old_size, 0, (n - old_size) * sizeof(T));
         } else
         #endif
         {
@@ -462,7 +456,7 @@ struct CommonVector {
         return data + data_size;
     }
 
-    HOST DEVICE void fill(T fill_value, size_t start_idx=-1, size_t end_pos=-1)
+    HOST DEVICE void fill(T fill_value, const long start_idx=-1, const unsigned long end_pos=-1)
     {
         size_t derived_start_idx = start_idx != -1 ? start_idx : 0;
         size_t derived_end_pos = end_pos != -1 ? end_pos : data_size;
@@ -470,7 +464,7 @@ struct CommonVector {
         #ifdef HAS_CUDA
         if constexpr (GPUUsage == GPUUsageMode::ON_GPU)
         {
-            for (size_t i = derived_start_idx; i < derived_end_pos; i++)) {
+            for (size_t i = derived_start_idx; i < derived_end_pos; i++) {
                 data[i] = fill_value;
             }
         }
