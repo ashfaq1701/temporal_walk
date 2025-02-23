@@ -26,12 +26,12 @@ void NodeEdgeIndex<GPUUsage>::rebuild(
    const size_t num_nodes = mapping.size();
 
    // Initialize base CSR structures
-   outbound_offsets.assign(num_nodes + 1, 0);
-   outbound_timestamp_group_offsets.assign(num_nodes + 1, 0);
+   outbound_offsets.assign(num_nodes + 1);
+   outbound_timestamp_group_offsets.assign(num_nodes + 1);
 
    if (is_directed) {
-       inbound_offsets.assign(num_nodes + 1, 0);
-       inbound_timestamp_group_offsets.assign(num_nodes + 1, 0);
+       inbound_offsets.assign(num_nodes + 1);
+       inbound_timestamp_group_offsets.assign(num_nodes + 1);
    }
 
    // First pass: count edges per node
@@ -62,10 +62,10 @@ void NodeEdgeIndex<GPUUsage>::rebuild(
    }
 
    // Second pass: fill edge indices
-   SizeVector outbound_current(num_nodes, 0);
+   SizeVector outbound_current(num_nodes);
    SizeVector inbound_current;
    if (is_directed) {
-       inbound_current.resize(num_nodes, 0);
+       inbound_current.resize(num_nodes);
    }
 
     auto edges_size = edges.size();
@@ -86,10 +86,10 @@ void NodeEdgeIndex<GPUUsage>::rebuild(
    }
 
    // Third pass: count timestamp groups
-   SizeVector outbound_group_count(num_nodes, 0);
+   SizeVector outbound_group_count(num_nodes);
    SizeVector inbound_group_count;
    if (is_directed) {
-       inbound_group_count.resize(num_nodes, 0);
+       inbound_group_count.resize(num_nodes);
    }
 
    for (size_t node = 0; node < num_nodes; node++) {
