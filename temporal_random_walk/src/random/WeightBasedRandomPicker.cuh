@@ -2,7 +2,7 @@
 #define WEIGHTBASEDRANDOMPICKER_H
 
 #include "RandomPicker.h"
-#include "../core/structs.h"
+#include "../structs/enums.h"
 #include "../common/types.cuh"
 
 template<GPUUsageMode GPUUsage>

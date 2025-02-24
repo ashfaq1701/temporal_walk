@@ -3,118 +3,118 @@
 #include <iostream>
 
 template<GPUUsageMode GPUUsage>
-void NodeEdgeIndexCPU<GPUUsage>::clear() {
+HOST void NodeEdgeIndexCPU<GPUUsage>::clear_host() {
    // Clear edge CSR structures
-   outbound_offsets.clear();
-   outbound_indices.clear();
-   outbound_timestamp_group_offsets.clear();
-   outbound_timestamp_group_indices.clear();
+   this->outbound_offsets.clear();
+   this->outbound_indices.clear();
+   this->outbound_timestamp_group_offsets.clear();
+   this->outbound_timestamp_group_indices.clear();
 
    // Clear inbound structures
-   inbound_offsets.clear();
-   inbound_indices.clear();
-   inbound_timestamp_group_offsets.clear();
-   inbound_timestamp_group_indices.clear();
+   this->inbound_offsets.clear();
+   this->inbound_indices.clear();
+   this->inbound_timestamp_group_offsets.clear();
+   this->inbound_timestamp_group_indices.clear();
 }
 
 template<GPUUsageMode GPUUsage>
-void NodeEdgeIndexCPU<GPUUsage>::rebuild(
+HOST void NodeEdgeIndexCPU<GPUUsage>::rebuild_host(
    const EdgeData<GPUUsage>& edges,
    const NodeMapping<GPUUsage>& mapping,
    const bool is_directed) {
 
-   const size_t num_nodes = mapping.size();
+   const size_t num_nodes = mapping.size_host();
 
    // Initialize base CSR structures
-   outbound_offsets.assign(num_nodes + 1);
-   outbound_timestamp_group_offsets.assign(num_nodes + 1);
+   this->outbound_offsets.assign(num_nodes + 1);
+   this->outbound_timestamp_group_offsets.assign(num_nodes + 1);
 
    if (is_directed) {
-       inbound_offsets.assign(num_nodes + 1);
-       inbound_timestamp_group_offsets.assign(num_nodes + 1);
+       this->inbound_offsets.assign(num_nodes + 1);
+       this->inbound_timestamp_group_offsets.assign(num_nodes + 1);
    }
 
    // First pass: count edges per node
-   for (size_t i = 0; i < edges.size(); i++) {
-       const int src_idx = mapping.to_dense(edges.sources[i]);
-       const int tgt_idx = mapping.to_dense(edges.targets[i]);
+   for (size_t i = 0; i < edges.size_host(); i++) {
+       const int src_idx = mapping.to_dense_host(edges.sources[i]);
+       const int tgt_idx = mapping.to_dense_host(edges.targets[i]);
 
-       ++outbound_offsets[src_idx + 1];
+       ++this->outbound_offsets[src_idx + 1];
        if (is_directed) {
-           ++inbound_offsets[tgt_idx + 1];
+           ++this->inbound_offsets[tgt_idx + 1];
        } else {
-           ++outbound_offsets[tgt_idx + 1];
+           ++this->outbound_offsets[tgt_idx + 1];
        }
    }
 
    // Calculate prefix sums for edge offsets
    for (size_t i = 1; i <= num_nodes; i++) {
-       outbound_offsets[i] += outbound_offsets[i-1];
+       this->outbound_offsets[i] += this->outbound_offsets[i-1];
        if (is_directed) {
-           inbound_offsets[i] += inbound_offsets[i-1];
+           this->inbound_offsets[i] += this->inbound_offsets[i-1];
        }
    }
 
    // Allocate edge index arrays
-   outbound_indices.resize(outbound_offsets.back());
+   this->outbound_indices.resize(this->outbound_offsets.back());
    if (is_directed) {
-       inbound_indices.resize(inbound_offsets.back());
+       this->inbound_indices.resize(this->inbound_offsets.back());
    }
 
    // Second pass: fill edge indices
-   SizeVector outbound_current(num_nodes);
-   SizeVector inbound_current;
+   typename NodeEdgeIndex<GPUUsage>::SizeVector outbound_current(num_nodes);
+   typename NodeEdgeIndex<GPUUsage>::SizeVector inbound_current;
    if (is_directed) {
        inbound_current.resize(num_nodes);
    }
 
-    auto edges_size = edges.size();
-   for (size_t i = 0; i < edges.size(); i++) {
-       const int src_idx = mapping.to_dense(edges.sources[i]);
-       const int tgt_idx = mapping.to_dense(edges.targets[i]);
+    auto edges_size = edges.size_host();
+   for (size_t i = 0; i < edges.size_host(); ++i) {
+       const int src_idx = mapping.to_dense_host(edges.sources[i]);
+       const int tgt_idx = mapping.to_dense_host(edges.targets[i]);
 
-       const size_t out_pos = outbound_offsets[src_idx] + outbound_current[src_idx]++;
-       outbound_indices[out_pos] = i;
+       const size_t out_pos = this->outbound_offsets[src_idx] + outbound_current[src_idx]++;
+       this->outbound_indices[out_pos] = i;
 
        if (is_directed) {
-           const size_t in_pos = inbound_offsets[tgt_idx] + inbound_current[tgt_idx]++;
-           inbound_indices[in_pos] = i;
+           const size_t in_pos = this->inbound_offsets[tgt_idx] + inbound_current[tgt_idx]++;
+           this->inbound_indices[in_pos] = i;
        } else {
-           const size_t out_pos2 = outbound_offsets[tgt_idx] + outbound_current[tgt_idx]++;
-           outbound_indices[out_pos2] = i;
+           const size_t out_pos2 = this->outbound_offsets[tgt_idx] + outbound_current[tgt_idx]++;
+           this->outbound_indices[out_pos2] = i;
        }
    }
 
    // Third pass: count timestamp groups
-   SizeVector outbound_group_count(num_nodes);
-   SizeVector inbound_group_count;
+   typename NodeEdgeIndex<GPUUsage>::SizeVector outbound_group_count(num_nodes);
+   typename NodeEdgeIndex<GPUUsage>::SizeVector inbound_group_count;
    if (is_directed) {
        inbound_group_count.resize(num_nodes);
    }
 
    for (size_t node = 0; node < num_nodes; node++) {
-       size_t start = outbound_offsets[node];
-       size_t end = outbound_offsets[node + 1];
+       size_t start = this->outbound_offsets[node];
+       size_t end = this->outbound_offsets[node + 1];
 
        if (start < end) {
            outbound_group_count[node] = 1;  // First group
-           for (size_t i = start + 1; i < end; i++) {
-               if (edges.timestamps[outbound_indices[i]] !=
-                   edges.timestamps[outbound_indices[i-1]]) {
+           for (size_t i = start + 1; i < end; ++i) {
+               if (edges.timestamps[this->outbound_indices[i]] !=
+                   edges.timestamps[this->outbound_indices[i-1]]) {
                    ++outbound_group_count[node];
                }
            }
        }
 
        if (is_directed) {
-           start = inbound_offsets[node];
-           end = inbound_offsets[node + 1];
+           start = this->inbound_offsets[node];
+           end = this->inbound_offsets[node + 1];
 
            if (start < end) {
                inbound_group_count[node] = 1;  // First group
-               for (size_t i = start + 1; i < end; i++) {
-                   if (edges.timestamps[inbound_indices[i]] !=
-                       edges.timestamps[inbound_indices[i-1]]) {
+               for (size_t i = start + 1; i < end; ++i) {
+                   if (edges.timestamps[this->inbound_indices[i]] !=
+                       edges.timestamps[this->inbound_indices[i-1]]) {
                        ++inbound_group_count[node];
                    }
                }
@@ -124,45 +124,45 @@ void NodeEdgeIndexCPU<GPUUsage>::rebuild(
 
    // Calculate prefix sums for group offsets
    for (size_t i = 0; i < num_nodes; i++) {
-       outbound_timestamp_group_offsets[i + 1] = outbound_timestamp_group_offsets[i] + outbound_group_count[i];
+       this->outbound_timestamp_group_offsets[i + 1] = this->outbound_timestamp_group_offsets[i] + outbound_group_count[i];
        if (is_directed) {
-           inbound_timestamp_group_offsets[i + 1] = inbound_timestamp_group_offsets[i] + inbound_group_count[i];
+           this->inbound_timestamp_group_offsets[i + 1] = this->inbound_timestamp_group_offsets[i] + inbound_group_count[i];
        }
    }
 
    // Allocate and fill group indices
-   outbound_timestamp_group_indices.resize(outbound_timestamp_group_offsets.back());
+   this->outbound_timestamp_group_indices.resize(this->outbound_timestamp_group_offsets.back());
    if (is_directed) {
-       inbound_timestamp_group_indices.resize(inbound_timestamp_group_offsets.back());
+       this->inbound_timestamp_group_indices.resize(this->inbound_timestamp_group_offsets.back());
    }
 
    // Final pass: fill group indices
    for (size_t node = 0; node < num_nodes; node++) {
-       size_t start = outbound_offsets[node];
-       size_t end = outbound_offsets[node + 1];
-       size_t group_pos = outbound_timestamp_group_offsets[node];
+       size_t start = this->outbound_offsets[node];
+       size_t end = this->outbound_offsets[node + 1];
+       size_t group_pos = this->outbound_timestamp_group_offsets[node];
 
        if (start < end) {
-           outbound_timestamp_group_indices[group_pos++] = start;
-           for (size_t i = start + 1; i < end; i++) {
-               if (edges.timestamps[outbound_indices[i]] !=
-                   edges.timestamps[outbound_indices[i-1]]) {
-                   outbound_timestamp_group_indices[group_pos++] = i;
+           this->outbound_timestamp_group_indices[group_pos++] = start;
+           for (size_t i = start + 1; i < end; ++i) {
+               if (edges.timestamps[this->outbound_indices[i]] !=
+                   edges.timestamps[this->outbound_indices[i-1]]) {
+                   this->outbound_timestamp_group_indices[group_pos++] = i;
                }
            }
        }
 
        if (is_directed) {
-           start = inbound_offsets[node];
-           end = inbound_offsets[node + 1];
-           group_pos = inbound_timestamp_group_offsets[node];
+           start = this->inbound_offsets[node];
+           end = this->inbound_offsets[node + 1];
+           group_pos = this->inbound_timestamp_group_offsets[node];
 
            if (start < end) {
-               inbound_timestamp_group_indices[group_pos++] = start;
-               for (size_t i = start + 1; i < end; i++) {
-                   if (edges.timestamps[inbound_indices[i]] !=
-                       edges.timestamps[inbound_indices[i-1]]) {
-                       inbound_timestamp_group_indices[group_pos++] = i;
+               this->inbound_timestamp_group_indices[group_pos++] = start;
+               for (size_t i = start + 1; i < end; ++i) {
+                   if (edges.timestamps[this->inbound_indices[i]] !=
+                       edges.timestamps[this->inbound_indices[i-1]]) {
+                       this->inbound_timestamp_group_indices[group_pos++] = i;
                    }
                }
            }
@@ -171,27 +171,27 @@ void NodeEdgeIndexCPU<GPUUsage>::rebuild(
 }
 
 template<GPUUsageMode GPUUsage>
-void NodeEdgeIndexCPU<GPUUsage>::update_temporal_weights(const EdgeData<GPUUsage>& edges, double timescale_bound) {
-    const size_t num_nodes = outbound_offsets.size() - 1;
+HOST void NodeEdgeIndexCPU<GPUUsage>::update_temporal_weights_host(const EdgeData<GPUUsage>& edges, double timescale_bound) {
+    const size_t num_nodes = this->outbound_offsets.size() - 1;
 
-    outbound_forward_cumulative_weights_exponential.resize(outbound_timestamp_group_indices.size());
-    outbound_backward_cumulative_weights_exponential.resize(outbound_timestamp_group_indices.size());
-    if (!inbound_offsets.empty()) {
-        inbound_backward_cumulative_weights_exponential.resize(inbound_timestamp_group_indices.size());
+    this->outbound_forward_cumulative_weights_exponential.resize(this->outbound_timestamp_group_indices.size());
+    this->outbound_backward_cumulative_weights_exponential.resize(this->outbound_timestamp_group_indices.size());
+    if (!this->inbound_offsets.empty()) {
+        this->inbound_backward_cumulative_weights_exponential.resize(this->inbound_timestamp_group_indices.size());
     }
 
     // Process each node
     for (size_t node = 0; node < num_nodes; node++) {
         // Outbound weights
-        const auto& outbound_offsets = get_timestamp_offset_vector(true, false);
+        const auto& outbound_offsets = get_timestamp_offset_vector_host(true, false);
         const size_t out_start = outbound_offsets[node];
         const size_t out_end = outbound_offsets[node + 1];
 
         if (out_start < out_end) {
-            const size_t first_group_start = outbound_timestamp_group_indices[out_start];
-            const size_t last_group_start = outbound_timestamp_group_indices[out_end - 1];
-            const int64_t min_ts = edges.timestamps[outbound_indices[first_group_start]];
-            const int64_t max_ts = edges.timestamps[outbound_indices[last_group_start]];
+            const size_t first_group_start = this->outbound_timestamp_group_indices[out_start];
+            const size_t last_group_start = this->outbound_timestamp_group_indices[out_end - 1];
+            const int64_t min_ts = edges.timestamps[this->outbound_indices[first_group_start]];
+            const int64_t max_ts = edges.timestamps[this->outbound_indices[last_group_start]];
             const auto time_diff = static_cast<double>(max_ts - min_ts);
             const double time_scale = (timescale_bound > 0 && time_diff > 0) ?
                 timescale_bound / time_diff : 1.0;
@@ -201,8 +201,8 @@ void NodeEdgeIndexCPU<GPUUsage>::update_temporal_weights(const EdgeData<GPUUsage
 
             // Calculate weights and sums
             for (size_t pos = out_start; pos < out_end; ++pos) {
-                const size_t edge_start = outbound_timestamp_group_indices[pos];
-                const int64_t group_ts = edges.timestamps[outbound_indices[edge_start]];
+                const size_t edge_start = this->outbound_timestamp_group_indices[pos];
+                const int64_t group_ts = edges.timestamps[this->outbound_indices[edge_start]];
 
                 const auto time_diff_forward = static_cast<double>(max_ts - group_ts);
                 const auto time_diff_backward = static_cast<double>(group_ts - min_ts);
@@ -213,39 +213,39 @@ void NodeEdgeIndexCPU<GPUUsage>::update_temporal_weights(const EdgeData<GPUUsage
                     time_diff_backward * time_scale : time_diff_backward;
 
                 const double forward_weight = exp(forward_scaled);
-                outbound_forward_cumulative_weights_exponential[pos] = forward_weight;
+                this->outbound_forward_cumulative_weights_exponential[pos] = forward_weight;
                 forward_sum += forward_weight;
 
                 const double backward_weight = exp(backward_scaled);
-                outbound_backward_cumulative_weights_exponential[pos] = backward_weight;
+                this->outbound_backward_cumulative_weights_exponential[pos] = backward_weight;
                 backward_sum += backward_weight;
             }
 
             // Normalize and compute cumulative sums
             double forward_cumsum = 0.0, backward_cumsum = 0.0;
             for (size_t pos = out_start; pos < out_end; ++pos) {
-                outbound_forward_cumulative_weights_exponential[pos] /= forward_sum;
-                outbound_backward_cumulative_weights_exponential[pos] /= backward_sum;
+                this->outbound_forward_cumulative_weights_exponential[pos] /= forward_sum;
+                this->outbound_backward_cumulative_weights_exponential[pos] /= backward_sum;
 
-                forward_cumsum += outbound_forward_cumulative_weights_exponential[pos];
-                backward_cumsum += outbound_backward_cumulative_weights_exponential[pos];
+                forward_cumsum += this->outbound_forward_cumulative_weights_exponential[pos];
+                backward_cumsum += this->outbound_backward_cumulative_weights_exponential[pos];
 
-                outbound_forward_cumulative_weights_exponential[pos] = forward_cumsum;
-                outbound_backward_cumulative_weights_exponential[pos] = backward_cumsum;
+                this->outbound_forward_cumulative_weights_exponential[pos] = forward_cumsum;
+                this->outbound_backward_cumulative_weights_exponential[pos] = backward_cumsum;
             }
         }
 
         // Inbound weights
-        if (!inbound_offsets.empty()) {
-            const auto& inbound_group_offsets = get_timestamp_offset_vector(false, true);
+        if (!this->inbound_offsets.empty()) {
+            const auto& inbound_group_offsets = get_timestamp_offset_vector_host(false, true);
             const size_t in_start = inbound_group_offsets[node];
             const size_t in_end = inbound_group_offsets[node + 1];
 
             if (in_start < in_end) {
-                const size_t first_group_start = inbound_timestamp_group_indices[in_start];
-                const size_t last_group_start = inbound_timestamp_group_indices[in_end - 1];
-                const int64_t min_ts = edges.timestamps[inbound_indices[first_group_start]];
-                const int64_t max_ts = edges.timestamps[inbound_indices[last_group_start]];
+                const size_t first_group_start = this->inbound_timestamp_group_indices[in_start];
+                const size_t last_group_start = this->inbound_timestamp_group_indices[in_end - 1];
+                const int64_t min_ts = edges.timestamps[this->inbound_indices[first_group_start]];
+                const int64_t max_ts = edges.timestamps[this->inbound_indices[last_group_start]];
                 const auto time_diff = static_cast<double>(max_ts - min_ts);
                 const double time_scale = (timescale_bound > 0 && time_diff > 0) ?
                     timescale_bound / time_diff : 1.0;
@@ -254,24 +254,24 @@ void NodeEdgeIndexCPU<GPUUsage>::update_temporal_weights(const EdgeData<GPUUsage
 
                 // Calculate weights and sum
                 for (size_t pos = in_start; pos < in_end; ++pos) {
-                    const size_t edge_start = inbound_timestamp_group_indices[pos];
-                    const int64_t group_ts = edges.timestamps[inbound_indices[edge_start]];
+                    const size_t edge_start = this->inbound_timestamp_group_indices[pos];
+                    const int64_t group_ts = edges.timestamps[this->inbound_indices[edge_start]];
 
                     const auto time_diff_backward = static_cast<double>(group_ts - min_ts);
                     const double backward_scaled = timescale_bound > 0 ?
                         time_diff_backward * time_scale : time_diff_backward;
 
                     const double backward_weight = exp(backward_scaled);
-                    inbound_backward_cumulative_weights_exponential[pos] = backward_weight;
+                    this->inbound_backward_cumulative_weights_exponential[pos] = backward_weight;
                     backward_sum += backward_weight;
                 }
 
                 // Normalize and compute cumulative sum
                 double backward_cumsum = 0.0;
                 for (size_t pos = in_start; pos < in_end; ++pos) {
-                    inbound_backward_cumulative_weights_exponential[pos] /= backward_sum;
-                    backward_cumsum += inbound_backward_cumulative_weights_exponential[pos];
-                    inbound_backward_cumulative_weights_exponential[pos] = backward_cumsum;
+                    this->inbound_backward_cumulative_weights_exponential[pos] /= backward_sum;
+                    backward_cumsum += this->inbound_backward_cumulative_weights_exponential[pos];
+                    this->inbound_backward_cumulative_weights_exponential[pos] = backward_cumsum;
                 }
             }
         }
@@ -279,46 +279,46 @@ void NodeEdgeIndexCPU<GPUUsage>::update_temporal_weights(const EdgeData<GPUUsage
 }
 
 template<GPUUsageMode GPUUsage>
-std::pair<size_t, size_t> NodeEdgeIndexCPU<GPUUsage>::get_edge_range(
+HOST SizeRange NodeEdgeIndexCPU<GPUUsage>::get_edge_range_host(
    int dense_node_id,
    bool forward,
    bool is_directed) const {
 
    if (is_directed) {
-       const auto& offsets = forward ? outbound_offsets : inbound_offsets;
+       const auto& offsets = forward ? this->outbound_offsets : this->inbound_offsets;
        if (dense_node_id < 0 || dense_node_id >= offsets.size() - 1) {
-           return {0, 0};
+           return SizeRange{0, 0};
        }
-       return {offsets[dense_node_id], offsets[dense_node_id + 1]};
+       return SizeRange{offsets[dense_node_id], offsets[dense_node_id + 1]};
    } else {
-       if (dense_node_id < 0 || dense_node_id >= outbound_offsets.size() - 1) {
-           return {0, 0};
+       if (dense_node_id < 0 || dense_node_id >= this->outbound_offsets.size() - 1) {
+           return SizeRange{0, 0};
        }
-       return {outbound_offsets[dense_node_id], outbound_offsets[dense_node_id + 1]};
+       return SizeRange{this->outbound_offsets[dense_node_id], this->outbound_offsets[dense_node_id + 1]};
    }
 }
 
 template<GPUUsageMode GPUUsage>
-std::pair<size_t, size_t> NodeEdgeIndexCPU<GPUUsage>::get_timestamp_group_range(
+HOST SizeRange NodeEdgeIndexCPU<GPUUsage>::get_timestamp_group_range_host(
    int dense_node_id,
    size_t group_idx,
    bool forward,
    bool is_directed) const {
 
    const auto& group_offsets = (is_directed && !forward) ?
-       inbound_timestamp_group_offsets : outbound_timestamp_group_offsets;
+       this->inbound_timestamp_group_offsets : this->outbound_timestamp_group_offsets;
    const auto& group_indices = (is_directed && !forward) ?
-       inbound_timestamp_group_indices : outbound_timestamp_group_indices;
+       this->inbound_timestamp_group_indices : this->outbound_timestamp_group_indices;
    const auto& edge_offsets = (is_directed && !forward) ?
-       inbound_offsets : outbound_offsets;
+       this->inbound_offsets : this->outbound_offsets;
 
    if (dense_node_id < 0 || dense_node_id >= group_offsets.size() - 1) {
-       return {0, 0};
+       return SizeRange{0, 0};
    }
 
    size_t num_groups = group_offsets[dense_node_id + 1] - group_offsets[dense_node_id];
    if (group_idx >= num_groups) {
-       return {0, 0};
+       return SizeRange{0, 0};
    }
 
    size_t group_start_idx = group_offsets[dense_node_id] + group_idx;
@@ -332,16 +332,16 @@ std::pair<size_t, size_t> NodeEdgeIndexCPU<GPUUsage>::get_timestamp_group_range(
        group_end = group_indices[group_start_idx + 1];
    }
 
-   return {group_start, group_end};
+   return SizeRange{group_start, group_end};
 }
 
 template<GPUUsageMode GPUUsage>
-size_t NodeEdgeIndexCPU<GPUUsage>::get_timestamp_group_count(
+HOST size_t NodeEdgeIndexCPU<GPUUsage>::get_timestamp_group_count_host(
    int dense_node_id,
    bool forward,
    bool directed) const {
 
-   const auto& offsets = get_timestamp_offset_vector(forward, directed);
+   const auto& offsets = get_timestamp_offset_vector_host(forward, directed);
 
    if (dense_node_id < 0 || dense_node_id >= offsets.size() - 1) {
        return 0;
@@ -351,10 +351,10 @@ size_t NodeEdgeIndexCPU<GPUUsage>::get_timestamp_group_count(
 }
 
 template<GPUUsageMode GPUUsage>
-[[nodiscard]] typename NodeEdgeIndexCPU<GPUUsage>::SizeVector NodeEdgeIndexCPU<GPUUsage>::get_timestamp_offset_vector(
+[[nodiscard]] HOST typename NodeEdgeIndex<GPUUsage>::SizeVector NodeEdgeIndexCPU<GPUUsage>::get_timestamp_offset_vector_host(
     const bool forward,
     const bool directed) const {
-    return (directed && !forward) ? inbound_timestamp_group_offsets : outbound_timestamp_group_offsets;
+    return (directed && !forward) ? this->inbound_timestamp_group_offsets : this->outbound_timestamp_group_offsets;
 }
 
 template class NodeEdgeIndexCPU<GPUUsageMode::ON_CPU>;

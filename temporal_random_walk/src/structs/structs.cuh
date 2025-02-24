@@ -2,6 +2,7 @@
 #define STRUCTS_H
 
 #include "../common/macros.cuh"
+#include <cstddef>
 #include <cstdint>
 
 struct SizeRange {

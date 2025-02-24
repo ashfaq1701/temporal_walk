@@ -1,7 +1,7 @@
 #ifndef LINEARRANDOMPICKER_H
 #define LINEARRANDOMPICKER_H
 
-#include "../core/structs.h"
+#include "../structs/enums.h"
 
 #include "IndexBasedRandomPicker.h"
 #include "../utils/utils.h"

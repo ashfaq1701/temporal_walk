@@ -1,7 +1,7 @@
 #ifndef NODEEDGEINDEXCUDA_H
 #define NODEEDGEINDEXCUDA_H
 
-#include "../../core/structs.h"
+#include "../../structs/structs.cuh"
 #include "../interfaces/NodeEdgeIndex.cuh"
 
 template<GPUUsageMode GPUUsage>

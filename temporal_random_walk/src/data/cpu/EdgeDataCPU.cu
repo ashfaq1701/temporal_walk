@@ -146,9 +146,9 @@ HOST void EdgeDataCPU<GPUUsage>::update_temporal_weights_host(const double times
 }
 
 template<GPUUsageMode GPUUsage>
-HOST std::pair<size_t, size_t> EdgeDataCPU<GPUUsage>::get_timestamp_group_range_host(size_t group_idx) const {
+HOST SizeRange EdgeDataCPU<GPUUsage>::get_timestamp_group_range_host(size_t group_idx) const {
     if (group_idx >= this->unique_timestamps.size()) {
-        return {0, 0};
+        return SizeRange{0, 0};
     }
     return {this->timestamp_group_offsets[group_idx], this->timestamp_group_offsets[group_idx + 1]};
 }

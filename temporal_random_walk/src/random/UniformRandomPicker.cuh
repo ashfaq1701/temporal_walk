@@ -1,7 +1,7 @@
 #ifndef UNIFORMRANDOMPICKER_H
 #define UNIFORMRANDOMPICKER_H
 
-#include "../core/structs.h"
+#include "../structs/enums.h"
 
 #include "IndexBasedRandomPicker.h"
 #include "../utils/utils.h"

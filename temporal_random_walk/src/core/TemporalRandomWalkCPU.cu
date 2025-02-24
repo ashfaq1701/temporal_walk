@@ -1,4 +1,4 @@
-#include "TemporalRandomWalk.cuh"
+#include "TemporalRandomWalkCPU.cuh"
 
 #include <iostream>
 #include "../utils/utils.h"

@@ -8,8 +8,13 @@ class TemporalGraphCUDA : public TemporalGraph<GPUUsage> {
     static_assert(GPUUsage != GPUUsageMode::ON_CPU, "TemporalGraphCUDA cannot be used with ON_CPU mode");
 
 public:
-    // Inherit constructors from base class
-    using TemporalGraph<GPUUsage>::TemporalGraph;
+    ~TemporalGraphCUDA() override = default;
+
+    DEVICE explicit TemporalGraphCUDA(
+        bool directed,
+        int64_t window = -1,
+        bool enable_weight_computation = false,
+        double timescale_bound=-1);
 
     #ifdef HAS_CUDA
 

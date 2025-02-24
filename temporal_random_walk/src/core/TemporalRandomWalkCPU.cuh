@@ -1,13 +1,15 @@
-#ifndef TEMPORAL_RANDOM_WALK_H
-#define TEMPORAL_RANDOM_WALK_H
+#ifndef TEMPORAL_RANDOM_WALK_CPU_H
+#define TEMPORAL_RANDOM_WALK_CPU_H
 
+#include<vector>
+#include "TemporalRandomWalk.cuh"
 #include "../structs/structs.cuh"
 #include "../structs/enums.h"
 #include "../config/constants.h"
 #include "../../libs/thread-pool/ThreadPool.h"
-
-#include "../data/interfaces/TemporalGraph.cuh"
-
+#include "../random/RandomPicker.h"
+#include "../data/cpu/TemporalGraphCPU.cuh"
+#include "../data/cuda/TemporalGraphCUDA.cuh"
 #include "../random/WeightBasedRandomPicker.cuh"
 #include "../random/WeightBasedRandomPickerGPU.cuh"
 
@@ -20,18 +22,16 @@
  * @tparam GPUUsage enum to control data placement and computation between CPU and GPU. Possible values are ON_CPU, ON_GPU.
  */
 template<GPUUsageMode GPUUsage>
-class TemporalRandomWalk {
-public:
+class TemporalRandomWalkCPU : public TemporalRandomWalk<GPUUsage> {
+    bool is_directed;
 
-    bool is_directed = false;
+    int64_t max_time_capacity;
 
-    int64_t max_time_capacity = -1;
+    int n_threads;
 
-    int n_threads = static_cast<int>(std::thread::hardware_concurrency());
+    bool enable_weight_computation;
 
-    bool enable_weight_computation = false;
-
-    double timescale_bound = DEFAULT_TIMESTAMP_BOUND;
+    double timescale_bound;
 
     int64_t max_edge_time = 0;
 
@@ -39,7 +39,7 @@ public:
 
     ThreadPool thread_pool;
 
-    void generate_random_walk_and_time(
+    HOST void generate_random_walk_and_time(
         std::vector<NodeWithTime>* walk,
         const std::shared_ptr<RandomPicker>& edge_picker,
         const std::shared_ptr<RandomPicker>& start_picker,
@@ -51,6 +51,7 @@ public:
 
     [[nodiscard]] long estimate_cw_count(int num_walks_per_node, int max_walk_len, int min_walk_len) const;
 
+public:
 
     /**
      * @brief Construct a temporal random walk generator
@@ -210,4 +211,4 @@ public:
     void clear();
 };
 
-#endif //TEMPORAL_RANDOM_WALK_H
+#endif //TEMPORAL_RANDOM_WALK_CPU_H

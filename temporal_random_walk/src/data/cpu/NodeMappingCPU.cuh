@@ -10,33 +10,24 @@
 #include "../../common/types.cuh"
 
 template<GPUUsageMode GPUUsage>
-class NodeMappingCPU {
-
-protected:
-   using IntVector = typename SelectVectorType<int, GPUUsage>::type;
-   using BoolVector = typename SelectVectorType<bool, GPUUsage>::type;
-
+class NodeMappingCPU : NodeMapping<GPUUsage> {
 public:
-   virtual ~NodeMappingCPU() = default;
+   ~NodeMappingCPU() override = default;
 
-   IntVector sparse_to_dense{};    // Maps sparse ID to dense index
-   IntVector dense_to_sparse{};    // Maps dense index back to sparse ID
-
-   BoolVector is_deleted{};        // Tracks deleted status of nodes
-
-   virtual void update(const EdgeData<GPUUsage>& edges, size_t start_idx, size_t end_idx);
-   [[nodiscard]] int to_dense(int sparse_id) const;
-   [[nodiscard]] int to_sparse(int dense_idx) const;
-   [[nodiscard]] size_t size() const;
-   [[nodiscard]] virtual size_t active_size() const;
+private:
+   HOST void update_host(const EdgeData<GPUUsage>& edges, size_t start_idx, size_t end_idx) override;
+   [[nodiscard]] HOST int to_dense_host(int sparse_id) const override;
+   [[nodiscard]] HOST int to_sparse_host(int dense_idx) const override;
+   [[nodiscard]] HOST size_t size_host() const override;
+   [[nodiscard]] HOST size_t active_size_host() const override;
 
    // Helper methods
-   [[nodiscard]] virtual std::vector<int> get_active_node_ids() const;
-   void clear();
-   void reserve(size_t size);
-   void mark_node_deleted(int sparse_id);
-   [[nodiscard]] bool has_node(int sparse_id) const;
-   [[nodiscard]] IntVector get_all_sparse_ids() const;
+   [[nodiscard]] HOST typename NodeMapping<GPUUsage>::IntVector get_active_node_ids_host() const override;
+   HOST void clear_host() override;
+   HOST void reserve_host(size_t size) override;
+   HOST void mark_node_deleted_host(int sparse_id) override;
+   [[nodiscard]] HOST bool has_node_host(int sparse_id) const override;
+   [[nodiscard]] HOST typename NodeMappingCPU<GPUUsage>::IntVector get_all_sparse_ids_host() const override;
 };
 
 #endif //NODEMAPPING_CPU_H

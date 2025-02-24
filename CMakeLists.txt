@@ -51,7 +51,7 @@ set(SRC_FILES
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/data/cuda/NodeMappingCUDA.cu
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/data/cuda/TemporalGraphCUDA.cu
 
-        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/core/TemporalRandomWalk.cu
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/core/TemporalRandomWalkCPU.cu
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/core/TemporalRandomWalkCUDA.cu
 )
 

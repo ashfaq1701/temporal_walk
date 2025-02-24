@@ -3,7 +3,7 @@
 #define WEIGHTBASEDRANDOMPICKERGPU_CUH
 
 #include "RandomPicker.h"
-#include "../core/structs.h"
+#include "../structs/enums.h"
 #include "../common/types.cuh"
 
 

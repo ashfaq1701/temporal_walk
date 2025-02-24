@@ -1,7 +1,8 @@
 #ifndef EXPONENTIALINDEXRANDOMPICKER_H
 #define EXPONENTIALINDEXRANDOMPICKER_H
 
-#include "../core/structs.h"
+#include "../structs/structs.cuh"
+#include "../structs/enums.h"
 
 #include "IndexBasedRandomPicker.h"
 #include "../utils/utils.h"

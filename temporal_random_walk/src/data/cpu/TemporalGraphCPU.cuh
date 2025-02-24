@@ -4,95 +4,55 @@
 #include <vector>
 #include <cstdint>
 #include <tuple>
-#include "../cuda/NodeEdgeIndexCUDA.cuh"
-#include "../cuda/EdgeDataCUDA.cuh"
-#include "../cuda/NodeMappingCUDA.cuh"
 
 #include "../../structs/enums.h"
 #include "../../random/RandomPicker.h"
 
 #include "../interfaces/TemporalGraph.cuh"
-#include "../interfaces/NodeMapping.cuh"
-#include "../interfaces/EdgeData.cuh"
-#include "../interfaces/NodeEdgeIndex.cuh"
 
 template<GPUUsageMode GPUUsage>
-class TemporalGraphCPU
+class TemporalGraphCPU : TemporalGraph<GPUUsage>
 {
-private:
-    #ifdef HAS_CUDA
-    using NodeIndexType = std::conditional_t<
-        (GPUUsage == ON_CPU), NodeEdgeIndex<GPUUsage>, NodeEdgeIndexCUDA<GPUUsage>>;
-
-    using EdgeDataType = std::conditional_t<
-        (GPUUsage == ON_CPU), EdgeData<GPUUsage>, EdgeDataCUDA<GPUUsage>>;
-
-    using NodeMappingType = std::conditional_t<
-        (GPUUsage == ON_CPU), NodeMapping<GPUUsage>, NodeMappingCUDA<GPUUsage>>;
-    #else
-    using NodeIndexType = NodeEdgeIndex<GPUUsage>;
-    using EdgeDataType = EdgeData<GPUUsage>;
-    using NodeMappingType = NodeMapping<GPUUsage>;
-    #endif
-
-protected:
-    using SizeVector = typename SelectVectorType<size_t, GPUUsage>::type;
-    using IntVector = typename SelectVectorType<int, GPUUsage>::type;
-    using Int64TVector = typename SelectVectorType<int64_t, GPUUsage>::type;
-    using BoolVector = typename SelectVectorType<bool, GPUUsage>::type;
-
-protected:
-    int64_t time_window; // Time duration to keep edges (-1 means keep all)
-    bool enable_weight_computation;
-    double timescale_bound;
-    int64_t latest_timestamp; // Track latest edge timestamp
-
 public:
-    virtual ~TemporalGraphCPU() = default;
+    ~TemporalGraphCPU() override = default;
 
-    bool is_directed;
-
-    NodeIndexType node_index; // Node to edge mappings
-    EdgeDataType edges; // Main edge storage
-    NodeMappingType node_mapping; // Sparse to dense node ID mapping
-
-    explicit TemporalGraphCPU(
+    HOST explicit TemporalGraphCPU(
         bool directed,
         int64_t window = -1,
         bool enable_weight_computation = false,
         double timescale_bound=-1);
 
-    virtual void sort_and_merge_edges(size_t start_idx);
+    HOST void sort_and_merge_edges_host(size_t start_idx) override;
 
     // Edge addition
-    void add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& new_edges);
+    HOST void add_multiple_edges_host(typename TemporalGraph<GPUUsage>::EdgeVector new_edges) override;
 
-    void update_temporal_weights();
+    HOST void update_temporal_weights_host() override;
 
-    virtual void delete_old_edges();
+    HOST void delete_old_edges_host() override;
 
     // Timestamp group counting
-    [[nodiscard]] virtual size_t count_timestamps_less_than(int64_t timestamp) const;
-    [[nodiscard]] virtual size_t count_timestamps_greater_than(int64_t timestamp) const;
-    [[nodiscard]] virtual size_t count_node_timestamps_less_than(int node_id, int64_t timestamp) const;
-    [[nodiscard]] virtual size_t count_node_timestamps_greater_than(int node_id, int64_t timestamp) const;
+    [[nodiscard]] HOST size_t count_timestamps_less_than_host(int64_t timestamp) const override;
+    [[nodiscard]] HOST size_t count_timestamps_greater_than_host(int64_t timestamp) const override;
+    [[nodiscard]] HOST size_t count_node_timestamps_less_than_host(int node_id, int64_t timestamp) const override;
+    [[nodiscard]] HOST size_t count_node_timestamps_greater_than_host(int node_id, int64_t timestamp) const override;
 
     // Edge selection
-    [[nodiscard]] std::tuple<int, int, int64_t> get_edge_at(
+    [[nodiscard]] HOST Edge get_edge_at_host(
         RandomPicker& picker, int64_t timestamp = -1,
-        bool forward = true) const;
+        bool forward = true) const override;
 
-    [[nodiscard]] virtual std::tuple<int, int, int64_t> get_node_edge_at(int node_id,
+    [[nodiscard]] HOST Edge get_node_edge_at_host(int node_id,
                                                                  RandomPicker& picker,
                                                                  int64_t timestamp = -1,
-                                                                 bool forward = true) const;
+                                                                 bool forward = true) const override;
 
     // Utility methods
-    [[nodiscard]] size_t get_total_edges() const { return edges.size(); }
-    [[nodiscard]] size_t get_node_count() const { return node_mapping.active_size(); }
-    [[nodiscard]] int64_t get_latest_timestamp() const { return latest_timestamp; }
-    [[nodiscard]] std::vector<int> get_node_ids() const;
-    [[nodiscard]] std::vector<std::tuple<int, int, int64_t>> get_edges();
+    [[nodiscard]] HOST size_t get_total_edges_host() const override { return this->edges.size(); }
+    [[nodiscard]] HOST size_t get_node_count_host() const override { return this->node_mapping.active_size(); }
+    [[nodiscard]] HOST int64_t get_latest_timestamp_host() override { return this->latest_timestamp; }
+    [[nodiscard]] typename TemporalGraph<GPUUsage>::IntVector get_node_ids_host() const override;
+    [[nodiscard]] typename TemporalGraph<GPUUsage>::EdgeVector get_edges_host() override;
 };
 
 #endif //TEMPORALGRAPH_CPU_H
