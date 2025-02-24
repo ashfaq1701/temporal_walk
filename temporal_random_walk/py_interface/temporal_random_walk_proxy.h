@@ -1,7 +1,8 @@
 #ifndef TEMPORAL_RANDOM_WALK_PROXY_H
 #define TEMPORAL_RANDOM_WALK_PROXY_H
 
-#include "../src/core/structs.h"
+#include "../src/structs/structs.cuh"
+#include "../src/structs/enums.h"
 #include "../src/core/TemporalRandomWalk.cuh"
 #include "../src/core/TemporalRandomWalkCUDA.cuh"
 
