@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdint>
 #include <tuple>
+#include "../../structs/enums.h"
 #include "../interfaces/EdgeData.cuh"
 #include "../interfaces/NodeMapping.cuh"
 #include "../../common/types.cuh"

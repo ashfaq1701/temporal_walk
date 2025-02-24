@@ -6,53 +6,33 @@
 #include <tuple>
 
 #include "../interfaces/EdgeData.cuh"
-#include "../../core/structs.h"
+#include "../../structs/enums.h"
 #include "../../common/types.cuh"
 
 template<GPUUsageMode GPUUsage>
-class EdgeDataCPU {
-protected:
-    using IntVector = typename SelectVectorType<int, GPUUsage>::type;
-    using Int64Vector = typename SelectVectorType<int64_t, GPUUsage>::type;
-    using SizeVector = typename SelectVectorType<size_t, GPUUsage>::type;
-    using DoubleVector = typename SelectVectorType<double, GPUUsage>::type;
+class EdgeDataCPU : public EdgeData<GPUUsage> {
 
-public:
-    virtual ~EdgeDataCPU() = default;
+    HOST void reserve_host(size_t size) override;
+    HOST void clear_host() override;
+    [[nodiscard]] HOST size_t size_host() const override;
+    [[nodiscard]] HOST bool empty_host() const override;
+    HOST void resize_host(size_t new_size) override;
 
-    // Core edge data
-    IntVector sources{};
-    IntVector targets{};
-    Int64Vector timestamps{};
+    HOST void add_edges_host(int* src, int* tgt, int64_t* ts, size_t size) override;
+    HOST void push_back_host(int src, int tgt, int64_t ts) override;
 
-    // Timestamp grouping
-    SizeVector timestamp_group_offsets{};     // Start of each timestamp group
-    Int64Vector unique_timestamps{};          // Corresponding unique timestamps
-
-    DoubleVector forward_cumulative_weights_exponential{};  // For forward temporal sampling
-    DoubleVector backward_cumulative_weights_exponential{}; // For backward temporal sampling
-
-    void reserve(size_t size);
-    void clear();
-    [[nodiscard]] size_t size() const;
-    [[nodiscard]] bool empty() const;
-    void resize(size_t new_size);
-
-    void add_edges(int* src, int* tgt, int64_t* ts, size_t size);
-    void push_back(int src, int tgt, int64_t ts);
-
-    virtual std::vector<std::tuple<int, int, int64_t>> get_edges();
+    HOST typename EdgeData<GPUUsage>::EdgeVector get_edges_host() override;
 
     // Group management
-    virtual void update_timestamp_groups();  // Call after sorting
-    virtual void update_temporal_weights(double timescale_bound);
+    HOST void update_timestamp_groups_host() override;  // Call after sorting
+    HOST void update_temporal_weights_host(double timescale_bound) override;
 
-    [[nodiscard]] std::pair<size_t, size_t> get_timestamp_group_range(size_t group_idx) const;
-    [[nodiscard]] size_t get_timestamp_group_count() const;
+    [[nodiscard]] HOST SizeRange get_timestamp_group_range_host(size_t group_idx) const override;
+    [[nodiscard]] HOST size_t get_timestamp_group_count_host() const override;
 
     // Group lookup
-    [[nodiscard]] virtual size_t find_group_after_timestamp(int64_t timestamp) const;  // For forward walks
-    [[nodiscard]] virtual size_t find_group_before_timestamp(int64_t timestamp) const; // For backward walks
+    [[nodiscard]] HOST size_t find_group_after_timestamp_host(int64_t timestamp) const override;  // For forward walks
+    [[nodiscard]] HOST size_t find_group_before_timestamp_host(int64_t timestamp) const override; // For backward walks
 };
 
 #endif //EDGEDATA_CPU_H

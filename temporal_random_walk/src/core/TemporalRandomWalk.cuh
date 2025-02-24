@@ -2,7 +2,8 @@
 #define TEMPORAL_RANDOM_WALK_H
 
 #include<vector>
-#include "structs.h"
+#include "../structs/structs.cuh"
+#include "../structs/enums.h"
 #include "../config/constants.h"
 #include "../../libs/thread-pool/ThreadPool.h"
 #include "../random/RandomPicker.h"

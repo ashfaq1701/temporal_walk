@@ -1,7 +1,5 @@
-#ifndef TEMPORAL_RANDOM_WALK_STRUCTS_H
-#define TEMPORAL_RANDOM_WALK_STRUCTS_H
-
-#include <cstdint>
+#ifndef ENUMS_H
+#define ENUMS_H
 
 enum RandomPickerType {
     Uniform,
@@ -20,9 +18,4 @@ enum GPUUsageMode {
     ON_GPU
 };
 
-struct NodeWithTime {
-    int node;
-    int64_t timestamp;
-};
-
-#endif //TEMPORAL_RANDOM_WALK_STRUCTS_H
+#endif // ENUMS_H

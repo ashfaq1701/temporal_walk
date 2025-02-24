@@ -4,6 +4,10 @@
 #include <vector>
 #include <cstdint>
 #include <tuple>
+
+#include "../../structs/structs.cuh"
+#include "../../structs/enums.h"
+
 #include "NodeMapping.cuh"
 #include "EdgeData.cuh"
 
@@ -37,37 +41,37 @@ public:
     /**
     * HOST METHODS
     */
-    virtual HOST void clear_host();
-    virtual HOST void rebuild_host(const EdgeData<GPUUsage>& edges, const NodeMapping<GPUUsage>& mapping, bool is_directed);
+    virtual HOST void clear_host() {}
+    virtual HOST void rebuild_host(const EdgeData<GPUUsage>& edges, const NodeMapping<GPUUsage>& mapping, bool is_directed) {}
 
     // Core access methods
-    [[nodiscard]] virtual HOST std::pair<size_t, size_t> get_edge_range_host(int dense_node_id, bool forward, bool is_directed) const;
-    [[nodiscard]] virtual HOST std::pair<size_t, size_t> get_timestamp_group_range_host(int dense_node_id, size_t group_idx, bool forward,
-                                                                      bool is_directed) const;
-    [[nodiscard]] virtual HOST size_t get_timestamp_group_count_host(int dense_node_id, bool forward, bool directed) const;
+    [[nodiscard]] virtual HOST SizeRange get_edge_range_host(int dense_node_id, bool forward, bool is_directed) const { return {}; }
+    [[nodiscard]] virtual HOST SizeRange get_timestamp_group_range_host(int dense_node_id, size_t group_idx, bool forward,
+                                                                      bool is_directed) const { return {}; }
+    [[nodiscard]] virtual HOST size_t get_timestamp_group_count_host(int dense_node_id, bool forward, bool directed) const { return 0; }
 
-    virtual HOST void update_temporal_weights_host(const EdgeData<GPUUsage>& edges, double timescale_bound);
+    virtual HOST void update_temporal_weights_host(const EdgeData<GPUUsage>& edges, double timescale_bound) {}
 
 protected:
-    virtual HOST SizeVector get_timestamp_offset_vector_host(bool forward, bool directed) const;
+    virtual HOST SizeVector get_timestamp_offset_vector_host(bool forward, bool directed) const { return SizeVector(); }
 
     /**
     * DEVICE METHODS
     */
 public:
-    virtual DEVICE void clear_device();
-    virtual DEVICE void rebuild_device(const EdgeData<GPUUsage>& edges, const NodeMapping<GPUUsage>& mapping, bool is_directed);
+    virtual DEVICE void clear_device() {}
+    virtual DEVICE void rebuild_device(const EdgeData<GPUUsage>& edges, const NodeMapping<GPUUsage>& mapping, bool is_directed) {}
 
     // Core access methods
-    [[nodiscard]] virtual DEVICE std::pair<size_t, size_t> get_edge_range_device(int dense_node_id, bool forward, bool is_directed) const;
-    [[nodiscard]] virtual DEVICE std::pair<size_t, size_t> get_timestamp_group_range_device(int dense_node_id, size_t group_idx, bool forward,
-                                                                      bool is_directed) const;
-    [[nodiscard]] virtual DEVICE size_t get_timestamp_group_count_device(int dense_node_id, bool forward, bool directed) const;
+    [[nodiscard]] virtual DEVICE SizeRange get_edge_range_device(int dense_node_id, bool forward, bool is_directed) const { return {}; }
+    [[nodiscard]] virtual DEVICE SizeRange get_timestamp_group_range_device(int dense_node_id, size_t group_idx, bool forward,
+                                                                      bool is_directed) const { return {}; }
+    [[nodiscard]] virtual DEVICE size_t get_timestamp_group_count_device(int dense_node_id, bool forward, bool directed) const { return 0; }
 
-    virtual DEVICE void update_temporal_weights_device(const EdgeData<GPUUsage>& edges, double timescale_bound);
+    virtual DEVICE void update_temporal_weights_device(const EdgeData<GPUUsage>& edges, double timescale_bound) {}
 
 protected:
-    virtual DEVICE SizeVector get_timestamp_offset_vector_device(bool forward, bool directed) const;
+    virtual DEVICE SizeVector get_timestamp_offset_vector_device(bool forward, bool directed) const { return SizeVector(); }
 };
 
 #endif //NODEEDGEINDEX_H

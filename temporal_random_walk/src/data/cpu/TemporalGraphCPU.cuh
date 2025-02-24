@@ -8,7 +8,7 @@
 #include "../cuda/EdgeDataCUDA.cuh"
 #include "../cuda/NodeMappingCUDA.cuh"
 
-#include "../../core/structs.h"
+#include "../../structs/enums.h"
 #include "../../random/RandomPicker.h"
 
 #include "../interfaces/TemporalGraph.cuh"

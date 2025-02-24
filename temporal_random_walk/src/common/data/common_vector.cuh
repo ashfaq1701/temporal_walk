@@ -7,8 +7,9 @@
 #endif
 #include <cstddef>
 #include <algorithm>
-#include "../core/structs.h"
-#include "macros.cuh"
+#include "../../structs/structs.cuh"
+#include "../../structs/enums.h"
+#include "../macros.cuh"
 
 template <typename T, GPUUsageMode GPUUsage>
 struct CommonVector {

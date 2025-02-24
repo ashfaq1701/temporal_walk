@@ -3,114 +3,114 @@
 #include <iostream>
 
 template<GPUUsageMode GPUUsage>
-void EdgeDataCPU<GPUUsage>::reserve(size_t size) {
-    sources.allocate(size);
-    targets.allocate(size);
-    timestamps.allocate(size);
-    timestamp_group_offsets.allocate(size);  // Estimate for group count
-    unique_timestamps.allocate(size);
+HOST void EdgeDataCPU<GPUUsage>::reserve_host(size_t size) {
+    this->sources.allocate(size);
+    this->targets.allocate(size);
+    this->timestamps.allocate(size);
+    this->timestamp_group_offsets.allocate(size);  // Estimate for group count
+    this->unique_timestamps.allocate(size);
 }
 
 template<GPUUsageMode GPUUsage>
-void EdgeDataCPU<GPUUsage>::clear() {
-    sources.clear();
-    targets.clear();
-    timestamps.clear();
-    timestamp_group_offsets.clear();
-    unique_timestamps.clear();
+HOST void EdgeDataCPU<GPUUsage>::clear_host() {
+    this->sources.clear();
+    this->targets.clear();
+    this->timestamps.clear();
+    this->timestamp_group_offsets.clear();
+    this->unique_timestamps.clear();
 }
 
 template<GPUUsageMode GPUUsage>
-size_t EdgeDataCPU<GPUUsage>::size() const {
-    return timestamps.size();
+HOST size_t EdgeDataCPU<GPUUsage>::size_host() const {
+    return this->timestamps.size();
 }
 
 template<GPUUsageMode GPUUsage>
-bool EdgeDataCPU<GPUUsage>::empty() const {
-    return timestamps.empty();
+HOST bool EdgeDataCPU<GPUUsage>::empty_host() const {
+    return this->timestamps.empty();
 }
 
 template<GPUUsageMode GPUUsage>
-void EdgeDataCPU<GPUUsage>::resize(size_t new_size) {
-    sources.resize(new_size);
-    targets.resize(new_size);
-    timestamps.resize(new_size);
+void EdgeDataCPU<GPUUsage>::resize_host(size_t new_size) {
+    this->sources.resize(new_size);
+    this->targets.resize(new_size);
+    this->timestamps.resize(new_size);
 }
 
 template<GPUUsageMode GPUUsage>
-void EdgeDataCPU<GPUUsage>::add_edges(int* src, int* tgt, int64_t* ts, size_t size) {
-    sources.append_from_pointer(src, size);
-    targets.append_from_pointer(tgt, size);
-    timestamps.append_from_pointer(ts, size);
+HOST void EdgeDataCPU<GPUUsage>::add_edges_host(int* src, int* tgt, int64_t* ts, size_t size) {
+    this->sources.append_from_pointer(src, size);
+    this->targets.append_from_pointer(tgt, size);
+    this->timestamps.append_from_pointer(ts, size);
 }
 
 template<GPUUsageMode GPUUsage>
-void EdgeDataCPU<GPUUsage>::push_back(int src, int tgt, int64_t ts) {
-    sources.push_back(src);
-    targets.push_back(tgt);
-    timestamps.push_back(ts);
+HOST void EdgeDataCPU<GPUUsage>::push_back_host(int src, int tgt, int64_t ts) {
+    this->sources.push_back(src);
+    this->targets.push_back(tgt);
+    this->timestamps.push_back(ts);
 }
 
 
 template<GPUUsageMode GPUUsage>
-std::vector<std::tuple<int, int, int64_t>> EdgeDataCPU<GPUUsage>::get_edges() {
-    std::vector<std::tuple<int, int, int64_t>> edges;
-    edges.reserve(sources.size());
+HOST typename EdgeData<GPUUsage>::EdgeVector EdgeDataCPU<GPUUsage>::get_edges_host() {
+    typename EdgeData<GPUUsage>::EdgeVector edges;
+    edges.reserve(this->sources.size());
 
-    for (int i = 0; i < sources.size(); i++) {
-        edges.emplace_back(sources[i], targets[i], timestamps[i]);
+    for (int i = 0; i < this->sources.size(); i++) {
+        edges.emplace_back(Edge(this->sources[i], this->targets[i], this->timestamps[i]));
     }
 
     return edges;
 }
 
 template<GPUUsageMode GPUUsage>
-void EdgeDataCPU<GPUUsage>::update_timestamp_groups() {
-    if (timestamps.empty()) {
-        timestamp_group_offsets.clear();
-        unique_timestamps.clear();
+HOST void EdgeDataCPU<GPUUsage>::update_timestamp_groups_host() {
+    if (this->timestamps.empty()) {
+        this->timestamp_group_offsets.clear();
+        this->unique_timestamps.clear();
         return;
     }
 
-    timestamp_group_offsets.clear();
-    unique_timestamps.clear();
+    this->timestamp_group_offsets.clear();
+    this->unique_timestamps.clear();
 
-    timestamp_group_offsets.push_back(0);
-    unique_timestamps.push_back(timestamps[0]);
+    this->timestamp_group_offsets.push_back(0);
+    this->unique_timestamps.push_back(this->timestamps[0]);
 
-    for (size_t i = 1; i < timestamps.size(); i++) {
-        if (timestamps[i] != timestamps[i-1]) {
-            timestamp_group_offsets.push_back(i);
-            unique_timestamps.push_back(timestamps[i]);
+    for (size_t i = 1; i < this->timestamps.size(); i++) {
+        if (this->timestamps[i] != this->timestamps[i-1]) {
+            this->timestamp_group_offsets.push_back(i);
+            this->unique_timestamps.push_back(this->timestamps[i]);
         }
     }
-    timestamp_group_offsets.push_back(timestamps.size());
+    this->timestamp_group_offsets.push_back(this->timestamps.size());
 }
 
 template<GPUUsageMode GPUUsage>
-void EdgeDataCPU<GPUUsage>::update_temporal_weights(const double timescale_bound) {
-    if (timestamps.empty()) {
-        forward_cumulative_weights_exponential.clear();
-        backward_cumulative_weights_exponential.clear();
+HOST void EdgeDataCPU<GPUUsage>::update_temporal_weights_host(const double timescale_bound) {
+    if (this->timestamps.empty()) {
+        this->forward_cumulative_weights_exponential.clear();
+        this->backward_cumulative_weights_exponential.clear();
         return;
     }
 
-    const int64_t min_timestamp = timestamps[0];
-    const int64_t max_timestamp = timestamps.back();
+    const int64_t min_timestamp = this->timestamps[0];
+    const int64_t max_timestamp = this->timestamps.back();
     const auto time_diff = static_cast<double>(max_timestamp - min_timestamp);
     const double time_scale = (timescale_bound > 0 && time_diff > 0) ?
         timescale_bound / time_diff : 1.0;
 
-    const size_t num_groups = get_timestamp_group_count();
-    forward_cumulative_weights_exponential.resize(num_groups);
-    backward_cumulative_weights_exponential.resize(num_groups);
+    const size_t num_groups = this->get_timestamp_group_count();
+    this->forward_cumulative_weights_exponential.resize(num_groups);
+    this->backward_cumulative_weights_exponential.resize(num_groups);
 
     double forward_sum = 0.0, backward_sum = 0.0;
 
     // First calculate all weights and total sums
     for (size_t group = 0; group < num_groups; group++) {
-        const size_t start = timestamp_group_offsets[group];
-        const int64_t group_timestamp = timestamps[start];
+        const size_t start = this->timestamp_group_offsets[group];
+        const int64_t group_timestamp = this->timestamps[start];
 
         const auto time_diff_forward = static_cast<double>(max_timestamp - group_timestamp);
         const auto time_diff_backward = static_cast<double>(group_timestamp - min_timestamp);
@@ -126,57 +126,57 @@ void EdgeDataCPU<GPUUsage>::update_temporal_weights(const double timescale_bound
         forward_sum += forward_weight;
         backward_sum += backward_weight;
 
-        forward_cumulative_weights_exponential[group] = forward_weight;
-        backward_cumulative_weights_exponential[group] = backward_weight;
+        this->forward_cumulative_weights_exponential[group] = forward_weight;
+        this->backward_cumulative_weights_exponential[group] = backward_weight;
     }
 
     // Then normalize and compute cumulative sums
     double forward_cumsum = 0.0, backward_cumsum = 0.0;
     for (size_t group = 0; group < num_groups; group++) {
-        forward_cumulative_weights_exponential[group] /= forward_sum;
-        backward_cumulative_weights_exponential[group] /= backward_sum;
+        this->forward_cumulative_weights_exponential[group] /= forward_sum;
+        this->backward_cumulative_weights_exponential[group] /= backward_sum;
 
         // Update with cumulative sums
-        forward_cumsum += forward_cumulative_weights_exponential[group];
-        backward_cumsum += backward_cumulative_weights_exponential[group];
+        forward_cumsum += this->forward_cumulative_weights_exponential[group];
+        backward_cumsum += this->backward_cumulative_weights_exponential[group];
 
-        forward_cumulative_weights_exponential[group] = forward_cumsum;
-        backward_cumulative_weights_exponential[group] = backward_cumsum;
+        this->forward_cumulative_weights_exponential[group] = forward_cumsum;
+        this->backward_cumulative_weights_exponential[group] = backward_cumsum;
     }
 }
 
 template<GPUUsageMode GPUUsage>
-std::pair<size_t, size_t> EdgeDataCPU<GPUUsage>::get_timestamp_group_range(size_t group_idx) const {
-    if (group_idx >= unique_timestamps.size()) {
+HOST std::pair<size_t, size_t> EdgeDataCPU<GPUUsage>::get_timestamp_group_range_host(size_t group_idx) const {
+    if (group_idx >= this->unique_timestamps.size()) {
         return {0, 0};
     }
-    return {timestamp_group_offsets[group_idx], timestamp_group_offsets[group_idx + 1]};
+    return {this->timestamp_group_offsets[group_idx], this->timestamp_group_offsets[group_idx + 1]};
 }
 
 template<GPUUsageMode GPUUsage>
-size_t EdgeDataCPU<GPUUsage>::get_timestamp_group_count() const {
-    return unique_timestamps.size();
+HOST size_t EdgeDataCPU<GPUUsage>::get_timestamp_group_count_host() const {
+    return this->unique_timestamps.size();
 }
 
 template<GPUUsageMode GPUUsage>
-size_t EdgeDataCPU<GPUUsage>::find_group_after_timestamp(int64_t timestamp) const {
-    if (unique_timestamps.empty()) return 0;
+HOST size_t EdgeDataCPU<GPUUsage>::find_group_after_timestamp_host(int64_t timestamp) const {
+    if (this->unique_timestamps.empty()) return 0;
 
     // Get raw pointer to data and use std::upper_bound directly
-    const int64_t* begin = unique_timestamps.data;
-    const int64_t* end = unique_timestamps.data + unique_timestamps.size();
+    const int64_t* begin = this->unique_timestamps.data;
+    const int64_t* end = this->unique_timestamps.data + this->unique_timestamps.size();
 
     const auto it = std::upper_bound(begin, end, timestamp);
     return it - begin;
 }
 
 template<GPUUsageMode GPUUsage>
-size_t EdgeDataCPU<GPUUsage>::find_group_before_timestamp(int64_t timestamp) const {
-    if (unique_timestamps.empty()) return 0;
+HOST size_t EdgeDataCPU<GPUUsage>::find_group_before_timestamp_host(int64_t timestamp) const {
+    if (this->unique_timestamps.empty()) return 0;
 
     // Get raw pointer to data and use std::lower_bound directly
-    const int64_t* begin = unique_timestamps.data;
-    const int64_t* end = unique_timestamps.data + unique_timestamps.size();
+    const int64_t* begin = this->unique_timestamps.data;
+    const int64_t* end = this->unique_timestamps.data + this->unique_timestamps.size();
 
     auto it = std::lower_bound(begin, end, timestamp);
     return (it - begin) - 1;
