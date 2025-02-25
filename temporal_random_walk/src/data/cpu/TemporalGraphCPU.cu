@@ -18,11 +18,7 @@ HOST TemporalGraphCPU<GPUUsage>::TemporalGraphCPU(
     const int64_t window,
     const bool enable_weight_computation,
     const double timescale_bound)
-    : ITemporalGraph<GPUUsage>::is_directed(directed)
-    , ITemporalGraph<GPUUsage>::time_window(window)
-    , ITemporalGraph<GPUUsage>::enable_weight_computation(enable_weight_computation)
-    , ITemporalGraph<GPUUsage>::timescale_bound(timescale_bound)
-    , ITemporalGraph<GPUUsage>::latest_timestamp(0)
+    : ITemporalGraph<GPUUsage>(directed, window, enable_weight_computation, timescale_bound)
     , ITemporalGraph<GPUUsage>::node_index(NodeEdgeIndexCPU<GPUUsage>())
     , ITemporalGraph<GPUUsage>::edges(EdgeDataCPU<GPUUsage>())
     , ITemporalGraph<GPUUsage>::node_mapping(NodeMappingCPU<GPUUsage>())
@@ -296,13 +292,14 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_edge_at_host(
             const size_t available_groups = num_groups - first_group;
             if (available_groups == 0) return Edge{-1, -1, -1};
 
-            if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+            if (picker.get_picker_type() == INDEX_BASED_PICKER_TYPE) {
+                auto* index_picker = static_cast<IndexBasedRandomPicker*>(&picker);
                 const size_t index = index_picker->pick_random(0, static_cast<int>(available_groups), false);
                 if (index >= available_groups) return Edge{-1, -1, -1};
                 group_idx = first_group + index;
             }
             else {
-                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
+                auto* weight_picker = static_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
                 group_idx = weight_picker->pick_random(
                     this->edges.forward_cumulative_weights_exponential,
                     static_cast<int>(first_group),
@@ -313,13 +310,14 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_edge_at_host(
             if (last_group == static_cast<size_t>(-1)) return Edge{-1, -1, -1};
 
             const size_t available_groups = last_group + 1;
-            if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+            if (picker.get_picker_type() == INDEX_BASED_PICKER_TYPE) {
+                auto* index_picker = static_cast<IndexBasedRandomPicker*>(&picker);
                 const size_t index = index_picker->pick_random(0, static_cast<int>(available_groups), true);
                 if (index >= available_groups) return Edge{-1, -1, -1};
                 group_idx = last_group - (available_groups - index - 1);
             }
             else {
-                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
+                auto* weight_picker = static_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
                 group_idx = weight_picker->pick_random(
                     this->edges.backward_cumulative_weights_exponential,
                     0,
@@ -328,12 +326,13 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_edge_at_host(
         }
     } else {
         // No timestamp constraint - select from all groups
-        if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+        if (picker.get_picker_type() == INDEX_BASED_PICKER_TYPE) {
+            auto* index_picker = static_cast<IndexBasedRandomPicker*>(&picker);
             const size_t index = index_picker->pick_random(0, static_cast<int>(num_groups), !forward);
             if (index >= num_groups) return Edge{-1, -1, -1};
             group_idx = index;
         } else {
-            auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
+            auto* weight_picker = static_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
             if (forward) {
                 group_idx = weight_picker->pick_random(
                     this->edges.forward_cumulative_weights_exponential,
@@ -411,14 +410,15 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_node_edge_at_host(
             if (available == 0) return Edge{-1, -1, -1};
 
             const size_t start_pos = it - timestamp_group_indices.begin();
-            if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+            if (picker.get_picker_type() == INDEX_BASED_PICKER_TYPE) {
+                auto* index_picker = static_cast<IndexBasedRandomPicker*>(&picker);
                 const size_t index = index_picker->pick_random(0, static_cast<int>(available), false);
                 if (index >= available) return Edge{-1, -1, -1};
                 group_pos = start_pos + index;
             }
             else
             {
-                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
+                auto* weight_picker = static_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
                 group_pos = weight_picker->pick_random(
                     this->node_index.outbound_forward_cumulative_weights_exponential,
                     static_cast<int>(start_pos),
@@ -439,14 +439,15 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_node_edge_at_host(
                 it);
             if (available == 0) return Edge{-1, -1, -1};
 
-            if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+            if (picker.get_picker_type() == INDEX_BASED_PICKER_TYPE) {
+                auto* index_picker = static_cast<IndexBasedRandomPicker*>(&picker);
                 const size_t index = index_picker->pick_random(0, static_cast<int>(available), true);
                 if (index >= available) return Edge{-1, -1, -1};
                 group_pos = (it - timestamp_group_indices.begin()) - 1 - (available - index - 1);
             }
             else
             {
-                auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
+                auto* weight_picker = static_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
                 group_pos = weight_picker->pick_random(
                     this->is_directed
                         ? this->node_index.inbound_backward_cumulative_weights_exponential
@@ -461,7 +462,8 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_node_edge_at_host(
         const size_t num_groups = group_end_offset - group_start_offset;
         if (num_groups == 0) return Edge{-1, -1, -1};
 
-        if (auto* index_picker = dynamic_cast<IndexBasedRandomPicker*>(&picker)) {
+        if (picker.get_picker_type() == INDEX_BASED_PICKER_TYPE) {
+            auto* index_picker = static_cast<IndexBasedRandomPicker*>(&picker);
             const size_t index = index_picker->pick_random(0, static_cast<int>(num_groups), !forward);
             if (index >= num_groups) return Edge{-1, -1, -1};
             group_pos = forward
@@ -470,7 +472,7 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_node_edge_at_host(
         }
         else
         {
-            auto* weight_picker = dynamic_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
+            auto* weight_picker = static_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
             if (forward)
             {
                 group_pos = weight_picker->pick_random(

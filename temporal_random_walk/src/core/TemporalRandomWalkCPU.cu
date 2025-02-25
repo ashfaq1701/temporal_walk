@@ -4,35 +4,24 @@
 #include "../utils/utils.h"
 #include "../random/UniformRandomPicker.cuh"
 #include "../random/LinearRandomPicker.cuh"
+#include "../data/cpu/TemporalGraphCPU.cuh"
 #include "../random/ExponentialIndexRandomPicker.cuh"
 
 
 constexpr int DEFAULT_CONTEXT_WINDOW_LEN = 2;
 
 template<GPUUsageMode GPUUsage>
-TemporalRandomWalk<GPUUsage>::TemporalRandomWalk(
+TemporalRandomWalkCPU<GPUUsage>::TemporalRandomWalkCPU(
     bool is_directed,
     int64_t max_time_capacity,
     bool enable_weight_computation,
     double timescale_bound,
     size_t n_threads):
-    is_directed(is_directed), max_time_capacity(max_time_capacity),
-    n_threads(static_cast<int>(n_threads)), enable_weight_computation(enable_weight_computation),
-    timescale_bound(timescale_bound), thread_pool(n_threads)
+    ITemporalRandomWalk<GPUUsage>(is_directed, max_time_capacity, enable_weight_computation, timescale_bound),
+    n_threads(static_cast<int>(n_threads)), thread_pool(n_threads)
 {
-    #ifndef HAS_CUDA
-    if (GPUUsage != GPUUsageMode::ON_CPU) {
-        throw std::runtime_error("GPU support is not available, only \"ON_CPU\" version is available.");
-    }
-    #endif
-
-    #ifdef HAS_CUDA
-    temporal_graph = std::make_unique<TemporalGraphType>(
+    this->temporal_graph = new TemporalGraphCPU<GPUUsage>(
         is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
-    #else
-    temporal_graph = std::make_unique<TemporalGraph<GPUUsageMode::ON_CPU>>(
-        is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
-    #endif
 }
 
 bool get_should_walk_forward(const WalkDirection walk_direction) {
@@ -48,23 +37,23 @@ bool get_should_walk_forward(const WalkDirection walk_direction) {
 }
 
 template<GPUUsageMode GPUUsage>
-RandomPicker TemporalRandomWalk<GPUUsage>::get_random_picker(const RandomPickerType* picker_type) const {
+HOST RandomPicker* TemporalRandomWalkCPU<GPUUsage>::get_random_picker(const RandomPickerType* picker_type) const {
     if (!picker_type) {
         throw std::invalid_argument("picker_type cannot be nullptr");
     }
 
     switch (*picker_type) {
     case Uniform:
-        return std::make_shared<UniformRandomPicker<GPUUsage>>();
+        return new UniformRandomPicker<GPUUsage>();
     case Linear:
-        return std::make_shared<LinearRandomPicker<GPUUsage>>();
+        return new LinearRandomPicker<GPUUsage>();
     case ExponentialIndex:
-        return std::make_shared<ExponentialIndexRandomPicker<GPUUsage>>();
+        return new ExponentialIndexRandomPicker<GPUUsage>();
     case ExponentialWeight:
-        if (!enable_weight_computation) {
+        if (!this->enable_weight_computation) {
             throw std::invalid_argument("To enable weight based random pickers, set enable_weight_computation constructor argument to true.");
         }
-        return std::make_shared<WeightBasedRandomPickerType>();
+        return new WeightBasedRandomPicker<GPUUsage>();
     default:
         throw std::invalid_argument("Invalid picker type");
     }
@@ -360,56 +349,43 @@ void TemporalRandomWalk<GPUUsage>::generate_random_walk_and_time(
 }
 
 template<GPUUsageMode GPUUsage>
-void TemporalRandomWalk<GPUUsage>::add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& edge_infos) const {
-    temporal_graph->add_multiple_edges(edge_infos);
+HOST void TemporalRandomWalkCPU<GPUUsage>::add_multiple_edges(const typename ITemporalRandomWalk<GPUUsage>::EdgeVector& edge_infos) const {
+    this->temporal_graph->add_multiple_edges(edge_infos);
 }
 
 template<GPUUsageMode GPUUsage>
-size_t TemporalRandomWalk<GPUUsage>::get_node_count() const {
-    return temporal_graph->get_node_count();
+HOST size_t TemporalRandomWalkCPU<GPUUsage>::get_node_count() const {
+    return this->temporal_graph->get_node_count();
 }
 
 template<GPUUsageMode GPUUsage>
-long TemporalRandomWalk<GPUUsage>::estimate_cw_count(
-    const int num_walks_per_node,
-    const int max_walk_len,
-    const int min_walk_len) const {
-
-    return static_cast<long>(get_node_count()) * num_walks_per_node * (max_walk_len - min_walk_len + 1);
+HOST size_t TemporalRandomWalkCPU<GPUUsage>::get_edge_count() const {
+    return this->temporal_graph->get_total_edges();
 }
 
 template<GPUUsageMode GPUUsage>
-size_t TemporalRandomWalk<GPUUsage>::get_edge_count() const {
-    return temporal_graph->get_total_edges();
+HOST typename ITemporalRandomWalk<GPUUsage>::IntVector TemporalRandomWalkCPU<GPUUsage>::get_node_ids() const {
+    return this->temporal_graph->get_node_ids();
 }
 
 template<GPUUsageMode GPUUsage>
-std::vector<int> TemporalRandomWalk<GPUUsage>::get_node_ids() const {
-    return temporal_graph->get_node_ids();
+HOST typename ITemporalRandomWalk<GPUUsage>::EdgeVector TemporalRandomWalkCPU<GPUUsage>::get_edges() const {
+    return this->temporal_graph->get_edges();
 }
 
 template<GPUUsageMode GPUUsage>
-std::vector<std::tuple<int, int, int64_t>> TemporalRandomWalk<GPUUsage>::get_edges() const {
-    return temporal_graph->get_edges();
+HOST bool TemporalRandomWalkCPU<GPUUsage>::get_is_directed() const {
+    return this->is_directed;
 }
 
 template<GPUUsageMode GPUUsage>
-bool TemporalRandomWalk<GPUUsage>::get_is_directed() const {
-    return is_directed;
+HOST void TemporalRandomWalkCPU<GPUUsage>::clear() {
+    this->temporal_graph = new TemporalGraphCPU<GPUUsage>(
+        this->is_directed, this->max_time_capacity,
+        this->enable_weight_computation, this->timescale_bound);
 }
 
-template<GPUUsageMode GPUUsage>
-void TemporalRandomWalk<GPUUsage>::clear() {
-    #ifdef HAS_CUDA
-    temporal_graph = std::make_unique<TemporalGraphType>(
-        is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
-    #else
-    temporal_graph = std::make_unique<TemporalGraph<GPUUsageMode::ON_CPU>>(
-        is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
-    #endif
-}
-
-template class TemporalRandomWalk<GPUUsageMode::ON_CPU>;
+template class TemporalRandomWalkCPU<GPUUsageMode::ON_CPU>;
 #ifdef HAS_CUDA
 template class TemporalRandomWalk<GPUUsageMode::ON_GPU>;
 #endif

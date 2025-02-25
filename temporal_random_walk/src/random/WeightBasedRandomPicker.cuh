@@ -13,6 +13,11 @@ public:
         const typename SelectVectorType<double, GPUUsage>::type& cumulative_weights,
         int group_start,
         int group_end);
+
+    int get_picker_type() override
+    {
+        return WEIGHT_BASED_PICKER_TYPE;
+    }
 };
 
 #endif //WEIGHTBASEDRANDOMPICKER_H

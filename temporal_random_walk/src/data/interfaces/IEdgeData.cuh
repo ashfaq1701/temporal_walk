@@ -37,8 +37,8 @@ public:
     /**
     * HOST METHODS
     */
-    HOST void virtual reserve_host(size_t size) {}
-    HOST void virtual clear_host() {}
+    virtual HOST void reserve_host(size_t size) {}
+    virtual HOST void clear_host() {}
     [[nodiscard]] virtual HOST size_t size_host() const { return 0; }
     [[nodiscard]] virtual HOST bool empty_host() const { return true; }
     virtual HOST void resize_host(size_t new_size) {}

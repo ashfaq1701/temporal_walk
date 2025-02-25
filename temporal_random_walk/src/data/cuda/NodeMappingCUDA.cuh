@@ -1,10 +1,11 @@
 #ifndef NODEMAPPINGCUDA_H
 #define NODEMAPPINGCUDA_H
 
-#include "../interfaces/NodeMapping.cuh"
+#include "../../structs/enums.h"
+#include "../interfaces/INodeMapping.cuh"
 
 template<GPUUsageMode GPUUsage>
-class NodeMappingCUDA : public NodeMapping<GPUUsage> {
+class NodeMappingCUDA : public INodeMapping<GPUUsage> {
 #ifdef HAS_CUDA
 
 #endif

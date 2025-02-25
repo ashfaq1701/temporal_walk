@@ -39,6 +39,16 @@ public:
     IEdgeData<GPUUsage> edges; // Main edge storage
     INodeMapping<GPUUsage> node_mapping; // Sparse to dense node ID mapping
 
+    explicit ITemporalGraph(
+        bool directed,
+        int64_t window = -1,
+        bool enable_weight_computation = false,
+        double timescale_bound=-1)
+        : is_directed(directed)
+            , time_window(window)
+            , enable_weight_computation(enable_weight_computation)
+            , timescale_bound(timescale_bound) {}
+
     /**
     * HOST METHODS
     */
