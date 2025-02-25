@@ -53,8 +53,8 @@ HOST void EdgeDataCPU<GPUUsage>::push_back_host(int src, int tgt, int64_t ts) {
 
 
 template<GPUUsageMode GPUUsage>
-HOST typename EdgeData<GPUUsage>::EdgeVector EdgeDataCPU<GPUUsage>::get_edges_host() {
-    typename EdgeData<GPUUsage>::EdgeVector edges;
+HOST typename IEdgeData<GPUUsage>::EdgeVector EdgeDataCPU<GPUUsage>::get_edges_host() {
+    typename IEdgeData<GPUUsage>::EdgeVector edges;
     edges.reserve(this->sources.size());
 
     for (int i = 0; i < this->sources.size(); i++) {

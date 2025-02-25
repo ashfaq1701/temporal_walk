@@ -2,7 +2,7 @@
 #define TEMPORAL_RANDOM_WALK_CPU_H
 
 #include<vector>
-#include "TemporalRandomWalk.cuh"
+#include "ITemporalRandomWalk.cuh"
 #include "../structs/structs.cuh"
 #include "../structs/enums.h"
 #include "../config/constants.h"
@@ -22,7 +22,7 @@
  * @tparam GPUUsage enum to control data placement and computation between CPU and GPU. Possible values are ON_CPU, ON_GPU.
  */
 template<GPUUsageMode GPUUsage>
-class TemporalRandomWalkCPU : public TemporalRandomWalk<GPUUsage> {
+class TemporalRandomWalkCPU : public ITemporalRandomWalk<GPUUsage> {
     bool is_directed;
 
     int64_t max_time_capacity;
@@ -52,16 +52,6 @@ class TemporalRandomWalkCPU : public TemporalRandomWalk<GPUUsage> {
     [[nodiscard]] long estimate_cw_count(int num_walks_per_node, int max_walk_len, int min_walk_len) const;
 
 public:
-
-    /**
-     * @brief Construct a temporal random walk generator
-     *
-     * @param is_directed Whether the graph is directed
-     * @param max_time_capacity Maximum time window for edges (-1 for no limit)
-     * @param enable_weight_computation Enable CTDNE weight computation for ExponentialWeight picker
-     * @param timescale_bound Scale factor for temporal differences
-     * @param n_threads Number of threads for parallel walk generation
-     */
     explicit TemporalRandomWalk(
         bool is_directed,
         int64_t max_time_capacity=-1,

@@ -19,8 +19,8 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::clear_host() {
 
 template<GPUUsageMode GPUUsage>
 HOST void NodeEdgeIndexCPU<GPUUsage>::rebuild_host(
-   const EdgeData<GPUUsage>& edges,
-   const NodeMapping<GPUUsage>& mapping,
+   const IEdgeData<GPUUsage>& edges,
+   const INodeMapping<GPUUsage>& mapping,
    const bool is_directed) {
 
    const size_t num_nodes = mapping.size_host();
@@ -62,8 +62,8 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::rebuild_host(
    }
 
    // Second pass: fill edge indices
-   typename NodeEdgeIndex<GPUUsage>::SizeVector outbound_current(num_nodes);
-   typename NodeEdgeIndex<GPUUsage>::SizeVector inbound_current;
+   typename INodeEdgeIndex<GPUUsage>::SizeVector outbound_current(num_nodes);
+   typename INodeEdgeIndex<GPUUsage>::SizeVector inbound_current;
    if (is_directed) {
        inbound_current.resize(num_nodes);
    }
@@ -86,8 +86,8 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::rebuild_host(
    }
 
    // Third pass: count timestamp groups
-   typename NodeEdgeIndex<GPUUsage>::SizeVector outbound_group_count(num_nodes);
-   typename NodeEdgeIndex<GPUUsage>::SizeVector inbound_group_count;
+   typename INodeEdgeIndex<GPUUsage>::SizeVector outbound_group_count(num_nodes);
+   typename INodeEdgeIndex<GPUUsage>::SizeVector inbound_group_count;
    if (is_directed) {
        inbound_group_count.resize(num_nodes);
    }
@@ -171,7 +171,7 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::rebuild_host(
 }
 
 template<GPUUsageMode GPUUsage>
-HOST void NodeEdgeIndexCPU<GPUUsage>::update_temporal_weights_host(const EdgeData<GPUUsage>& edges, double timescale_bound) {
+HOST void NodeEdgeIndexCPU<GPUUsage>::update_temporal_weights_host(const IEdgeData<GPUUsage>& edges, double timescale_bound) {
     const size_t num_nodes = this->outbound_offsets.size() - 1;
 
     this->outbound_forward_cumulative_weights_exponential.resize(this->outbound_timestamp_group_indices.size());
@@ -351,7 +351,7 @@ HOST size_t NodeEdgeIndexCPU<GPUUsage>::get_timestamp_group_count_host(
 }
 
 template<GPUUsageMode GPUUsage>
-[[nodiscard]] HOST typename NodeEdgeIndex<GPUUsage>::SizeVector NodeEdgeIndexCPU<GPUUsage>::get_timestamp_offset_vector_host(
+[[nodiscard]] HOST typename INodeEdgeIndex<GPUUsage>::SizeVector NodeEdgeIndexCPU<GPUUsage>::get_timestamp_offset_vector_host(
     const bool forward,
     const bool directed) const {
     return (directed && !forward) ? this->inbound_timestamp_group_offsets : this->outbound_timestamp_group_offsets;

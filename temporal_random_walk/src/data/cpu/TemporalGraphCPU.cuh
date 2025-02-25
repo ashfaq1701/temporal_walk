@@ -8,10 +8,10 @@
 #include "../../structs/enums.h"
 #include "../../random/RandomPicker.h"
 
-#include "../interfaces/TemporalGraph.cuh"
+#include "../interfaces/ITemporalGraph.cuh"
 
 template<GPUUsageMode GPUUsage>
-class TemporalGraphCPU : TemporalGraph<GPUUsage>
+class TemporalGraphCPU : ITemporalGraph<GPUUsage>
 {
 public:
     ~TemporalGraphCPU() override = default;
@@ -25,7 +25,7 @@ public:
     HOST void sort_and_merge_edges_host(size_t start_idx) override;
 
     // Edge addition
-    HOST void add_multiple_edges_host(typename TemporalGraph<GPUUsage>::EdgeVector new_edges) override;
+    HOST void add_multiple_edges_host(typename ITemporalGraph<GPUUsage>::EdgeVector new_edges) override;
 
     HOST void update_temporal_weights_host() override;
 
@@ -38,21 +38,20 @@ public:
     [[nodiscard]] HOST size_t count_node_timestamps_greater_than_host(int node_id, int64_t timestamp) const override;
 
     // Edge selection
-    [[nodiscard]] HOST Edge get_edge_at_host(
-        RandomPicker& picker, int64_t timestamp = -1,
-        bool forward = true) const override;
+    [[nodiscard]] HOST Edge get_edge_at_host(RandomPicker& picker, int64_t timestamp = -1,
+                                            bool forward = true) const override;
 
     [[nodiscard]] HOST Edge get_node_edge_at_host(int node_id,
-                                                                 RandomPicker& picker,
-                                                                 int64_t timestamp = -1,
-                                                                 bool forward = true) const override;
+                                                RandomPicker& picker,
+                                                int64_t timestamp = -1,
+                                                bool forward = true) const override;
 
     // Utility methods
     [[nodiscard]] HOST size_t get_total_edges_host() const override { return this->edges.size(); }
     [[nodiscard]] HOST size_t get_node_count_host() const override { return this->node_mapping.active_size(); }
     [[nodiscard]] HOST int64_t get_latest_timestamp_host() override { return this->latest_timestamp; }
-    [[nodiscard]] typename TemporalGraph<GPUUsage>::IntVector get_node_ids_host() const override;
-    [[nodiscard]] typename TemporalGraph<GPUUsage>::EdgeVector get_edges_host() override;
+    [[nodiscard]] typename ITemporalGraph<GPUUsage>::IntVector get_node_ids_host() const override;
+    [[nodiscard]] typename ITemporalGraph<GPUUsage>::EdgeVector get_edges_host() override;
 };
 
 #endif //TEMPORALGRAPH_CPU_H

@@ -1,15 +1,14 @@
 #ifndef TEMPORAL_RANDOM_WALK_H
 #define TEMPORAL_RANDOM_WALK_H
 
+#include<vector>
+#include "TemporalRandomWalk.cuh"
 #include "../structs/structs.cuh"
 #include "../structs/enums.h"
 #include "../config/constants.h"
 #include "../../libs/thread-pool/ThreadPool.h"
-
-#include "../data/interfaces/TemporalGraph.cuh"
-
-#include "../random/WeightBasedRandomPicker.cuh"
-#include "../random/WeightBasedRandomPickerGPU.cuh"
+#include "../random/RandomPicker.h"
+#include "../data/cpu/TemporalGraphCPU.cuh"
 
 /**
  * @brief Main class for generating temporal random walks
@@ -21,36 +20,8 @@
  */
 template<GPUUsageMode GPUUsage>
 class TemporalRandomWalk {
+
 public:
-
-    bool is_directed = false;
-
-    int64_t max_time_capacity = -1;
-
-    int n_threads = static_cast<int>(std::thread::hardware_concurrency());
-
-    bool enable_weight_computation = false;
-
-    double timescale_bound = DEFAULT_TIMESTAMP_BOUND;
-
-    int64_t max_edge_time = 0;
-
-    std::unique_ptr<TemporalGraph<GPUUsage>> temporal_graph;
-
-    ThreadPool thread_pool;
-
-    void generate_random_walk_and_time(
-        std::vector<NodeWithTime>* walk,
-        const std::shared_ptr<RandomPicker>& edge_picker,
-        const std::shared_ptr<RandomPicker>& start_picker,
-        int max_walk_len,
-        bool should_walk_forward,
-        int start_node_id=-1) const;
-
-    std::shared_ptr<RandomPicker> get_random_picker(const RandomPickerType* picker_type) const;
-
-    [[nodiscard]] long estimate_cw_count(int num_walks_per_node, int max_walk_len, int min_walk_len) const;
-
 
     /**
      * @brief Construct a temporal random walk generator
@@ -139,53 +110,6 @@ public:
         WalkDirection walk_direction=WalkDirection::Forward_In_Time);
 
     /**
-     * @brief Generate walks with fixed number of context windows
-     *
-     * @param max_walk_len Maximum length of each walk
-     * @param walk_bias Random selection strategy for next edges
-     * @param num_cw Target number of context windows (-1 to use num_walks_per_node)
-     * @param num_walks_per_node Number of walks to generate per starting node
-     * @param initial_edge_bias Optional different strategy for first edge
-     * @param walk_direction Forward or backward in time
-     * @param context_window_len Minimum walk length (-1 for default)
-     * @param p_walk_success_threshold Minimum success rate threshold
-     * @return Vector of walks with timestamps
-     */
-    [[nodiscard]] std::vector<std::vector<NodeWithTime>> get_random_walks_and_times_with_specific_number_of_contexts(
-        int max_walk_len,
-        const RandomPickerType* walk_bias,
-        long num_cw=-1,
-        int num_walks_per_node=-1,
-        const RandomPickerType* initial_edge_bias=nullptr,
-        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
-        int context_window_len=-1,
-        float p_walk_success_threshold=DEFAULT_SUCCESS_THRESHOLD);
-
-    /**
-     * @brief Generate walks with fixed number of context windows (without timestamps)
-     * Similar to get_random_walks_and_times_with_specific_number_of_contexts but returns only node IDs.
-     *
-     * @param max_walk_len Maximum length of each walk
-     * @param walk_bias Random selection strategy for next edges
-     * @param num_cw Target number of context windows (-1 to use num_walks_per_node)
-     * @param num_walks_per_node Number of walks to generate per starting node
-     * @param initial_edge_bias Optional different strategy for first edge
-     * @param walk_direction Forward or backward in time
-     * @param context_window_len Minimum walk length (-1 for default)
-     * @param p_walk_success_threshold Minimum success rate threshold
-     * @return Vector of walks with nodes only
-     */
-    [[nodiscard]] std::vector<std::vector<int>> get_random_walks_with_specific_number_of_contexts(
-        int max_walk_len,
-        const RandomPickerType* walk_bias,
-        long num_cw=-1,
-        int num_walks_per_node=-1,
-        const RandomPickerType* initial_edge_bias=nullptr,
-        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
-        int context_window_len=-1,
-        float p_walk_success_threshold=DEFAULT_SUCCESS_THRESHOLD);
-
-    /**
      * @brief Add multiple edges to the graph
      * @param edge_infos Vector of (source, target, timestamp) tuples
      */
@@ -209,5 +133,6 @@ public:
     /** @brief Clear all edges and nodes from the graph */
     void clear();
 };
+
 
 #endif //TEMPORAL_RANDOM_WALK_H

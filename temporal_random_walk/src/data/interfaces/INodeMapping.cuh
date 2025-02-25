@@ -1,5 +1,5 @@
-#ifndef NODEMAPPING_H
-#define NODEMAPPING_H
+#ifndef I_NODEMAPPING_H
+#define I_NODEMAPPING_H
 
 #include <vector>
 #include <cstdint>
@@ -8,17 +8,17 @@
 #include "../../structs/enums.h"
 #include "../../common/types.cuh"
 
-#include "../interfaces/EdgeData.cuh"
+#include "../interfaces/IEdgeData.cuh"
 
 template<GPUUsageMode GPUUsage>
-class NodeMapping {
+class INodeMapping {
 
 protected:
     using IntVector = typename SelectVectorType<int, GPUUsage>::type;
     using BoolVector = typename SelectVectorType<bool, GPUUsage>::type;
 
 public:
-    virtual ~NodeMapping() = default;
+    virtual ~INodeMapping() = default;
 
     IntVector sparse_to_dense{};    // Maps sparse ID to dense index
     IntVector dense_to_sparse{};    // Maps dense index back to sparse ID
@@ -28,7 +28,7 @@ public:
     /**
     * HOST METHODS
     */
-    virtual HOST void update_host(const EdgeData<GPUUsage>& edges, size_t start_idx, size_t end_idx) {}
+    virtual HOST void update_host(const IEdgeData<GPUUsage>& edges, size_t start_idx, size_t end_idx) {}
     [[nodiscard]] virtual HOST int to_dense_host(int sparse_id) const { return -1; }
     [[nodiscard]] virtual HOST int to_sparse_host(int dense_idx) const { return -1; }
     [[nodiscard]] virtual HOST size_t size_host() const { return 0; }
@@ -45,7 +45,7 @@ public:
     /**
     * DEVICE METHODS
     */
-    virtual DEVICE void update_device(const EdgeData<GPUUsage>& edges, size_t start_idx, size_t end_idx) {}
+    virtual DEVICE void update_device(const IEdgeData<GPUUsage>& edges, size_t start_idx, size_t end_idx) {}
     [[nodiscard]] virtual DEVICE int to_dense_device(int sparse_id) const { return -1; }
     [[nodiscard]] virtual DEVICE int to_sparse_device(int dense_idx) const { return -1; }
     [[nodiscard]] virtual DEVICE size_t size_device() const { return 0; }
@@ -60,4 +60,4 @@ public:
     [[nodiscard]] virtual DEVICE IntVector get_all_sparse_ids_device() const { return IntVector(); }
 };
 
-#endif //NODEMAPPING_H
+#endif //I_NODEMAPPING_H

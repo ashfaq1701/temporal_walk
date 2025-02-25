@@ -48,7 +48,7 @@ bool get_should_walk_forward(const WalkDirection walk_direction) {
 }
 
 template<GPUUsageMode GPUUsage>
-std::shared_ptr<RandomPicker> TemporalRandomWalk<GPUUsage>::get_random_picker(const RandomPickerType* picker_type) const {
+RandomPicker TemporalRandomWalk<GPUUsage>::get_random_picker(const RandomPickerType* picker_type) const {
     if (!picker_type) {
         throw std::invalid_argument("picker_type cannot be nullptr");
     }
@@ -265,140 +265,6 @@ std::vector<std::vector<int>> TemporalRandomWalk<GPUUsage>::get_random_walks(
         initial_edge_bias,
         walk_direction);
 
-    std::vector<std::vector<int>> walks;
-
-    for (auto & walk_with_time : walks_with_times)
-    {
-        std::vector<int> walk;
-
-        for (const auto & [node, time] : walk_with_time)
-        {
-            walk.push_back(node); // NOLINT(*-inefficient-vector-operation)
-        }
-
-        walks.push_back(walk);
-    }
-
-    return walks;
-}
-
-template<GPUUsageMode GPUUsage>
-std::vector<std::vector<NodeWithTime>> TemporalRandomWalk<GPUUsage>::get_random_walks_and_times_with_specific_number_of_contexts(
-    const int max_walk_len,
-    const RandomPickerType* walk_bias,
-    const long num_cw,
-    const int num_walks_per_node,
-    const RandomPickerType* initial_edge_bias,
-    const WalkDirection walk_direction,
-    const int context_window_len,
-    const float p_walk_success_threshold) {
-
-    const std::shared_ptr<RandomPicker> edge_picker = get_random_picker(walk_bias);
-    std::shared_ptr<RandomPicker> start_picker;
-    if (initial_edge_bias) {
-        start_picker = get_random_picker(initial_edge_bias);
-    } else {
-        start_picker = edge_picker;
-    }
-
-    int min_walk_len = DEFAULT_CONTEXT_WINDOW_LEN;
-    if (context_window_len != -1) {
-        min_walk_len = context_window_len;
-    }
-
-    long cw_count = num_cw;
-    if (num_cw == -1 && num_walks_per_node == -1) {
-        throw std::invalid_argument("One of num_cw and num_walks_per_node must be specified.");
-    }
-
-    if (num_cw == -1) {
-        cw_count = estimate_cw_count(num_walks_per_node, max_walk_len, min_walk_len);
-    }
-
-    std::atomic<size_t> num_cw_curr{0};
-    std::atomic<size_t> successes{0};
-    std::atomic<size_t> failures{0};
-
-    // Thread-safe vector for collecting walks
-    std::mutex walks_mutex;
-    std::vector<std::vector<NodeWithTime>> walks;
-
-    auto generate_walks_thread = [&]()
-    {
-        while (num_cw_curr < cw_count) {
-            const bool should_walk_forward = get_should_walk_forward(walk_direction);
-
-            std::vector<NodeWithTime> walk;
-            walk.reserve(max_walk_len);
-
-            generate_random_walk_and_time(
-                &walk,
-                edge_picker,
-                start_picker,
-                max_walk_len,
-                should_walk_forward);
-
-            if (walk.size() >= min_walk_len) {
-                const size_t new_cw = walk.size() - min_walk_len + 1;
-                size_t curr_cw = num_cw_curr.fetch_add(new_cw);
-
-                if (curr_cw < cw_count) {
-                    std::lock_guard<std::mutex> lock(walks_mutex);
-                    walks.push_back(std::move(walk));
-                }
-
-                ++successes;
-            } else {
-                ++failures;
-
-                size_t total = successes + failures;
-                if (total > 100) {
-                    const float posterior = compute_beta_95th_percentile(successes, failures);
-                    if (posterior < p_walk_success_threshold) {
-                        throw std::runtime_error("Too many walks being discarded. "
-                                                 "Consider using a smaller context window size.");
-                    }
-                }
-            }
-        }
-    };
-
-    std::vector<std::future<void>> futures;
-    futures.reserve(n_threads);
-
-    for (size_t i = 0; i < n_threads; ++i)
-    {
-        futures.push_back(thread_pool.enqueue(generate_walks_thread));
-    }
-
-    for (auto& future : futures) {
-        try {
-            future.get();
-        } catch (const std::exception& e) {
-            for (auto& f : futures) {
-                if (f.valid()) {
-                    f.wait();
-                }
-            }
-            throw;
-        }
-    }
-
-    return walks;
-}
-
-template<GPUUsageMode GPUUsage>
-std::vector<std::vector<int>> TemporalRandomWalk<GPUUsage>::get_random_walks_with_specific_number_of_contexts(
-    const int max_walk_len,
-    const RandomPickerType* walk_bias,
-    const long num_cw,
-    const int num_walks_per_node,
-    const RandomPickerType* initial_edge_bias,
-    const WalkDirection walk_direction,
-    const int context_window_len,
-    const float p_walk_success_threshold) {
-
-    std::vector<std::vector<NodeWithTime>> walks_with_times = get_random_walks_and_times_with_specific_number_of_contexts(max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias, walk_direction, context_window_len, p_walk_success_threshold);
     std::vector<std::vector<int>> walks;
 
     for (auto & walk_with_time : walks_with_times)

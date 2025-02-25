@@ -5,6 +5,9 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "enums.h"
+#include "../common/data/common_vector.cuh"
+
 struct SizeRange {
     size_t from;
     size_t to;
@@ -31,6 +34,52 @@ struct NodeWithTime {
     HOST DEVICE NodeWithTime(): node(-1), timestamp(-1) {}
 
     HOST DEVICE NodeWithTime(int node, int64_t timestamp): node(node), timestamp(timestamp) {}
+};
+
+template<GPUUsageMode GPUUsage>
+struct WalkSet
+{
+    size_t num_walks;
+    size_t max_len;
+
+    CommonVector<int, GPUUsage> nodes;
+    CommonVector<int64_t, GPUUsage> timestamps;
+    CommonVector<size_t, GPUUsage> walk_lens;
+
+    HOST DEVICE WalkSet(): num_walks(0), max_len(0), nodes(nullptr), timestamps(nullptr), walk_lens(nullptr) {}
+
+    HOST DEVICE explicit WalkSet(size_t num_walks, size_t max_len)
+        : num_walks(num_walks), max_len(max_len), nodes({}), timestamps({}), walk_lens({})
+    {
+        nodes.allocate(num_walks * max_len);
+        timestamps.allocate(num_walks * max_len);
+        walk_lens.allocate(num_walks);
+    }
+
+    HOST DEVICE void add_hop(int walk_number, int node, int64_t timestamp)
+    {
+        size_t offset = walk_number * max_len + walk_lens[walk_number];
+        nodes[offset] = node;
+        timestamps[offset] = timestamp;
+        ++walk_lens[walk_number];
+    }
+
+    HOST DEVICE void get_walk_len(int walk_number)
+    {
+        return walk_lens[walk_number];
+    }
+
+    HOST DEVICE NodeWithTime get_walk_hop(int walk_number, int hop_number)
+    {
+        size_t walk_length = walk_lens[walk_number];
+        if (hop_number < 0 || hop_number >= walk_length) {
+            return NodeWithTime{-1, -1};  // Return invalid entry
+        }
+
+        // Compute offset safely
+        size_t offset = walk_number * max_len + hop_number;
+        return NodeWithTime{nodes[offset], timestamps[offset]};
+    }
 };
 
 #endif // STRUCTS_H

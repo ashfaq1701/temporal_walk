@@ -5,12 +5,12 @@
 #include <cstdint>
 #include <tuple>
 
-#include "../interfaces/EdgeData.cuh"
+#include "../interfaces/IEdgeData.cuh"
 #include "../../structs/enums.h"
 #include "../../common/types.cuh"
 
 template<GPUUsageMode GPUUsage>
-class EdgeDataCPU : public EdgeData<GPUUsage> {
+class EdgeDataCPU : public IEdgeData<GPUUsage> {
 
     HOST void reserve_host(size_t size) override;
     HOST void clear_host() override;
@@ -21,7 +21,7 @@ class EdgeDataCPU : public EdgeData<GPUUsage> {
     HOST void add_edges_host(int* src, int* tgt, int64_t* ts, size_t size) override;
     HOST void push_back_host(int src, int tgt, int64_t ts) override;
 
-    HOST typename EdgeData<GPUUsage>::EdgeVector get_edges_host() override;
+    HOST typename IEdgeData<GPUUsage>::EdgeVector get_edges_host() override;
 
     // Group management
     HOST void update_timestamp_groups_host() override;  // Call after sorting

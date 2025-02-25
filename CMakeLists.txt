@@ -53,6 +53,7 @@ set(SRC_FILES
 
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/core/TemporalRandomWalkCPU.cu
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/core/TemporalRandomWalkCUDA.cu
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/core/TemporalRandomWalk.cu
 )
 
 if(HAS_CUDA AND CMAKE_CUDA_COMPILER)

@@ -1,5 +1,5 @@
-#ifndef TEMPORALGRAPH_H
-#define TEMPORALGRAPH_H
+#ifndef I_TEMPORALGRAPH_H
+#define I_TEMPORALGRAPH_H
 
 #include <vector>
 #include <cstdint>
@@ -11,12 +11,12 @@
 
 #include "../../random/RandomPicker.h"
 
-#include "../interfaces/NodeMapping.cuh"
-#include "../interfaces/EdgeData.cuh"
-#include "../interfaces/NodeEdgeIndex.cuh"
+#include "../interfaces/INodeMapping.cuh"
+#include "../interfaces/IEdgeData.cuh"
+#include "../interfaces/INodeEdgeIndex.cuh"
 
 template<GPUUsageMode GPUUsage>
-class TemporalGraph
+class ITemporalGraph
 {
 public:
     using SizeVector = typename SelectVectorType<size_t, GPUUsage>::type;
@@ -31,13 +31,13 @@ public:
     double timescale_bound = -1;
     int64_t latest_timestamp = 0; // Track latest edge timestamp
 
-    virtual ~TemporalGraph() = default;
+    virtual ~ITemporalGraph() = default;
 
     bool is_directed = false;
 
-    NodeEdgeIndex<GPUUsage> node_index; // Node to edge mappings
-    EdgeData<GPUUsage> edges; // Main edge storage
-    NodeMapping<GPUUsage> node_mapping; // Sparse to dense node ID mapping
+    INodeEdgeIndex<GPUUsage> node_index; // Node to edge mappings
+    IEdgeData<GPUUsage> edges; // Main edge storage
+    INodeMapping<GPUUsage> node_mapping; // Sparse to dense node ID mapping
 
     /**
     * HOST METHODS
@@ -111,4 +111,4 @@ public:
     [[nodiscard]] virtual DEVICE EdgeVector get_edges_device() { return EdgeVector(); }
 };
 
-#endif //TEMPORALGRAPH_H
+#endif //I_TEMPORALGRAPH_H
