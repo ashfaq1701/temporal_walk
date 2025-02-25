@@ -80,6 +80,28 @@ struct WalkSet
         size_t offset = walk_number * max_len + hop_number;
         return NodeWithTime{nodes[offset], timestamps[offset]};
     }
+
+    HOST DEVICE void reverse_walk(int walk_number)
+    {
+        const size_t walk_length = walk_lens[walk_number];
+        if (walk_length <= 1) return; // No need to reverse if walk is empty or has one hop
+
+        const size_t start = walk_number * max_len;
+        const size_t end = start + walk_length - 1;
+
+        for (size_t i = 0; i < walk_length / 2; ++i) {
+            // Swap nodes
+            int temp_node = nodes[start + i];
+            nodes[start + i] = nodes[end - i];
+            nodes[end - i] = temp_node;
+
+            // Swap timestamps
+            int64_t temp_time = timestamps[start + i];
+            timestamps[start + i] = timestamps[end - i];
+            timestamps[end - i] = temp_time;
+        }
+    }
+
 };
 
 #endif // STRUCTS_H

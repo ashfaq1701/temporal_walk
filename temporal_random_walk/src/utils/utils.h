@@ -65,8 +65,8 @@ inline std::vector<int> repeat_elements(const std::vector<int>& arr, int times) 
     return repeated_items;
 }
 
-inline std::vector<std::vector<int>> divide_vector(const std::vector<int>& input, int n) {
-    std::vector<std::vector<int>> result(n);
+inline std::vector<std::vector<std::pair<int, int>>> divide_vector(const std::vector<int>& input, int n) {
+    std::vector<std::vector<std::pair<int, int>>> result(n);
     const int total_size = static_cast<int>(input.size());
     const int base_size = total_size / n;
     const int remainder = total_size % n;
@@ -74,7 +74,9 @@ inline std::vector<std::vector<int>> divide_vector(const std::vector<int>& input
     int start = 0;
     for (int i = 0; i < n; ++i) {
         const int current_size = base_size + (i < remainder ? 1 : 0);
-        result[i].assign(input.begin() + start, input.begin() + start + current_size);
+        for (int j = 0; j < current_size; ++j) {
+            result[i].emplace_back(start + j, input[start + j]);
+        }
         start += current_size;
     }
 

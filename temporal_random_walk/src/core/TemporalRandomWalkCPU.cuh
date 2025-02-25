@@ -14,13 +14,14 @@ template<GPUUsageMode GPUUsage>
 class TemporalRandomWalkCPU : public ITemporalRandomWalk<GPUUsage> {
 protected:
 
-    ThreadPool thread_pool;
     size_t n_threads;
+    ThreadPool thread_pool;
 
     HOST void generate_random_walk_and_time(
-        std::vector<NodeWithTime>* walk,
-        const std::shared_ptr<RandomPicker>& edge_picker,
-        const std::shared_ptr<RandomPicker>& start_picker,
+        int walk_idx,
+        WalkSet<GPUUsage>& walk_set,
+        const RandomPicker* edge_picker,
+        const RandomPicker* start_picker,
         int max_walk_len,
         bool should_walk_forward,
         int start_node_id=-1) const;
