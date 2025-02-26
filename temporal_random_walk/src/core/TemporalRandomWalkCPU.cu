@@ -177,13 +177,13 @@ HOST void TemporalRandomWalkCPU<GPUUsage>::generate_random_walk_and_time(
     Edge start_edge;
     if (start_node_id == -1) {
         start_edge = this->temporal_graph->get_edge_at_host(
-            *start_picker,
+            start_picker,
             -1,
             should_walk_forward);
     } else {
         start_edge = this->temporal_graph->get_node_edge_at_host(
             start_node_id,
-            *start_picker,
+            start_picker,
             -1,
             should_walk_forward
         );
@@ -218,7 +218,7 @@ HOST void TemporalRandomWalkCPU<GPUUsage>::generate_random_walk_and_time(
 
         auto [picked_src, picked_dst, picked_ts] = this->temporal_graph->get_node_edge_at_host(
             current_node,
-            *edge_picker,
+            edge_picker,
             current_timestamp,
             should_walk_forward
         );

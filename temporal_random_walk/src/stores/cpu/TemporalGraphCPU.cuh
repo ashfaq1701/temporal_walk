@@ -38,11 +38,11 @@ public:
     [[nodiscard]] HOST size_t count_node_timestamps_greater_than_host(int node_id, int64_t timestamp) const override;
 
     // Edge selection
-    [[nodiscard]] HOST Edge get_edge_at_host(RandomPicker& picker, int64_t timestamp = -1,
+    [[nodiscard]] HOST Edge get_edge_at_host(RandomPicker* picker, int64_t timestamp = -1,
                                             bool forward = true) const override;
 
     [[nodiscard]] HOST Edge get_node_edge_at_host(int node_id,
-                                                RandomPicker& picker,
+                                                RandomPicker* picker,
                                                 int64_t timestamp = -1,
                                                 bool forward = true) const override;
 

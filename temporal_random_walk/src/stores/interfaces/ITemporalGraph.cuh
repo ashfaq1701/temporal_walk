@@ -74,11 +74,11 @@ public:
 
     // Edge selection
     [[nodiscard]] virtual HOST Edge get_edge_at_host(
-        RandomPicker& picker, int64_t timestamp = -1,
+        RandomPicker* picker, int64_t timestamp = -1,
         bool forward = true) const { return Edge{-1, -1, -1}; }
 
     [[nodiscard]] virtual HOST Edge get_node_edge_at_host(int node_id,
-                                                                 RandomPicker& picker,
+                                                                 RandomPicker* picker,
                                                                  int64_t timestamp = -1,
                                                                  bool forward = true) const { return Edge{-1, -1, -1}; }
 
@@ -88,7 +88,6 @@ public:
     [[nodiscard]] virtual HOST int64_t get_latest_timestamp_host() { return latest_timestamp; }
     [[nodiscard]] virtual HOST IntVector get_node_ids_host() const { return IntVector(); }
     [[nodiscard]] virtual HOST EdgeVector get_edges_host() { return EdgeVector(); }
-
 
     /**
     * DEVICE METHODS
@@ -110,11 +109,11 @@ public:
 
     // Edge selection
     [[nodiscard]] virtual DEVICE Edge get_edge_at_device(
-        RandomPicker& picker, int64_t timestamp = -1,
+        RandomPicker* picker, int64_t timestamp = -1,
         bool forward = true) const { return Edge{ -1, -1, -1 }; }
 
     [[nodiscard]] virtual DEVICE Edge get_node_edge_at_device(int node_id,
-                                                                 RandomPicker& picker,
+                                                                 RandomPicker* picker,
                                                                  int64_t timestamp = -1,
                                                                  bool forward = true) const { return Edge{-1, -1, -1}; }
 

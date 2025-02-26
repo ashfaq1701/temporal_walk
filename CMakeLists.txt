@@ -52,6 +52,11 @@ set(SRC_FILES
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/cuda/NodeMappingCUDA.cu
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/cuda/TemporalGraphCUDA.cu
 
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/proxies/EdgeData.cu
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/proxies/NodeEdgeIndex.cu
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/proxies/NodeMapping.cu
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/proxies/TemporalGraph.cu
+
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/core/TemporalRandomWalkCPU.cu
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/core/TemporalRandomWalkCUDA.cu
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/core/TemporalRandomWalk.cu
