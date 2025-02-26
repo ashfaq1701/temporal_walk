@@ -6,12 +6,18 @@
 
 constexpr GPUUsageMode GPU_USAGE_MODE = GPUUsageMode::ON_CPU;
 
-int main() {
-    const auto edge_infos = read_edges_from_csv("../../data/sample_data.csv");
+int main(int argc, char* argv[]) {
+    std::string file_path = "../../data/sample_data.csv";
+
+    if (argc > 1) {
+        file_path = argv[1];
+    }
+
+    const auto edge_infos = read_edges_from_csv(file_path);
     std::cout << edge_infos.size() << std::endl;
 
     auto start = std::chrono::high_resolution_clock::now();
-    TemporalRandomWalk<GPU_USAGE_MODE> temporal_random_walk(false, -1, true, 34, 1);
+    TemporalRandomWalk<GPU_USAGE_MODE> temporal_random_walk(false, -1, true, 34);
     temporal_random_walk.add_multiple_edges(edge_infos);
     auto end = std::chrono::high_resolution_clock::now();
 
