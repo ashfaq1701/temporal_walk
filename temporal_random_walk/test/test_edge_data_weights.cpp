@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
-#include "../src/data/cpu/EdgeData.cuh"
+#include "../src/stores/proxies/EdgeData.cuh"
 #include <cmath>
-#include <data/cuda/EdgeDataCUDA.cuh>
+#include <stores/cuda/EdgeDataCUDA.cuh>
 
 template<typename T>
 class EdgeDataWeightTest : public ::testing::Test {

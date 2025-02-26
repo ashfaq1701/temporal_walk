@@ -4,17 +4,16 @@
 #include <vector>
 #include <cstdint>
 #include <tuple>
-#include "../../structs/enums.h"
+#include "../../data/enums.h"
 #include "../interfaces/IEdgeData.cuh"
 #include "../interfaces/INodeMapping.cuh"
-#include "../../common/types.cuh"
+#include "../../cuda_common/types.cuh"
 
 template<GPUUsageMode GPUUsage>
-class NodeMappingCPU : INodeMapping<GPUUsage> {
+class NodeMappingCPU : public INodeMapping<GPUUsage> {
 public:
    ~NodeMappingCPU() override = default;
 
-private:
    HOST void update_host(const IEdgeData<GPUUsage>& edges, size_t start_idx, size_t end_idx) override;
    [[nodiscard]] HOST int to_dense_host(int sparse_id) const override;
    [[nodiscard]] HOST int to_sparse_host(int dense_idx) const override;

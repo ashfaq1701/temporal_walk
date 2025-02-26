@@ -7,9 +7,8 @@
 #endif
 #include <cstddef>
 #include <algorithm>
-#include "../../structs/structs.cuh"
-#include "../../structs/enums.h"
-#include "../macros.cuh"
+#include "enums.h"
+#include "../cuda_common/macros.cuh"
 
 template <typename T, GPUUsageMode GPUUsage>
 struct CommonVector {
@@ -165,9 +164,6 @@ struct CommonVector {
                     return;
                 }
             }
-
-            // Initialize any extra space with default value
-            cudaMemset(new_data + old_size, 0, (n - old_size) * sizeof(T));
         } else
         #endif
         {
@@ -184,10 +180,10 @@ struct CommonVector {
             {
                 std::memcpy(new_data, data, data_size * sizeof(T));
             }
-
-            // Initialize extra space with default value
-            std::fill(new_data + old_size, new_data + n, 0);
         }
+
+        // Initialize extra space with default value
+        fill(new_data, T(), old_size, n);
 
         // Free old memory
         if (data)
@@ -232,15 +228,7 @@ struct CommonVector {
 
     HOST DEVICE void assign(size_t count) {
         resize(count);
-
-        #ifdef HAS_CUDA
-        if constexpr (GPUUsage == GPUUsageMode::ON_GPU) {
-            cudaMemset(data, 0, count * sizeof(T));
-        } else
-        #endif
-        {
-            std::fill(data, data + count, 0);
-        }
+        fill(T(), 0, count);
     }
 
     // Resize with fill value
@@ -275,11 +263,6 @@ struct CommonVector {
                     return;
                 }
             }
-
-            // Fill new elements with provided value
-            if (new_size > old_size) {
-                cudaMemset(new_data + old_size, 0, (new_size - old_size) * sizeof(T));
-            }
         } else
         #endif
         {
@@ -298,12 +281,12 @@ struct CommonVector {
                 size_t copy_size = std::min(data_size, new_size);
                 std::copy(data, data + copy_size, new_data);
             }
+        }
 
-            // Fill new elements with provided value
-            if (new_size > old_size)
-            {
-                std::fill(new_data + old_size, new_data + new_size, 0);
-            }
+        // Fill new elements with provided value
+        if (new_size > old_size)
+        {
+            fill(T(), old_size, new_size);
         }
 
         // Free old memory
@@ -473,6 +456,22 @@ struct CommonVector {
         #endif
         {
             std::fill(data + derived_start_idx, data + derived_end_pos, fill_value);
+        }
+    }
+
+    HOST DEVICE void fill(T* data_arr, T fill_value, const long start_idx, const unsigned long end_pos)
+    {
+        #ifdef HAS_CUDA
+        if constexpr (GPUUsage == GPUUsageMode::ON_GPU)
+        {
+            for (size_t i = start_idx; i < end_pos; i++) {
+                data_arr[i] = fill_value;
+            }
+        }
+        else
+        #endif
+        {
+            std::fill(data_arr + start_idx, data_arr + end_pos, fill_value);
         }
     }
 

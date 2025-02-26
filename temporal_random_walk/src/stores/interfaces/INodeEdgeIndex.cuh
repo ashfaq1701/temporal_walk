@@ -5,8 +5,8 @@
 #include <cstdint>
 #include <tuple>
 
-#include "../../structs/structs.cuh"
-#include "../../structs/enums.h"
+#include "../../data/structs.cuh"
+#include "../../data/enums.h"
 
 #include "INodeMapping.cuh"
 #include "IEdgeData.cuh"

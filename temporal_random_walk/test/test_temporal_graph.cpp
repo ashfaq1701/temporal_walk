@@ -1,6 +1,6 @@
-#include "../src/data/cuda/TemporalGraphCUDA.cuh"
+#include "../src/stores/cuda/TemporalGraphCUDA.cuh"
 #include <gtest/gtest.h>
-#include "../src/data/cpu/TemporalGraph.cuh"
+#include "../src/stores/proxies/TemporalGraph.cuh"
 #include "../src/random/IndexBasedRandomPicker.h"
 
 // Test-specific picker that always selects first element

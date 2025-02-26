@@ -2,8 +2,8 @@
 #define WEIGHTBASEDRANDOMPICKER_H
 
 #include "RandomPicker.h"
-#include "../structs/enums.h"
-#include "../common/types.cuh"
+#include "../data/enums.h"
+#include "../cuda_common/types.cuh"
 
 template<GPUUsageMode GPUUsage>
 class WeightBasedRandomPicker final : public RandomPicker

@@ -1,14 +1,12 @@
 #ifndef TEMPORAL_RANDOM_WALK_CPU_H
 #define TEMPORAL_RANDOM_WALK_CPU_H
 
-#include<vector>
 #include "ITemporalRandomWalk.cuh"
-#include "../structs/structs.cuh"
-#include "../structs/enums.h"
+#include "../data/structs.cuh"
+#include "../data/enums.h"
 #include "../config/constants.h"
 #include "../../libs/thread-pool/ThreadPool.h"
 #include "../random/RandomPicker.h"
-#include "../random/WeightBasedRandomPickerGPU.cuh"
 
 template<GPUUsageMode GPUUsage>
 class TemporalRandomWalkCPU : public ITemporalRandomWalk<GPUUsage> {
@@ -20,8 +18,8 @@ protected:
     HOST void generate_random_walk_and_time(
         int walk_idx,
         WalkSet<GPUUsage>& walk_set,
-        const RandomPicker* edge_picker,
-        const RandomPicker* start_picker,
+        RandomPicker* edge_picker,
+        RandomPicker* start_picker,
         int max_walk_len,
         bool should_walk_forward,
         int start_node_id=-1) const;
@@ -56,9 +54,9 @@ public:
 
     [[nodiscard]] HOST size_t get_edge_count() const override;
 
-    [[nodiscard]] HOST ITemporalRandomWalk<GPUUsage>::IntVector get_node_ids() const override;
+    [[nodiscard]] HOST typename ITemporalRandomWalk<GPUUsage>::IntVector get_node_ids() const override;
 
-    [[nodiscard]] HOST ITemporalRandomWalk<GPUUsage>::EdgeVector get_edges() const override;
+    [[nodiscard]] HOST typename ITemporalRandomWalk<GPUUsage>::EdgeVector get_edges() const override;
 
     [[nodiscard]] HOST bool get_is_directed() const override;
 

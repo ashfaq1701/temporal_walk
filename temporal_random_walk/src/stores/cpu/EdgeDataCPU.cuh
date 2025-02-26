@@ -3,11 +3,10 @@
 
 #include <vector>
 #include <cstdint>
-#include <tuple>
 
 #include "../interfaces/IEdgeData.cuh"
-#include "../../structs/enums.h"
-#include "../../common/types.cuh"
+#include "../../data/enums.h"
+#include "../../cuda_common/types.cuh"
 
 template<GPUUsageMode GPUUsage>
 class EdgeDataCPU : public IEdgeData<GPUUsage> {

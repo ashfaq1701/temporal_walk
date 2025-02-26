@@ -2,7 +2,7 @@
 
 #ifdef HAS_CUDA
 
-#include "../common/CudaRandomStates.cuh"
+#include "../cuda_common/CudaRandomStates.cuh"
 
 __global__ void generate_random_kernel(
     double* random_val,

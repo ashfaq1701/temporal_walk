@@ -2,13 +2,14 @@
 #define TEMPORAL_RANDOM_WALK_H
 
 #include<vector>
+
+#include "ITemporalRandomWalk.cuh"
 #include "TemporalRandomWalk.cuh"
-#include "../structs/structs.cuh"
-#include "../structs/enums.h"
+#include "../data/structs.cuh"
+#include "../data/enums.h"
 #include "../config/constants.h"
 #include "../../libs/thread-pool/ThreadPool.h"
-#include "../random/RandomPicker.h"
-#include "../data/cpu/TemporalGraphCPU.cuh"
+#include "../stores/cpu/TemporalGraphCPU.cuh"
 
 /**
  * @brief Main class for generating temporal random walks
@@ -20,6 +21,9 @@
  */
 template<GPUUsageMode GPUUsage>
 class TemporalRandomWalk {
+
+
+    ITemporalRandomWalk<GPUUsage>* temporal_random_walk;
 
 public:
 

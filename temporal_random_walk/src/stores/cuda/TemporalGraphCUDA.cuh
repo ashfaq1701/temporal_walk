@@ -1,8 +1,8 @@
 #ifndef TEMPORALGRAPHCUDA_H
 #define TEMPORALGRAPHCUDA_H
 
-#include "../../structs/enums.h"
-#include <data/interfaces/ITemporalGraph.cuh>
+#include "../../data/enums.h"
+#include "../interfaces/ITemporalGraph.cuh"
 
 template<GPUUsageMode GPUUsage>
 class TemporalGraphCUDA : public ITemporalGraph<GPUUsage> {

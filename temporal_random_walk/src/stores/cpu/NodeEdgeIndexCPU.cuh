@@ -4,7 +4,7 @@
 #include <vector>
 #include <cstdint>
 #include <tuple>
-#include "../../structs/enums.h"
+#include "../../data/enums.h"
 #include "../interfaces/INodeEdgeIndex.cuh"
 #include "../interfaces/INodeMapping.cuh"
 

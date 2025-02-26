@@ -1,6 +1,8 @@
+#include "LinearRandomPicker.cuh"
+
 #include <cmath>
 #include <stdexcept>
-#include "LinearRandomPicker.cuh"
+#include "../utils/utils.h"
 
 // Derivation available in derivations folder
 template<GPUUsageMode GPUUsage>

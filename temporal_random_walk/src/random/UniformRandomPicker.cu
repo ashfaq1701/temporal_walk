@@ -1,5 +1,7 @@
-#include <stdexcept>
 #include "UniformRandomPicker.cuh"
+
+#include <stdexcept>
+#include "../utils/utils.h"
 
 template<GPUUsageMode GPUUsage>
 int UniformRandomPicker<GPUUsage>::pick_random(const int start, const int end, const bool prioritize_end) {

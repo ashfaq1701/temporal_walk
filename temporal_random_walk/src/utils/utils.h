@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <map>
 #include <boost/math/distributions/beta.hpp>
+#include "../data/structs.cuh"
+#include "../data/common_vector.cuh"
 
 thread_local static std::mt19937 thread_local_gen{std::random_device{}()};
 
@@ -52,9 +54,10 @@ inline float compute_beta_95th_percentile(size_t successes, size_t failures) {
     return boost::math::quantile(beta_dist, 0.95f); // 95th percentile
 }
 
-inline std::vector<int> repeat_elements(const std::vector<int>& arr, int times) {
-    std::vector<int> repeated_items;
-    repeated_items.reserve(arr.size() * times);
+template<GPUUsageMode GPUUsage>
+CommonVector<int, GPUUsage> repeat_elements(const CommonVector<int, GPUUsage>& arr, int times) {
+    CommonVector<int, GPUUsage> repeated_items;
+    repeated_items.allocate(arr.size() * times);
 
     for (const auto& item : arr) {
         for (int i = 0; i < times; ++i) {
@@ -65,8 +68,14 @@ inline std::vector<int> repeat_elements(const std::vector<int>& arr, int times) 
     return repeated_items;
 }
 
-inline std::vector<std::vector<std::pair<int, int>>> divide_vector(const std::vector<int>& input, int n) {
-    std::vector<std::vector<std::pair<int, int>>> result(n);
+template <typename T, GPUUsageMode GPUUsage>
+CommonVector<CommonVector<IndexValuePair<int, T>, GPUUsage>, GPUUsage> divide_vector(
+    const CommonVector<T, GPUUsage>& input,
+    int n)
+{
+    CommonVector<CommonVector<IndexValuePair<int, T>, GPUUsage>, GPUUsage> result;
+    result.resize(n);
+
     const int total_size = static_cast<int>(input.size());
     const int base_size = total_size / n;
     const int remainder = total_size % n;
@@ -74,8 +83,10 @@ inline std::vector<std::vector<std::pair<int, int>>> divide_vector(const std::ve
     int start = 0;
     for (int i = 0; i < n; ++i) {
         const int current_size = base_size + (i < remainder ? 1 : 0);
+        result[i].allocate(current_size);
+
         for (int j = 0; j < current_size; ++j) {
-            result[i].emplace_back(start + j, input[start + j]);
+            result[i].push_back(IndexValuePair<int, T>(start + j, input[start + j]));
         }
         start += current_size;
     }
@@ -94,8 +105,8 @@ inline std::vector<int> divide_number(int n, int i) {
     return parts;
 }
 
-template <typename T>
-void shuffle_vector(std::vector<T>& vec) {
+template <typename T, GPUUsageMode GPUUsage>
+void shuffle_vector(CommonVector<T, GPUUsage>& vec) {
     std::random_device rd;
     std::mt19937 rng(rd());
     std::shuffle(vec.begin(), vec.end(), rng);

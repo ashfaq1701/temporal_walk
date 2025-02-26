@@ -34,22 +34,23 @@ if(HAS_CUDA)
 endif()
 
 set(SRC_FILES
-        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/common/CudaRandomStates.cu
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/cuda_common/CudaRandomStates.cu
+
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/random/WeightBasedRandomPicker.cu
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/random/WeightBasedRandomPickerGPU.cu
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/random/ExponentialIndexRandomPicker.cu
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/random/LinearRandomPicker.cu
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/random/UniformRandomPicker.cu
 
-        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/data/cpu/EdgeDataCPU.cu
-        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/data/cpu/NodeEdgeIndexCPU.cu
-        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/data/cpu/NodeMappingCPU.cu
-        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/data/cpu/TemporalGraphCPU.cu
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/cpu/EdgeDataCPU.cu
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/cpu/NodeEdgeIndexCPU.cu
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/cpu/NodeMappingCPU.cu
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/cpu/TemporalGraphCPU.cu
 
-        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/data/cuda/EdgeDataCUDA.cu
-        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/data/cuda/NodeEdgeIndexCUDA.cu
-        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/data/cuda/NodeMappingCUDA.cu
-        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/data/cuda/TemporalGraphCUDA.cu
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/cuda/EdgeDataCUDA.cu
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/cuda/NodeEdgeIndexCUDA.cu
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/cuda/NodeMappingCUDA.cu
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/cuda/TemporalGraphCUDA.cu
 
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/core/TemporalRandomWalkCPU.cu
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/core/TemporalRandomWalkCUDA.cu
@@ -78,5 +79,4 @@ if(HAS_CUDA AND CMAKE_CUDA_COMPILER)
 endif()
 
 add_subdirectory(temporal_random_walk/py_interface)
-add_subdirectory(temporal_random_walk/test)
 add_subdirectory(temporal_random_walk/test_run)

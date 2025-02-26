@@ -1,10 +1,8 @@
 #ifndef LINEARRANDOMPICKER_H
 #define LINEARRANDOMPICKER_H
 
-#include "../structs/enums.h"
-
+#include "../data/enums.h"
 #include "IndexBasedRandomPicker.h"
-#include "../utils/utils.h"
 
 template<GPUUsageMode GPUUsage>
 class LinearRandomPicker final : public IndexBasedRandomPicker {

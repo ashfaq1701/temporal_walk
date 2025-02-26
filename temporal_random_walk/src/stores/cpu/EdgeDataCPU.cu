@@ -54,14 +54,14 @@ HOST void EdgeDataCPU<GPUUsage>::push_back_host(int src, int tgt, int64_t ts) {
 
 template<GPUUsageMode GPUUsage>
 HOST typename IEdgeData<GPUUsage>::EdgeVector EdgeDataCPU<GPUUsage>::get_edges_host() {
-    typename IEdgeData<GPUUsage>::EdgeVector edges;
-    edges.reserve(this->sources.size());
+    typename IEdgeData<GPUUsage>::EdgeVector accumulated_edges;
+    accumulated_edges.allocate(this->sources.size());
 
     for (int i = 0; i < this->sources.size(); i++) {
-        edges.emplace_back(Edge(this->sources[i], this->targets[i], this->timestamps[i]));
+        accumulated_edges.push_back(Edge(this->sources[i], this->targets[i], this->timestamps[i]));
     }
 
-    return edges;
+    return accumulated_edges;
 }
 
 template<GPUUsageMode GPUUsage>
@@ -101,7 +101,7 @@ HOST void EdgeDataCPU<GPUUsage>::update_temporal_weights_host(const double times
     const double time_scale = (timescale_bound > 0 && time_diff > 0) ?
         timescale_bound / time_diff : 1.0;
 
-    const size_t num_groups = this->get_timestamp_group_count();
+    const size_t num_groups = this->get_timestamp_group_count_host();
     this->forward_cumulative_weights_exponential.resize(num_groups);
     this->backward_cumulative_weights_exponential.resize(num_groups);
 
@@ -150,7 +150,7 @@ HOST SizeRange EdgeDataCPU<GPUUsage>::get_timestamp_group_range_host(size_t grou
     if (group_idx >= this->unique_timestamps.size()) {
         return SizeRange{0, 0};
     }
-    return {this->timestamp_group_offsets[group_idx], this->timestamp_group_offsets[group_idx + 1]};
+    return SizeRange{this->timestamp_group_offsets[group_idx], this->timestamp_group_offsets[group_idx + 1]};
 }
 
 template<GPUUsageMode GPUUsage>

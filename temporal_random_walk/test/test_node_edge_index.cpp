@@ -1,12 +1,12 @@
-#include <data/cuda/EdgeDataCUDA.cuh>
-#include <data/cuda/NodeMappingCUDA.cuh>
+#include <stores/cuda/EdgeDataCUDA.cuh>
+#include <stores/cuda/NodeMappingCUDA.cuh>
 #include <gtest/gtest.h>
-#include "../src/data/cpu/EdgeData.cuh"
-#include "../src/data/cuda/EdgeDataCUDA.cuh"
-#include "../src/data/cpu/NodeMapping.cuh"
-#include "../src/data/cuda/NodeMappingCUDA.cuh"
-#include "../src/data/cpu/NodeEdgeIndex.cuh"
-#include "../src/data/cuda/NodeEdgeIndexCUDA.cuh"
+#include "../src/stores/proxies/EdgeData.cuh"
+#include "../src/stores/cuda/EdgeDataCUDA.cuh"
+#include "../src/stores/proxies/NodeMapping.cuh"
+#include "../src/stores/cuda/NodeMappingCUDA.cuh"
+#include "../src/stores/proxies/NodeEdgeIndex.cuh"
+#include "../src/stores/cuda/NodeEdgeIndexCUDA.cuh"
 
 template<typename T>
 class NodeEdgeIndexTest : public ::testing::Test {

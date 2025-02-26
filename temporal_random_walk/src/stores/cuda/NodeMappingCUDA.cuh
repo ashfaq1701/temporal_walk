@@ -1,7 +1,7 @@
 #ifndef NODEMAPPINGCUDA_H
 #define NODEMAPPINGCUDA_H
 
-#include "../../structs/enums.h"
+#include "../../data/enums.h"
 #include "../interfaces/INodeMapping.cuh"
 
 template<GPUUsageMode GPUUsage>

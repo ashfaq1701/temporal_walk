@@ -1,8 +1,8 @@
 #ifndef RANDOM_PICKER_PROXIES_H
 #define RANDOM_PICKER_PROXIES_H
 
-#include "../src/structs/structs.cuh"
-#include "../src/structs/enums.h"
+#include "../src/data/structs.cuh"
+#include "../src/data/enums.h"
 #include "../src/random/ExponentialIndexRandomPicker.cuh"
 #include "../src/random/LinearRandomPicker.cuh"
 #include "../src/random/UniformRandomPicker.cuh"

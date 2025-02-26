@@ -1,5 +1,7 @@
 #include "WeightBasedRandomPicker.cuh"
 
+#include "../utils/utils.h"
+
 template<GPUUsageMode GPUUsage>
 int WeightBasedRandomPicker<GPUUsage>::pick_random(
     const typename SelectVectorType<double, GPUUsage>::type& cumulative_weights,

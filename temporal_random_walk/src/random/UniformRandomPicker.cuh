@@ -1,10 +1,9 @@
 #ifndef UNIFORMRANDOMPICKER_H
 #define UNIFORMRANDOMPICKER_H
 
-#include "../structs/enums.h"
+#include "../data/enums.h"
 
 #include "IndexBasedRandomPicker.h"
-#include "../utils/utils.h"
 
 template<GPUUsageMode GPUUsage>
 class UniformRandomPicker final : public IndexBasedRandomPicker {

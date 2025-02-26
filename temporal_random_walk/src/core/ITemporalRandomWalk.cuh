@@ -2,10 +2,11 @@
 #define I_TEMPORAL_RANDOM_WALK_H
 
 #include "../config/constants.h"
-#include "../structs/structs.cuh"
-#include "../structs/enums.h"
+#include "../data/structs.cuh"
+#include "../cuda_common/types.cuh"
+#include "../data/enums.h"
 #include "../random/RandomPicker.h"
-#include "../random/WeightBasedRandomPicker.cuh"
+#include "../stores/interfaces/ITemporalGraph.cuh"
 
 template<GPUUsageMode GPUUsage>
 class ITemporalRandomWalk {
@@ -24,7 +25,7 @@ public:
 
     int64_t max_edge_time = 0;
 
-    ITemporalRandomWalk<GPUUsage>* temporal_graph = nullptr;
+    ITemporalGraph<GPUUsage>* temporal_graph = nullptr;
 
     explicit HOST ITemporalRandomWalk(
         bool is_directed,

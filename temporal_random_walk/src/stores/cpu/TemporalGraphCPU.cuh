@@ -5,13 +5,13 @@
 #include <cstdint>
 #include <tuple>
 
-#include "../../structs/enums.h"
+#include "../../data/enums.h"
 #include "../../random/RandomPicker.h"
 
 #include "../interfaces/ITemporalGraph.cuh"
 
 template<GPUUsageMode GPUUsage>
-class TemporalGraphCPU : ITemporalGraph<GPUUsage>
+class TemporalGraphCPU : public ITemporalGraph<GPUUsage>
 {
 public:
     ~TemporalGraphCPU() override = default;
@@ -47,8 +47,8 @@ public:
                                                 bool forward = true) const override;
 
     // Utility methods
-    [[nodiscard]] HOST size_t get_total_edges_host() const override { return this->edges.size(); }
-    [[nodiscard]] HOST size_t get_node_count_host() const override { return this->node_mapping.active_size(); }
+    [[nodiscard]] HOST size_t get_total_edges_host() const override { return this->edges.size_host(); }
+    [[nodiscard]] HOST size_t get_node_count_host() const override { return this->node_mapping.active_size_host(); }
     [[nodiscard]] HOST int64_t get_latest_timestamp_host() override { return this->latest_timestamp; }
     [[nodiscard]] typename ITemporalGraph<GPUUsage>::IntVector get_node_ids_host() const override;
     [[nodiscard]] typename ITemporalGraph<GPUUsage>::EdgeVector get_edges_host() override;

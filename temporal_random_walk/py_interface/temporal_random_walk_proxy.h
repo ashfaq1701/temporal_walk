@@ -1,8 +1,8 @@
 #ifndef TEMPORAL_RANDOM_WALK_PROXY_H
 #define TEMPORAL_RANDOM_WALK_PROXY_H
 
-#include "../src/structs/structs.cuh"
-#include "../src/structs/enums.h"
+#include "../src/data/structs.cuh"
+#include "../src/data/enums.h"
 #include "../src/core/TemporalRandomWalk.cuh"
 #include "../src/core/TemporalRandomWalkCUDA.cuh"
 
@@ -129,60 +129,6 @@ public:
         }
         #else
         return cpu_impl->get_random_walks(max_walk_len, walk_bias, num_walks_total, initial_edge_bias, walk_direction);
-        #endif
-    }
-
-    std::vector<std::vector<NodeWithTime>> get_random_walks_and_times_with_specific_number_of_contexts(
-        int max_walk_len,
-        const RandomPickerType* walk_bias,
-        long num_cw=-1,
-        int num_walks_per_node=-1,
-        const RandomPickerType* initial_edge_bias=nullptr,
-        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
-        int context_window_len=-1,
-        float p_walk_success_threshold=DEFAULT_SUCCESS_THRESHOLD) {
-        #ifdef HAS_CUDA
-        switch(gpu_usage) {
-            case GPUUsageMode::ON_GPU:
-                return gpu_impl->get_random_walks_and_times_with_specific_number_of_contexts(
-                    max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias,
-                    walk_direction, context_window_len, p_walk_success_threshold);
-            default:  // ON_CPU
-                return cpu_impl->get_random_walks_and_times_with_specific_number_of_contexts(
-                    max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias,
-                    walk_direction, context_window_len, p_walk_success_threshold);
-        }
-        #else
-        return cpu_impl->get_random_walks_and_times_with_specific_number_of_contexts(
-            max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias,
-            walk_direction, context_window_len, p_walk_success_threshold);
-        #endif
-    }
-
-    std::vector<std::vector<int>> get_random_walks_with_specific_number_of_contexts(
-        int max_walk_len,
-        const RandomPickerType* walk_bias,
-        long num_cw=-1,
-        int num_walks_per_node=-1,
-        const RandomPickerType* initial_edge_bias=nullptr,
-        WalkDirection walk_direction=WalkDirection::Forward_In_Time,
-        int context_window_len=-1,
-        float p_walk_success_threshold=DEFAULT_SUCCESS_THRESHOLD) {
-        #ifdef HAS_CUDA
-        switch(gpu_usage) {
-            case GPUUsageMode::ON_GPU:
-                return gpu_impl->get_random_walks_with_specific_number_of_contexts(
-                    max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias,
-                    walk_direction, context_window_len, p_walk_success_threshold);
-            default:  // ON_CPU
-                return cpu_impl->get_random_walks_with_specific_number_of_contexts(
-                    max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias,
-                    walk_direction, context_window_len, p_walk_success_threshold);
-        }
-        #else
-        return cpu_impl->get_random_walks_with_specific_number_of_contexts(
-            max_walk_len, walk_bias, num_cw, num_walks_per_node, initial_edge_bias,
-            walk_direction, context_window_len, p_walk_success_threshold);
         #endif
     }
 

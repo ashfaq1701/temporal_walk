@@ -5,9 +5,9 @@
 #include <cstdint>
 #include <tuple>
 
-#include "../../common/types.cuh"
-#include "../../structs/structs.cuh"
-#include "../../structs/enums.h"
+#include "../../cuda_common/types.cuh"
+#include "../../data/structs.cuh"
+#include "../../data/enums.h"
 
 #include "../../random/RandomPicker.h"
 
@@ -70,12 +70,12 @@ public:
     // Edge selection
     [[nodiscard]] virtual HOST Edge get_edge_at_host(
         RandomPicker& picker, int64_t timestamp = -1,
-        bool forward = true) const { return {}; }
+        bool forward = true) const { return Edge{-1, -1, -1}; }
 
     [[nodiscard]] virtual HOST Edge get_node_edge_at_host(int node_id,
                                                                  RandomPicker& picker,
                                                                  int64_t timestamp = -1,
-                                                                 bool forward = true) const { return {}; }
+                                                                 bool forward = true) const { return Edge{-1, -1, -1}; }
 
     // Utility methods
     [[nodiscard]] virtual HOST size_t get_total_edges_host() const { return 0; }
@@ -106,12 +106,12 @@ public:
     // Edge selection
     [[nodiscard]] virtual DEVICE Edge get_edge_at_device(
         RandomPicker& picker, int64_t timestamp = -1,
-        bool forward = true) const { return {}; }
+        bool forward = true) const { return Edge{ -1, -1, -1 }; }
 
     [[nodiscard]] virtual DEVICE Edge get_node_edge_at_device(int node_id,
                                                                  RandomPicker& picker,
                                                                  int64_t timestamp = -1,
-                                                                 bool forward = true) const { return {}; }
+                                                                 bool forward = true) const { return Edge{-1, -1, -1}; }
 
     // Utility methods
     [[nodiscard]] virtual DEVICE size_t get_total_edges_device() const { return 0; }

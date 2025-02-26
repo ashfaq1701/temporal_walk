@@ -4,8 +4,9 @@
 #include "../utils/utils.h"
 #include "../random/UniformRandomPicker.cuh"
 #include "../random/LinearRandomPicker.cuh"
-#include "../data/cpu/TemporalGraphCPU.cuh"
+#include "../stores/cpu/TemporalGraphCPU.cuh"
 #include "../random/ExponentialIndexRandomPicker.cuh"
+#include "../random/WeightBasedRandomPicker.cuh"
 
 
 constexpr int DEFAULT_CONTEXT_WINDOW_LEN = 2;
@@ -67,17 +68,17 @@ HOST WalkSet<GPUUsage> TemporalRandomWalkCPU<GPUUsage>::get_random_walks_and_tim
         const RandomPickerType* initial_edge_bias,
         WalkDirection walk_direction) {
 
-    const RandomPicker* edge_picker = get_random_picker(walk_bias);
-    const RandomPicker* start_picker = initial_edge_bias ? get_random_picker(initial_edge_bias) : edge_picker;
+    RandomPicker* edge_picker = get_random_picker(walk_bias);
+    RandomPicker* start_picker = initial_edge_bias ? get_random_picker(initial_edge_bias) : edge_picker;
 
 
-    std::vector<int> repeated_node_ids = repeat_elements(get_node_ids(), num_walks_per_node);
+    auto repeated_node_ids = repeat_elements(get_node_ids(), num_walks_per_node);
     shuffle_vector(repeated_node_ids);
-    std::vector<std::vector<std::pair<int, int>>> distributed_node_ids = divide_vector(repeated_node_ids, n_threads);
+    auto distributed_node_ids = divide_vector(repeated_node_ids, n_threads);
 
     WalkSet<GPUUsage> walk_set(repeated_node_ids.size(), max_walk_len);
 
-    auto generate_walks_thread = [this, &walk_set, &edge_picker, &start_picker, max_walk_len, walk_direction](const std::vector<std::pair<int, int>>& start_node_ids) {
+    auto generate_walks_thread = [this, &walk_set, &edge_picker, &start_picker, max_walk_len, walk_direction](const CommonVector<IndexValuePair<int, int>, GPUUsage>& start_node_ids) {
         for (const auto [walk_idx, start_node_id] : start_node_ids) {
             const bool should_walk_forward = get_should_walk_forward(walk_direction);
 
@@ -166,20 +167,20 @@ template<GPUUsageMode GPUUsage>
 HOST void TemporalRandomWalkCPU<GPUUsage>::generate_random_walk_and_time(
         int walk_idx,
         WalkSet<GPUUsage>& walk_set,
-        const RandomPicker* edge_picker,
-        const RandomPicker* start_picker,
+        RandomPicker* edge_picker,
+        RandomPicker* start_picker,
         int max_walk_len,
         bool should_walk_forward,
         int start_node_id) const {
 
-    std::tuple<int, int, int64_t> start_edge;
+    Edge start_edge;
     if (start_node_id == -1) {
-        start_edge = this->temporal_graph->get_edge_at(
+        start_edge = this->temporal_graph->get_edge_at_host(
             *start_picker,
             -1,
             should_walk_forward);
     } else {
-        start_edge = this->temporal_graph->get_node_edge_at(
+        start_edge = this->temporal_graph->get_node_edge_at_host(
             start_node_id,
             *start_picker,
             -1,
@@ -187,7 +188,7 @@ HOST void TemporalRandomWalkCPU<GPUUsage>::generate_random_walk_and_time(
         );
     }
 
-    if (std::get<2>(start_edge) == -1) {
+    if (start_edge.i == -1) {
         return;
     }
 
@@ -214,7 +215,7 @@ HOST void TemporalRandomWalkCPU<GPUUsage>::generate_random_walk_and_time(
     while (walk_set.get_walk_len(walk_idx) < max_walk_len && current_node != -1) {
         walk_set.add_hop(walk_idx, current_node, current_timestamp);
 
-        auto [picked_src, picked_dst, picked_ts] = this->temporal_graph->get_node_edge_at(
+        auto [picked_src, picked_dst, picked_ts] = this->temporal_graph->get_node_edge_at_host(
             current_node,
             *edge_picker,
             current_timestamp,
@@ -242,27 +243,27 @@ HOST void TemporalRandomWalkCPU<GPUUsage>::generate_random_walk_and_time(
 
 template<GPUUsageMode GPUUsage>
 HOST void TemporalRandomWalkCPU<GPUUsage>::add_multiple_edges(const typename ITemporalRandomWalk<GPUUsage>::EdgeVector& edge_infos) const {
-    this->temporal_graph->add_multiple_edges(edge_infos);
+    this->temporal_graph->add_multiple_edges_host(edge_infos);
 }
 
 template<GPUUsageMode GPUUsage>
 HOST size_t TemporalRandomWalkCPU<GPUUsage>::get_node_count() const {
-    return this->temporal_graph->get_node_count();
+    return this->temporal_graph->get_node_count_host();
 }
 
 template<GPUUsageMode GPUUsage>
 HOST size_t TemporalRandomWalkCPU<GPUUsage>::get_edge_count() const {
-    return this->temporal_graph->get_total_edges();
+    return this->temporal_graph->get_total_edges_host();
 }
 
 template<GPUUsageMode GPUUsage>
 HOST typename ITemporalRandomWalk<GPUUsage>::IntVector TemporalRandomWalkCPU<GPUUsage>::get_node_ids() const {
-    return this->temporal_graph->get_node_ids();
+    return this->temporal_graph->get_node_ids_host();
 }
 
 template<GPUUsageMode GPUUsage>
 HOST typename ITemporalRandomWalk<GPUUsage>::EdgeVector TemporalRandomWalkCPU<GPUUsage>::get_edges() const {
-    return this->temporal_graph->get_edges();
+    return this->temporal_graph->get_edges_host();
 }
 
 template<GPUUsageMode GPUUsage>
@@ -278,6 +279,3 @@ HOST void TemporalRandomWalkCPU<GPUUsage>::clear() {
 }
 
 template class TemporalRandomWalkCPU<GPUUsageMode::ON_CPU>;
-#ifdef HAS_CUDA
-template class TemporalRandomWalk<GPUUsageMode::ON_GPU>;
-#endif
