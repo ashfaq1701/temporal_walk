@@ -35,7 +35,10 @@ public:
     : is_directed(is_directed), max_time_capacity(max_time_capacity),
         enable_weight_computation(enable_weight_computation), timescale_bound(timescale_bound) {}
 
-    virtual ~ITemporalRandomWalk() = default;
+    virtual ~ITemporalRandomWalk()
+    {
+        delete temporal_graph;
+    };
 
     virtual HOST RandomPicker* get_random_picker(const RandomPickerType* picker_type) const { return nullptr; }
 

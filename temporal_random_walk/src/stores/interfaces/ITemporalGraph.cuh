@@ -31,13 +31,18 @@ public:
     double timescale_bound = -1;
     int64_t latest_timestamp = 0; // Track latest edge timestamp
 
-    virtual ~ITemporalGraph() = default;
+    virtual ~ITemporalGraph()
+    {
+        delete node_index;
+        delete edges;
+        delete node_mapping;
+    };
 
     bool is_directed = false;
 
-    INodeEdgeIndex<GPUUsage> node_index; // Node to edge mappings
-    IEdgeData<GPUUsage> edges; // Main edge storage
-    INodeMapping<GPUUsage> node_mapping; // Sparse to dense node ID mapping
+    INodeEdgeIndex<GPUUsage>* node_index = nullptr; // Node to edge mappings
+    IEdgeData<GPUUsage>* edges = nullptr; // Main edge storage
+    INodeMapping<GPUUsage>* node_mapping = nullptr; // Sparse to dense node ID mapping
 
     explicit ITemporalGraph(
         bool directed,

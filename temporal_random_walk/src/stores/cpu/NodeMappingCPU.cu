@@ -24,14 +24,14 @@ HOST void NodeMappingCPU<GPUUsage>::mark_node_deleted_host(const int sparse_id) 
 }
 
 template<GPUUsageMode GPUUsage>
-HOST void NodeMappingCPU<GPUUsage>::update_host(const IEdgeData<GPUUsage>& edges, const size_t start_idx, const size_t end_idx) {
+HOST void NodeMappingCPU<GPUUsage>::update_host(const IEdgeData<GPUUsage>* edges, const size_t start_idx, const size_t end_idx) {
     // First pass: find max node ID
     int max_node_id = 0;
     for (size_t i = start_idx; i < end_idx; i++) {
         max_node_id = std::max({
             max_node_id,
-            static_cast<int>(edges.sources[i]),
-            static_cast<int>(edges.targets[i])
+            static_cast<int>(edges->sources[i]),
+            static_cast<int>(edges->targets[i])
         });
     }
 
@@ -45,8 +45,8 @@ HOST void NodeMappingCPU<GPUUsage>::update_host(const IEdgeData<GPUUsage>& edges
     new_nodes.allocate((end_idx - start_idx) * 2);
 
     for (size_t i = start_idx; i < end_idx; i++) {
-        new_nodes.push_back(edges.sources[i]);
-        new_nodes.push_back(edges.targets[i]);
+        new_nodes.push_back(edges->sources[i]);
+        new_nodes.push_back(edges->targets[i]);
     }
 
     std::sort(new_nodes.begin(), new_nodes.end());

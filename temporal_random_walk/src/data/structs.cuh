@@ -168,4 +168,96 @@ struct WalkSet
 
 };
 
+template <typename T, GPUUsageMode GPUUsage>
+struct DividedVector {
+    CommonVector<IndexValuePair<int, T>, GPUUsage> elements;
+    CommonVector<size_t, GPUUsage> group_offsets;
+    size_t num_groups;
+
+    // Constructor - divides input vector into n groups
+    HOST DEVICE DividedVector(const CommonVector<T, GPUUsage>& input, int n)
+        : num_groups(n)
+    {
+        const int total_size = static_cast<int>(input.size());
+        const int base_size = total_size / n;
+        const int remainder = total_size % n;
+
+        // Reserve space for group offsets (n+1 offsets for n groups)
+        group_offsets.allocate(n + 1);
+
+        // Calculate and store group offsets
+        size_t current_offset = 0;
+        group_offsets.push_back(current_offset);
+
+        for (int i = 0; i < n; i++) {
+            const int group_size = base_size + (i < remainder ? 1 : 0);
+            current_offset += group_size;
+            group_offsets.push_back(current_offset);
+        }
+
+        // Allocate space for all elements
+        elements.allocate(total_size);
+
+        // Populate the elements array
+        for (int i = 0; i < n; i++) {
+            const size_t start_idx = group_offsets[i];
+            const size_t end_idx = group_offsets[i + 1];
+
+            for (size_t j = start_idx; j < end_idx; ++j) {
+                elements.push_back(IndexValuePair<int, T>(j, input[j]));
+            }
+        }
+    }
+
+    // Get begin iterator for a specific group
+    HOST DEVICE IndexValuePair<int, T>* group_begin(size_t group_idx) {
+        if (group_idx >= num_groups) {
+            return nullptr;
+        }
+        return elements.data + group_offsets[group_idx];
+    }
+
+    // Get end iterator for a specific group
+    HOST DEVICE IndexValuePair<int, T>* group_end(size_t group_idx) {
+        if (group_idx >= num_groups) {
+            return nullptr;
+        }
+        return elements.data + group_offsets[group_idx + 1];
+    }
+
+    // Get size of a specific group
+    HOST DEVICE [[nodiscard]] size_t group_size(size_t group_idx) const {
+        if (group_idx >= num_groups) {
+            return 0;
+        }
+        return group_offsets[group_idx + 1] - group_offsets[group_idx];
+    }
+
+    // Helper class for iterating over a group
+    struct GroupIterator {
+        DividedVector& divided_vector;
+        size_t group_idx;
+
+        HOST DEVICE GroupIterator(DividedVector& dv, size_t idx)
+            : divided_vector(dv), group_idx(idx) {}
+
+        HOST DEVICE IndexValuePair<int, T>* begin() const {
+            return divided_vector.group_begin(group_idx);
+        }
+
+        HOST DEVICE IndexValuePair<int, T>* end() const {
+            return divided_vector.group_end(group_idx);
+        }
+
+        HOST DEVICE [[nodiscard]] size_t size() const {
+            return divided_vector.group_size(group_idx);
+        }
+    };
+
+    // Get an iterator for a specific group
+    HOST DEVICE GroupIterator get_group(size_t group_idx) {
+        return GroupIterator(*this, group_idx);
+    }
+};
+
 #endif // STRUCTS_H

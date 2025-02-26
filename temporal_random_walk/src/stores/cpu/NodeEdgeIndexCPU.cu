@@ -19,11 +19,11 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::clear_host() {
 
 template<GPUUsageMode GPUUsage>
 HOST void NodeEdgeIndexCPU<GPUUsage>::rebuild_host(
-   const IEdgeData<GPUUsage>& edges,
-   const INodeMapping<GPUUsage>& mapping,
+   const IEdgeData<GPUUsage>* edges,
+   const INodeMapping<GPUUsage>* mapping,
    const bool is_directed) {
 
-   const size_t num_nodes = mapping.size_host();
+   const size_t num_nodes = mapping->size_host();
 
    // Initialize base CSR structures
    this->outbound_offsets.assign(num_nodes + 1);
@@ -35,9 +35,9 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::rebuild_host(
    }
 
    // First pass: count edges per node
-   for (size_t i = 0; i < edges.size_host(); i++) {
-       const int src_idx = mapping.to_dense_host(edges.sources[i]);
-       const int tgt_idx = mapping.to_dense_host(edges.targets[i]);
+   for (size_t i = 0; i < edges->size_host(); i++) {
+       const int src_idx = mapping->to_dense_host(edges->sources[i]);
+       const int tgt_idx = mapping->to_dense_host(edges->targets[i]);
 
        ++this->outbound_offsets[src_idx + 1];
        if (is_directed) {
@@ -68,10 +68,10 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::rebuild_host(
        inbound_current.resize(num_nodes);
    }
 
-    auto edges_size = edges.size_host();
-   for (size_t i = 0; i < edges.size_host(); ++i) {
-       const int src_idx = mapping.to_dense_host(edges.sources[i]);
-       const int tgt_idx = mapping.to_dense_host(edges.targets[i]);
+    auto edges_size = edges->size_host();
+   for (size_t i = 0; i < edges->size_host(); ++i) {
+       const int src_idx = mapping->to_dense_host(edges->sources[i]);
+       const int tgt_idx = mapping->to_dense_host(edges->targets[i]);
 
        const size_t out_pos = this->outbound_offsets[src_idx] + outbound_current[src_idx]++;
        this->outbound_indices[out_pos] = i;
@@ -99,8 +99,8 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::rebuild_host(
        if (start < end) {
            outbound_group_count[node] = 1;  // First group
            for (size_t i = start + 1; i < end; ++i) {
-               if (edges.timestamps[this->outbound_indices[i]] !=
-                   edges.timestamps[this->outbound_indices[i-1]]) {
+               if (edges->timestamps[this->outbound_indices[i]] !=
+                   edges->timestamps[this->outbound_indices[i-1]]) {
                    ++outbound_group_count[node];
                }
            }
@@ -113,8 +113,8 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::rebuild_host(
            if (start < end) {
                inbound_group_count[node] = 1;  // First group
                for (size_t i = start + 1; i < end; ++i) {
-                   if (edges.timestamps[this->inbound_indices[i]] !=
-                       edges.timestamps[this->inbound_indices[i-1]]) {
+                   if (edges->timestamps[this->inbound_indices[i]] !=
+                       edges->timestamps[this->inbound_indices[i-1]]) {
                        ++inbound_group_count[node];
                    }
                }
@@ -145,8 +145,8 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::rebuild_host(
        if (start < end) {
            this->outbound_timestamp_group_indices[group_pos++] = start;
            for (size_t i = start + 1; i < end; ++i) {
-               if (edges.timestamps[this->outbound_indices[i]] !=
-                   edges.timestamps[this->outbound_indices[i-1]]) {
+               if (edges->timestamps[this->outbound_indices[i]] !=
+                   edges->timestamps[this->outbound_indices[i-1]]) {
                    this->outbound_timestamp_group_indices[group_pos++] = i;
                }
            }
@@ -160,8 +160,8 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::rebuild_host(
            if (start < end) {
                this->inbound_timestamp_group_indices[group_pos++] = start;
                for (size_t i = start + 1; i < end; ++i) {
-                   if (edges.timestamps[this->inbound_indices[i]] !=
-                       edges.timestamps[this->inbound_indices[i-1]]) {
+                   if (edges->timestamps[this->inbound_indices[i]] !=
+                       edges->timestamps[this->inbound_indices[i-1]]) {
                        this->inbound_timestamp_group_indices[group_pos++] = i;
                    }
                }
@@ -171,7 +171,7 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::rebuild_host(
 }
 
 template<GPUUsageMode GPUUsage>
-HOST void NodeEdgeIndexCPU<GPUUsage>::update_temporal_weights_host(const IEdgeData<GPUUsage>& edges, double timescale_bound) {
+HOST void NodeEdgeIndexCPU<GPUUsage>::update_temporal_weights_host(const IEdgeData<GPUUsage>* edges, double timescale_bound) {
     const size_t num_nodes = this->outbound_offsets.size() - 1;
 
     this->outbound_forward_cumulative_weights_exponential.resize(this->outbound_timestamp_group_indices.size());
@@ -190,8 +190,8 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::update_temporal_weights_host(const IEdgeDa
         if (out_start < out_end) {
             const size_t first_group_start = this->outbound_timestamp_group_indices[out_start];
             const size_t last_group_start = this->outbound_timestamp_group_indices[out_end - 1];
-            const int64_t min_ts = edges.timestamps[this->outbound_indices[first_group_start]];
-            const int64_t max_ts = edges.timestamps[this->outbound_indices[last_group_start]];
+            const int64_t min_ts = edges->timestamps[this->outbound_indices[first_group_start]];
+            const int64_t max_ts = edges->timestamps[this->outbound_indices[last_group_start]];
             const auto time_diff = static_cast<double>(max_ts - min_ts);
             const double time_scale = (timescale_bound > 0 && time_diff > 0) ?
                 timescale_bound / time_diff : 1.0;
@@ -202,7 +202,7 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::update_temporal_weights_host(const IEdgeDa
             // Calculate weights and sums
             for (size_t pos = out_start; pos < out_end; ++pos) {
                 const size_t edge_start = this->outbound_timestamp_group_indices[pos];
-                const int64_t group_ts = edges.timestamps[this->outbound_indices[edge_start]];
+                const int64_t group_ts = edges->timestamps[this->outbound_indices[edge_start]];
 
                 const auto time_diff_forward = static_cast<double>(max_ts - group_ts);
                 const auto time_diff_backward = static_cast<double>(group_ts - min_ts);
@@ -244,8 +244,8 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::update_temporal_weights_host(const IEdgeDa
             if (in_start < in_end) {
                 const size_t first_group_start = this->inbound_timestamp_group_indices[in_start];
                 const size_t last_group_start = this->inbound_timestamp_group_indices[in_end - 1];
-                const int64_t min_ts = edges.timestamps[this->inbound_indices[first_group_start]];
-                const int64_t max_ts = edges.timestamps[this->inbound_indices[last_group_start]];
+                const int64_t min_ts = edges->timestamps[this->inbound_indices[first_group_start]];
+                const int64_t max_ts = edges->timestamps[this->inbound_indices[last_group_start]];
                 const auto time_diff = static_cast<double>(max_ts - min_ts);
                 const double time_scale = (timescale_bound > 0 && time_diff > 0) ?
                     timescale_bound / time_diff : 1.0;
@@ -255,7 +255,7 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::update_temporal_weights_host(const IEdgeDa
                 // Calculate weights and sum
                 for (size_t pos = in_start; pos < in_end; ++pos) {
                     const size_t edge_start = this->inbound_timestamp_group_indices[pos];
-                    const int64_t group_ts = edges.timestamps[this->inbound_indices[edge_start]];
+                    const int64_t group_ts = edges->timestamps[this->inbound_indices[edge_start]];
 
                     const auto time_diff_backward = static_cast<double>(group_ts - min_ts);
                     const double backward_scaled = timescale_bound > 0 ?

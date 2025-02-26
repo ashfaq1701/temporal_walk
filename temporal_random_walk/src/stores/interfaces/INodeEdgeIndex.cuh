@@ -42,7 +42,7 @@ public:
     * HOST METHODS
     */
     virtual HOST void clear_host() {}
-    virtual HOST void rebuild_host(const IEdgeData<GPUUsage>& edges, const INodeMapping<GPUUsage>& mapping, bool is_directed) {}
+    virtual HOST void rebuild_host(const IEdgeData<GPUUsage>* edges, const INodeMapping<GPUUsage>* mapping, bool is_directed) {}
 
     // Core access methods
     [[nodiscard]] virtual HOST SizeRange get_edge_range_host(int dense_node_id, bool forward, bool is_directed) const { return {}; }
@@ -50,7 +50,7 @@ public:
                                                                       bool is_directed) const { return {}; }
     [[nodiscard]] virtual HOST size_t get_timestamp_group_count_host(int dense_node_id, bool forward, bool directed) const { return 0; }
 
-    virtual HOST void update_temporal_weights_host(const IEdgeData<GPUUsage>& edges, double timescale_bound) {}
+    virtual HOST void update_temporal_weights_host(const IEdgeData<GPUUsage>* edges, double timescale_bound) {}
 
 protected:
     virtual HOST SizeVector get_timestamp_offset_vector_host(bool forward, bool directed) const { return SizeVector(); }
@@ -60,7 +60,7 @@ protected:
     */
 public:
     virtual DEVICE void clear_device() {}
-    virtual DEVICE void rebuild_device(const IEdgeData<GPUUsage>& edges, const INodeMapping<GPUUsage>& mapping, bool is_directed) {}
+    virtual DEVICE void rebuild_device(const IEdgeData<GPUUsage>* edges, const INodeMapping<GPUUsage>* mapping, bool is_directed) {}
 
     // Core access methods
     [[nodiscard]] virtual DEVICE SizeRange get_edge_range_device(int dense_node_id, bool forward, bool is_directed) const { return {}; }
@@ -68,7 +68,7 @@ public:
                                                                       bool is_directed) const { return {}; }
     [[nodiscard]] virtual DEVICE size_t get_timestamp_group_count_device(int dense_node_id, bool forward, bool directed) const { return 0; }
 
-    virtual DEVICE void update_temporal_weights_device(const IEdgeData<GPUUsage>& edges, double timescale_bound) {}
+    virtual DEVICE void update_temporal_weights_device(const IEdgeData<GPUUsage>* edges, double timescale_bound) {}
 
 protected:
     virtual DEVICE SizeVector get_timestamp_offset_vector_device(bool forward, bool directed) const { return SizeVector(); }

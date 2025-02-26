@@ -7,6 +7,9 @@
 #endif
 #include <cstddef>
 #include <algorithm>
+#include <iostream>
+#include <ostream>
+
 #include "enums.h"
 #include "../cuda_common/macros.cuh"
 
@@ -183,7 +186,7 @@ struct CommonVector {
         }
 
         // Initialize extra space with default value
-        fill(new_data, T(), old_size, n);
+        fill_buffer(new_data, T(), old_size, n);
 
         // Free old memory
         if (data)
@@ -286,7 +289,7 @@ struct CommonVector {
         // Fill new elements with provided value
         if (new_size > old_size)
         {
-            fill(T(), old_size, new_size);
+            fill_buffer(new_data, T(), old_size, new_size);
         }
 
         // Free old memory
@@ -459,7 +462,7 @@ struct CommonVector {
         }
     }
 
-    HOST DEVICE void fill(T* data_arr, T fill_value, const long start_idx, const unsigned long end_pos)
+    HOST DEVICE void fill_buffer(T* data_arr, T fill_value, const long start_idx, const unsigned long end_pos)
     {
         #ifdef HAS_CUDA
         if constexpr (GPUUsage == GPUUsageMode::ON_GPU)

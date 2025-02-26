@@ -4,6 +4,7 @@
 #include "EdgeDataCPU.cuh"
 #include "NodeEdgeIndexCPU.cuh"
 
+#include <iostream>
 #include <algorithm>
 
 #include "../../random/IndexBasedRandomPicker.h"
@@ -20,17 +21,17 @@ HOST TemporalGraphCPU<GPUUsage>::TemporalGraphCPU(
     const double timescale_bound)
     : ITemporalGraph<GPUUsage>(directed, window, enable_weight_computation, timescale_bound)
 {
-    this->node_index = NodeEdgeIndexCPU<GPUUsage>();
-    this->edges = EdgeDataCPU<GPUUsage>();
-    this->node_mapping = NodeMappingCPU<GPUUsage>();
+    this->node_index = new NodeEdgeIndexCPU<GPUUsage>();
+    this->edges = new EdgeDataCPU<GPUUsage>();
+    this->node_mapping = new NodeMappingCPU<GPUUsage>();
 }
 
 template<GPUUsageMode GPUUsage>
 HOST void TemporalGraphCPU<GPUUsage>::add_multiple_edges_host(typename ITemporalGraph<GPUUsage>::EdgeVector new_edges) {
     if (new_edges.empty()) return;
 
-    const size_t start_idx = this->edges.size_host();
-    this->edges.reserve_host(start_idx + new_edges.size());
+    const size_t start_idx = this->edges->size_host();
+    this->edges->reserve_host(start_idx + new_edges.size());
 
     typename ITemporalGraph<GPUUsage>::IntVector sources;
     typename ITemporalGraph<GPUUsage>::IntVector targets;
@@ -49,16 +50,16 @@ HOST void TemporalGraphCPU<GPUUsage>::add_multiple_edges_host(typename ITemporal
         this->latest_timestamp = std::max(this->latest_timestamp, ts);
     }
 
-    this->edges.add_edges_host(sources.data, targets.data, timestamps.data, new_edges.size());
+    this->edges->add_edges_host(sources.data, targets.data, timestamps.data, new_edges.size());
 
     // Update node mappings
-    this->node_mapping.update_host(this->edges, start_idx, this->edges.size_host());
+    this->node_mapping->update_host(this->edges, start_idx, this->edges->size_host());
 
     // Sort and merge new edges
     sort_and_merge_edges_host(start_idx);
 
     // Update timestamp groups after sorting
-    this->edges.update_timestamp_groups_host();
+    this->edges->update_timestamp_groups_host();
 
     // Handle time window
     if (this->time_window > 0) {
@@ -66,7 +67,7 @@ HOST void TemporalGraphCPU<GPUUsage>::add_multiple_edges_host(typename ITemporal
     }
 
     // Rebuild edge indices
-    this->node_index.rebuild_host(this->edges, this->node_mapping, this->is_directed);
+    this->node_index->rebuild_host(this->edges, this->node_mapping, this->is_directed);
 
     if (this->enable_weight_computation) {
         update_temporal_weights_host();
@@ -75,66 +76,66 @@ HOST void TemporalGraphCPU<GPUUsage>::add_multiple_edges_host(typename ITemporal
 
 template<GPUUsageMode GPUUsage>
 HOST void TemporalGraphCPU<GPUUsage>::update_temporal_weights_host() {
-    this->edges.update_temporal_weights_host(this->timescale_bound);
-    this->node_index.update_temporal_weights_host(this->edges, this->timescale_bound);
+    this->edges->update_temporal_weights_host(this->timescale_bound);
+    this->node_index->update_temporal_weights_host(this->edges, this->timescale_bound);
 }
 
 template<GPUUsageMode GPUUsage>
 HOST void TemporalGraphCPU<GPUUsage>::sort_and_merge_edges_host(const size_t start_idx) {
-    if (start_idx >= this->edges.size_host()) return;
+    if (start_idx >= this->edges->size_host()) return;
 
     // Sort new edges first
-    typename ITemporalGraph<GPUUsage>::SizeVector indices(this->edges.size_host() - start_idx);
+    typename ITemporalGraph<GPUUsage>::SizeVector indices(this->edges->size_host() - start_idx);
     for (size_t i = 0; i < indices.size(); i++) {
         indices[i] = start_idx + i;
     }
 
     std::sort(indices.begin(), indices.end(),
         [this](const size_t i, const size_t j) {
-            return this->edges.timestamps[i] < this->edges.timestamps[j];
+            return this->edges->timestamps[i] < this->edges->timestamps[j];
     });
 
     // Apply permutation in-place using temporary vectors
-    typename ITemporalGraph<GPUUsage>::IntVector sorted_sources(this->edges.size_host() - start_idx);
-    typename ITemporalGraph<GPUUsage>::IntVector sorted_targets(this->edges.size_host() - start_idx);
-    typename ITemporalGraph<GPUUsage>::Int64TVector sorted_timestamps(this->edges.size_host() - start_idx);
+    typename ITemporalGraph<GPUUsage>::IntVector sorted_sources(this->edges->size_host() - start_idx);
+    typename ITemporalGraph<GPUUsage>::IntVector sorted_targets(this->edges->size_host() - start_idx);
+    typename ITemporalGraph<GPUUsage>::Int64TVector sorted_timestamps(this->edges->size_host() - start_idx);
 
     for (size_t i = 0; i < indices.size(); i++) {
         const size_t idx = indices[i];
-        sorted_sources[i] = this->edges.sources[idx];
-        sorted_targets[i] = this->edges.targets[idx];
-        sorted_timestamps[i] = this->edges.timestamps[idx];
+        sorted_sources[i] = this->edges->sources[idx];
+        sorted_targets[i] = this->edges->targets[idx];
+        sorted_timestamps[i] = this->edges->timestamps[idx];
     }
 
     // Copy back sorted edges
     for (size_t i = 0; i < indices.size(); i++) {
-        this->edges.sources[start_idx + i] = sorted_sources[i];
-        this->edges.targets[start_idx + i] = sorted_targets[i];
-        this->edges.timestamps[start_idx + i] = sorted_timestamps[i];
+        this->edges->sources[start_idx + i] = sorted_sources[i];
+        this->edges->targets[start_idx + i] = sorted_targets[i];
+        this->edges->timestamps[start_idx + i] = sorted_timestamps[i];
     }
 
     // Merge with existing edges
     if (start_idx > 0) {
         // Create buffer vectors
-        typename ITemporalGraph<GPUUsage>::IntVector merged_sources(this->edges.size_host());
-        typename ITemporalGraph<GPUUsage>::IntVector merged_targets(this->edges.size_host());
-        typename ITemporalGraph<GPUUsage>::Int64TVector merged_timestamps(this->edges.size_host());
+        typename ITemporalGraph<GPUUsage>::IntVector merged_sources(this->edges->size_host());
+        typename ITemporalGraph<GPUUsage>::IntVector merged_targets(this->edges->size_host());
+        typename ITemporalGraph<GPUUsage>::Int64TVector merged_timestamps(this->edges->size_host());
 
         size_t i = 0;  // Index for existing edges
         size_t j = start_idx;  // Index for new edges
         size_t k = 0;  // Index for merged result
 
         // Merge while keeping arrays aligned
-        while (i < start_idx && j < this->edges.size_host()) {
-            if (this->edges.timestamps[i] <= this->edges.timestamps[j]) {
-                merged_sources[k] = this->edges.sources[i];
-                merged_targets[k] = this->edges.targets[i];
-                merged_timestamps[k] = this->edges.timestamps[i];
+        while (i < start_idx && j < this->edges->size_host()) {
+            if (this->edges->timestamps[i] <= this->edges->timestamps[j]) {
+                merged_sources[k] = this->edges->sources[i];
+                merged_targets[k] = this->edges->targets[i];
+                merged_timestamps[k] = this->edges->timestamps[i];
                 i++;
             } else {
-                merged_sources[k] = this->edges.sources[j];
-                merged_targets[k] = this->edges.targets[j];
-                merged_timestamps[k] = this->edges.timestamps[j];
+                merged_sources[k] = this->edges->sources[j];
+                merged_targets[k] = this->edges->targets[j];
+                merged_timestamps[k] = this->edges->timestamps[j];
                 j++;
             }
             k++;
@@ -142,94 +143,94 @@ HOST void TemporalGraphCPU<GPUUsage>::sort_and_merge_edges_host(const size_t sta
 
         // Copy remaining entries
         while (i < start_idx) {
-            merged_sources[k] = this->edges.sources[i];
-            merged_targets[k] = this->edges.targets[i];
-            merged_timestamps[k] = this->edges.timestamps[i];
+            merged_sources[k] = this->edges->sources[i];
+            merged_targets[k] = this->edges->targets[i];
+            merged_timestamps[k] = this->edges->timestamps[i];
             i++;
             k++;
         }
 
-        while (j < this->edges.size_host()) {
-            merged_sources[k] = this->edges.sources[j];
-            merged_targets[k] = this->edges.targets[j];
-            merged_timestamps[k] = this->edges.timestamps[j];
+        while (j < this->edges->size_host()) {
+            merged_sources[k] = this->edges->sources[j];
+            merged_targets[k] = this->edges->targets[j];
+            merged_timestamps[k] = this->edges->timestamps[j];
             j++;
             k++;
         }
 
         // Copy merged data back to edges
-        this->edges.sources = std::move(merged_sources);
-        this->edges.targets = std::move(merged_targets);
-        this->edges.timestamps = std::move(merged_timestamps);
+        this->edges->sources = std::move(merged_sources);
+        this->edges->targets = std::move(merged_targets);
+        this->edges->timestamps = std::move(merged_timestamps);
     }
 }
 
 template<GPUUsageMode GPUUsage>
 HOST void TemporalGraphCPU<GPUUsage>::delete_old_edges_host() {
-    if (this->time_window <= 0 || this->edges.empty_host()) return;
+    if (this->time_window <= 0 || this->edges->empty_host()) return;
 
     const int64_t cutoff_time = this->latest_timestamp - this->time_window;
-    const auto it = std::upper_bound(this->edges.timestamps.begin(), this->edges.timestamps.end(), cutoff_time);
-    if (it == this->edges.timestamps.begin()) return;
+    const auto it = std::upper_bound(this->edges->timestamps.begin(), this->edges->timestamps.end(), cutoff_time);
+    if (it == this->edges->timestamps.begin()) return;
 
-    const int delete_count = static_cast<int>(it - this->edges.timestamps.begin());
-    const size_t remaining = this->edges.size_host() - delete_count;
+    const int delete_count = static_cast<int>(it - this->edges->timestamps.begin());
+    const size_t remaining = this->edges->size_host() - delete_count;
 
     // Track which nodes still have edges
-    typename ITemporalGraph<GPUUsage>::BoolVector has_edges(this->node_mapping.sparse_to_dense.size());
+    typename ITemporalGraph<GPUUsage>::BoolVector has_edges(this->node_mapping->sparse_to_dense.size());
 
     if (remaining > 0) {
-        std::move(this->edges.sources.begin() + delete_count, this->edges.sources.end(), this->edges.sources.begin());
-        std::move(this->edges.targets.begin() + delete_count, this->edges.targets.end(), this->edges.targets.begin());
-        std::move(this->edges.timestamps.begin() + delete_count, this->edges.timestamps.end(), this->edges.timestamps.begin());
+        std::move(this->edges->sources.begin() + delete_count, this->edges->sources.end(), this->edges->sources.begin());
+        std::move(this->edges->targets.begin() + delete_count, this->edges->targets.end(), this->edges->targets.begin());
+        std::move(this->edges->timestamps.begin() + delete_count, this->edges->timestamps.end(), this->edges->timestamps.begin());
 
         // Mark nodes that still have edges
         for (size_t i = 0; i < remaining; i++) {
-            has_edges[this->edges.sources[i]] = true;
-            has_edges[this->edges.targets[i]] = true;
+            has_edges[this->edges->sources[i]] = true;
+            has_edges[this->edges->targets[i]] = true;
         }
     }
 
-    this->edges.resize_host(remaining);
+    this->edges->resize_host(remaining);
 
     // Mark nodes with no edges as deleted
     for (size_t i = 0; i < has_edges.size(); i++) {
         if (!has_edges[i]) {
-            this->node_mapping.mark_node_deleted_host(static_cast<int>(i));
+            this->node_mapping->mark_node_deleted_host(static_cast<int>(i));
         }
     }
 
     // Update all data structures after edge deletion
-    this->edges.update_timestamp_groups_host();
-    this->node_mapping.update_host(this->edges, 0, this->edges.size_host());
-    this->node_index.rebuild_host(this->edges, this->node_mapping, this->is_directed);
+    this->edges->update_timestamp_groups_host();
+    this->node_mapping->update_host(this->edges, 0, this->edges->size_host());
+    this->node_index->rebuild_host(this->edges, this->node_mapping, this->is_directed);
 }
 
 template<GPUUsageMode GPUUsage>
 HOST size_t TemporalGraphCPU<GPUUsage>::count_timestamps_less_than_host(int64_t timestamp) const {
-    if (this->edges.empty_host()) return 0;
+    if (this->edges->empty_host()) return 0;
 
-    const auto it = std::lower_bound(this->edges.unique_timestamps.begin(), this->edges.unique_timestamps.end(), timestamp);
-    return it - this->edges.unique_timestamps.begin();
+    const auto it = std::lower_bound(this->edges->unique_timestamps.begin(), this->edges->unique_timestamps.end(), timestamp);
+    return it - this->edges->unique_timestamps.begin();
 }
 
 template<GPUUsageMode GPUUsage>
 HOST size_t TemporalGraphCPU<GPUUsage>::count_timestamps_greater_than_host(int64_t timestamp) const {
-    if (this->edges.empty_host()) return 0;
+    if (this->edges->empty_host()) return 0;
 
-    auto it = std::upper_bound(this->edges.unique_timestamps.begin(), this->edges.unique_timestamps.end(), timestamp);
-    return this->edges.unique_timestamps.end() - it;
+    auto it = std::upper_bound(this->edges->unique_timestamps.begin(), this->edges->unique_timestamps.end(), timestamp);
+    return this->edges->unique_timestamps.end() - it;
 }
 
 template<GPUUsageMode GPUUsage>
 HOST size_t TemporalGraphCPU<GPUUsage>::count_node_timestamps_less_than_host(int node_id, int64_t timestamp) const {
     // Used for backward walks
-    const int dense_idx = this->node_mapping.to_dense_host(node_id);
+    const int dense_idx = this->node_mapping->to_dense_host(node_id);
     if (dense_idx < 0) return 0;
 
-    const auto& timestamp_group_offsets = this->is_directed ? this->node_index.inbound_timestamp_group_offsets : this->node_index.outbound_timestamp_group_offsets;
-    const auto& timestamp_group_indices = this->is_directed ? this->node_index.inbound_timestamp_group_indices : this->node_index.outbound_timestamp_group_indices;
-    const auto& edge_indices = this->is_directed ? this->node_index.inbound_indices : this->node_index.outbound_indices;
+    const auto& timestamp_group_offsets = this->is_directed ? this->node_index->inbound_timestamp_group_offsets : this->node_index->outbound_timestamp_group_offsets;
+    const auto& timestamp_group_indices = this->is_directed ? this->node_index->inbound_timestamp_group_indices : this->node_index->outbound_timestamp_group_indices;
+    const auto& edge_indices = this->is_directed ? this->node_index->inbound_indices : this->node_index->outbound_indices;
 
     const size_t group_start = timestamp_group_offsets[dense_idx];
     const size_t group_end = timestamp_group_offsets[dense_idx + 1];
@@ -242,7 +243,7 @@ HOST size_t TemporalGraphCPU<GPUUsage>::count_node_timestamps_less_than_host(int
         timestamp,
         [this, &edge_indices](size_t group_pos, int64_t ts)
         {
-            return this->edges.timestamps[edge_indices[group_pos]] < ts;
+            return this->edges->timestamps[edge_indices[group_pos]] < ts;
         });
 
     return std::distance(timestamp_group_indices.begin() + static_cast<int>(group_start), it);
@@ -251,12 +252,12 @@ HOST size_t TemporalGraphCPU<GPUUsage>::count_node_timestamps_less_than_host(int
 template<GPUUsageMode GPUUsage>
 HOST size_t TemporalGraphCPU<GPUUsage>::count_node_timestamps_greater_than_host(int node_id, int64_t timestamp) const {
     // Used for forward walks
-    int dense_idx = this->node_mapping.to_dense_host(node_id);
+    int dense_idx = this->node_mapping->to_dense_host(node_id);
     if (dense_idx < 0) return 0;
 
-    const auto& timestamp_group_offsets = this->node_index.outbound_timestamp_group_offsets;
-    const auto& timestamp_group_indices = this->node_index.outbound_timestamp_group_indices;
-    const auto& edge_indices = this->node_index.outbound_indices;
+    const auto& timestamp_group_offsets = this->node_index->outbound_timestamp_group_offsets;
+    const auto& timestamp_group_indices = this->node_index->outbound_timestamp_group_indices;
+    const auto& edge_indices = this->node_index->outbound_indices;
 
     const size_t group_start = timestamp_group_offsets[dense_idx];
     const size_t group_end = timestamp_group_offsets[dense_idx + 1];
@@ -269,7 +270,7 @@ HOST size_t TemporalGraphCPU<GPUUsage>::count_node_timestamps_greater_than_host(
         timestamp,
         [this, &edge_indices](int64_t ts, size_t group_pos)
         {
-            return ts < this->edges.timestamps[edge_indices[group_pos]];
+            return ts < this->edges->timestamps[edge_indices[group_pos]];
         });
 
     return std::distance(it, timestamp_group_indices.begin() + static_cast<int>(group_end));
@@ -281,15 +282,15 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_edge_at_host(
     int64_t timestamp,
     const bool forward) const {
 
-    if (this->edges.empty_host()) return Edge{-1, -1, -1};
+    if (this->edges->empty_host()) return Edge{-1, -1, -1};
 
-    const size_t num_groups = this->edges.get_timestamp_group_count_host();
+    const size_t num_groups = this->edges->get_timestamp_group_count_host();
     if (num_groups == 0) return Edge{-1, -1, -1};
 
     size_t group_idx;
     if (timestamp != -1) {
         if (forward) {
-            const size_t first_group = this->edges.find_group_after_timestamp_host(timestamp);
+            const size_t first_group = this->edges->find_group_after_timestamp_host(timestamp);
             const size_t available_groups = num_groups - first_group;
             if (available_groups == 0) return Edge{-1, -1, -1};
 
@@ -302,12 +303,12 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_edge_at_host(
             else {
                 auto* weight_picker = static_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
                 group_idx = weight_picker->pick_random(
-                    this->edges.forward_cumulative_weights_exponential,
+                    this->edges->forward_cumulative_weights_exponential,
                     static_cast<int>(first_group),
                     static_cast<int>(num_groups));
             }
         } else {
-            const size_t last_group = this->edges.find_group_before_timestamp_host(timestamp);
+            const size_t last_group = this->edges->find_group_before_timestamp_host(timestamp);
             if (last_group == static_cast<size_t>(-1)) return Edge{-1, -1, -1};
 
             const size_t available_groups = last_group + 1;
@@ -320,7 +321,7 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_edge_at_host(
             else {
                 auto* weight_picker = static_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
                 group_idx = weight_picker->pick_random(
-                    this->edges.backward_cumulative_weights_exponential,
+                    this->edges->backward_cumulative_weights_exponential,
                     0,
                     static_cast<int>(last_group + 1));
             }
@@ -336,13 +337,13 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_edge_at_host(
             auto* weight_picker = static_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
             if (forward) {
                 group_idx = weight_picker->pick_random(
-                    this->edges.forward_cumulative_weights_exponential,
+                    this->edges->forward_cumulative_weights_exponential,
                     0,
                     static_cast<int>(num_groups));
             }
             else {
                 group_idx = weight_picker->pick_random(
-                    this->edges.backward_cumulative_weights_exponential,
+                    this->edges->backward_cumulative_weights_exponential,
                     0,
                     static_cast<int>(num_groups));
             }
@@ -350,7 +351,7 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_edge_at_host(
     }
 
     // Get selected group's boundaries
-    auto [group_start, group_end] = this->edges.get_timestamp_group_range_host(group_idx);
+    auto [group_start, group_end] = this->edges->get_timestamp_group_range_host(group_idx);
     if (group_start == group_end) {
         return Edge{-1, -1, -1};
     }
@@ -358,9 +359,9 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_edge_at_host(
     // Random selection from the chosen group
     const size_t random_idx = group_start + generate_random_number_bounded_by(static_cast<int>(group_end - group_start));
     return Edge {
-        this->edges.sources[random_idx],
-        this->edges.targets[random_idx],
-        this->edges.timestamps[random_idx]
+        this->edges->sources[random_idx],
+        this->edges->targets[random_idx],
+        this->edges->timestamps[random_idx]
     };
 }
 
@@ -371,21 +372,21 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_node_edge_at_host(
     const int64_t timestamp,
     const bool forward) const {
 
-    const int dense_idx = this->node_mapping.to_dense_host(node_id);
+    const int dense_idx = this->node_mapping->to_dense_host(node_id);
     if (dense_idx < 0) return Edge{-1, -1, -1};
 
     // Get appropriate node indices based on direction and graph type
     const auto& timestamp_group_offsets = forward
-        ? this->node_index.outbound_timestamp_group_offsets
-        : (this->is_directed ? this->node_index.inbound_timestamp_group_offsets : this->node_index.outbound_timestamp_group_offsets);
+        ? this->node_index->outbound_timestamp_group_offsets
+        : (this->is_directed ? this->node_index->inbound_timestamp_group_offsets : this->node_index->outbound_timestamp_group_offsets);
 
     const auto& timestamp_group_indices = forward
-        ? this->node_index.outbound_timestamp_group_indices
-        : (this->is_directed ? this->node_index.inbound_timestamp_group_indices : this->node_index.outbound_timestamp_group_indices);
+        ? this->node_index->outbound_timestamp_group_indices
+        : (this->is_directed ? this->node_index->inbound_timestamp_group_indices : this->node_index->outbound_timestamp_group_indices);
 
     const auto& edge_indices = forward
-        ? this->node_index.outbound_indices
-        : (this->is_directed ? this->node_index.inbound_indices : this->node_index.outbound_indices);
+        ? this->node_index->outbound_indices
+        : (this->is_directed ? this->node_index->inbound_indices : this->node_index->outbound_indices);
 
     // Get node's group range
     const size_t group_start_offset = timestamp_group_offsets[dense_idx];
@@ -401,7 +402,7 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_node_edge_at_host(
                 timestamp_group_indices.begin() + static_cast<int>(group_end_offset),
                 timestamp,
                 [this, &edge_indices](int64_t ts, size_t pos) {
-                    return ts < this->edges.timestamps[edge_indices[pos]];
+                    return ts < this->edges->timestamps[edge_indices[pos]];
                 });
 
             // Count available groups after timestamp
@@ -421,7 +422,7 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_node_edge_at_host(
             {
                 auto* weight_picker = static_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
                 group_pos = weight_picker->pick_random(
-                    this->node_index.outbound_forward_cumulative_weights_exponential,
+                    this->node_index->outbound_forward_cumulative_weights_exponential,
                     static_cast<int>(start_pos),
                     static_cast<int>(group_end_offset));
             }
@@ -432,7 +433,7 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_node_edge_at_host(
                 timestamp_group_indices.begin() + static_cast<int>(group_end_offset),
                 timestamp,
                 [this, &edge_indices](size_t pos, int64_t ts) {
-                    return this->edges.timestamps[edge_indices[pos]] < ts;
+                    return this->edges->timestamps[edge_indices[pos]] < ts;
                 });
 
             const size_t available = std::distance(
@@ -451,8 +452,8 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_node_edge_at_host(
                 auto* weight_picker = static_cast<WeightBasedRandomPicker<GPUUsage>*>(&picker);
                 group_pos = weight_picker->pick_random(
                     this->is_directed
-                        ? this->node_index.inbound_backward_cumulative_weights_exponential
-                        : this->node_index.outbound_backward_cumulative_weights_exponential,
+                        ? this->node_index->inbound_backward_cumulative_weights_exponential
+                        : this->node_index->outbound_backward_cumulative_weights_exponential,
                     static_cast<int>(group_start_offset), // start from node's first group
                     static_cast<int>(it - timestamp_group_indices.begin()) // up to and excluding first group >= timestamp
                 );
@@ -477,7 +478,7 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_node_edge_at_host(
             if (forward)
             {
                 group_pos = weight_picker->pick_random(
-                    this->node_index.outbound_forward_cumulative_weights_exponential,
+                    this->node_index->outbound_forward_cumulative_weights_exponential,
                     static_cast<int>(group_start_offset),
                     static_cast<int>(group_end_offset));
             }
@@ -485,8 +486,8 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_node_edge_at_host(
             {
                 group_pos = weight_picker->pick_random(
                     this->is_directed
-                        ? this->node_index.inbound_backward_cumulative_weights_exponential
-                        : this->node_index.outbound_backward_cumulative_weights_exponential,
+                        ? this->node_index->inbound_backward_cumulative_weights_exponential
+                        : this->node_index->outbound_backward_cumulative_weights_exponential,
                     static_cast<int>(group_start_offset),
                     static_cast<int>(group_end_offset));
             }
@@ -497,9 +498,9 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_node_edge_at_host(
     const size_t edge_start = timestamp_group_indices[group_pos];
     const size_t edge_end = (group_pos + 1 < group_end_offset)
         ? timestamp_group_indices[group_pos + 1]
-        : (forward ? this->node_index.outbound_offsets[dense_idx + 1]
-                  : (this->is_directed ? this->node_index.inbound_offsets[dense_idx + 1]
-                                : this->node_index.outbound_offsets[dense_idx + 1]));
+        : (forward ? this->node_index->outbound_offsets[dense_idx + 1]
+                  : (this->is_directed ? this->node_index->inbound_offsets[dense_idx + 1]
+                                : this->node_index->outbound_offsets[dense_idx + 1]));
 
     // Validate range before random selection
     if (edge_start >= edge_end || edge_start >= edge_indices.size() || edge_end > edge_indices.size()) {
@@ -510,20 +511,20 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_node_edge_at_host(
     const size_t edge_idx = edge_indices[edge_start + generate_random_number_bounded_by(static_cast<int>(edge_end - edge_start))];
 
     return Edge {
-        this->edges.sources[edge_idx],
-        this->edges.targets[edge_idx],
-        this->edges.timestamps[edge_idx]
+        this->edges->sources[edge_idx],
+        this->edges->targets[edge_idx],
+        this->edges->timestamps[edge_idx]
     };
 }
 
 template<GPUUsageMode GPUUsage>
 HOST typename ITemporalGraph<GPUUsage>::IntVector TemporalGraphCPU<GPUUsage>::get_node_ids_host() const {
-    return this->node_mapping.get_active_node_ids_host();
+    return this->node_mapping->get_active_node_ids_host();
 }
 
 template<GPUUsageMode GPUUsage>
 HOST typename ITemporalGraph<GPUUsage>::EdgeVector TemporalGraphCPU<GPUUsage>::get_edges_host() {
-    return this->edges.get_edges_host();
+    return this->edges->get_edges_host();
 }
 
 template class TemporalGraphCPU<GPUUsageMode::ON_CPU>;

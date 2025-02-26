@@ -69,33 +69,18 @@ CommonVector<int, GPUUsage> repeat_elements(const CommonVector<int, GPUUsage>& a
 }
 
 template <typename T, GPUUsageMode GPUUsage>
-CommonVector<CommonVector<IndexValuePair<int, T>, GPUUsage>, GPUUsage> divide_vector(
+DividedVector<T, GPUUsage> divide_vector(
     const CommonVector<T, GPUUsage>& input,
     int n)
 {
-    CommonVector<CommonVector<IndexValuePair<int, T>, GPUUsage>, GPUUsage> result;
-    result.resize(n);
-
-    const int total_size = static_cast<int>(input.size());
-    const int base_size = total_size / n;
-    const int remainder = total_size % n;
-
-    int start = 0;
-    for (int i = 0; i < n; ++i) {
-        const int current_size = base_size + (i < remainder ? 1 : 0);
-        result[i].allocate(current_size);
-
-        for (int j = 0; j < current_size; ++j) {
-            result[i].push_back(IndexValuePair<int, T>(start + j, input[start + j]));
-        }
-        start += current_size;
-    }
-
-    return result;
+    return DividedVector<T, GPUUsage>(input, n);
 }
 
-inline std::vector<int> divide_number(int n, int i) {
-    std::vector<int> parts(i, n / i);
+template <GPUUsageMode GPUUsage>
+CommonVector<int, GPUUsage> divide_number(int n, int i) {
+    CommonVector<int, GPUUsage> parts(i);
+    parts.fill(n / i);
+
     const int remainder = n % i;
 
     for (int j = 0; j < remainder; ++j) {

@@ -11,7 +11,7 @@ int main() {
     std::cout << edge_infos.size() << std::endl;
 
     auto start = std::chrono::high_resolution_clock::now();
-    TemporalRandomWalk<GPU_USAGE_MODE> temporal_random_walk(false, -1, true, 34);
+    TemporalRandomWalk<GPU_USAGE_MODE> temporal_random_walk(false, -1, true, 34, 1);
     temporal_random_walk.add_multiple_edges(edge_infos);
     auto end = std::chrono::high_resolution_clock::now();
 

@@ -71,15 +71,16 @@ HOST WalkSet<GPUUsage> TemporalRandomWalkCPU<GPUUsage>::get_random_walks_and_tim
     RandomPicker* edge_picker = get_random_picker(walk_bias);
     RandomPicker* start_picker = initial_edge_bias ? get_random_picker(initial_edge_bias) : edge_picker;
 
-
     auto repeated_node_ids = repeat_elements(get_node_ids(), num_walks_per_node);
     shuffle_vector(repeated_node_ids);
     auto distributed_node_ids = divide_vector(repeated_node_ids, n_threads);
 
     WalkSet<GPUUsage> walk_set(repeated_node_ids.size(), max_walk_len);
 
-    auto generate_walks_thread = [this, &walk_set, &edge_picker, &start_picker, max_walk_len, walk_direction](const CommonVector<IndexValuePair<int, int>, GPUUsage>& start_node_ids) {
-        for (const auto [walk_idx, start_node_id] : start_node_ids) {
+    auto generate_walks_thread = [this, &walk_set, &edge_picker, &start_picker, max_walk_len, walk_direction](const typename DividedVector<int, GPUUsage>::GroupIterator& group) {
+        for (auto ptr = group.begin(); ptr != group.end(); ++ptr) {
+            int walk_idx = ptr->index;
+            int start_node_id = ptr->value;
             const bool should_walk_forward = get_should_walk_forward(walk_direction);
 
             generate_random_walk_and_time(
@@ -94,11 +95,11 @@ HOST WalkSet<GPUUsage> TemporalRandomWalkCPU<GPUUsage>::get_random_walks_and_tim
     };
 
     std::vector<std::future<void>> futures;
-    futures.reserve(distributed_node_ids.size());
+    futures.reserve(distributed_node_ids.num_groups);
 
-    for (auto & node_ids : distributed_node_ids)
+    for (size_t i = 0; i < distributed_node_ids.num_groups; i++)
     {
-        futures.push_back(thread_pool.enqueue(generate_walks_thread, node_ids));
+        futures.push_back(thread_pool.enqueue(generate_walks_thread, distributed_node_ids.get_group(i)));
     }
 
     std::vector<std::vector<NodeWithTime>> walks;
@@ -144,7 +145,7 @@ HOST WalkSet<GPUUsage> TemporalRandomWalkCPU<GPUUsage>::get_random_walks_and_tim
     std::vector<std::future<void>> futures;
     futures.reserve(n_threads);
 
-    const std::vector<int> walks_per_thread = divide_number(num_walks_total, n_threads);
+    auto walks_per_thread = divide_number<GPUUsage>(num_walks_total, n_threads);
 
     int start_idx = 0;
     for (int num_walks : walks_per_thread) {

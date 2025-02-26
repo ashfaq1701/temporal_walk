@@ -28,7 +28,7 @@ public:
     /**
     * HOST METHODS
     */
-    virtual HOST void update_host(const IEdgeData<GPUUsage>& edges, size_t start_idx, size_t end_idx) {}
+    virtual HOST void update_host(const IEdgeData<GPUUsage>* edges, size_t start_idx, size_t end_idx) {}
     [[nodiscard]] virtual HOST int to_dense_host(int sparse_id) const { return -1; }
     [[nodiscard]] virtual HOST int to_sparse_host(int dense_idx) const { return -1; }
     [[nodiscard]] virtual HOST size_t size_host() const { return 0; }
@@ -45,7 +45,7 @@ public:
     /**
     * DEVICE METHODS
     */
-    virtual DEVICE void update_device(const IEdgeData<GPUUsage>& edges, size_t start_idx, size_t end_idx) {}
+    virtual DEVICE void update_device(const IEdgeData<GPUUsage>* edges, size_t start_idx, size_t end_idx) {}
     [[nodiscard]] virtual DEVICE int to_dense_device(int sparse_id) const { return -1; }
     [[nodiscard]] virtual DEVICE int to_sparse_device(int dense_idx) const { return -1; }
     [[nodiscard]] virtual DEVICE size_t size_device() const { return 0; }

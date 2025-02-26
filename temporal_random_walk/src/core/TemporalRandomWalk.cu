@@ -151,9 +151,8 @@ void TemporalRandomWalk<GPUUsage>::add_multiple_edges(const std::vector<std::tup
     typename ITemporalRandomWalk<GPUUsage>::EdgeVector edges;
     edges.allocate(edge_infos.size());
 
-    for (size_t idx = 0; idx < edge_infos.size(); ++idx) {
-        auto [u, i, ts] = edge_infos[idx];
-        edges[idx] = Edge(u, i, ts);
+    for (auto [u, i, ts] : edge_infos) {
+        edges.push_back(Edge(u, i, ts));
     }
 
     temporal_random_walk->add_multiple_edges(edges);
