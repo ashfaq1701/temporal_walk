@@ -194,7 +194,7 @@ HOST void TemporalRandomWalkCPU<GPUUsage>::generate_random_walk_and_time(
     }
 
     int current_node = -1;
-    auto current_timestamp = should_walk_forward ? INT64_MIN : INT64_MAX;
+    size_t current_timestamp = should_walk_forward ? INT64_MIN : INT64_MAX;
     auto [start_src, start_dst, start_ts] = start_edge;
 
     if (this->is_directed) {

@@ -42,7 +42,7 @@ std::vector<std::vector<NodeWithTime>> TemporalRandomWalk<GPUUsage>::get_random_
     std::vector<std::vector<NodeWithTime>> walks(walk_set.num_walks);
 
     for (size_t i = 0; i < walk_set.num_walks; ++i) {
-        const size_t walk_len = walk_set.walk_lens[i];
+        const size_t walk_len = walk_set.get_walk_len(i);
         walks[i].resize(walk_len);
 
         for (size_t j = 0; j < walk_len; ++j) {

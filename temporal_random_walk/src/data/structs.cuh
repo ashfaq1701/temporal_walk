@@ -100,9 +100,9 @@ struct WalkSet
     HOST DEVICE explicit WalkSet(size_t num_walks, size_t max_len)
         : num_walks(num_walks), max_len(max_len), nodes({}), timestamps({}), walk_lens({})
     {
-        nodes.allocate(num_walks * max_len);
-        timestamps.allocate(num_walks * max_len);
-        walk_lens.allocate(num_walks);
+        nodes.resize(num_walks * max_len);
+        timestamps.resize(num_walks * max_len);
+        walk_lens.resize(num_walks);
     }
 
     HOST DEVICE void add_hop(int walk_number, int node, int64_t timestamp)
@@ -111,21 +111,6 @@ struct WalkSet
         nodes[offset] = node;
         timestamps[offset] = timestamp;
         ++walk_lens[walk_number];
-    }
-
-    HOST DEVICE WalkSet& operator=(const WalkSet& other)
-    {
-        if (this != &other)
-        {
-            num_walks = other.num_walks;
-            max_len = other.max_len;
-
-            nodes.write_from_pointer(other.nodes.data, num_walks * max_len);
-            timestamps.write_from_pointer(other.timestamps.data, num_walks * max_len);
-            walk_lens.allocate(other.walk_lens.data, num_walks);
-        }
-
-        return *this;
     }
 
     HOST DEVICE size_t get_walk_len(int walk_number)
@@ -165,7 +150,6 @@ struct WalkSet
             timestamps[end - i] = temp_time;
         }
     }
-
 };
 
 template <typename T, GPUUsageMode GPUUsage>
