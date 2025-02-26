@@ -20,7 +20,7 @@ TemporalRandomWalk<GPUUsage>::TemporalRandomWalk(bool is_directed, int64_t max_t
         std::cerr << "Warning: CUDA implementation requested but not available, using CPU implementation instead" << std::endl;
         temporal_random_walk = new TemporalRandomWalkCPU<GPUUsage>(is_directed, max_time_capacity, enable_weight_computation, timescale_bound, n_threads);
     }
-#endif
+    #endif
 }
 
 template <GPUUsageMode GPUUsage>
