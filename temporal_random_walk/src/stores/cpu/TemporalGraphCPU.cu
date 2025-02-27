@@ -4,7 +4,6 @@
 #include "EdgeDataCPU.cuh"
 #include "NodeEdgeIndexCPU.cuh"
 
-#include <iostream>
 #include <algorithm>
 
 #include "../../random/IndexBasedRandomPicker.h"

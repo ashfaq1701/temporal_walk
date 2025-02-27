@@ -1,5 +1,5 @@
-#ifndef PRINT_WALKS_H
-#define PRINT_WALKS_H
+#ifndef TEST_RUN_UTILS_H
+#define TEST_RUN_UTILS_H
 
 #include <iostream>
 
@@ -61,4 +61,4 @@ inline double get_average_walk_length(const std::vector<std::vector<NodeWithTime
     return static_cast<double>(total_length) / static_cast<double>(num_walks);
 }
 
-#endif //PRINT_WALKS_H
+#endif //TEST_RUN_UTILS_H

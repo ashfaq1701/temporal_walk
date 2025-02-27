@@ -1,11 +1,8 @@
 #include <gtest/gtest.h>
 
 #include "../src/stores/proxies/EdgeData.cuh"
-#include "../src/stores/cuda/EdgeDataCUDA.cuh"
 #include "../src/stores/proxies/NodeMapping.cuh"
-#include "../src/stores/cuda/NodeMappingCUDA.cuh"
 #include "../src/stores/proxies/NodeEdgeIndex.cuh"
-#include "../src/stores/cuda/NodeEdgeIndexCUDA.cuh"
 
 template<typename T>
 class NodeEdgeIndexWeightTest : public ::testing::Test {

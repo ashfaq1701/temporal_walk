@@ -1,6 +1,5 @@
 #include "NodeMappingCPU.cuh"
 #include <algorithm>
-#include <iostream>
 
 template<GPUUsageMode GPUUsage>
 HOST void NodeMappingCPU<GPUUsage>::clear_host() {

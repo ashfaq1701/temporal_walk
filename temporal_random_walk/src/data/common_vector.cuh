@@ -8,7 +8,6 @@
 #include <cstddef>
 #include <algorithm>
 #include <iostream>
-#include <ostream>
 
 #include "enums.h"
 #include "../cuda_common/macros.cuh"

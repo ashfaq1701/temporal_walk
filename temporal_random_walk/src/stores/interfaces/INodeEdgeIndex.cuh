@@ -1,10 +1,6 @@
 #ifndef I_NODEEDGEINDEX_H
 #define I_NODEEDGEINDEX_H
 
-#include <vector>
-#include <cstdint>
-#include <tuple>
-
 #include "../../data/structs.cuh"
 #include "../../data/enums.h"
 

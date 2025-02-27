@@ -1,9 +1,7 @@
 #ifndef NODEMAPPING_CPU_H
 #define NODEMAPPING_CPU_H
 
-#include <vector>
 #include <cstdint>
-#include <tuple>
 #include "../../data/enums.h"
 #include "../interfaces/IEdgeData.cuh"
 #include "../interfaces/INodeMapping.cuh"

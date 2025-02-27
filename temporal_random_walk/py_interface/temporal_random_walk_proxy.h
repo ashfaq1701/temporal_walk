@@ -4,7 +4,6 @@
 #include "../src/data/structs.cuh"
 #include "../src/data/enums.h"
 #include "../src/core/TemporalRandomWalk.cuh"
-#include "../src/core/TemporalRandomWalkCUDA.cuh"
 
 class TemporalRandomWalkProxy {
 
@@ -33,7 +32,7 @@ public:
         #ifdef HAS_CUDA
         switch(gpu_usage) {
         case GPUUsageMode::ON_GPU:
-            gpu_impl = std::make_unique<TemporalRandomWalkCUDA<GPUUsageMode::ON_GPU>>(
+            gpu_impl = std::make_unique<TemporalRandomWalk<GPUUsageMode::ON_GPU>>(
                 is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
             break;
         default:  // ON_CPU

@@ -1,8 +1,6 @@
 #include <gtest/gtest.h>
 #include "../src/stores/proxies/NodeMapping.cuh"
-#include "../src/stores/cuda/NodeMappingCUDA.cuh"
 #include "../src/stores/proxies/EdgeData.cuh"
-#include "../src/stores/cuda/EdgeDataCUDA.cuh"
 
 template<typename T>
 class NodeMappingTest : public ::testing::Test {

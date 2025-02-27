@@ -1,7 +1,6 @@
 #ifndef EDGEDATA_CPU_H
 #define EDGEDATA_CPU_H
 
-#include <vector>
 #include <cstdint>
 
 #include "../interfaces/IEdgeData.cuh"

@@ -1,3 +1,6 @@
+#ifndef TEST_UTILS_H
+#define TEST_UTILS_H
+
 #include <sstream>
 #include <string>
 #include <fstream>
@@ -21,3 +24,5 @@ inline std::vector<std::tuple<int, int, int64_t>> read_edges_from_csv(const std:
 
     return edges;
 }
+
+#endif // TEST_UTILS_H

@@ -1,9 +1,7 @@
 #ifndef NODEEDGEINDEX_CPU_H
 #define NODEEDGEINDEX_CPU_H
 
-#include <vector>
 #include <cstdint>
-#include <tuple>
 #include "../../data/enums.h"
 #include "../interfaces/INodeEdgeIndex.cuh"
 #include "../interfaces/INodeMapping.cuh"

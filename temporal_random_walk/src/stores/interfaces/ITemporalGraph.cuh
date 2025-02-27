@@ -1,9 +1,7 @@
 #ifndef I_TEMPORALGRAPH_H
 #define I_TEMPORALGRAPH_H
 
-#include <vector>
 #include <cstdint>
-#include <tuple>
 
 #include "../../cuda_common/types.cuh"
 #include "../../data/structs.cuh"

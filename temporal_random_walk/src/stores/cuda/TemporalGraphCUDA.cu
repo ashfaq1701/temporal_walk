@@ -10,11 +10,11 @@ HOST TemporalGraphCUDA<GPUUsage>::TemporalGraphCUDA(
     const int64_t window,
     const bool enable_weight_computation,
     const double timescale_bound)
-    : ITemporalGraph<GPUUsage>(directed, window, enable_weight_computation, timescale_bound)
-    , ITemporalGraph<GPUUsage>::node_index(NodeEdgeIndexCUDA<GPUUsage>())
-    , ITemporalGraph<GPUUsage>::edges(EdgeDataCUDA<GPUUsage>())
-    , ITemporalGraph<GPUUsage>::node_mapping(NodeMappingCUDA<GPUUsage>())
-{}
+    : ITemporalGraph<GPUUsage>(directed, window, enable_weight_computation, timescale_bound) {
+    this->node_index = new NodeEdgeIndexCUDA<GPUUsage>();
+    this->edges = new EdgeDataCUDA<GPUUsage>();
+    this->node_mapping = new NodeMappingCUDA<GPUUsage>();
+}
 
 #ifdef HAS_CUDA
 

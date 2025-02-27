@@ -1,6 +1,5 @@
 #include "TemporalRandomWalkCPU.cuh"
 
-#include <iostream>
 #include "../utils/utils.h"
 #include "../random/UniformRandomPicker.cuh"
 #include "../random/LinearRandomPicker.cuh"

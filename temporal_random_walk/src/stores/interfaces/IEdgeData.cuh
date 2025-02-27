@@ -1,10 +1,7 @@
 #ifndef I_EDGEDATA_H
 #define I_EDGEDATA_H
 
-#include <vector>
 #include <cstdint>
-#include <tuple>
-#include <cmath>
 
 #include "../../data/structs.cuh"
 #include "../../data/enums.h"

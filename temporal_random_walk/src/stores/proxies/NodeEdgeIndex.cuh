@@ -1,7 +1,6 @@
 #ifndef NODEEDGEINDEX_H
 #define NODEEDGEINDEX_H
 
-#include <functional>
 #include "../cpu/NodeEdgeIndexCPU.cuh"
 #include "../cuda/NodeEdgeIndexCUDA.cuh"
 

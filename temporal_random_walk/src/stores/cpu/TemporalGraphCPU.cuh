@@ -1,9 +1,7 @@
 #ifndef TEMPORALGRAPH_CPU_H
 #define TEMPORALGRAPH_CPU_H
 
-#include <vector>
 #include <cstdint>
-#include <tuple>
 
 #include "../../data/enums.h"
 #include "../../random/RandomPicker.h"

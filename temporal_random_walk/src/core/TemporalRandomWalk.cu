@@ -1,6 +1,5 @@
 #include "TemporalRandomWalk.cuh"
 
-#include<iostream>
 #include "TemporalRandomWalkCPU.cuh"
 #include "TemporalRandomWalkCUDA.cuh"
 
