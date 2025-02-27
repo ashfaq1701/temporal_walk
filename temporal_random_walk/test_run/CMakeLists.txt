@@ -41,8 +41,6 @@ function(add_test_executable target_name source_file)
         )
     endif()
 
-    target_link_libraries(${target_name} PRIVATE Boost::math)
-
     set_target_properties(${target_name} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
     )

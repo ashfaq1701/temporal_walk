@@ -10,6 +10,16 @@ public:
     [[nodiscard]] int pick_random(int start, int end, bool prioritize_end) override {
         return start;
     }
+
+    [[nodiscard]] HOST int pick_random_host(int start, int end, bool prioritize_end) override {
+        return start;
+    }
+
+    #ifdef HAS_CUDA
+    [[nodiscard]] DEVICE int pick_random_device(int start, int end, bool prioritize_end) override {
+        return start;
+    }
+    #endif
 };
 
 // Test-specific picker that always selects last element
@@ -19,6 +29,16 @@ public:
     [[nodiscard]] int pick_random(int start, int end, bool prioritize_end) override {
         return end - 1;
     }
+
+    [[nodiscard]] HOST int pick_random_host(int start, int end, bool prioritize_end) override {
+        return end - 1;
+    }
+
+    #ifdef HAS_CUDA
+    [[nodiscard]] DEVICE int pick_random_device(int start, int end, bool prioritize_end) override {
+        return end - 1;
+    }
+    #endif
 };
 
 template<typename T>

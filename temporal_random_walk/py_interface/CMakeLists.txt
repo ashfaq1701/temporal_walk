@@ -46,5 +46,4 @@ endif()
 target_link_libraries(_temporal_random_walk PRIVATE
         pybind11::module
         ${Python3_LIBRARIES}
-        Boost::math
 )

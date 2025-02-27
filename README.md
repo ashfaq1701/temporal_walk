@@ -58,7 +58,6 @@ walks = walker.get_random_walks_for_all_nodes(
 | **pybind11**  | Python-C++ bindings                         |
 | **python3**   | Required for building the python interfaces |
 | **gtest**     | Unit testing framework                      |
-| **boost-math** | Mathematical utilities for computation      |
 
 
 > 💡 **Tip:** Use **vcpkg** to easily install and link the C++ dependencies.

@@ -14,7 +14,6 @@ execute_process(
 )
 set(CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH};${PYBIND11_DIR}")
 find_package(pybind11 REQUIRED)
-find_package(Boost REQUIRED COMPONENTS math)
 
 option(HAS_CUDA "Enable CUDA support" ON)
 

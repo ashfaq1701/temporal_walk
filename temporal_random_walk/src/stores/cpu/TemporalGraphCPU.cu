@@ -298,6 +298,7 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_edge_at_host(
                 auto* index_picker = static_cast<IndexBasedRandomPicker<GPUUsage>*>(picker);
                 const size_t index = index_picker->pick_random_host(0, static_cast<int>(available_groups), false);
                 if (index == -1) return Edge{-1, -1, -1};
+
                 if (index >= available_groups) return Edge{-1, -1, -1};
                 group_idx = first_group + index;
             }
@@ -318,6 +319,7 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_edge_at_host(
                 auto* index_picker = static_cast<IndexBasedRandomPicker<GPUUsage>*>(picker);
                 const size_t index = index_picker->pick_random_host(0, static_cast<int>(available_groups), true);
                 if (index == -1) return Edge{-1, -1, -1};
+
                 if (index >= available_groups) return Edge{-1, -1, -1};
                 group_idx = last_group - (available_groups - index - 1);
             }
@@ -336,6 +338,7 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_edge_at_host(
             auto* index_picker = static_cast<IndexBasedRandomPicker<GPUUsage>*>(picker);
             const size_t index = index_picker->pick_random_host(0, static_cast<int>(num_groups), !forward);
             if (index == -1) return Edge{-1, -1, -1};
+
             if (index >= num_groups) return Edge{-1, -1, -1};
             group_idx = index;
         } else {
@@ -423,6 +426,7 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_node_edge_at_host(
                 auto* index_picker = static_cast<IndexBasedRandomPicker<GPUUsage>*>(picker);
                 const size_t index = index_picker->pick_random_host(0, static_cast<int>(available), false);
                 if (index == -1) return Edge{-1, -1, -1};
+
                 if (index >= available) return Edge{-1, -1, -1};
                 group_pos = start_pos + index;
             }
@@ -454,6 +458,7 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_node_edge_at_host(
                 auto* index_picker = static_cast<IndexBasedRandomPicker<GPUUsage>*>(picker);
                 const size_t index = index_picker->pick_random_host(0, static_cast<int>(available), true);
                 if (index == -1) return Edge{-1, -1, -1};
+
                 if (index >= available) return Edge{-1, -1, -1};
                 group_pos = (it - timestamp_group_indices.begin()) - 1 - (available - index - 1);
             }
@@ -479,6 +484,7 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_node_edge_at_host(
             auto* index_picker = static_cast<IndexBasedRandomPicker<GPUUsage>*>(picker);
             const size_t index = index_picker->pick_random_host(0, static_cast<int>(num_groups), !forward);
             if (index == -1) return Edge{-1, -1, -1};
+
             if (index >= num_groups) return Edge{-1, -1, -1};
             group_pos = forward
                 ? group_start_offset + index

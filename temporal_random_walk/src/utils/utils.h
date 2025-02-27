@@ -4,7 +4,6 @@
 #include <random>
 #include <algorithm>
 #include <map>
-#include <boost/math/distributions/beta.hpp>
 #include "../data/structs.cuh"
 #include "../data/common_vector.cuh"
 
@@ -42,15 +41,6 @@ template<typename T, typename V, typename Comp>
 void delete_items_less_than(std::vector<T>& vec, const V& value, Comp comp) {
     auto it = std::lower_bound(vec.begin(), vec.end(), value, comp);
     vec.erase(vec.begin(), it);
-}
-
-inline float compute_beta_95th_percentile(size_t successes, size_t failures) {
-    if (successes == 0 && failures == 0) {
-        return 1.0f; // No walks processed yet, assume full success
-    }
-
-    boost::math::beta_distribution<float> beta_dist(1.0f + successes, 1.0f + failures);
-    return boost::math::quantile(beta_dist, 0.95f); // 95th percentile
 }
 
 template<GPUUsageMode GPUUsage>
