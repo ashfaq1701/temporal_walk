@@ -66,8 +66,8 @@ HOST WalkSet<GPUUsage> TemporalRandomWalkCPU<GPUUsage>::get_random_walks_and_tim
         const RandomPickerType* walk_bias,
         int num_walks_per_node,
         const RandomPickerType* initial_edge_bias,
-        WalkDirection walk_direction) {
-
+        WalkDirection walk_direction)
+{
     RandomPicker* edge_picker = get_random_picker(walk_bias);
     RandomPicker* start_picker = initial_edge_bias ? get_random_picker(initial_edge_bias) : edge_picker;
 
@@ -107,6 +107,12 @@ HOST WalkSet<GPUUsage> TemporalRandomWalkCPU<GPUUsage>::get_random_walks_and_tim
     for (auto& future : futures) {
         future.wait();
     }
+
+    if (start_picker != edge_picker)
+    {
+        delete start_picker;
+    }
+    delete edge_picker;
 
     return walk_set;
 }
@@ -153,6 +159,12 @@ HOST WalkSet<GPUUsage> TemporalRandomWalkCPU<GPUUsage>::get_random_walks_and_tim
     for (auto& future : futures) {
         future.wait();
     }
+
+    if (start_picker != edge_picker)
+    {
+        delete start_picker;
+    }
+    delete edge_picker;
 
     return walk_set;
 }
