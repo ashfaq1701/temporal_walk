@@ -1,5 +1,6 @@
 #include "TemporalRandomWalkCUDA.cuh"
 
+#include "../cuda_common/CudaRandomStates.cuh"
 #include <stores/cuda/TemporalGraphCUDA.cuh>
 
 template<GPUUsageMode GPUUsage>
@@ -10,6 +11,14 @@ HOST TemporalRandomWalkCUDA<GPUUsage>::TemporalRandomWalkCUDA(
     double timescale_bound):
     ITemporalRandomWalk<GPUUsage>(is_directed, max_time_capacity, enable_weight_computation, timescale_bound)
 {
+    #ifdef HAS_CUDA
+    /**
+     * Very important to initiate CudaRandomStates in the entrypoint.
+     * Other code will assume it's initialized.
+     */
+    CudaRandomStates::initialize();
+    #endif
+
     this->temporal_graph = new TemporalGraphCUDA<GPUUsage>(
         is_directed, max_time_capacity, enable_weight_computation, timescale_bound);
 }
