@@ -6,7 +6,7 @@ TemporalGraph<GPUUsage>::TemporalGraph(
     int64_t window,
     bool enable_weight_computation,
     double timescale_bound)
-    : temporal_graph(TemporalGraphType(directed, window, enable_weight_computation, timescale_bound)) {}
+    : temporal_graph(BaseType(directed, window, enable_weight_computation, timescale_bound)) {}
 
 template<GPUUsageMode GPUUsage>
 void TemporalGraph<GPUUsage>::sort_and_merge_edges(size_t start_idx)

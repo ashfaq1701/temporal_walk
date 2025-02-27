@@ -8,14 +8,31 @@
 #include "../../data/enums.h"
 
 template<GPUUsageMode GPUUsage>
-class NodeEdgeIndex {
+class NodeEdgeIndex : protected std::conditional_t<
+    (GPUUsage == GPUUsageMode::ON_CPU), NodeEdgeIndexCPU<GPUUsage>, NodeEdgeIndexCUDA<GPUUsage>> {
+
 protected:
-    using NodeEdgeIndexType = std::conditional_t<
+    using BaseType = std::conditional_t<
         (GPUUsage == ON_CPU), NodeEdgeIndexCPU<GPUUsage>, NodeEdgeIndexCUDA<GPUUsage>>;
 
-    NodeEdgeIndexType node_edge_index;
+    BaseType node_edge_index;
 
 public:
+    using BaseType::outbound_offsets;
+    using BaseType::outbound_indices;
+
+    using BaseType::outbound_timestamp_group_offsets;
+    using BaseType::outbound_timestamp_group_indices;
+
+    using BaseType::inbound_offsets;
+    using BaseType::inbound_indices;
+    using BaseType::inbound_timestamp_group_offsets;
+    using BaseType::inbound_timestamp_group_indices;
+
+    using BaseType::outbound_forward_cumulative_weights_exponential;
+    using BaseType::outbound_backward_cumulative_weights_exponential;
+    using BaseType::inbound_backward_cumulative_weights_exponential;
+
     void clear();
     void rebuild(const IEdgeData<GPUUsage>* edges, const INodeMapping<GPUUsage>* mapping, bool is_directed);
 

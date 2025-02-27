@@ -85,7 +85,7 @@ void EdgeData<GPUUsage>::push_back(int src, int tgt, int64_t ts)
 }
 
 template <GPUUsageMode GPUUsage>
-std::vector<Edge> EdgeData<GPUUsage>::get_edges_host()
+std::vector<Edge> EdgeData<GPUUsage>::get_edges()
 {
     std::vector<Edge> results;
 
@@ -121,7 +121,7 @@ void EdgeData<GPUUsage>::update_timestamp_groups()
 }
 
 template <GPUUsageMode GPUUsage>
-void EdgeData<GPUUsage>::update_temporal_weights_host(double timescale_bound)
+void EdgeData<GPUUsage>::update_temporal_weights(double timescale_bound)
 {
     if (GPUUsage == GPUUsageMode::ON_CPU)
     {
@@ -133,7 +133,7 @@ void EdgeData<GPUUsage>::update_temporal_weights_host(double timescale_bound)
 }
 
 template <GPUUsageMode GPUUsage>
-std::pair<size_t, size_t> EdgeData<GPUUsage>::get_timestamp_group_range_host(size_t group_idx)
+std::pair<size_t, size_t> EdgeData<GPUUsage>::get_timestamp_group_range(size_t group_idx)
 {
     if (GPUUsage == GPUUsageMode::ON_CPU)
     {
@@ -147,7 +147,7 @@ std::pair<size_t, size_t> EdgeData<GPUUsage>::get_timestamp_group_range_host(siz
 }
 
 template <GPUUsageMode GPUUsage>
-size_t EdgeData<GPUUsage>::get_timestamp_group_count_host() const
+size_t EdgeData<GPUUsage>::get_timestamp_group_count() const
 {
     if (GPUUsage == GPUUsageMode::ON_CPU)
     {
@@ -159,7 +159,7 @@ size_t EdgeData<GPUUsage>::get_timestamp_group_count_host() const
 }
 
 template <GPUUsageMode GPUUsage>
-size_t EdgeData<GPUUsage>::find_group_after_timestamp_host(int64_t timestamp) const
+size_t EdgeData<GPUUsage>::find_group_after_timestamp(int64_t timestamp) const
 {
     if (GPUUsage == GPUUsageMode::ON_CPU)
     {
@@ -171,7 +171,7 @@ size_t EdgeData<GPUUsage>::find_group_after_timestamp_host(int64_t timestamp) co
 }
 
 template <GPUUsageMode GPUUsage>
-size_t EdgeData<GPUUsage>::find_group_before_timestamp_host(int64_t timestamp) const
+size_t EdgeData<GPUUsage>::find_group_before_timestamp(int64_t timestamp) const
 {
     if (GPUUsage == GPUUsageMode::ON_CPU)
     {

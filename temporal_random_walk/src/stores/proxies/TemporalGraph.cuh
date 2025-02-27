@@ -10,11 +10,12 @@
 
 template<GPUUsageMode GPUUsage>
 class TemporalGraph {
+
 protected:
-    using TemporalGraphType = std::conditional_t<
+    using BaseType = std::conditional_t<
         (GPUUsage == ON_CPU), TemporalGraphCPU<GPUUsage>, TemporalGraphCUDA<GPUUsage>>;
 
-    TemporalGraphType temporal_graph;
+    BaseType temporal_graph;
 
 public:
     explicit TemporalGraph(

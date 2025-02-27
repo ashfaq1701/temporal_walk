@@ -141,7 +141,7 @@ bool NodeMapping<GPUUsage>::has_node(int sparse_id)
 }
 
 template<GPUUsageMode GPUUsage>
-std::vector<int> NodeMapping<GPUUsage>::get_all_sparse_ids_host() const
+std::vector<int> NodeMapping<GPUUsage>::get_all_sparse_ids() const
 {
     std::vector<int> result;
     if (GPUUsage == GPUUsageMode::ON_CPU)
