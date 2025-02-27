@@ -1,6 +1,8 @@
 #include "UniformRandomPicker.cuh"
 
 #include <stdexcept>
+#include <utils/rand_utils.cuh>
+
 #include "../utils/utils.h"
 
 template<GPUUsageMode GPUUsage>
@@ -9,7 +11,7 @@ int UniformRandomPicker<GPUUsage>::pick_random(const int start, const int end, c
         throw std::invalid_argument("Start must be less than end.");
     }
 
-    return generate_random_int(start, end - 1);
+    return generate_random_int_host(start, end - 1);
 }
 
 template class UniformRandomPicker<GPUUsageMode::ON_CPU>;

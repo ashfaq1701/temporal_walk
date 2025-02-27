@@ -5,6 +5,7 @@
 #include "NodeEdgeIndexCPU.cuh"
 
 #include <algorithm>
+#include <utils/rand_utils.cuh>
 
 #include "../../random/IndexBasedRandomPicker.h"
 #include "../../random/WeightBasedRandomPicker.cuh"
@@ -356,7 +357,7 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_edge_at_host(
     }
 
     // Random selection from the chosen group
-    const size_t random_idx = group_start + generate_random_number_bounded_by(static_cast<int>(group_end - group_start));
+    const size_t random_idx = group_start + generate_random_number_bounded_by_host(static_cast<int>(group_end - group_start));
     return Edge {
         this->edges->sources[random_idx],
         this->edges->targets[random_idx],
@@ -507,7 +508,7 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_node_edge_at_host(
     }
 
     // Random selection from group
-    const size_t edge_idx = edge_indices[edge_start + generate_random_number_bounded_by(static_cast<int>(edge_end - edge_start))];
+    const size_t edge_idx = edge_indices[edge_start + generate_random_number_bounded_by_host(static_cast<int>(edge_end - edge_start))];
 
     return Edge {
         this->edges->sources[edge_idx],

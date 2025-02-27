@@ -2,6 +2,8 @@
 
 #include <cmath>
 #include <stdexcept>
+#include <utils/rand_utils.cuh>
+
 #include "../utils/utils.h"
 
 // Derivation available in derivations folder
@@ -21,7 +23,7 @@ int LinearRandomPicker<GPUUsage>::pick_random(const int start, const int end, co
                                    (static_cast<long double>(len_seq) + 1.0L) / 2.0L;
 
     // Generate random value in [0, total_weight)
-    const long double random_value = generate_random_value(0.0L, total_weight);
+    const long double random_value = generate_random_value_host(0.0L, total_weight);
 
     // For both cases, we solve quadratic equation i² + i - 2r = 0
     // where r is our random value (or transformed random value)

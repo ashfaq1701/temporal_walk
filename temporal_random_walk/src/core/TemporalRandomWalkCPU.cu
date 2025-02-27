@@ -1,6 +1,7 @@
 #include "TemporalRandomWalkCPU.cuh"
 
 #include "../utils/utils.h"
+#include "../utils/rand_utils.cuh"
 #include "../random/UniformRandomPicker.cuh"
 #include "../random/LinearRandomPicker.cuh"
 #include "../stores/cpu/TemporalGraphCPU.cuh"
@@ -71,7 +72,7 @@ HOST WalkSet<GPUUsage> TemporalRandomWalkCPU<GPUUsage>::get_random_walks_and_tim
     RandomPicker* start_picker = initial_edge_bias ? get_random_picker(initial_edge_bias) : edge_picker;
 
     auto repeated_node_ids = repeat_elements(get_node_ids(), num_walks_per_node);
-    shuffle_vector(repeated_node_ids);
+    shuffle_vector_host(repeated_node_ids);
     auto distributed_node_ids = divide_vector(repeated_node_ids, n_threads);
 
     WalkSet<GPUUsage> walk_set(repeated_node_ids.size(), max_walk_len);

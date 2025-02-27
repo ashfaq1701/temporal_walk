@@ -1,13 +1,12 @@
 #ifndef UTILS_H
 #define UTILS_H
+
 #include <random>
 #include <algorithm>
 #include <map>
 #include <boost/math/distributions/beta.hpp>
 #include "../data/structs.cuh"
 #include "../data/common_vector.cuh"
-
-thread_local static std::mt19937 thread_local_gen{std::random_device{}()};
 
 template <typename T>
 size_t count_keys_less_than(const std::map<int64_t, T>& inputMap, int64_t key) {
@@ -88,36 +87,6 @@ CommonVector<int, GPUUsage> divide_number(int n, int i) {
     }
 
     return parts;
-}
-
-template <typename T, GPUUsageMode GPUUsage>
-void shuffle_vector(CommonVector<T, GPUUsage>& vec) {
-    std::random_device rd;
-    std::mt19937 rng(rd());
-    std::shuffle(vec.begin(), vec.end(), rng);
-}
-
-template <typename T>
-T generate_random_value(T start, T end) {
-    std::uniform_real_distribution<T> dist(start, end);
-    return dist(thread_local_gen);
-}
-
-inline int generate_random_int(const int start, const int end) {
-    std::uniform_int_distribution<> dist(start, end);
-    return dist(thread_local_gen);
-}
-
-inline int generate_random_number_bounded_by(const int max_bound) {
-    return generate_random_int(0, max_bound - 1);
-}
-
-inline bool generate_random_boolean() {
-    return generate_random_int(0, 1) == 1;
-}
-
-inline int pick_random_number(const int a, const int b) {
-    return generate_random_boolean() ? a : b;
 }
 
 inline int pick_other_number(const std::tuple<int, int>& number, const int picked_number) {

@@ -1,6 +1,6 @@
 #include "WeightBasedRandomPicker.cuh"
 
-#include "../utils/utils.h"
+#include "../utils/rand_utils.cuh"
 
 template<GPUUsageMode GPUUsage>
 int WeightBasedRandomPicker<GPUUsage>::pick_random(
@@ -26,7 +26,7 @@ int WeightBasedRandomPicker<GPUUsage>::pick_random(
     }
 
     // Generate random value between [start_sum, end_sum]
-    const double random_val = generate_random_value(start_sum, end_sum);
+    const double random_val = generate_random_value_host(start_sum, end_sum);
     return static_cast<int>(std::lower_bound(
             cumulative_weights.begin() + group_start,
             cumulative_weights.begin() + group_end,

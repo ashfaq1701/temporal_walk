@@ -9,8 +9,8 @@
 class CUDARandomStates {
 private:
     // Dynamic state
-    curandState* d_states;
-    bool initialized;
+    static curandState* d_states;
+    static bool initialized;
 
     // Static hardware properties (initialized once)
     static unsigned int num_blocks;
