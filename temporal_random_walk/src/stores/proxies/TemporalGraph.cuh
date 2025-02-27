@@ -26,7 +26,7 @@ public:
     void sort_and_merge_edges(size_t start_idx);
 
     // Edge addition
-    void add_multiple_edges(std::vector<Edge> new_edges);
+    void add_multiple_edges(const std::vector<Edge>& new_edges);
 
     void update_temporal_weights();
 

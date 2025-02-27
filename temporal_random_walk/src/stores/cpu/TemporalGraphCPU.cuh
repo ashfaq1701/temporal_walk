@@ -25,7 +25,7 @@ public:
     HOST void sort_and_merge_edges_host(size_t start_idx) override;
 
     // Edge addition
-    HOST void add_multiple_edges_host(typename ITemporalGraph<GPUUsage>::EdgeVector new_edges) override;
+    HOST void add_multiple_edges_host(const typename ITemporalGraph<GPUUsage>::EdgeVector& new_edges) override;
 
     HOST void update_temporal_weights_host() override;
 

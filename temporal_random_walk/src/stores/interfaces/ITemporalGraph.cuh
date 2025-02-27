@@ -60,7 +60,7 @@ public:
     virtual HOST void sort_and_merge_edges_host(size_t start_idx) {}
 
     // Edge addition
-    virtual HOST void add_multiple_edges_host(const EdgeVector new_edges) {}
+    virtual HOST void add_multiple_edges_host(const EdgeVector& new_edges) {}
 
     virtual HOST void update_temporal_weights_host() {}
 
@@ -95,7 +95,7 @@ public:
     virtual DEVICE void sort_and_merge_edges_device(size_t start_idx) {}
 
     // Edge addition
-    virtual DEVICE void add_multiple_edges_device(const std::vector<std::tuple<int, int, int64_t>>& new_edges) {}
+    virtual DEVICE void add_multiple_edges_device(const EdgeVector& new_edges) {}
 
     virtual DEVICE void update_temporal_weights_device() {}
 

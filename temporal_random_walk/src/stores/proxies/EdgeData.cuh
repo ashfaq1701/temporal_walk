@@ -19,7 +19,7 @@ public:
     void reserve(size_t size);
     void clear();
     [[nodiscard]] size_t size() const;
-    [[nodiscard]] bool empty_host() const;
+    [[nodiscard]] bool empty() const;
     virtual void resize(size_t new_size);
 
     void add_edges(int* src, int* tgt, int64_t* ts, size_t size);
@@ -31,7 +31,7 @@ public:
     void update_timestamp_groups();
     void update_temporal_weights_host(double timescale_bound);
 
-    [[nodiscard]] SizeRange get_timestamp_group_range_host(size_t group_idx);
+    [[nodiscard]] std::pair<size_t, size_t> get_timestamp_group_range_host(size_t group_idx);
     [[nodiscard]] size_t get_timestamp_group_count_host() const;
 
     // Group lookup

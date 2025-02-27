@@ -11,6 +11,7 @@
 template<GPUUsageMode GPUUsage>
 class EdgeDataCPU : public IEdgeData<GPUUsage> {
 
+public:
     HOST void reserve_host(size_t size) override;
     HOST void clear_host() override;
     [[nodiscard]] HOST size_t size_host() const override;

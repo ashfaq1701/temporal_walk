@@ -27,7 +27,7 @@ HOST TemporalGraphCPU<GPUUsage>::TemporalGraphCPU(
 }
 
 template<GPUUsageMode GPUUsage>
-HOST void TemporalGraphCPU<GPUUsage>::add_multiple_edges_host(typename ITemporalGraph<GPUUsage>::EdgeVector new_edges) {
+HOST void TemporalGraphCPU<GPUUsage>::add_multiple_edges_host(const typename ITemporalGraph<GPUUsage>::EdgeVector& new_edges) {
     if (new_edges.empty()) return;
 
     const size_t start_idx = this->edges->size_host();

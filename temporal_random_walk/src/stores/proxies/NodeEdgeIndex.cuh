@@ -20,8 +20,8 @@ public:
     void rebuild(const IEdgeData<GPUUsage>* edges, const INodeMapping<GPUUsage>* mapping, bool is_directed);
 
     // Core access methods
-    [[nodiscard]] SizeRange get_edge_range(int dense_node_id, bool forward, bool is_directed) const;
-    [[nodiscard]] SizeRange get_timestamp_group_range(int dense_node_id, size_t group_idx, bool forward,
+    [[nodiscard]] std::pair<size_t, size_t> get_edge_range(int dense_node_id, bool forward, bool is_directed) const;
+    [[nodiscard]] std::pair<size_t, size_t> get_timestamp_group_range(int dense_node_id, size_t group_idx, bool forward,
                                                                       bool is_directed) const;
     [[nodiscard]] size_t get_timestamp_group_count(int dense_node_id, bool forward, bool directed) const;
 };
