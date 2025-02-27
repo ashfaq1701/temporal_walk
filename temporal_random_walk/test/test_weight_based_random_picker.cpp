@@ -1,19 +1,12 @@
 #include <gtest/gtest.h>
-#include <random/WeightBasedRandomPickerGPU.cuh>
 
 #include "../src/random/WeightBasedRandomPicker.cuh"
-#include "../src/cuda_common/CudaRandomStates.cuh"
 #include "../src/utils/utils.h"
 
 template<typename T>
 class WeightBasedRandomPickerTest : public ::testing::Test
 {
 protected:
-    using WeightBasedRandomPickerType = std::conditional_t<
-        T::value == GPUUsageMode::ON_GPU,
-        WeightBasedRandomPickerGPU<T::value>,
-        WeightBasedRandomPicker<T::value>
-    >;
 
     template <typename U>
     using VectorType = CommonVector<U, T::value>;
@@ -26,7 +19,7 @@ protected:
         }
     }
 
-    WeightBasedRandomPickerType picker;
+    WeightBasedRandomPicker<T::value> picker;
 
     // Helper to verify sampling is within correct range
     void verify_sampling_range(CommonVector<double, T::value>& weights,

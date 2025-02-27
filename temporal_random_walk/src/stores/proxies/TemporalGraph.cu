@@ -126,7 +126,7 @@ size_t TemporalGraph<GPUUsage>::count_node_timestamps_greater_than(int node_id, 
 }
 
 template<GPUUsageMode GPUUsage>
-Edge TemporalGraph<GPUUsage>::get_edge_at(RandomPicker* picker, int64_t timestamp, bool forward) const
+Edge TemporalGraph<GPUUsage>::get_edge_at(RandomPicker<GPUUsage>* picker, int64_t timestamp, bool forward) const
 {
     if (GPUUsage == GPUUsageMode::ON_CPU)
     {
@@ -139,7 +139,7 @@ Edge TemporalGraph<GPUUsage>::get_edge_at(RandomPicker* picker, int64_t timestam
 }
 
 template<GPUUsageMode GPUUsage>
-Edge TemporalGraph<GPUUsage>::get_node_edge_at(int node_id, RandomPicker* picker, int64_t timestamp, bool forward) const
+Edge TemporalGraph<GPUUsage>::get_node_edge_at(int node_id, RandomPicker<GPUUsage>* picker, int64_t timestamp, bool forward) const
 {
     if (GPUUsage == GPUUsageMode::ON_CPU)
     {

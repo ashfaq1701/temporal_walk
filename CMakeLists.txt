@@ -37,7 +37,6 @@ set(SRC_FILES
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/cuda_common/CudaRandomStates.cu
 
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/random/WeightBasedRandomPicker.cu
-        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/random/WeightBasedRandomPickerGPU.cu
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/random/ExponentialIndexRandomPicker.cu
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/random/LinearRandomPicker.cu
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/random/UniformRandomPicker.cu

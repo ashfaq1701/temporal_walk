@@ -4,7 +4,8 @@
 #include "../src/random/IndexBasedRandomPicker.h"
 
 // Test-specific picker that always selects first element
-class FirstIndexPicker : public IndexBasedRandomPicker {
+template<GPUUsageMode GPUUsage>
+class FirstIndexPicker : public IndexBasedRandomPicker<GPUUsage> {
 public:
     [[nodiscard]] int pick_random(int start, int end, bool prioritize_end) override {
         return start;
@@ -12,7 +13,8 @@ public:
 };
 
 // Test-specific picker that always selects last element
-class LastIndexPicker : public IndexBasedRandomPicker {
+template<GPUUsageMode GPUUsage>
+class LastIndexPicker : public IndexBasedRandomPicker<GPUUsage> {
 public:
     [[nodiscard]] int pick_random(int start, int end, bool prioritize_end) override {
         return end - 1;
@@ -23,14 +25,14 @@ template<typename T>
 class TemporalGraphTest : public ::testing::Test {
 protected:
     std::unique_ptr<TemporalGraph<T::value>> graph;
-    std::unique_ptr<FirstIndexPicker> first_picker;
-    std::unique_ptr<LastIndexPicker> last_picker;
+    std::unique_ptr<FirstIndexPicker<T::value>> first_picker;
+    std::unique_ptr<LastIndexPicker<T::value>> last_picker;
 
     void SetUp() override {
         // Create directed graph by default
         graph = std::make_unique<TemporalGraph<T::value>>(true);
-        first_picker = std::make_unique<FirstIndexPicker>();
-        last_picker = std::make_unique<LastIndexPicker>();
+        first_picker = std::make_unique<FirstIndexPicker<T::value>>();
+        last_picker = std::make_unique<LastIndexPicker<T::value>>();
     }
 
     // Helper to create edge tuples

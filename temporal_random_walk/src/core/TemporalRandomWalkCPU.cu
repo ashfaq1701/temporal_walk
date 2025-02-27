@@ -38,7 +38,7 @@ bool get_should_walk_forward(const WalkDirection walk_direction) {
 }
 
 template<GPUUsageMode GPUUsage>
-HOST RandomPicker* TemporalRandomWalkCPU<GPUUsage>::get_random_picker(const RandomPickerType* picker_type) const {
+HOST RandomPicker<GPUUsage>* TemporalRandomWalkCPU<GPUUsage>::get_random_picker(const RandomPickerType* picker_type) const {
     if (!picker_type) {
         throw std::invalid_argument("picker_type cannot be nullptr");
     }
@@ -68,8 +68,8 @@ HOST WalkSet<GPUUsage> TemporalRandomWalkCPU<GPUUsage>::get_random_walks_and_tim
         const RandomPickerType* initial_edge_bias,
         WalkDirection walk_direction)
 {
-    RandomPicker* edge_picker = get_random_picker(walk_bias);
-    RandomPicker* start_picker = initial_edge_bias ? get_random_picker(initial_edge_bias) : edge_picker;
+    RandomPicker<GPUUsage>* edge_picker = get_random_picker(walk_bias);
+    RandomPicker<GPUUsage>* start_picker = initial_edge_bias ? get_random_picker(initial_edge_bias) : edge_picker;
 
     auto repeated_node_ids = repeat_elements(get_node_ids(), num_walks_per_node);
     shuffle_vector_host(repeated_node_ids);
@@ -125,8 +125,8 @@ HOST WalkSet<GPUUsage> TemporalRandomWalkCPU<GPUUsage>::get_random_walks_and_tim
         const RandomPickerType* initial_edge_bias,
         WalkDirection walk_direction) {
 
-    RandomPicker* edge_picker = get_random_picker(walk_bias);
-    RandomPicker* start_picker = initial_edge_bias ? get_random_picker(initial_edge_bias) : edge_picker;
+    RandomPicker<GPUUsage>* edge_picker = get_random_picker(walk_bias);
+    RandomPicker<GPUUsage>* start_picker = initial_edge_bias ? get_random_picker(initial_edge_bias) : edge_picker;
 
     WalkSet<GPUUsage> walk_set(num_walks_total, max_walk_len);
 
@@ -174,8 +174,8 @@ template<GPUUsageMode GPUUsage>
 HOST void TemporalRandomWalkCPU<GPUUsage>::generate_random_walk_and_time(
         int walk_idx,
         WalkSet<GPUUsage>& walk_set,
-        RandomPicker* edge_picker,
-        RandomPicker* start_picker,
+        RandomPicker<GPUUsage>* edge_picker,
+        RandomPicker<GPUUsage>* start_picker,
         int max_walk_len,
         bool should_walk_forward,
         int start_node_id) const {

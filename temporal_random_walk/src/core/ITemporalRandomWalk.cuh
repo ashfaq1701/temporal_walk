@@ -40,7 +40,7 @@ public:
         delete temporal_graph;
     };
 
-    virtual HOST RandomPicker* get_random_picker(const RandomPickerType* picker_type) const { return nullptr; }
+    virtual HOST RandomPicker<GPUUsage>* get_random_picker(const RandomPickerType* picker_type) const { return nullptr; }
 
     [[nodiscard]] virtual HOST WalkSet<GPUUsage> get_random_walks_and_times_for_all_nodes(
         int max_walk_len,

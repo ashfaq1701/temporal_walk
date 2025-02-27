@@ -18,13 +18,13 @@ protected:
     HOST void generate_random_walk_and_time(
         int walk_idx,
         WalkSet<GPUUsage>& walk_set,
-        RandomPicker* edge_picker,
-        RandomPicker* start_picker,
+        RandomPicker<GPUUsage>* edge_picker,
+        RandomPicker<GPUUsage>* start_picker,
         int max_walk_len,
         bool should_walk_forward,
         int start_node_id=-1) const;
 
-    HOST RandomPicker* get_random_picker(const RandomPickerType* picker_type) const override;
+    HOST RandomPicker<GPUUsage>* get_random_picker(const RandomPickerType* picker_type) const override;
 
 public:
     explicit HOST TemporalRandomWalkCPU(

@@ -41,11 +41,11 @@ public:
 
     // Edge selection
     [[nodiscard]] Edge get_edge_at(
-        RandomPicker* picker, int64_t timestamp = -1,
+        RandomPicker<GPUUsage>* picker, int64_t timestamp = -1,
         bool forward = true) const;
 
     [[nodiscard]] Edge get_node_edge_at(int node_id,
-                                            RandomPicker* picker,
+                                            RandomPicker<GPUUsage>* picker,
                                             int64_t timestamp = -1,
                                             bool forward = true) const;
 

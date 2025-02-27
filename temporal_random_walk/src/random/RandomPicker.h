@@ -1,12 +1,14 @@
 #ifndef RANDOMPICKER_H
 #define RANDOMPICKER_H
 
+#include "../data/enums.h"
+
 constexpr int INDEX_BASED_PICKER_TYPE = 1;
 constexpr int WEIGHT_BASED_PICKER_TYPE = 2;
 
+template<GPUUsageMode GPUUsage>
 class RandomPicker
 {
-
 public:
     virtual ~RandomPicker() = default;
 
