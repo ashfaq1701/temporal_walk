@@ -8,19 +8,40 @@
 #include "../../data/enums.h"
 
 template<GPUUsageMode GPUUsage>
-class EdgeData : protected std::conditional_t<
-    (GPUUsage == GPUUsageMode::ON_CPU), EdgeDataCPU<GPUUsage>, EdgeDataCUDA<GPUUsage>> {
+class EdgeData {
 
 protected:
     using BaseType = std::conditional_t<
         (GPUUsage == ON_CPU), EdgeDataCPU<GPUUsage>, EdgeDataCUDA<GPUUsage>>;
 
-    BaseType edge_data;
-
 public:
-    using BaseType::sources;
-    using BaseType::targets;
-    using BaseType::timestamps;
+    IEdgeData<GPUUsage>* edge_data;
+
+    virtual ~EdgeData() = default;
+
+    EdgeData();
+    explicit EdgeData(IEdgeData<GPUUsage>* edge_date);
+
+    auto& sources() { return edge_data->sources; }
+    const auto& sources() const { return edge_data->sources; }
+
+    auto& targets() { return edge_data->targets; }
+    const auto& targets() const { return edge_data->targets; }
+
+    auto& timestamps() { return edge_data->timestamps; }
+    const auto& timestamps() const { return edge_data->timestamps; }
+
+    auto& timestamp_group_offsets() { return edge_data->timestamp_group_offsets; }
+    const auto& timestamp_group_offsets() const { return edge_data->timestamp_group_offsets; }
+
+    auto& unique_timestamps() { return edge_data->unique_timestamps; }
+    const auto& unique_timestamps() const { return edge_data->unique_timestamps; }
+
+    auto& forward_cumulative_weights_exponential() { return edge_data->forward_cumulative_weights_exponential; }
+    const auto& forward_cumulative_weights_exponential() const { return edge_data->forward_cumulative_weights_exponential; }
+
+    auto& backward_cumulative_weights_exponential() { return edge_data->backward_cumulative_weights_exponential; }
+    const auto& backward_cumulative_weights_exponential() const { return edge_data->backward_cumulative_weights_exponential; }
 
     void reserve(size_t size);
     void clear();

@@ -68,12 +68,12 @@ TYPED_TEST(EdgeDataWeightTest, SingleTimestampGroup) {
    edges.update_timestamp_groups();
    edges.update_temporal_weights(-1);
 
-   ASSERT_EQ(edges.forward_cumulative_weights_exponential.size(), 1);
-   ASSERT_EQ(edges.backward_cumulative_weights_exponential.size(), 1);
+   ASSERT_EQ(edges.forward_cumulative_weights_exponential().size(), 1);
+   ASSERT_EQ(edges.backward_cumulative_weights_exponential().size(), 1);
 
    // Single group should have normalized weight of 1.0
-   EXPECT_NEAR(edges.forward_cumulative_weights_exponential[0], 1.0, 1e-6);
-   EXPECT_NEAR(edges.backward_cumulative_weights_exponential[0], 1.0, 1e-6);
+   EXPECT_NEAR(edges.forward_cumulative_weights_exponential()[0], 1.0, 1e-6);
+   EXPECT_NEAR(edges.backward_cumulative_weights_exponential()[0], 1.0, 1e-6);
 }
 
 TYPED_TEST(EdgeDataWeightTest, WeightNormalization) {
@@ -83,11 +83,11 @@ TYPED_TEST(EdgeDataWeightTest, WeightNormalization) {
     edges.update_temporal_weights(-1);
 
     // Should have 4 timestamp groups (10,20,30,40)
-    ASSERT_EQ(edges.forward_cumulative_weights_exponential.size(), 4);
-    ASSERT_EQ(edges.backward_cumulative_weights_exponential.size(), 4);
+    ASSERT_EQ(edges.forward_cumulative_weights_exponential().size(), 4);
+    ASSERT_EQ(edges.backward_cumulative_weights_exponential().size(), 4);
 
-    this->verify_cumulative_weights(edges.forward_cumulative_weights_exponential);
-    this->verify_cumulative_weights(edges.backward_cumulative_weights_exponential);
+    this->verify_cumulative_weights(edges.forward_cumulative_weights_exponential());
+    this->verify_cumulative_weights(edges.backward_cumulative_weights_exponential());
 }
 
 TYPED_TEST(EdgeDataWeightTest, ForwardWeightBias) {
@@ -98,7 +98,7 @@ TYPED_TEST(EdgeDataWeightTest, ForwardWeightBias) {
     edges.update_temporal_weights(-1);
 
     // Forward weights should be higher for earlier timestamps
-    const std::vector<double> forward_weights = this->get_individual_weights(edges.forward_cumulative_weights_exponential);
+    const std::vector<double> forward_weights = this->get_individual_weights(edges.forward_cumulative_weights_exponential());
 
     // Earlier groups should have higher weights
     for (size_t i = 0; i < forward_weights.size() - 1; i++) {
@@ -114,7 +114,7 @@ TYPED_TEST(EdgeDataWeightTest, BackwardWeightBias) {
     edges.update_temporal_weights(-1);
 
     // Backward weights should be higher for later timestamps
-    const std::vector<double> backward_weights = this->get_individual_weights(edges.backward_cumulative_weights_exponential);
+    const std::vector<double> backward_weights = this->get_individual_weights(edges.backward_cumulative_weights_exponential());
 
     // Later groups should have higher weights
     for (size_t i = 0; i < backward_weights.size() - 1; i++) {
@@ -133,12 +133,12 @@ TYPED_TEST(EdgeDataWeightTest, WeightExponentialDecay) {
     edges.update_timestamp_groups();
     edges.update_temporal_weights(-1);
 
-    const auto forward_weights = this->get_individual_weights(edges.forward_cumulative_weights_exponential);
-    const auto backward_weights = this->get_individual_weights(edges.backward_cumulative_weights_exponential);
+    const auto forward_weights = this->get_individual_weights(edges.forward_cumulative_weights_exponential());
+    const auto backward_weights = this->get_individual_weights(edges.backward_cumulative_weights_exponential());
 
     // For forward weights: log(w[i+1]/w[i]) = -Δt
     for (size_t i = 0; i < forward_weights.size() - 1; i++) {
-        const auto time_diff = edges.unique_timestamps[i+1] - edges.unique_timestamps[i];
+        const auto time_diff = edges.unique_timestamps()[i+1] - edges.unique_timestamps()[i];
         if (forward_weights[i+1] > 0 && forward_weights[i] > 0) {
             const double log_ratio = log(forward_weights[i+1]/forward_weights[i]);
             EXPECT_NEAR(log_ratio, -time_diff, 1e-6)
@@ -148,7 +148,7 @@ TYPED_TEST(EdgeDataWeightTest, WeightExponentialDecay) {
 
     // For backward weights: log(w[i+1]/w[i]) = Δt
     for (size_t i = 0; i < backward_weights.size() - 1; i++) {
-        const auto time_diff = edges.unique_timestamps[i+1] - edges.unique_timestamps[i];
+        const auto time_diff = edges.unique_timestamps()[i+1] - edges.unique_timestamps()[i];
         if (backward_weights[i+1] > 0 && backward_weights[i] > 0) {
             const double log_ratio = log(backward_weights[i+1]/backward_weights[i]);
             EXPECT_NEAR(log_ratio, time_diff, 1e-6)
@@ -164,8 +164,8 @@ TYPED_TEST(EdgeDataWeightTest, UpdateWeights) {
    edges.update_temporal_weights(-1);
 
    // Store original weights
-   const auto original_forward = edges.forward_cumulative_weights_exponential;
-   const auto original_backward = edges.backward_cumulative_weights_exponential;
+   const auto original_forward = edges.forward_cumulative_weights_exponential();
+   const auto original_backward = edges.backward_cumulative_weights_exponential();
 
    // Add new edge with different timestamp
    edges.push_back(1, 4, 50);
@@ -173,12 +173,12 @@ TYPED_TEST(EdgeDataWeightTest, UpdateWeights) {
    edges.update_temporal_weights(-1);
 
    // Weights should be different after update
-   EXPECT_NE(original_forward.size(), edges.forward_cumulative_weights_exponential.size());
-   EXPECT_NE(original_backward.size(), edges.backward_cumulative_weights_exponential.size());
+   EXPECT_NE(original_forward.size(), edges.forward_cumulative_weights_exponential().size());
+   EXPECT_NE(original_backward.size(), edges.backward_cumulative_weights_exponential().size());
 
    // But should still maintain normalization
-   this->verify_cumulative_weights(edges.forward_cumulative_weights_exponential);
-   this->verify_cumulative_weights(edges.backward_cumulative_weights_exponential);
+   this->verify_cumulative_weights(edges.forward_cumulative_weights_exponential());
+   this->verify_cumulative_weights(edges.backward_cumulative_weights_exponential());
 }
 
 TYPED_TEST(EdgeDataWeightTest, TimescaleBoundZero) {
@@ -187,8 +187,8 @@ TYPED_TEST(EdgeDataWeightTest, TimescaleBoundZero) {
     this->add_test_edges(edges);
     edges.update_temporal_weights(0);  // Should behave like -1
 
-    this->verify_cumulative_weights(edges.forward_cumulative_weights_exponential);
-    this->verify_cumulative_weights(edges.backward_cumulative_weights_exponential);
+    this->verify_cumulative_weights(edges.forward_cumulative_weights_exponential());
+    this->verify_cumulative_weights(edges.backward_cumulative_weights_exponential());
 }
 
 TYPED_TEST(EdgeDataWeightTest, TimescaleBoundPositive) {
@@ -200,10 +200,10 @@ TYPED_TEST(EdgeDataWeightTest, TimescaleBoundPositive) {
 
     // Check relative weights instead of absolute values
     std::vector<double> forward_weights;
-    forward_weights.push_back(edges.forward_cumulative_weights_exponential[0]);
-    for (size_t i = 1; i < edges.forward_cumulative_weights_exponential.size(); i++) {
+    forward_weights.push_back(edges.forward_cumulative_weights_exponential()[0]);
+    for (size_t i = 1; i < edges.forward_cumulative_weights_exponential().size(); i++) {
         forward_weights.push_back(
-            edges.forward_cumulative_weights_exponential[i] - edges.forward_cumulative_weights_exponential[i-1]);
+            edges.forward_cumulative_weights_exponential()[i] - edges.forward_cumulative_weights_exponential()[i-1]);
     }
 
     // Earlier timestamps should have higher weights for forward
@@ -213,10 +213,10 @@ TYPED_TEST(EdgeDataWeightTest, TimescaleBoundPositive) {
 
     // Later timestamps should have higher weights for backward
     std::vector<double> backward_weights;
-    backward_weights.push_back(edges.backward_cumulative_weights_exponential[0]);
-    for (size_t i = 1; i < edges.backward_cumulative_weights_exponential.size(); i++) {
+    backward_weights.push_back(edges.backward_cumulative_weights_exponential()[0]);
+    for (size_t i = 1; i < edges.backward_cumulative_weights_exponential().size(); i++) {
         backward_weights.push_back(
-            edges.backward_cumulative_weights_exponential[i] - edges.backward_cumulative_weights_exponential[i-1]);
+            edges.backward_cumulative_weights_exponential()[i] - edges.backward_cumulative_weights_exponential()[i-1]);
     }
 
     for (size_t i = 0; i < backward_weights.size() - 1; i++) {
@@ -233,15 +233,15 @@ TYPED_TEST(EdgeDataWeightTest, ScalingComparison) {
     std::vector<double> weights_unscaled, weights_scaled;
 
     edges.update_temporal_weights(-1);
-    for (size_t i = 1; i < edges.forward_cumulative_weights_exponential.size(); i++) {
+    for (size_t i = 1; i < edges.forward_cumulative_weights_exponential().size(); i++) {
         weights_unscaled.push_back(
-            edges.forward_cumulative_weights_exponential[i] / edges.forward_cumulative_weights_exponential[i-1]);
+            edges.forward_cumulative_weights_exponential()[i] / edges.forward_cumulative_weights_exponential()[i-1]);
     }
 
     edges.update_temporal_weights(50.0);
-    for (size_t i = 1; i < edges.forward_cumulative_weights_exponential.size(); i++) {
+    for (size_t i = 1; i < edges.forward_cumulative_weights_exponential().size(); i++) {
         weights_scaled.push_back(
-            edges.forward_cumulative_weights_exponential[i] / edges.forward_cumulative_weights_exponential[i-1]);
+            edges.forward_cumulative_weights_exponential()[i] / edges.forward_cumulative_weights_exponential()[i-1]);
     }
 
     // Compare ratios with some tolerance
@@ -262,8 +262,8 @@ TYPED_TEST(EdgeDataWeightTest, ScaledWeightBounds) {
     edges.update_temporal_weights(timescale_bound);
 
     // Get weights using the helper method defined in the test fixture
-    const auto forward_weights = this->get_individual_weights(edges.forward_cumulative_weights_exponential);
-    const auto backward_weights = this->get_individual_weights(edges.backward_cumulative_weights_exponential);
+    const auto forward_weights = this->get_individual_weights(edges.forward_cumulative_weights_exponential());
+    const auto backward_weights = this->get_individual_weights(edges.backward_cumulative_weights_exponential());
 
     // Maximum log ratio should not exceed timescale_bound
     for (size_t i = 0; i < forward_weights.size(); i++) {
@@ -299,9 +299,9 @@ TYPED_TEST(EdgeDataWeightTest, DifferentTimescaleBounds) {
     for (const double bound : bounds) {
         edges.update_temporal_weights(bound);
         std::vector<double> ratios;
-        for (size_t i = 1; i < edges.forward_cumulative_weights_exponential.size(); i++) {
-            ratios.push_back(edges.forward_cumulative_weights_exponential[i] /
-                           edges.forward_cumulative_weights_exponential[i-1]);
+        for (size_t i = 1; i < edges.forward_cumulative_weights_exponential().size(); i++) {
+            ratios.push_back(edges.forward_cumulative_weights_exponential()[i] /
+                           edges.forward_cumulative_weights_exponential()[i-1]);
         }
         scaled_ratios.push_back(ratios);
     }
@@ -327,10 +327,10 @@ TYPED_TEST(EdgeDataWeightTest, SingleTimestampWithBounds) {
     // Test with different bounds
     for (double bound : {-1.0, 0.0, 10.0, 50.0}) {
         edges.update_temporal_weights(bound);
-        ASSERT_EQ(edges.forward_cumulative_weights_exponential.size(), 1);
-        ASSERT_EQ(edges.backward_cumulative_weights_exponential.size(), 1);
-        EXPECT_NEAR(edges.forward_cumulative_weights_exponential[0], 1.0, 1e-6);
-        EXPECT_NEAR(edges.backward_cumulative_weights_exponential[0], 1.0, 1e-6);
+        ASSERT_EQ(edges.forward_cumulative_weights_exponential().size(), 1);
+        ASSERT_EQ(edges.backward_cumulative_weights_exponential().size(), 1);
+        EXPECT_NEAR(edges.forward_cumulative_weights_exponential()[0], 1.0, 1e-6);
+        EXPECT_NEAR(edges.backward_cumulative_weights_exponential()[0], 1.0, 1e-6);
     }
 }
 
@@ -343,30 +343,30 @@ TYPED_TEST(EdgeDataWeightTest, WeightMonotonicity) {
     edges.update_temporal_weights(timescale_bound);
 
     // Forward weights should decrease monotonically
-    for (size_t i = 1; i < edges.forward_cumulative_weights_exponential.size(); i++) {
-        double prev_weight = i == 1 ? edges.forward_cumulative_weights_exponential[0]
-                                  : edges.forward_cumulative_weights_exponential[i-1];
-        double curr_weight = edges.forward_cumulative_weights_exponential[i];
+    for (size_t i = 1; i < edges.forward_cumulative_weights_exponential().size(); i++) {
+        double prev_weight = i == 1 ? edges.forward_cumulative_weights_exponential()[0]
+                                  : edges.forward_cumulative_weights_exponential()[i-1];
+        double curr_weight = edges.forward_cumulative_weights_exponential()[i];
         double weight_diff = curr_weight - prev_weight;
 
         if (i > 1) {
-            double prev_diff = edges.forward_cumulative_weights_exponential[i-1] -
-                             edges.forward_cumulative_weights_exponential[i-2];
+            double prev_diff = edges.forward_cumulative_weights_exponential()[i-1] -
+                             edges.forward_cumulative_weights_exponential()[i-2];
             EXPECT_GE(prev_diff, weight_diff)
                 << "Forward weight differences should decrease monotonically";
         }
     }
 
     // Backward weights should increase monotonically
-    for (size_t i = 1; i < edges.backward_cumulative_weights_exponential.size(); i++) {
-        double prev_weight = i == 1 ? edges.backward_cumulative_weights_exponential[0]
-                                  : edges.backward_cumulative_weights_exponential[i-1];
-        double curr_weight = edges.backward_cumulative_weights_exponential[i];
+    for (size_t i = 1; i < edges.backward_cumulative_weights_exponential().size(); i++) {
+        double prev_weight = i == 1 ? edges.backward_cumulative_weights_exponential()[0]
+                                  : edges.backward_cumulative_weights_exponential()[i-1];
+        double curr_weight = edges.backward_cumulative_weights_exponential()[i];
         double weight_diff = curr_weight - prev_weight;
 
         if (i > 1) {
-            double prev_diff = edges.backward_cumulative_weights_exponential[i-1] -
-                             edges.backward_cumulative_weights_exponential[i-2];
+            double prev_diff = edges.backward_cumulative_weights_exponential()[i-1] -
+                             edges.backward_cumulative_weights_exponential()[i-2];
             EXPECT_LE(prev_diff, weight_diff)
                 << "Backward weight differences should increase monotonically";
         }
@@ -385,8 +385,8 @@ TYPED_TEST(EdgeDataWeightTest, TimescaleScalingPrecision) {
     constexpr double timescale_bound = 2.0;
     edges.update_temporal_weights(timescale_bound);
 
-    const auto forward_weights = this->get_individual_weights(edges.forward_cumulative_weights_exponential);
-    const auto backward_weights = this->get_individual_weights(edges.backward_cumulative_weights_exponential);
+    const auto forward_weights = this->get_individual_weights(edges.forward_cumulative_weights_exponential());
+    const auto backward_weights = this->get_individual_weights(edges.backward_cumulative_weights_exponential());
 
     // Time range is 600, scale = 2.0/600
     constexpr double time_scale = timescale_bound / 600.0;
@@ -394,7 +394,7 @@ TYPED_TEST(EdgeDataWeightTest, TimescaleScalingPrecision) {
     // Check forward weights
     for (size_t i = 0; i < forward_weights.size() - 1; i++) {
         const auto time_diff = static_cast<double>(
-            edges.unique_timestamps[i+1] - edges.unique_timestamps[i]);
+            edges.unique_timestamps()[i+1] - edges.unique_timestamps()[i]);
         const double expected_ratio = exp(-time_diff * time_scale);
         const double actual_ratio = forward_weights[i+1] / forward_weights[i];
         EXPECT_NEAR(actual_ratio, expected_ratio, 1e-6)
@@ -404,7 +404,7 @@ TYPED_TEST(EdgeDataWeightTest, TimescaleScalingPrecision) {
     // Check backward weights
     for (size_t i = 0; i < backward_weights.size() - 1; i++) {
         const auto time_diff = static_cast<double>(
-            edges.unique_timestamps[i+1] - edges.unique_timestamps[i]);
+            edges.unique_timestamps()[i+1] - edges.unique_timestamps()[i]);
         const double expected_ratio = exp(time_diff * time_scale);
         const double actual_ratio = backward_weights[i+1] / backward_weights[i];
         EXPECT_NEAR(actual_ratio, expected_ratio, 1e-6)

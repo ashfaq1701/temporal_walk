@@ -1,37 +1,14 @@
-#include <stores/cuda/EdgeDataCUDA.cuh>
-#include <stores/cuda/NodeMappingCUDA.cuh>
 #include <gtest/gtest.h>
 #include "../src/stores/proxies/EdgeData.cuh"
-#include "../src/stores/cuda/EdgeDataCUDA.cuh"
-#include "../src/stores/proxies/NodeMapping.cuh"
-#include "../src/stores/cuda/NodeMappingCUDA.cuh"
 #include "../src/stores/proxies/NodeEdgeIndex.cuh"
-#include "../src/stores/cuda/NodeEdgeIndexCUDA.cuh"
+#include "../src/stores/proxies/NodeMapping.cuh"
 
-template<typename T>
+template<typename  T>
 class NodeEdgeIndexTest : public ::testing::Test {
 protected:
-    using EdgeDataType = std::conditional_t<
-        T::value == GPUUsageMode::ON_CPU,
-        EdgeData<T::value>,
-        EdgeDataCUDA<T::value>
-    >;
-
-    using NodeMappingType = std::conditional_t<
-        T::value == GPUUsageMode::ON_CPU,
-        NodeMapping<T::value>,
-        NodeMappingCUDA<T::value>
-    >;
-
-    using NodeEdgeIndexType = std::conditional_t<
-        T::value == GPUUsageMode::ON_CPU,
-        NodeEdgeIndex<T::value>,
-        NodeEdgeIndexCUDA<T::value>
-    >;
-
-    NodeEdgeIndexType index;
-    EdgeDataType edges;
-    NodeMappingType mapping;
+    NodeEdgeIndex<T::value> index;
+    EdgeData<T::value> edges;
+    NodeMapping<T::value> mapping;
 
     // Helper function to set up a simple directed graph
     void setup_simple_directed_graph() {
@@ -44,10 +21,10 @@ protected:
         edges.update_timestamp_groups();
 
         // Update node mapping
-        mapping.update(edges, 0, edges.size());
+        mapping.update(edges.edge_data, 0, edges.size());
 
         // Rebuild index
-        index.rebuild(edges, mapping, true);
+        index.rebuild(edges.edge_data, mapping.node_mapping, true);
     }
 
     // Helper function to set up a simple undirected graph
@@ -60,10 +37,10 @@ protected:
         edges.update_timestamp_groups();
 
         // Update node mapping
-        mapping.update(edges, 0, edges.size());
+        mapping.update(edges.edge_data, 0, edges.size());
 
         // Rebuild index
-        index.rebuild(edges, mapping, false);
+        index.rebuild(edges.edge_data, mapping.node_mapping, false);
     }
 };
 
@@ -82,14 +59,14 @@ TYPED_TEST_SUITE(NodeEdgeIndexTest, GPU_USAGE_TYPES);
 
 // Test empty state
 TYPED_TEST(NodeEdgeIndexTest, EmptyStateTest) {
-    EXPECT_TRUE(this->index.outbound_offsets.empty());
-    EXPECT_TRUE(this->index.outbound_indices.empty());
-    EXPECT_TRUE(this->index.outbound_timestamp_group_offsets.empty());
-    EXPECT_TRUE(this->index.outbound_timestamp_group_indices.empty());
-    EXPECT_TRUE(this->index.inbound_offsets.empty());
-    EXPECT_TRUE(this->index.inbound_indices.empty());
-    EXPECT_TRUE(this->index.inbound_timestamp_group_offsets.empty());
-    EXPECT_TRUE(this->index.inbound_timestamp_group_indices.empty());
+    EXPECT_TRUE(this->index.outbound_offsets().empty());
+    EXPECT_TRUE(this->index.outbound_indices().empty());
+    EXPECT_TRUE(this->index.outbound_timestamp_group_offsets().empty());
+    EXPECT_TRUE(this->index.outbound_timestamp_group_indices().empty());
+    EXPECT_TRUE(this->index.inbound_offsets().empty());
+    EXPECT_TRUE(this->index.inbound_indices().empty());
+    EXPECT_TRUE(this->index.inbound_timestamp_group_offsets().empty());
+    EXPECT_TRUE(this->index.inbound_timestamp_group_indices().empty());
 }
 
 // Test edge ranges in directed graph
@@ -103,8 +80,8 @@ TYPED_TEST(NodeEdgeIndexTest, DirectedEdgeRangeTest) {
 
     // Verify each outbound edge
     for (size_t i = out_start10; i < out_end10; i++) {
-        size_t edge_idx = this->index.outbound_indices[i];
-        EXPECT_EQ(this->edges.sources[edge_idx], 10);  // All should be from node 10
+        size_t edge_idx = this->index.outbound_indices()[i];
+        EXPECT_EQ(this->edges.sources()[edge_idx], 10);  // All should be from node 10
     }
 
     // Check inbound edges for node 20
@@ -114,8 +91,8 @@ TYPED_TEST(NodeEdgeIndexTest, DirectedEdgeRangeTest) {
 
     // Verify each inbound edge
     for (size_t i = in_start20; i < in_end20; i++) {
-        size_t edge_idx = this->index.inbound_indices[i];
-        EXPECT_EQ(this->edges.targets[edge_idx], 20);  // All should be to node 20
+        size_t edge_idx = this->index.inbound_indices()[i];
+        EXPECT_EQ(this->edges.targets()[edge_idx], 20);  // All should be to node 20
     }
 
     // Check invalid node
@@ -139,10 +116,10 @@ TYPED_TEST(NodeEdgeIndexTest, DirectedTimestampGroupTest) {
 
     // Verify all edges in first group
     for (size_t i = group1_start; i < group1_end; i++) {
-        size_t edge_idx = this->index.outbound_indices[i];
-        EXPECT_EQ(this->edges.timestamps[edge_idx], 100);
-        EXPECT_EQ(this->edges.sources[edge_idx], 10);
-        EXPECT_TRUE(this->edges.targets[edge_idx] == 20 || this->edges.targets[edge_idx] == 30);
+        size_t edge_idx = this->index.outbound_indices()[i];
+        EXPECT_EQ(this->edges.timestamps()[edge_idx], 100);
+        EXPECT_EQ(this->edges.sources()[edge_idx], 10);
+        EXPECT_TRUE(this->edges.targets()[edge_idx] == 20 || this->edges.targets()[edge_idx] == 30);
     }
 
     // Check second group range (timestamp 200)
@@ -150,10 +127,10 @@ TYPED_TEST(NodeEdgeIndexTest, DirectedTimestampGroupTest) {
     EXPECT_EQ(group2_end - group2_start, 1);  // One edge in timestamp 200
 
     // Verify edge in second group
-    size_t edge_idx = this->index.outbound_indices[group2_start];
-    EXPECT_EQ(this->edges.timestamps[edge_idx], 200);
-    EXPECT_EQ(this->edges.sources[edge_idx], 10);
-    EXPECT_EQ(this->edges.targets[edge_idx], 20);
+    size_t edge_idx = this->index.outbound_indices()[group2_start];
+    EXPECT_EQ(this->edges.timestamps()[edge_idx], 200);
+    EXPECT_EQ(this->edges.sources()[edge_idx], 10);
+    EXPECT_EQ(this->edges.targets()[edge_idx], 20);
 }
 
 // Test edge ranges in undirected graph
@@ -167,10 +144,10 @@ TYPED_TEST(NodeEdgeIndexTest, UndirectedEdgeRangeTest) {
 
     // Verify each edge for node 100
     for (size_t i = out_start100; i < out_end100; i++) {
-        size_t edge_idx = this->index.outbound_indices[i];
+        size_t edge_idx = this->index.outbound_indices()[i];
         EXPECT_TRUE(
-            (this->edges.sources[edge_idx] == 100 && (this->edges.targets[edge_idx] == 200 || this->edges.targets[edge_idx] == 300)) ||
-            (this->edges.targets[edge_idx] == 100 && (this->edges.sources[edge_idx] == 200 || this->edges.sources[edge_idx] == 300))
+            (this->edges.sources()[edge_idx] == 100 && (this->edges.targets()[edge_idx] == 200 || this->edges.targets()[edge_idx] == 300)) ||
+            (this->edges.targets()[edge_idx] == 100 && (this->edges.sources()[edge_idx] == 200 || this->edges.sources()[edge_idx] == 300))
         );
     }
 
@@ -190,30 +167,30 @@ TYPED_TEST(NodeEdgeIndexTest, UndirectedTimestampGroupTest) {
 
     // Check first group (timestamp 1000)
     auto [group1_start, group1_end] = this->index.get_timestamp_group_range(dense_node100, 0, true, false);
-    EXPECT_EQ(this->edges.timestamps[this->index.outbound_indices[group1_start]], 1000);
+    EXPECT_EQ(this->edges.timestamps()[this->index.outbound_indices()[group1_start]], 1000);
     EXPECT_EQ(group1_end - group1_start, 2);  // Two edges in timestamp 1000 group
 
     // Verify all edges in first group (timestamp 1000)
     for (size_t i = group1_start; i < group1_end; i++) {
-        size_t edge_idx = this->index.outbound_indices[i];
-        EXPECT_EQ(this->edges.timestamps[edge_idx], 1000);
+        size_t edge_idx = this->index.outbound_indices()[i];
+        EXPECT_EQ(this->edges.timestamps()[edge_idx], 1000);
         EXPECT_TRUE(
-            (this->edges.sources[edge_idx] == 100 && (this->edges.targets[edge_idx] == 200 || this->edges.targets[edge_idx] == 300)) ||
-            (this->edges.targets[edge_idx] == 100 && (this->edges.sources[edge_idx] == 200 || this->edges.sources[edge_idx] == 300))
+            (this->edges.sources()[edge_idx] == 100 && (this->edges.targets()[edge_idx] == 200 || this->edges.targets()[edge_idx] == 300)) ||
+            (this->edges.targets()[edge_idx] == 100 && (this->edges.sources()[edge_idx] == 200 || this->edges.sources()[edge_idx] == 300))
         );
     }
 
     // Check second group (timestamp 2000)
     auto [group2_start, group2_end] = this->index.get_timestamp_group_range(dense_node100, 1, true, false);
-    EXPECT_EQ(this->edges.timestamps[this->index.outbound_indices[group2_start]], 2000);
+    EXPECT_EQ(this->edges.timestamps()[this->index.outbound_indices()[group2_start]], 2000);
     EXPECT_EQ(group2_end - group2_start, 1);  // One edge in timestamp 2000 group
 
     // Verify edge in second group (timestamp 2000)
-    size_t edge_idx = this->index.outbound_indices[group2_start];
-    EXPECT_EQ(this->edges.timestamps[edge_idx], 2000);
+    size_t edge_idx = this->index.outbound_indices()[group2_start];
+    EXPECT_EQ(this->edges.timestamps()[edge_idx], 2000);
     EXPECT_TRUE(
-        (this->edges.sources[edge_idx] == 100 && this->edges.targets[edge_idx] == 200) ||
-        (this->edges.targets[edge_idx] == 100 && this->edges.sources[edge_idx] == 200)
+        (this->edges.sources()[edge_idx] == 100 && this->edges.targets()[edge_idx] == 200) ||
+        (this->edges.targets()[edge_idx] == 100 && this->edges.sources()[edge_idx] == 200)
     );
 }
 
@@ -232,8 +209,8 @@ TYPED_TEST(NodeEdgeIndexTest, EdgeCasesTest) {
     // Test node with no edges
     this->edges.push_back(4, 5, 400);  // Add isolated node
     this->edges.update_timestamp_groups();
-    this->mapping.update(this->edges, this->edges.size()-1, this->edges.size());
-    this->index.rebuild(this->edges, this->mapping, true);
+    this->mapping.update(this->edges.edge_data, this->edges.size()-1, this->edges.size());
+    this->index.rebuild(this->edges.edge_data, this->mapping.node_mapping, true);
 
     int isolated_node = this->mapping.to_dense(4);
     EXPECT_EQ(this->index.get_timestamp_group_count(isolated_node, false, true), 0);

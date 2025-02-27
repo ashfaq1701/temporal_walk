@@ -108,9 +108,6 @@ HOST WalkSet<GPUUsage> TemporalRandomWalkCPU<GPUUsage>::get_random_walks_and_tim
         future.wait();
     }
 
-    delete edge_picker;
-    delete start_picker;
-
     return walk_set;
 }
 
@@ -156,9 +153,6 @@ HOST WalkSet<GPUUsage> TemporalRandomWalkCPU<GPUUsage>::get_random_walks_and_tim
     for (auto& future : futures) {
         future.wait();
     }
-
-    delete edge_picker;
-    delete start_picker;
 
     return walk_set;
 }

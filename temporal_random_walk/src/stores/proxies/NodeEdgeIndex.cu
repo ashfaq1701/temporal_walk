@@ -1,15 +1,21 @@
 #include "NodeEdgeIndex.cuh"
 
 template<GPUUsageMode GPUUsage>
+NodeEdgeIndex<GPUUsage>::NodeEdgeIndex(): node_edge_index(new BaseType()) {}
+
+template<GPUUsageMode GPUUsage>
+NodeEdgeIndex<GPUUsage>::NodeEdgeIndex(INodeEdgeIndex<GPUUsage>* node_edge_index): node_edge_index(node_edge_index) {}
+
+template<GPUUsageMode GPUUsage>
 void NodeEdgeIndex<GPUUsage>::clear()
 {
     if (GPUUsage == GPUUsageMode::ON_CPU)
     {
-        node_edge_index.clear_host();
+        node_edge_index->clear_host();
     }
     else
     {
-        node_edge_index.clear_device();
+        node_edge_index->clear_device();
     }
 }
 
@@ -18,11 +24,11 @@ void NodeEdgeIndex<GPUUsage>::rebuild(const IEdgeData<GPUUsage>* edges, const IN
 {
     if (GPUUsage == GPUUsageMode::ON_CPU)
     {
-        node_edge_index.rebuild_host(edges, mapping, is_directed);
+        node_edge_index->rebuild_host(edges, mapping, is_directed);
     }
     else
     {
-        node_edge_index.rebuild_device(edges, mapping, is_directed);
+        node_edge_index->rebuild_device(edges, mapping, is_directed);
     }
 }
 
@@ -31,12 +37,12 @@ std::pair<size_t, size_t> NodeEdgeIndex<GPUUsage>::get_edge_range(int dense_node
 {
     if (GPUUsage == GPUUsageMode::ON_CPU)
     {
-        auto range = node_edge_index.get_edge_range_host(dense_node_id, forward, is_directed);
+        auto range = node_edge_index->get_edge_range_host(dense_node_id, forward, is_directed);
         return {range.from, range.to};
     }
     else
     {
-        auto range = node_edge_index.get_edge_range_device(dense_node_id, forward, is_directed);
+        auto range = node_edge_index->get_edge_range_device(dense_node_id, forward, is_directed);
         return {range.from, range.to};
     }
 }
@@ -46,12 +52,12 @@ std::pair<size_t, size_t> NodeEdgeIndex<GPUUsage>::get_timestamp_group_range(int
 {
     if (GPUUsage == GPUUsageMode::ON_CPU)
     {
-        auto range = node_edge_index.get_timestamp_group_range_host(dense_node_id, group_idx, forward, is_directed);
+        auto range = node_edge_index->get_timestamp_group_range_host(dense_node_id, group_idx, forward, is_directed);
         return {range.from, range.to};
     }
     else
     {
-        auto range = node_edge_index.get_timestamp_group_range_device(dense_node_id, group_idx, forward, is_directed);
+        auto range = node_edge_index->get_timestamp_group_range_device(dense_node_id, group_idx, forward, is_directed);
         return {range.from, range.to};
     }
 }
@@ -61,11 +67,23 @@ size_t NodeEdgeIndex<GPUUsage>::get_timestamp_group_count(int dense_node_id, boo
 {
     if (GPUUsage == GPUUsageMode::ON_CPU)
     {
-        return node_edge_index.get_timestamp_group_count_host(dense_node_id, forward, directed);
+        return node_edge_index->get_timestamp_group_count_host(dense_node_id, forward, directed);
     }
     else
     {
-        return node_edge_index.get_timestamp_group_count_device(dense_node_id, forward, directed);
+        return node_edge_index->get_timestamp_group_count_device(dense_node_id, forward, directed);
+    }
+}
+
+template<GPUUsageMode GPUUsage>
+void NodeEdgeIndex<GPUUsage>::update_temporal_weights(const IEdgeData<GPUUsage>* edges, double timescale_bound)
+{
+    if (GPUUsage == GPUUsageMode::ON_CPU)
+    {
+        node_edge_index->update_temporal_weights_host(edges, timescale_bound);
+    } else
+    {
+        node_edge_index->update_temporal_weights_device(edges, timescale_bound);
     }
 }
 

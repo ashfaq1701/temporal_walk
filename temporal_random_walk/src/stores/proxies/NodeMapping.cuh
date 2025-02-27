@@ -8,19 +8,30 @@
 #include "../../data/enums.h"
 
 template<GPUUsageMode GPUUsage>
-class NodeMapping : protected std::conditional_t<
-    (GPUUsage == GPUUsageMode::ON_CPU), NodeMappingCPU<GPUUsage>, NodeMappingCUDA<GPUUsage>> {
+class NodeMapping {
 
 protected:
     using BaseType = std::conditional_t<
         (GPUUsage == ON_CPU), NodeMappingCPU<GPUUsage>, NodeMappingCUDA<GPUUsage>>;
 
-    BaseType node_mapping;
-
 public:
-    using BaseType::sparse_to_dense;
-    using BaseType::dense_to_sparse;
-    using BaseType::is_deleted;
+
+    INodeMapping<GPUUsage>* node_mapping;
+
+    NodeMapping();
+    explicit NodeMapping(INodeMapping<GPUUsage>* node_mapping);
+
+    // Accessors for sparse_to_dense
+    auto& sparse_to_dense() { return node_mapping->sparse_to_dense; }
+    const auto& sparse_to_dense() const { return node_mapping->sparse_to_dense; }
+
+    // Accessors for dense_to_sparse
+    auto& dense_to_sparse() { return node_mapping->dense_to_sparse; }
+    const auto& dense_to_sparse() const { return node_mapping->dense_to_sparse; }
+
+    // Accessors for is_deleted
+    auto& is_deleted() { return node_mapping->is_deleted; }
+    const auto& is_deleted() const { return node_mapping->is_deleted; }
 
     void update(const IEdgeData<GPUUsage>* edges, size_t start_idx, size_t end_idx);
     [[nodiscard]] int to_dense(int sparse_id) const;

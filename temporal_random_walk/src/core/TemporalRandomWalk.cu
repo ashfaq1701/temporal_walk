@@ -43,6 +43,7 @@ std::vector<std::vector<NodeWithTime>> TemporalRandomWalk<GPUUsage>::get_random_
 
     for (size_t i = 0; i < walk_set.num_walks; ++i) {
         const size_t walk_len = walk_set.get_walk_len(i);
+
         walks[i].resize(walk_len);
 
         for (size_t j = 0; j < walk_len; ++j) {
@@ -50,7 +51,11 @@ std::vector<std::vector<NodeWithTime>> TemporalRandomWalk<GPUUsage>::get_random_
         }
     }
 
-    return walks;
+    std::vector<std::vector<NodeWithTime>> non_empty_walks;
+    std::copy_if(walks.begin(), walks.end(), std::back_inserter(non_empty_walks),
+                 [](const std::vector<NodeWithTime>& v) { return !v.empty(); });
+
+    return non_empty_walks;
 }
 
 template <GPUUsageMode GPUUsage>
@@ -81,7 +86,11 @@ std::vector<std::vector<int>> TemporalRandomWalk<GPUUsage>::get_random_walks_for
         }
     }
 
-    return walks;
+    std::vector<std::vector<int>> non_empty_walks;
+    std::copy_if(walks.begin(), walks.end(), std::back_inserter(non_empty_walks),
+                 [](const std::vector<int>& v) { return !v.empty(); });
+
+    return non_empty_walks;
 }
 
 template <GPUUsageMode GPUUsage>
@@ -111,7 +120,11 @@ std::vector<std::vector<NodeWithTime>> TemporalRandomWalk<GPUUsage>::get_random_
         }
     }
 
-    return walks;
+    std::vector<std::vector<NodeWithTime>> non_empty_walks;
+    std::copy_if(walks.begin(), walks.end(), std::back_inserter(non_empty_walks),
+                 [](const std::vector<NodeWithTime>& v) { return !v.empty(); });
+
+    return non_empty_walks;
 }
 
 template <GPUUsageMode GPUUsage>
@@ -142,7 +155,11 @@ std::vector<std::vector<int>> TemporalRandomWalk<GPUUsage>::get_random_walks(
         }
     }
 
-    return walks;
+    std::vector<std::vector<int>> non_empty_walks;
+    std::copy_if(walks.begin(), walks.end(), std::back_inserter(non_empty_walks),
+                 [](const std::vector<int>& v) { return !v.empty(); });
+
+    return non_empty_walks;
 }
 
 template <GPUUsageMode GPUUsage>

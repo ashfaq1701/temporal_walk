@@ -15,9 +15,9 @@ protected:
     using BaseType = std::conditional_t<
         (GPUUsage == ON_CPU), TemporalGraphCPU<GPUUsage>, TemporalGraphCUDA<GPUUsage>>;
 
-    BaseType temporal_graph;
-
 public:
+    ITemporalGraph<GPUUsage>* temporal_graph;
+
     explicit TemporalGraph(
         bool directed,
         int64_t window = -1,

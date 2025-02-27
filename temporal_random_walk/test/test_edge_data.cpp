@@ -15,9 +15,9 @@ protected:
 
    void verify_edge(const size_t index, const int expected_src, const int expected_tgt, const int64_t expected_ts) const {
        ASSERT_LT(index, this->edges.size());
-       EXPECT_EQ(this->edges.sources[index], expected_src);
-       EXPECT_EQ(this->edges.targets[index], expected_tgt);
-       EXPECT_EQ(this->edges.timestamps[index], expected_ts);
+       EXPECT_EQ(this->edges.sources()[index], expected_src);
+       EXPECT_EQ(this->edges.targets()[index], expected_tgt);
+       EXPECT_EQ(this->edges.timestamps()[index], expected_ts);
    }
 };
 
@@ -38,8 +38,8 @@ TYPED_TEST_SUITE(EdgeDataTest, GPU_USAGE_TYPES);
 TYPED_TEST(EdgeDataTest, EmptyStateTest) {
     EXPECT_TRUE(this->edges.empty());
     EXPECT_EQ(this->edges.size(), 0);
-    EXPECT_TRUE(this->edges.timestamp_group_offsets.empty());
-    EXPECT_TRUE(this->edges.unique_timestamps.empty());
+    EXPECT_TRUE(this->edges.timestamp_group_offsets().empty());
+    EXPECT_TRUE(this->edges.unique_timestamps().empty());
 }
 
 // Test single edge
@@ -50,10 +50,10 @@ TYPED_TEST(EdgeDataTest, SingleEdgeTest) {
     this->verify_edge(0, 100, 200, 100);
 
     this->edges.update_timestamp_groups();
-    EXPECT_EQ(this->edges.unique_timestamps.size(), 1);
-    EXPECT_EQ(this->edges.timestamp_group_offsets.size(), 2);  // n+1 offsets for n groups
-    EXPECT_EQ(this->edges.timestamp_group_offsets[0], 0);
-    EXPECT_EQ(this->edges.timestamp_group_offsets[1], 1);
+    EXPECT_EQ(this->edges.unique_timestamps().size(), 1);
+    EXPECT_EQ(this->edges.timestamp_group_offsets().size(), 2);  // n+1 offsets for n groups
+    EXPECT_EQ(this->edges.timestamp_group_offsets()[0], 0);
+    EXPECT_EQ(this->edges.timestamp_group_offsets()[1], 1);
 }
 
 // Test multiple edges with same timestamp
@@ -63,10 +63,10 @@ TYPED_TEST(EdgeDataTest, SameTimestampEdgesTest) {
     this->edges.push_back(300, 400, 100);
 
     this->edges.update_timestamp_groups();
-    EXPECT_EQ(this->edges.unique_timestamps.size(), 1);
-    EXPECT_EQ(this->edges.timestamp_group_offsets.size(), 2);
-    EXPECT_EQ(this->edges.timestamp_group_offsets[0], 0);
-    EXPECT_EQ(this->edges.timestamp_group_offsets[1], 3);
+    EXPECT_EQ(this->edges.unique_timestamps().size(), 1);
+    EXPECT_EQ(this->edges.timestamp_group_offsets().size(), 2);
+    EXPECT_EQ(this->edges.timestamp_group_offsets()[0], 0);
+    EXPECT_EQ(this->edges.timestamp_group_offsets()[1], 3);
 }
 
 // Test edges with different timestamps
@@ -76,12 +76,12 @@ TYPED_TEST(EdgeDataTest, DifferentTimestampEdgesTest) {
     this->edges.push_back(3, 4, 300);
 
     this->edges.update_timestamp_groups();
-    EXPECT_EQ(this->edges.unique_timestamps.size(), 3);
-    EXPECT_EQ(this->edges.timestamp_group_offsets.size(), 4);
-    EXPECT_EQ(this->edges.timestamp_group_offsets[0], 0);
-    EXPECT_EQ(this->edges.timestamp_group_offsets[1], 1);
-    EXPECT_EQ(this->edges.timestamp_group_offsets[2], 2);
-    EXPECT_EQ(this->edges.timestamp_group_offsets[3], 3);
+    EXPECT_EQ(this->edges.unique_timestamps().size(), 3);
+    EXPECT_EQ(this->edges.timestamp_group_offsets().size(), 4);
+    EXPECT_EQ(this->edges.timestamp_group_offsets()[0], 0);
+    EXPECT_EQ(this->edges.timestamp_group_offsets()[1], 1);
+    EXPECT_EQ(this->edges.timestamp_group_offsets()[2], 2);
+    EXPECT_EQ(this->edges.timestamp_group_offsets()[3], 3);
 }
 
 // Test find_group functions

@@ -7,20 +7,8 @@
 template<typename T>
 class NodeMappingTest : public ::testing::Test {
 protected:
-    using NodeMappingType = std::conditional_t<
-        T::value == GPUUsageMode::ON_CPU,
-        NodeMapping<T::value>,
-        NodeMappingCUDA<T::value>
-    >;
-
-    using EdgeDataType = std::conditional_t<
-        T::value == GPUUsageMode::ON_CPU,
-        EdgeData<T::value>,
-        EdgeDataCUDA<T::value>
-    >;
-
-    NodeMappingType mapping;
-    EdgeDataType edges;
+    NodeMapping<T::value> mapping;
+    EdgeData<T::value> edges;
 
     // Helper to verify bidirectional mapping
     void verify_mapping(int sparse_id, int expected_dense_idx) const {
@@ -62,7 +50,7 @@ TYPED_TEST(NodeMappingTest, EmptyStateTest) {
 TYPED_TEST(NodeMappingTest, BasicUpdateTest) {
     this->edges.push_back(10, 20, 100);
     this->edges.push_back(20, 30, 200);
-    this->mapping.update(this->edges, 0, this->edges.size());
+    this->mapping.update(this->edges.edge_data, 0, this->edges.size());
 
     // Verify sizes
     EXPECT_EQ(this->mapping.size(), 3);  // 3 unique nodes
@@ -83,11 +71,11 @@ TYPED_TEST(NodeMappingTest, BasicUpdateTest) {
 // Test handling of gaps in sparse IDs
 TYPED_TEST(NodeMappingTest, SparseGapsTest) {
     this->edges.push_back(10, 50, 100);  // Gap between 10 and 50
-    this->mapping.update(this->edges, 0, this->edges.size());
+    this->mapping.update(this->edges.edge_data, 0, this->edges.size());
 
     // Verify size handling with gaps
     EXPECT_EQ(this->mapping.size(), 2);  // Only 2 actual nodes
-    EXPECT_GE(this->mapping.sparse_to_dense.size(), 51);  // But space for all up to 50
+    EXPECT_GE(this->mapping.sparse_to_dense().size(), 51);  // But space for all up to 50
 
     // Verify mappings
     this->verify_mapping(10, 0);
@@ -104,21 +92,21 @@ TYPED_TEST(NodeMappingTest, SparseGapsTest) {
 TYPED_TEST(NodeMappingTest, IncrementalUpdateTest) {
     // First update
     this->edges.push_back(10, 20, 100);
-    this->mapping.update(this->edges, 0, 1);
+    this->mapping.update(this->edges.edge_data, 0, 1);
 
     this->verify_mapping(10, 0);
     this->verify_mapping(20, 1);
 
     // Second update with new nodes
     this->edges.push_back(30, 40, 200);
-    this->mapping.update(this->edges, 1, 2);
+    this->mapping.update(this->edges.edge_data, 1, 2);
 
     this->verify_mapping(30, 2);
     this->verify_mapping(40, 3);
 
     // Third update with existing nodes
     this->edges.push_back(20, 30, 300);  // Both nodes already exist
-    this->mapping.update(this->edges, 2, 3);
+    this->mapping.update(this->edges.edge_data, 2, 3);
 
     EXPECT_EQ(this->mapping.size(), 4);  // No new nodes added
 }
@@ -127,7 +115,7 @@ TYPED_TEST(NodeMappingTest, IncrementalUpdateTest) {
 TYPED_TEST(NodeMappingTest, NodeDeletionTest) {
     this->edges.push_back(10, 20, 100);
     this->edges.push_back(20, 30, 200);
-    this->mapping.update(this->edges, 0, this->edges.size());
+    this->mapping.update(this->edges.edge_data, 0, this->edges.size());
 
     // Delete node 20
     this->mapping.mark_node_deleted(20);
@@ -151,14 +139,14 @@ TYPED_TEST(NodeMappingTest, NodeDeletionTest) {
 TYPED_TEST(NodeMappingTest, EdgeCasesTest) {
     // Test with negative IDs
     this->edges.push_back(-1, -2, 100);
-    this->mapping.update(this->edges, 0, 1);
+    this->mapping.update(this->edges.edge_data, 0, 1);
     EXPECT_EQ(this->mapping.to_dense(-1), -1);  // Should not map negative IDs
     EXPECT_EQ(this->mapping.to_dense(-2), -1);
 
     // Test with very large sparse ID
     this->edges.clear();
     this->edges.push_back(1000000, 1, 100);
-    this->mapping.update(this->edges, 0, 1);
+    this->mapping.update(this->edges.edge_data, 0, 1);
     this->verify_mapping(1, 0);
     this->verify_mapping(1000000, 1);
 
@@ -170,7 +158,7 @@ TYPED_TEST(NodeMappingTest, EdgeCasesTest) {
     this->mapping.mark_node_deleted(999);  // Should not crash
 
     // Test empty range update
-    this->mapping.update(this->edges, 0, 0);  // Should handle empty range gracefully
+    this->mapping.update(this->edges.edge_data, 0, 0);  // Should handle empty range gracefully
 }
 
 // Test reservation and clear
@@ -178,7 +166,7 @@ TYPED_TEST(NodeMappingTest, ReservationAndClearTest) {
     this->mapping.reserve(100);
 
     this->edges.push_back(10, 20, 100);
-    this->mapping.update(this->edges, 0, 1);
+    this->mapping.update(this->edges.edge_data, 0, 1);
 
     this->mapping.clear();
     EXPECT_EQ(this->mapping.size(), 0);
