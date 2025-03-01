@@ -85,7 +85,12 @@ public:
                                                                       bool is_directed) const { return {}; }
     [[nodiscard]] virtual HOST size_t get_timestamp_group_count_host(int dense_node_id, bool forward, bool directed) const { return 0; }
 
-    virtual HOST void update_temporal_weights_host(const IEdgeData<GPUUsage>* edges, double timescale_bound) {}
+    virtual HOST void compute_temporal_weights_host(
+        const IEdgeData<GPUUsage>* edges,
+        double timescale_bound,
+        size_t num_nodes) {}
+
+    virtual HOST void update_temporal_weights(const IEdgeData<GPUUsage>* edges, double timescale_bound) {}
 
 protected:
     virtual HOST SizeVector get_timestamp_offset_vector_host(bool forward, bool directed) const { return SizeVector(); }
@@ -102,7 +107,10 @@ public:
                                                                       bool is_directed) const { return {}; }
     [[nodiscard]] virtual DEVICE size_t get_timestamp_group_count_device(int dense_node_id, bool forward, bool directed) const { return 0; }
 
-    virtual DEVICE void update_temporal_weights_device(const IEdgeData<GPUUsage>* edges, double timescale_bound) {}
+    virtual DEVICE void compute_temporal_weights_device(
+        const IEdgeData<GPUUsage>* edges,
+        double timescale_bound,
+        size_t num_nodes) {}
 
 protected:
     virtual DEVICE SizeVector get_timestamp_offset_vector_device(bool forward, bool directed) const { return SizeVector(); }

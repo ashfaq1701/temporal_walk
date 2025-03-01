@@ -245,15 +245,11 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::rebuild(
 }
 
 template<GPUUsageMode GPUUsage>
-HOST void NodeEdgeIndexCPU<GPUUsage>::update_temporal_weights_host(const IEdgeData<GPUUsage>* edges, double timescale_bound) {
-    const size_t num_nodes = this->outbound_offsets.size() - 1;
-
-    this->outbound_forward_cumulative_weights_exponential.resize(this->outbound_timestamp_group_indices.size());
-    this->outbound_backward_cumulative_weights_exponential.resize(this->outbound_timestamp_group_indices.size());
-    if (!this->inbound_offsets.empty()) {
-        this->inbound_backward_cumulative_weights_exponential.resize(this->inbound_timestamp_group_indices.size());
-    }
-
+HOST void NodeEdgeIndexCPU<GPUUsage>::compute_temporal_weights_host(
+    const IEdgeData<GPUUsage>* edges,
+    double timescale_bound,
+    size_t num_nodes)
+{
     // Process each node
     for (size_t node = 0; node < num_nodes; node++) {
         // Outbound weights
@@ -350,6 +346,19 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::update_temporal_weights_host(const IEdgeDa
             }
         }
     }
+}
+
+template<GPUUsageMode GPUUsage>
+HOST void NodeEdgeIndexCPU<GPUUsage>::update_temporal_weights(const IEdgeData<GPUUsage>* edges, double timescale_bound) {
+    const size_t num_nodes = this->outbound_offsets.size() - 1;
+
+    this->outbound_forward_cumulative_weights_exponential.resize(this->outbound_timestamp_group_indices.size());
+    this->outbound_backward_cumulative_weights_exponential.resize(this->outbound_timestamp_group_indices.size());
+    if (!this->inbound_offsets.empty()) {
+        this->inbound_backward_cumulative_weights_exponential.resize(this->inbound_timestamp_group_indices.size());
+    }
+
+    compute_temporal_weights_host(edges, timescale_bound, num_nodes);
 }
 
 template<GPUUsageMode GPUUsage>

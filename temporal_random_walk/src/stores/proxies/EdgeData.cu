@@ -119,10 +119,10 @@ void EdgeData<GPUUsage>::update_timestamp_groups()
 {
     if (GPUUsage == GPUUsageMode::ON_CPU)
     {
-        edge_data->update_timestamp_groups_host();
+        edge_data->update_timestamp_groups();
     } else
     {
-        edge_data->update_timestamp_groups_device();
+        edge_data->update_timestamp_groups();
     }
 }
 
@@ -131,10 +131,10 @@ void EdgeData<GPUUsage>::update_temporal_weights(double timescale_bound)
 {
     if (GPUUsage == GPUUsageMode::ON_CPU)
     {
-        edge_data->update_temporal_weights_host(timescale_bound);
+        edge_data->update_temporal_weights(timescale_bound);
     } else
     {
-        edge_data->update_temporal_weights_device(timescale_bound);
+        edge_data->update_temporal_weights(timescale_bound);
     }
 }
 

@@ -65,7 +65,7 @@ HOST typename IEdgeData<GPUUsage>::EdgeVector EdgeDataCPU<GPUUsage>::get_edges_h
 }
 
 template<GPUUsageMode GPUUsage>
-HOST void EdgeDataCPU<GPUUsage>::update_timestamp_groups_host() {
+void EdgeDataCPU<GPUUsage>::update_timestamp_groups() {
     if (this->timestamps.empty()) {
         this->timestamp_group_offsets.clear();
         this->unique_timestamps.clear();
@@ -88,7 +88,7 @@ HOST void EdgeDataCPU<GPUUsage>::update_timestamp_groups_host() {
 }
 
 template<GPUUsageMode GPUUsage>
-HOST void EdgeDataCPU<GPUUsage>::update_temporal_weights_host(const double timescale_bound) {
+void EdgeDataCPU<GPUUsage>::update_temporal_weights(const double timescale_bound) {
     if (this->timestamps.empty()) {
         this->forward_cumulative_weights_exponential.clear();
         this->backward_cumulative_weights_exponential.clear();

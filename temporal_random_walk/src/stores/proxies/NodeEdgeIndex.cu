@@ -80,10 +80,10 @@ void NodeEdgeIndex<GPUUsage>::update_temporal_weights(const IEdgeData<GPUUsage>*
 {
     if (GPUUsage == GPUUsageMode::ON_CPU)
     {
-        node_edge_index->update_temporal_weights_host(edges, timescale_bound);
+        node_edge_index->update_temporal_weights(edges, timescale_bound);
     } else
     {
-        node_edge_index->update_temporal_weights_device(edges, timescale_bound);
+        node_edge_index->update_temporal_weights(edges, timescale_bound);
     }
 }
 
