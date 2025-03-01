@@ -13,6 +13,7 @@ class INodeEdgeIndex
 public:
     virtual ~INodeEdgeIndex() = default;
 
+    using IntVector = typename SelectVectorType<int, GPUUsage>::type;
     using SizeVector = typename SelectVectorType<size_t, GPUUsage>::type;
     using DoubleVector = typename SelectVectorType<double, GPUUsage>::type;
 
@@ -38,7 +39,45 @@ public:
     * HOST METHODS
     */
     virtual HOST void clear_host() {}
-    virtual HOST void rebuild_host(const IEdgeData<GPUUsage>* edges, const INodeMapping<GPUUsage>* mapping, bool is_directed) {}
+
+    virtual HOST void populate_dense_ids_host(
+        const IEdgeData<GPUUsage>* edges,
+        const INodeMapping<GPUUsage>* mapping,
+        IntVector& dense_sources,
+        IntVector& dense_targets) {};
+
+    virtual HOST void allocate_node_edge_offsets(size_t num_nodes, bool is_directed) {};
+
+    virtual HOST void compute_node_edge_offsets_host(
+        const IEdgeData<GPUUsage>* edges,
+        IntVector& dense_sources,
+        IntVector& dense_targets,
+        size_t num_nodes,
+        bool is_directed) {};
+
+    virtual HOST void allocate_node_edge_indices(bool is_directed) {};
+
+    virtual HOST void compute_node_edge_indices_host(
+        const IEdgeData<GPUUsage>* edges,
+        IntVector& dense_sources,
+        IntVector& dense_targets,
+        SizeVector& outbound_running_index,
+        SizeVector& inbound_running_index,
+        bool is_directed) {};
+
+    virtual HOST void compute_node_timestamp_offsets_host(
+        const IEdgeData<GPUUsage>* edges,
+        size_t num_nodes,
+        bool is_directed) {};
+
+    virtual HOST void allocate_node_timestamp_indices(bool is_directed) {};
+
+    virtual HOST void compute_node_timestamp_indices_host(
+        const IEdgeData<GPUUsage>* edges,
+        size_t num_nodes,
+        bool is_directed) {};
+
+    virtual HOST void rebuild(const IEdgeData<GPUUsage>* edges, const INodeMapping<GPUUsage>* mapping, bool is_directed) {}
 
     // Core access methods
     [[nodiscard]] virtual HOST SizeRange get_edge_range_host(int dense_node_id, bool forward, bool is_directed) const { return {}; }
@@ -56,7 +95,6 @@ protected:
     */
 public:
     virtual DEVICE void clear_device() {}
-    virtual DEVICE void rebuild_device(const IEdgeData<GPUUsage>* edges, const INodeMapping<GPUUsage>* mapping, bool is_directed) {}
 
     // Core access methods
     [[nodiscard]] virtual DEVICE SizeRange get_edge_range_device(int dense_node_id, bool forward, bool is_directed) const { return {}; }

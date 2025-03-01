@@ -67,7 +67,7 @@ HOST void TemporalGraphCPU<GPUUsage>::add_multiple_edges_host(const typename ITe
     }
 
     // Rebuild edge indices
-    this->node_index->rebuild_host(this->edges, this->node_mapping, this->is_directed);
+    this->node_index->rebuild(this->edges, this->node_mapping, this->is_directed);
 
     if (this->enable_weight_computation) {
         update_temporal_weights_host();
@@ -203,7 +203,7 @@ HOST void TemporalGraphCPU<GPUUsage>::delete_old_edges_host() {
     // Update all data structures after edge deletion
     this->edges->update_timestamp_groups_host();
     this->node_mapping->update_host(this->edges, 0, this->edges->size_host());
-    this->node_index->rebuild_host(this->edges, this->node_mapping, this->is_directed);
+    this->node_index->rebuild(this->edges, this->node_mapping, this->is_directed);
 }
 
 template<GPUUsageMode GPUUsage>

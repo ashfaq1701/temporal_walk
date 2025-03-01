@@ -24,11 +24,11 @@ void NodeEdgeIndex<GPUUsage>::rebuild(const IEdgeData<GPUUsage>* edges, const IN
 {
     if (GPUUsage == GPUUsageMode::ON_CPU)
     {
-        node_edge_index->rebuild_host(edges, mapping, is_directed);
+        node_edge_index->rebuild(edges, mapping, is_directed);
     }
     else
     {
-        node_edge_index->rebuild_device(edges, mapping, is_directed);
+        node_edge_index->rebuild(edges, mapping, is_directed);
     }
 }
 
