@@ -88,13 +88,8 @@ void EdgeDataCPU<GPUUsage>::update_timestamp_groups() {
 }
 
 template<GPUUsageMode GPUUsage>
-void EdgeDataCPU<GPUUsage>::update_temporal_weights(const double timescale_bound) {
-    if (this->timestamps.empty()) {
-        this->forward_cumulative_weights_exponential.clear();
-        this->backward_cumulative_weights_exponential.clear();
-        return;
-    }
-
+HOST void EdgeDataCPU<GPUUsage>::compute_temporal_weights_host(const double timescale_bound)
+{
     const int64_t min_timestamp = this->timestamps[0];
     const int64_t max_timestamp = this->timestamps.back();
     const auto time_diff = static_cast<double>(max_timestamp - min_timestamp);
@@ -143,6 +138,17 @@ void EdgeDataCPU<GPUUsage>::update_temporal_weights(const double timescale_bound
         this->forward_cumulative_weights_exponential[group] = forward_cumsum;
         this->backward_cumulative_weights_exponential[group] = backward_cumsum;
     }
+}
+
+template<GPUUsageMode GPUUsage>
+void EdgeDataCPU<GPUUsage>::update_temporal_weights(const double timescale_bound) {
+    if (this->timestamps.empty()) {
+        this->forward_cumulative_weights_exponential.clear();
+        this->backward_cumulative_weights_exponential.clear();
+        return;
+    }
+
+    compute_temporal_weights_host(timescale_bound);
 }
 
 template<GPUUsageMode GPUUsage>

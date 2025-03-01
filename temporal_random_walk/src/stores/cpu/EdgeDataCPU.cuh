@@ -24,6 +24,8 @@ public:
 
     // Group management
     void update_timestamp_groups() override;  // Call after sorting
+
+    HOST void compute_temporal_weights_host(double timescale_bound) override;
     void update_temporal_weights(double timescale_bound) override;
 
     [[nodiscard]] HOST SizeRange get_timestamp_group_range_host(size_t group_idx) const override;

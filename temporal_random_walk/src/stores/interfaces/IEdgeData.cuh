@@ -47,6 +47,8 @@ public:
 
     // Group management
     virtual HOST void update_timestamp_groups() {}  // Call after sorting
+
+    virtual HOST void compute_temporal_weights_host(double timescale_bound) {}
     virtual HOST void update_temporal_weights(double timescale_bound) {};
 
     [[nodiscard]] virtual HOST SizeRange get_timestamp_group_range_host(size_t group_idx) const { return {}; };
@@ -69,6 +71,8 @@ public:
     virtual DEVICE void push_back_device(int src, int tgt, int64_t ts) {}
 
     virtual DEVICE EdgeVector get_edges_device() { return EdgeVector(); }
+
+    virtual DEVICE void compute_temporal_weights_device(double timescale_bound) {}
 
     [[nodiscard]] virtual DEVICE SizeRange get_timestamp_group_range_device(size_t group_idx) const { return {}; }
     [[nodiscard]] virtual DEVICE size_t get_timestamp_group_count_device() const { return 0; }
