@@ -192,7 +192,7 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::rebuild(
     const size_t num_edges = edges->size_host();
 
     typename INodeEdgeIndex<GPUUsage>::IntVector source_dense_ids(num_edges);
-    typename INodeEdgeIndex<GPUUsage>::IntVector target_dense_ids(num_nodes);
+    typename INodeEdgeIndex<GPUUsage>::IntVector target_dense_ids(num_edges);
 
     compute_dense_vectors_host(edges, mapping, source_dense_ids, target_dense_ids);
     resize_node_offset_and_indices_vectors(num_nodes, num_edges, is_directed);

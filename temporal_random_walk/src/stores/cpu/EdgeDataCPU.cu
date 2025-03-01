@@ -38,10 +38,13 @@ void EdgeDataCPU<GPUUsage>::resize_host(size_t new_size) {
 }
 
 template<GPUUsageMode GPUUsage>
-HOST void EdgeDataCPU<GPUUsage>::add_edges_host(int* src, int* tgt, int64_t* ts, size_t size) {
-    this->sources.insert(this->sources.end(), src, src + size);
-    this->targets.insert(this->targets.end(), tgt, tgt + size);
-    this->timestamps.insert(this->timestamps.end(), ts, ts + size);
+HOST void EdgeDataCPU<GPUUsage>::add_edges_host(
+    typename IEdgeData<GPUUsage>::IntVector src,
+    typename IEdgeData<GPUUsage>::IntVector tgt,
+    typename IEdgeData<GPUUsage>::Int64Vector ts) {
+    this->sources.insert(this->sources.end(), src.begin(), src.end());
+    this->targets.insert(this->targets.end(), tgt.begin(), tgt.end());
+    this->timestamps.insert(this->timestamps.end(), ts.begin(), ts.end());
 }
 
 template<GPUUsageMode GPUUsage>

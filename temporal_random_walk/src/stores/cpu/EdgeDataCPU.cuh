@@ -17,7 +17,11 @@ public:
     [[nodiscard]] HOST bool empty_host() const override;
     HOST void resize_host(size_t new_size) override;
 
-    HOST void add_edges_host(int* src, int* tgt, int64_t* ts, size_t size) override;
+    HOST void add_edges_host(
+        typename IEdgeData<GPUUsage>::IntVector src,
+        typename IEdgeData<GPUUsage>::IntVector tgt,
+        typename IEdgeData<GPUUsage>::Int64Vector ts) override;
+
     HOST void push_back_host(int src, int tgt, int64_t ts) override;
 
     HOST typename IEdgeData<GPUUsage>::EdgeVector get_edges_host() override;

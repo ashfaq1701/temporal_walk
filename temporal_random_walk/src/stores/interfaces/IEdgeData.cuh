@@ -9,14 +9,13 @@
 
 template<GPUUsageMode GPUUsage>
 class IEdgeData {
-protected:
+public:
     using IntVector = typename SelectVectorType<int, GPUUsage>::type;
     using Int64Vector = typename SelectVectorType<int64_t, GPUUsage>::type;
     using SizeVector = typename SelectVectorType<size_t, GPUUsage>::type;
     using DoubleVector = typename SelectVectorType<double, GPUUsage>::type;
     using EdgeVector = typename SelectVectorType<Edge, GPUUsage>::type;
 
-public:
     virtual ~IEdgeData() = default;
 
     // Core edge data
@@ -40,7 +39,7 @@ public:
     [[nodiscard]] virtual HOST bool empty_host() const { return true; }
     virtual HOST void resize_host(size_t new_size) {}
 
-    virtual HOST void add_edges_host(int* src, int* tgt, int64_t* ts, size_t size) {}
+    virtual HOST void add_edges_host(IntVector src, IntVector tgt, Int64Vector ts) {}
     virtual HOST void push_back_host(int src, int tgt, int64_t ts) {}
 
     virtual EdgeVector get_edges_host() { return EdgeVector(); }
@@ -65,7 +64,7 @@ public:
     [[nodiscard]] virtual DEVICE bool empty_device() const { return true; }
     virtual HOST void resize_device(size_t new_size) {}
 
-    virtual DEVICE void add_edges_device(int* src, int* tgt, int64_t* ts, size_t size) {}
+    virtual DEVICE void add_edges_device(IntVector src, IntVector tgt, Int64Vector ts) {}
     virtual DEVICE void push_back_device(int src, int tgt, int64_t ts) {}
 
     virtual DEVICE EdgeVector get_edges_device() { return EdgeVector(); }

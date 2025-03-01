@@ -67,14 +67,17 @@ void EdgeData<GPUUsage>::resize(size_t new_size)
 }
 
 template <GPUUsageMode GPUUsage>
-void EdgeData<GPUUsage>::add_edges(int* src, int* tgt, int64_t* ts, size_t size)
+void EdgeData<GPUUsage>::add_edges(
+    typename IEdgeData<GPUUsage>::IntVector src,
+    typename IEdgeData<GPUUsage>::IntVector tgt,
+    typename IEdgeData<GPUUsage>::Int64Vector ts)
 {
     if (GPUUsage == GPUUsageMode::ON_CPU)
     {
-        edge_data->add_edges_host(src, tgt, ts, size);
+        edge_data->add_edges_host(src, tgt, ts);
     } else
     {
-        edge_data->add_edges_device(src, tgt, ts, size);
+        edge_data->add_edges_device(src, tgt, ts);
     }
 }
 

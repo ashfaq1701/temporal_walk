@@ -49,7 +49,10 @@ public:
     [[nodiscard]] bool empty() const;
     virtual void resize(size_t new_size);
 
-    void add_edges(int* src, int* tgt, int64_t* ts, size_t size);
+    void add_edges(
+        typename IEdgeData<GPUUsage>::IntVector src,
+        typename IEdgeData<GPUUsage>::IntVector tgt,
+        typename IEdgeData<GPUUsage>::Int64Vector ts);
     void push_back(int src, int tgt, int64_t ts);
 
     std::vector<Edge> get_edges();
