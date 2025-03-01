@@ -11,66 +11,31 @@ TemporalGraph<GPUUsage>::TemporalGraph(
 template<GPUUsageMode GPUUsage>
 void TemporalGraph<GPUUsage>::sort_and_merge_edges(size_t start_idx)
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        temporal_graph->sort_and_merge_edges_host(start_idx);
-    }
-    else
-    {
-        temporal_graph->sort_and_merge_edges_device(start_idx);
-    }
+    temporal_graph->sort_and_merge_edges(start_idx);
 }
 
 template<GPUUsageMode GPUUsage>
 void TemporalGraph<GPUUsage>::add_multiple_edges(const std::vector<Edge>& new_edges)
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
+    typename ITemporalGraph<GPUUsage>::EdgeVector edge_vector;
+    edge_vector.reserve(new_edges.size());
+    for (const auto& edge : new_edges)
     {
-        typename ITemporalGraph<GPUUsage>::EdgeVector edge_vector;
-        edge_vector.reserve(new_edges.size());
-        for (const auto& edge : new_edges)
-        {
-            edge_vector.push_back(edge);
-        }
-        temporal_graph->add_multiple_edges_host(edge_vector);
+        edge_vector.push_back(edge);
     }
-    else
-    {
-        // Similar conversion for GPU mode
-        typename ITemporalGraph<GPUUsage>::EdgeVector edge_vector;
-        edge_vector.reserve(new_edges.size());
-        for (const auto& edge : new_edges)
-        {
-            edge_vector.push_back(edge);
-        }
-        temporal_graph->add_multiple_edges_device(edge_vector);
-    }
+    temporal_graph->add_multiple_edges(edge_vector);
 }
 
 template<GPUUsageMode GPUUsage>
 void TemporalGraph<GPUUsage>::update_temporal_weights()
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        temporal_graph->update_temporal_weights_host();
-    }
-    else
-    {
-        temporal_graph->update_temporal_weights_device();
-    }
+    temporal_graph->update_temporal_weights();
 }
 
 template<GPUUsageMode GPUUsage>
 void TemporalGraph<GPUUsage>::delete_old_edges()
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        temporal_graph->delete_old_edges_host();
-    }
-    else
-    {
-        temporal_graph->delete_old_edges_device();
-    }
+    temporal_graph->delete_old_edges();
 }
 
 template<GPUUsageMode GPUUsage>

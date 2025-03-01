@@ -27,7 +27,7 @@ HOST TemporalGraphCPU<GPUUsage>::TemporalGraphCPU(
 }
 
 template<GPUUsageMode GPUUsage>
-HOST void TemporalGraphCPU<GPUUsage>::add_multiple_edges_host(const typename ITemporalGraph<GPUUsage>::EdgeVector& new_edges) {
+HOST void TemporalGraphCPU<GPUUsage>::add_multiple_edges(const typename ITemporalGraph<GPUUsage>::EdgeVector& new_edges) {
     if (new_edges.empty()) return;
 
     const size_t start_idx = this->edges->size_host();
@@ -53,35 +53,35 @@ HOST void TemporalGraphCPU<GPUUsage>::add_multiple_edges_host(const typename ITe
     this->edges->add_edges_host(sources.data(), targets.data(), timestamps.data(), new_edges.size());
 
     // Update node mappings
-    this->node_mapping->update_host(this->edges, start_idx, this->edges->size_host());
+    this->node_mapping->update(this->edges, start_idx, this->edges->size_host());
 
     // Sort and merge new edges
-    sort_and_merge_edges_host(start_idx);
+    sort_and_merge_edges(start_idx);
 
     // Update timestamp groups after sorting
     this->edges->update_timestamp_groups();
 
     // Handle time window
     if (this->time_window > 0) {
-        delete_old_edges_host();
+        delete_old_edges();
     }
 
     // Rebuild edge indices
     this->node_index->rebuild(this->edges, this->node_mapping, this->is_directed);
 
     if (this->enable_weight_computation) {
-        update_temporal_weights_host();
+        update_temporal_weights();
     }
 }
 
 template<GPUUsageMode GPUUsage>
-HOST void TemporalGraphCPU<GPUUsage>::update_temporal_weights_host() {
+HOST void TemporalGraphCPU<GPUUsage>::update_temporal_weights() {
     this->edges->update_temporal_weights(this->timescale_bound);
     this->node_index->update_temporal_weights(this->edges, this->timescale_bound);
 }
 
 template<GPUUsageMode GPUUsage>
-HOST void TemporalGraphCPU<GPUUsage>::sort_and_merge_edges_host(const size_t start_idx) {
+HOST void TemporalGraphCPU<GPUUsage>::sort_and_merge_edges(const size_t start_idx) {
     if (start_idx >= this->edges->size_host()) return;
 
     // Sort new edges first
@@ -166,7 +166,7 @@ HOST void TemporalGraphCPU<GPUUsage>::sort_and_merge_edges_host(const size_t sta
 }
 
 template<GPUUsageMode GPUUsage>
-HOST void TemporalGraphCPU<GPUUsage>::delete_old_edges_host() {
+HOST void TemporalGraphCPU<GPUUsage>::delete_old_edges() {
     if (this->time_window <= 0 || this->edges->empty_host()) return;
 
     const int64_t cutoff_time = this->latest_timestamp - this->time_window;
@@ -202,7 +202,7 @@ HOST void TemporalGraphCPU<GPUUsage>::delete_old_edges_host() {
 
     // Update all data structures after edge deletion
     this->edges->update_timestamp_groups();
-    this->node_mapping->update_host(this->edges, 0, this->edges->size_host());
+    this->node_mapping->update(this->edges, 0, this->edges->size_host());
     this->node_index->rebuild(this->edges, this->node_mapping, this->is_directed);
 }
 

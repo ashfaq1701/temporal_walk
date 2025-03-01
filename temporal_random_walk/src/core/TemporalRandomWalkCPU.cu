@@ -250,7 +250,7 @@ HOST void TemporalRandomWalkCPU<GPUUsage>::generate_random_walk_and_time(
 
 template<GPUUsageMode GPUUsage>
 HOST void TemporalRandomWalkCPU<GPUUsage>::add_multiple_edges(const typename ITemporalRandomWalk<GPUUsage>::EdgeVector& edge_infos) const {
-    this->temporal_graph->add_multiple_edges_host(edge_infos);
+    this->temporal_graph->add_multiple_edges(edge_infos);
 }
 
 template<GPUUsageMode GPUUsage>

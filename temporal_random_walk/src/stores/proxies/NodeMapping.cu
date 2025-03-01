@@ -9,14 +9,7 @@ NodeMapping<GPUUsage>::NodeMapping(INodeMapping<GPUUsage>* node_mapping): node_m
 template<GPUUsageMode GPUUsage>
 void NodeMapping<GPUUsage>::update(const IEdgeData<GPUUsage>* edges, size_t start_idx, size_t end_idx)
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        node_mapping->update_host(edges, start_idx, end_idx);
-    }
-    else
-    {
-        node_mapping->update_device(edges, start_idx, end_idx);
-    }
+    node_mapping->update(edges, start_idx, end_idx);
 }
 
 template<GPUUsageMode GPUUsage>

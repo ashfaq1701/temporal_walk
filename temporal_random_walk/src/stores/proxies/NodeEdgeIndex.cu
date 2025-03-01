@@ -22,14 +22,7 @@ void NodeEdgeIndex<GPUUsage>::clear()
 template<GPUUsageMode GPUUsage>
 void NodeEdgeIndex<GPUUsage>::rebuild(const IEdgeData<GPUUsage>* edges, const INodeMapping<GPUUsage>* mapping, bool is_directed)
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        node_edge_index->rebuild(edges, mapping, is_directed);
-    }
-    else
-    {
-        node_edge_index->rebuild(edges, mapping, is_directed);
-    }
+    node_edge_index->rebuild(edges, mapping, is_directed);
 }
 
 template<GPUUsageMode GPUUsage>
@@ -78,13 +71,7 @@ size_t NodeEdgeIndex<GPUUsage>::get_timestamp_group_count(int dense_node_id, boo
 template<GPUUsageMode GPUUsage>
 void NodeEdgeIndex<GPUUsage>::update_temporal_weights(const IEdgeData<GPUUsage>* edges, double timescale_bound)
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        node_edge_index->update_temporal_weights(edges, timescale_bound);
-    } else
-    {
-        node_edge_index->update_temporal_weights(edges, timescale_bound);
-    }
+    node_edge_index->update_temporal_weights(edges, timescale_bound);
 }
 
 template class NodeEdgeIndex<GPUUsageMode::ON_CPU>;

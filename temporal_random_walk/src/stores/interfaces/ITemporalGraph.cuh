@@ -55,14 +55,14 @@ public:
     /**
     * HOST METHODS
     */
-    virtual HOST void sort_and_merge_edges_host(size_t start_idx) {}
+    virtual HOST void sort_and_merge_edges(size_t start_idx) {}
 
     // Edge addition
-    virtual HOST void add_multiple_edges_host(const EdgeVector& new_edges) {}
+    virtual HOST void add_multiple_edges(const EdgeVector& new_edges) {}
 
-    virtual HOST void update_temporal_weights_host() {}
+    virtual HOST void update_temporal_weights() {}
 
-    virtual HOST void delete_old_edges_host() {}
+    virtual HOST void delete_old_edges() {}
 
     // Timestamp group counting
     [[nodiscard]] virtual HOST size_t count_timestamps_less_than_host(int64_t timestamp) const { return 0; }
@@ -90,14 +90,6 @@ public:
     /**
     * DEVICE METHODS
     */
-    virtual DEVICE void sort_and_merge_edges_device(size_t start_idx) {}
-
-    // Edge addition
-    virtual DEVICE void add_multiple_edges_device(const EdgeVector& new_edges) {}
-
-    virtual DEVICE void update_temporal_weights_device() {}
-
-    virtual DEVICE void delete_old_edges_device() {}
 
     // Timestamp group counting
     [[nodiscard]] virtual DEVICE size_t count_timestamps_less_than_device(int64_t timestamp) const { return 0; }

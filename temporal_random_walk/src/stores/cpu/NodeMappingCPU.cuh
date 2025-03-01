@@ -12,7 +12,7 @@ class NodeMappingCPU : public INodeMapping<GPUUsage> {
 public:
    ~NodeMappingCPU() override = default;
 
-   HOST void update_host(const IEdgeData<GPUUsage>* edges, size_t start_idx, size_t end_idx) override;
+   HOST void update(const IEdgeData<GPUUsage>* edges, size_t start_idx, size_t end_idx) override;
    [[nodiscard]] HOST int to_dense_host(int sparse_id) const override;
    [[nodiscard]] HOST int to_sparse_host(int dense_idx) const override;
    [[nodiscard]] HOST size_t size_host() const override;

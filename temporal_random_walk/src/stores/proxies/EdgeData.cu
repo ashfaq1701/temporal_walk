@@ -62,7 +62,7 @@ void EdgeData<GPUUsage>::resize(size_t new_size)
         edge_data->resize_host(new_size);
     } else
     {
-        edge_data->reserve_device(new_size);
+        edge_data->resize_device(new_size);
     }
 }
 
@@ -117,25 +117,13 @@ std::vector<Edge> EdgeData<GPUUsage>::get_edges()
 template <GPUUsageMode GPUUsage>
 void EdgeData<GPUUsage>::update_timestamp_groups()
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        edge_data->update_timestamp_groups();
-    } else
-    {
-        edge_data->update_timestamp_groups();
-    }
+    edge_data->update_timestamp_groups();
 }
 
 template <GPUUsageMode GPUUsage>
 void EdgeData<GPUUsage>::update_temporal_weights(double timescale_bound)
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        edge_data->update_temporal_weights(timescale_bound);
-    } else
-    {
-        edge_data->update_temporal_weights(timescale_bound);
-    }
+    edge_data->update_temporal_weights(timescale_bound);
 }
 
 template <GPUUsageMode GPUUsage>
