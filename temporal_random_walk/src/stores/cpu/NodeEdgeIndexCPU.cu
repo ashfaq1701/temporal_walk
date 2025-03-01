@@ -35,12 +35,12 @@ template<GPUUsageMode GPUUsage>
 HOST void NodeEdgeIndexCPU<GPUUsage>::allocate_node_edge_offsets(size_t num_nodes, bool is_directed)
 {
     // Initialize base CSR structures
-    this->outbound_offsets.assign(num_nodes + 1);
-    this->outbound_timestamp_group_offsets.assign(num_nodes + 1);
+    this->outbound_offsets.assign(num_nodes + 1, 0);
+    this->outbound_timestamp_group_offsets.assign(num_nodes + 1, 0);
 
     if (is_directed) {
-        this->inbound_offsets.assign(num_nodes + 1);
-        this->inbound_timestamp_group_offsets.assign(num_nodes + 1);
+        this->inbound_offsets.assign(num_nodes + 1, 0);
+        this->inbound_timestamp_group_offsets.assign(num_nodes + 1, 0);
     }
 }
 

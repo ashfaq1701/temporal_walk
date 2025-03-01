@@ -4,6 +4,7 @@
 #include "RandomPicker.h"
 #include "../data/enums.h"
 #include "../cuda_common/types.cuh"
+#include "../cuda_common/macros.cuh"
 
 template<GPUUsageMode GPUUsage>
 class WeightBasedRandomPicker final : public RandomPicker<GPUUsage>

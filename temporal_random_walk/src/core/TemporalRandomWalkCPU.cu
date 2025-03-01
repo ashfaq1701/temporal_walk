@@ -71,9 +71,9 @@ HOST WalkSet<GPUUsage> TemporalRandomWalkCPU<GPUUsage>::get_random_walks_and_tim
     RandomPicker<GPUUsage>* edge_picker = get_random_picker(walk_bias);
     RandomPicker<GPUUsage>* start_picker = initial_edge_bias ? get_random_picker(initial_edge_bias) : edge_picker;
 
-    auto repeated_node_ids = repeat_elements(get_node_ids(), num_walks_per_node);
-    shuffle_vector_host(repeated_node_ids);
-    auto distributed_node_ids = divide_vector(repeated_node_ids, n_threads);
+    auto repeated_node_ids = repeat_elements<GPUUsage>(get_node_ids(), num_walks_per_node);
+    shuffle_vector_host<int, GPUUsage>(repeated_node_ids);
+    auto distributed_node_ids = divide_vector<int, GPUUsage>(repeated_node_ids, n_threads);
 
     WalkSet<GPUUsage> walk_set(repeated_node_ids.size(), max_walk_len);
 

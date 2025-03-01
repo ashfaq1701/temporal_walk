@@ -9,7 +9,7 @@ class WeightBasedRandomPickerTest : public ::testing::Test
 protected:
 
     template <typename U>
-    using VectorType = CommonVector<U, T::value>;
+    using VectorType = typename SelectVectorType<U, T::value>::type;
 
     WeightBasedRandomPickerTest() {
         if constexpr (T::value == GPUUsageMode::ON_GPU) {
@@ -22,7 +22,7 @@ protected:
     WeightBasedRandomPicker<T::value> picker;
 
     // Helper to verify sampling is within correct range
-    void verify_sampling_range(CommonVector<double, T::value>& weights,
+    void verify_sampling_range(typename SelectVectorType<double, T::value>::type& weights,
                                const int start,
                                const int end,
                                const int num_samples = 1000)

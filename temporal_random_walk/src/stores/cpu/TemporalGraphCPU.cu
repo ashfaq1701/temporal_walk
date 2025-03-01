@@ -50,7 +50,7 @@ HOST void TemporalGraphCPU<GPUUsage>::add_multiple_edges_host(const typename ITe
         this->latest_timestamp = std::max(this->latest_timestamp, ts);
     }
 
-    this->edges->add_edges_host(sources.data, targets.data, timestamps.data, new_edges.size());
+    this->edges->add_edges_host(sources.data(), targets.data(), timestamps.data(), new_edges.size());
 
     // Update node mappings
     this->node_mapping->update_host(this->edges, start_idx, this->edges->size_host());

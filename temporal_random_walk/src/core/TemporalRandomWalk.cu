@@ -1,5 +1,7 @@
 #include "TemporalRandomWalk.cuh"
 
+#include <iostream>
+
 #include "TemporalRandomWalkCPU.cuh"
 #include "TemporalRandomWalkCUDA.cuh"
 
@@ -165,7 +167,7 @@ template <GPUUsageMode GPUUsage>
 void TemporalRandomWalk<GPUUsage>::add_multiple_edges(const std::vector<std::tuple<int, int, int64_t>>& edge_infos) const
 {
     typename ITemporalRandomWalk<GPUUsage>::EdgeVector edges;
-    edges.allocate(edge_infos.size());
+    edges.reserve(edge_infos.size());
 
     for (auto [u, i, ts] : edge_infos) {
         edges.push_back(Edge(u, i, ts));

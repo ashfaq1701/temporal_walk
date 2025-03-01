@@ -2,7 +2,7 @@
 #define RAND_UTILS_H
 
 #include <random>
-#include "../data/common_vector.cuh"
+#include "../cuda_common/types.cuh"
 #include "../data/enums.h"
 #ifdef HAS_CUDA
 #include <curand_kernel.h>
@@ -35,7 +35,7 @@ inline int pick_random_number_host(const int a, const int b) {
 }
 
 template <typename T, GPUUsageMode GPUUsage>
-void shuffle_vector_host(CommonVector<T, GPUUsage>& vec) {
+void shuffle_vector_host(typename SelectVectorType<T, GPUUsage>::type& vec) {
     std::random_device rd;
     std::mt19937 rng(rd());
     std::shuffle(vec.begin(), vec.end(), rng);

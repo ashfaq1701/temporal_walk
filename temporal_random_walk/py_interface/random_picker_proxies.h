@@ -3,6 +3,7 @@
 
 #include "../src/data/structs.cuh"
 #include "../src/data/enums.h"
+#include "../src/cuda_common/types.cuh"
 #include "../src/random/ExponentialIndexRandomPicker.cuh"
 #include "../src/random/LinearRandomPicker.cuh"
 #include "../src/random/UniformRandomPicker.cuh"
@@ -190,8 +191,8 @@ public:
     }
 
     int pick_random(const std::vector<double>& cumulative_weights, int group_start, int group_end) {
-        CommonVector<double, GPUUsageMode::ON_CPU> cumulative_weights_vector;
-        cumulative_weights_vector.write_from_pointer(cumulative_weights.data(), cumulative_weights.size());
+        SelectVectorType<double, GPUUsageMode::ON_CPU>::type cumulative_weights_vector;
+        cumulative_weights_vector.assign(cumulative_weights.data(), cumulative_weights.data() + cumulative_weights.size());
         return cpu_impl->pick_random(cumulative_weights_vector, group_start, group_end);
     }
 };

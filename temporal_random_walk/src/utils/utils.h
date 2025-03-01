@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <map>
 #include "../data/structs.cuh"
-#include "../data/common_vector.cuh"
+#include "../cuda_common/types.cuh"
 
 template <typename T>
 size_t count_keys_less_than(const std::map<int64_t, T>& inputMap, int64_t key) {
@@ -44,9 +44,11 @@ void delete_items_less_than(std::vector<T>& vec, const V& value, Comp comp) {
 }
 
 template<GPUUsageMode GPUUsage>
-CommonVector<int, GPUUsage> repeat_elements(const CommonVector<int, GPUUsage>& arr, int times) {
-    CommonVector<int, GPUUsage> repeated_items;
-    repeated_items.allocate(arr.size() * times);
+typename SelectVectorType<int, GPUUsage>::type repeat_elements(
+    const typename SelectVectorType<int, GPUUsage>::type& arr,
+    int times) {
+    typename SelectVectorType<int, GPUUsage>::type repeated_items;
+    repeated_items.reserve(arr.size() * times);
 
     for (const auto& item : arr) {
         for (int i = 0; i < times; ++i) {
@@ -59,16 +61,16 @@ CommonVector<int, GPUUsage> repeat_elements(const CommonVector<int, GPUUsage>& a
 
 template <typename T, GPUUsageMode GPUUsage>
 DividedVector<T, GPUUsage> divide_vector(
-    const CommonVector<T, GPUUsage>& input,
+    const typename SelectVectorType<T, GPUUsage>::type& input,
     int n)
 {
     return DividedVector<T, GPUUsage>(input, n);
 }
 
 template <GPUUsageMode GPUUsage>
-CommonVector<int, GPUUsage> divide_number(int n, int i) {
-    CommonVector<int, GPUUsage> parts(i);
-    parts.fill(n / i);
+typename SelectVectorType<int, GPUUsage>::type divide_number(int n, int i) {
+    typename SelectVectorType<int, GPUUsage>::type parts(i);
+    std::fill(parts.begin(), parts.end(), n / i);
 
     const int remainder = n % i;
 
