@@ -74,13 +74,15 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::compute_node_offsets_and_indices_host(
 
     std::sort(this->outbound_indices.begin(), this->outbound_indices.begin() + num_edges,
               [&](size_t a, size_t b) {
-                  return source_dense_ids[a] < source_dense_ids[b];
+                  return source_dense_ids[a] != source_dense_ids[b]
+                    ? source_dense_ids[a] < source_dense_ids[b] : edges->timestamps[a] < edges->timestamps[b];
               });
 
     if (is_directed) {
         std::sort(this->inbound_indices.begin(), this->inbound_indices.begin() + num_edges,
                   [&](size_t a, size_t b) {
-                      return target_dense_ids[a] < target_dense_ids[b];
+                      return target_dense_ids[a] != target_dense_ids[b]
+                        ? target_dense_ids[a] < target_dense_ids[b] : edges->timestamps[a] < edges->timestamps[b];
                   });
     }
 }
