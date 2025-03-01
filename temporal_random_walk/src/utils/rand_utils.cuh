@@ -34,8 +34,8 @@ inline int pick_random_number_host(const int a, const int b) {
     return generate_random_boolean_host() ? a : b;
 }
 
-template <typename T, GPUUsageMode GPUUsage>
-void shuffle_vector_host(CommonVector<T, GPUUsage>& vec) {
+template <typename T>
+void shuffle_vector_host(std::vector<T> vec) {
     std::random_device rd;
     std::mt19937 rng(rd());
     std::shuffle(vec.begin(), vec.end(), rng);

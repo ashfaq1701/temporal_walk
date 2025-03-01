@@ -71,13 +71,13 @@ HOST WalkSet<GPUUsage> TemporalRandomWalkCPU<GPUUsage>::get_random_walks_and_tim
     RandomPicker<GPUUsage>* edge_picker = get_random_picker(walk_bias);
     RandomPicker<GPUUsage>* start_picker = initial_edge_bias ? get_random_picker(initial_edge_bias) : edge_picker;
 
-    auto repeated_node_ids = repeat_elements(get_node_ids(), num_walks_per_node);
+    std::vector<int> repeated_node_ids = repeat_elements(get_node_ids(), num_walks_per_node);
     shuffle_vector_host(repeated_node_ids);
     auto distributed_node_ids = divide_vector(repeated_node_ids, n_threads);
 
     WalkSet<GPUUsage> walk_set(repeated_node_ids.size(), max_walk_len);
 
-    auto generate_walks_thread = [this, &walk_set, &edge_picker, &start_picker, max_walk_len, walk_direction](const typename DividedVector<int, GPUUsage>::GroupIterator& group) {
+    auto generate_walks_thread = [this, &walk_set, &edge_picker, &start_picker, max_walk_len, walk_direction](const typename DividedVector<int>::GroupIterator& group) {
         for (auto ptr = group.begin(); ptr != group.end(); ++ptr) {
             int walk_idx = ptr->index;
             int start_node_id = ptr->value;

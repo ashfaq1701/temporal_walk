@@ -56,8 +56,6 @@ public:
     auto& inbound_backward_cumulative_weights_exponential() { return node_edge_index->inbound_backward_cumulative_weights_exponential; }
     const auto& inbound_backward_cumulative_weights_exponential() const { return node_edge_index->inbound_backward_cumulative_weights_exponential; }
 
-
-    void clear();
     void rebuild(const IEdgeData<GPUUsage>* edges, const INodeMapping<GPUUsage>* mapping, bool is_directed);
 
     // Core access methods

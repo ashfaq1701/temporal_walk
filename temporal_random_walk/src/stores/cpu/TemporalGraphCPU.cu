@@ -50,7 +50,7 @@ HOST void TemporalGraphCPU<GPUUsage>::add_multiple_edges_host(const typename ITe
         this->latest_timestamp = std::max(this->latest_timestamp, ts);
     }
 
-    this->edges->add_edges_host(sources.data, targets.data, timestamps.data, new_edges.size());
+    this->edges->add_edges_host(sources.data(), targets.data(), timestamps.data(), new_edges.size());
 
     // Update node mappings
     this->node_mapping->update_host(this->edges, start_idx, this->edges->size_host());
@@ -67,7 +67,7 @@ HOST void TemporalGraphCPU<GPUUsage>::add_multiple_edges_host(const typename ITe
     }
 
     // Rebuild edge indices
-    this->node_index->rebuild_host(this->edges, this->node_mapping, this->is_directed);
+    this->node_index->rebuild(this->edges, this->node_mapping, this->is_directed);
 
     if (this->enable_weight_computation) {
         update_temporal_weights_host();
@@ -77,7 +77,7 @@ HOST void TemporalGraphCPU<GPUUsage>::add_multiple_edges_host(const typename ITe
 template<GPUUsageMode GPUUsage>
 HOST void TemporalGraphCPU<GPUUsage>::update_temporal_weights_host() {
     this->edges->update_temporal_weights_host(this->timescale_bound);
-    this->node_index->update_temporal_weights_host(this->edges, this->timescale_bound);
+    this->node_index->update_temporal_weights(this->edges, this->timescale_bound);
 }
 
 template<GPUUsageMode GPUUsage>
@@ -203,7 +203,7 @@ HOST void TemporalGraphCPU<GPUUsage>::delete_old_edges_host() {
     // Update all data structures after edge deletion
     this->edges->update_timestamp_groups_host();
     this->node_mapping->update_host(this->edges, 0, this->edges->size_host());
-    this->node_index->rebuild_host(this->edges, this->node_mapping, this->is_directed);
+    this->node_index->rebuild(this->edges, this->node_mapping, this->is_directed);
 }
 
 template<GPUUsageMode GPUUsage>

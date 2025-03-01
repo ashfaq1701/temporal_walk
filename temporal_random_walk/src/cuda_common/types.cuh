@@ -16,7 +16,7 @@ struct SelectVectorType;
 // Specialization for CPU mode
 template <typename T, GPUUsageMode GPUUsage>
 struct SelectVectorType<T, GPUUsage, std::enable_if_t<GPUUsage == GPUUsageMode::ON_CPU>> {
-    using type = CommonVector<T, GPUUsage>;
+    using type = std::vector<T>;
 
     static constexpr VectorStorageType get_vector_storage_type() {
         return VectorStorageType::STD_VECTOR;

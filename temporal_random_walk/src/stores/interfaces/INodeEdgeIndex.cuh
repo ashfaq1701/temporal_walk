@@ -13,6 +13,7 @@ class INodeEdgeIndex
 public:
     virtual ~INodeEdgeIndex() = default;
 
+    using IntVector = typename SelectVectorType<int, GPUUsage>::type;
     using SizeVector = typename SelectVectorType<size_t, GPUUsage>::type;
     using DoubleVector = typename SelectVectorType<double, GPUUsage>::type;
 
@@ -37,8 +38,37 @@ public:
     /**
     * HOST METHODS
     */
-    virtual HOST void clear_host() {}
-    virtual HOST void rebuild_host(const IEdgeData<GPUUsage>* edges, const INodeMapping<GPUUsage>* mapping, bool is_directed) {}
+    virtual HOST void resize_node_offset_and_indices_vectors(size_t num_nodes, size_t num_edges, bool is_directed) {}
+
+    virtual HOST void compute_dense_vectors_host(
+        const IEdgeData<GPUUsage>* edges,
+        const INodeMapping<GPUUsage>* mapping,
+        IntVector& source_dense_ids,
+        IntVector& target_dense_ids) {}
+
+    virtual HOST void compute_node_offsets_and_indices_host(
+        const IEdgeData<GPUUsage>* edges,
+        IntVector& source_dense_ids,
+        IntVector& target_dense_ids,
+        bool is_directed,
+        size_t num_nodes,
+        size_t num_edges) {}
+
+    virtual HOST void compute_node_edge_timestamp_group_offsets_host(
+        const IEdgeData<GPUUsage>* edges,
+        bool is_directed,
+        size_t num_nodes,
+        SizeVector& outbound_node_timestamp_group_count,
+        SizeVector& inbound_node_timestamp_group_count) {}
+
+    virtual HOST void resize_node_timestamp_group_indices(bool is_directed) {}
+
+    virtual HOST void compute_node_edge_timestamp_group_indices_host(
+        const IEdgeData<GPUUsage>* edges,
+        bool is_directed,
+        size_t num_nodes) {}
+
+    virtual HOST void rebuild(const IEdgeData<GPUUsage>* edges, const INodeMapping<GPUUsage>* mapping, bool is_directed) {}
 
     // Core access methods
     [[nodiscard]] virtual HOST SizeRange get_edge_range_host(int dense_node_id, bool forward, bool is_directed) const { return {}; }
@@ -46,7 +76,9 @@ public:
                                                                       bool is_directed) const { return {}; }
     [[nodiscard]] virtual HOST size_t get_timestamp_group_count_host(int dense_node_id, bool forward, bool directed) const { return 0; }
 
-    virtual HOST void update_temporal_weights_host(const IEdgeData<GPUUsage>* edges, double timescale_bound) {}
+    virtual HOST void resize_weight_vectors() {}
+    virtual HOST void compute_temporal_weights_host(const IEdgeData<GPUUsage>* edges, double timescale_bound) {}
+    virtual HOST void update_temporal_weights(const IEdgeData<GPUUsage>* edges, double timescale_bound) {}
 
 protected:
     virtual HOST SizeVector get_timestamp_offset_vector_host(bool forward, bool directed) const { return SizeVector(); }
@@ -55,8 +87,31 @@ protected:
     * DEVICE METHODS
     */
 public:
-    virtual DEVICE void clear_device() {}
-    virtual DEVICE void rebuild_device(const IEdgeData<GPUUsage>* edges, const INodeMapping<GPUUsage>* mapping, bool is_directed) {}
+    virtual DEVICE void compute_dense_vectors_device(
+        const IEdgeData<GPUUsage>* edges,
+        const INodeMapping<GPUUsage>* mapping,
+        IntVector& source_dense_ids,
+        IntVector& target_dense_ids) {}
+
+    virtual DEVICE void compute_node_offsets_and_indices_device(
+        const IEdgeData<GPUUsage>* edges,
+        IntVector& source_dense_ids,
+        IntVector& target_dense_ids,
+        bool is_directed,
+        size_t num_nodes,
+        size_t num_edges) {}
+
+    virtual DEVICE void compute_node_edge_timestamp_group_offsets_device(
+        const IEdgeData<GPUUsage>* edges,
+        bool is_directed,
+        size_t num_nodes,
+        SizeVector& outbound_node_timestamp_group_count,
+        SizeVector& inbound_node_timestamp_group_count) {}
+
+    virtual DEVICE void compute_node_edge_timestamp_group_indices_device(
+        const IEdgeData<GPUUsage>* edges,
+        bool is_directed,
+        size_t num_nodes) {}
 
     // Core access methods
     [[nodiscard]] virtual DEVICE SizeRange get_edge_range_device(int dense_node_id, bool forward, bool is_directed) const { return {}; }
@@ -64,7 +119,7 @@ public:
                                                                       bool is_directed) const { return {}; }
     [[nodiscard]] virtual DEVICE size_t get_timestamp_group_count_device(int dense_node_id, bool forward, bool directed) const { return 0; }
 
-    virtual DEVICE void update_temporal_weights_device(const IEdgeData<GPUUsage>* edges, double timescale_bound) {}
+    virtual DEVICE void compute_temporal_weights_device(const IEdgeData<GPUUsage>* edges, double timescale_bound) {}
 
 protected:
     virtual DEVICE SizeVector get_timestamp_offset_vector_device(bool forward, bool directed) const { return SizeVector(); }

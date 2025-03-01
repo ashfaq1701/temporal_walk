@@ -4,11 +4,11 @@
 
 template<GPUUsageMode GPUUsage>
 HOST void EdgeDataCPU<GPUUsage>::reserve_host(size_t size) {
-    this->sources.allocate(size);
-    this->targets.allocate(size);
-    this->timestamps.allocate(size);
-    this->timestamp_group_offsets.allocate(size);  // Estimate for group count
-    this->unique_timestamps.allocate(size);
+    this->sources.resize(size);
+    this->targets.reserve(size);
+    this->timestamps.reserve(size);
+    this->timestamp_group_offsets.reserve(size);  // Estimate for group count
+    this->unique_timestamps.reserve(size);
 }
 
 template<GPUUsageMode GPUUsage>
@@ -39,9 +39,9 @@ void EdgeDataCPU<GPUUsage>::resize_host(size_t new_size) {
 
 template<GPUUsageMode GPUUsage>
 HOST void EdgeDataCPU<GPUUsage>::add_edges_host(int* src, int* tgt, int64_t* ts, size_t size) {
-    this->sources.append_from_pointer(src, size);
-    this->targets.append_from_pointer(tgt, size);
-    this->timestamps.append_from_pointer(ts, size);
+    this->sources.insert(this->sources.end(), src, src + size);
+    this->targets.insert(this->targets.end(), tgt, tgt + size);
+    this->timestamps.insert(this->timestamps.end(), ts, ts + size);
 }
 
 template<GPUUsageMode GPUUsage>
@@ -55,7 +55,7 @@ HOST void EdgeDataCPU<GPUUsage>::push_back_host(int src, int tgt, int64_t ts) {
 template<GPUUsageMode GPUUsage>
 HOST typename IEdgeData<GPUUsage>::EdgeVector EdgeDataCPU<GPUUsage>::get_edges_host() {
     typename IEdgeData<GPUUsage>::EdgeVector accumulated_edges;
-    accumulated_edges.allocate(this->sources.size());
+    accumulated_edges.reserve(this->sources.size());
 
     for (int i = 0; i < this->sources.size(); i++) {
         accumulated_edges.push_back(Edge(this->sources[i], this->targets[i], this->timestamps[i]));
@@ -163,8 +163,8 @@ HOST size_t EdgeDataCPU<GPUUsage>::find_group_after_timestamp_host(int64_t times
     if (this->unique_timestamps.empty()) return 0;
 
     // Get raw pointer to data and use std::upper_bound directly
-    const int64_t* begin = this->unique_timestamps.data;
-    const int64_t* end = this->unique_timestamps.data + this->unique_timestamps.size();
+    const int64_t* begin = this->unique_timestamps.data();
+    const int64_t* end = this->unique_timestamps.data() + this->unique_timestamps.size();
 
     const auto it = std::upper_bound(begin, end, timestamp);
     return it - begin;
@@ -175,8 +175,8 @@ HOST size_t EdgeDataCPU<GPUUsage>::find_group_before_timestamp_host(int64_t time
     if (this->unique_timestamps.empty()) return 0;
 
     // Get raw pointer to data and use std::lower_bound directly
-    const int64_t* begin = this->unique_timestamps.data;
-    const int64_t* end = this->unique_timestamps.data + this->unique_timestamps.size();
+    const int64_t* begin = this->unique_timestamps.data();
+    const int64_t* end = this->unique_timestamps.data() + this->unique_timestamps.size();
 
     auto it = std::lower_bound(begin, end, timestamp);
     return (it - begin) - 1;

@@ -91,9 +91,9 @@ struct WalkSet
     size_t num_walks;
     size_t max_len;
 
-    CommonVector<int, GPUUsage> nodes;
-    CommonVector<int64_t, GPUUsage> timestamps;
-    CommonVector<size_t, GPUUsage> walk_lens;
+    std::vector<int> nodes;
+    std::vector<int64_t> timestamps;
+    std::vector<size_t> walk_lens;
 
     HOST DEVICE WalkSet(): num_walks(0), max_len(0), nodes({}), timestamps({}), walk_lens({}) {}
 
@@ -152,14 +152,14 @@ struct WalkSet
     }
 };
 
-template <typename T, GPUUsageMode GPUUsage>
+template <typename T>
 struct DividedVector {
-    CommonVector<IndexValuePair<int, T>, GPUUsage> elements;
-    CommonVector<size_t, GPUUsage> group_offsets;
+    std::vector<IndexValuePair<int, T>> elements;
+    std::vector<T> group_offsets;
     size_t num_groups;
 
     // Constructor - divides input vector into n groups
-    HOST DEVICE DividedVector(const CommonVector<T, GPUUsage>& input, int n)
+    HOST DEVICE DividedVector(const std::vector<T>& input, int n)
         : num_groups(n)
     {
         const int total_size = static_cast<int>(input.size());
@@ -167,7 +167,7 @@ struct DividedVector {
         const int remainder = total_size % n;
 
         // Reserve space for group offsets (n+1 offsets for n groups)
-        group_offsets.allocate(n + 1);
+        group_offsets.reserve(n + 1);
 
         // Calculate and store group offsets
         size_t current_offset = 0;
@@ -180,7 +180,7 @@ struct DividedVector {
         }
 
         // Allocate space for all elements
-        elements.allocate(total_size);
+        elements.reserve(total_size);
 
         // Populate the elements array
         for (int i = 0; i < n; i++) {
@@ -198,7 +198,7 @@ struct DividedVector {
         if (group_idx >= num_groups) {
             return nullptr;
         }
-        return elements.data + group_offsets[group_idx];
+        return elements.data() + group_offsets[group_idx];
     }
 
     // Get end iterator for a specific group
@@ -206,7 +206,7 @@ struct DividedVector {
         if (group_idx >= num_groups) {
             return nullptr;
         }
-        return elements.data + group_offsets[group_idx + 1];
+        return elements.data() + group_offsets[group_idx + 1];
     }
 
     // Get size of a specific group

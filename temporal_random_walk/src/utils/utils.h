@@ -43,10 +43,9 @@ void delete_items_less_than(std::vector<T>& vec, const V& value, Comp comp) {
     vec.erase(vec.begin(), it);
 }
 
-template<GPUUsageMode GPUUsage>
-CommonVector<int, GPUUsage> repeat_elements(const CommonVector<int, GPUUsage>& arr, int times) {
-    CommonVector<int, GPUUsage> repeated_items;
-    repeated_items.allocate(arr.size() * times);
+inline std::vector<int> repeat_elements(const std::vector<int>& arr, int times) {
+    std::vector<int> repeated_items;
+    repeated_items.reserve(arr.size() * times);
 
     for (const auto& item : arr) {
         for (int i = 0; i < times; ++i) {
@@ -57,12 +56,12 @@ CommonVector<int, GPUUsage> repeat_elements(const CommonVector<int, GPUUsage>& a
     return repeated_items;
 }
 
-template <typename T, GPUUsageMode GPUUsage>
-DividedVector<T, GPUUsage> divide_vector(
-    const CommonVector<T, GPUUsage>& input,
+template <typename T>
+DividedVector<T> divide_vector(
+    const std::vector<T>& input,
     int n)
 {
-    return DividedVector<T, GPUUsage>(input, n);
+    return DividedVector<T>(input, n);
 }
 
 template <GPUUsageMode GPUUsage>

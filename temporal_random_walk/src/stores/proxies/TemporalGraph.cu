@@ -27,7 +27,7 @@ void TemporalGraph<GPUUsage>::add_multiple_edges(const std::vector<Edge>& new_ed
     if (GPUUsage == GPUUsageMode::ON_CPU)
     {
         typename ITemporalGraph<GPUUsage>::EdgeVector edge_vector;
-        edge_vector.allocate(new_edges.size());
+        edge_vector.reserve(new_edges.size());
         for (const auto& edge : new_edges)
         {
             edge_vector.push_back(edge);
@@ -38,7 +38,7 @@ void TemporalGraph<GPUUsage>::add_multiple_edges(const std::vector<Edge>& new_ed
     {
         // Similar conversion for GPU mode
         typename ITemporalGraph<GPUUsage>::EdgeVector edge_vector;
-        edge_vector.allocate(new_edges.size());
+        edge_vector.reserve(new_edges.size());
         for (const auto& edge : new_edges)
         {
             edge_vector.push_back(edge);
