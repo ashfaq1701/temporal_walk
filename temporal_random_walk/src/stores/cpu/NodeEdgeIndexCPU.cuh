@@ -14,6 +14,9 @@ public:
 
     HOST void clear_host() override;
 
+    /**
+     * START METHODS FOR REBUILD
+     */
     HOST void populate_dense_ids_host(
         const IEdgeData<GPUUsage>* edges,
         const INodeMapping<GPUUsage>* mapping,
@@ -50,6 +53,9 @@ public:
         const IEdgeData<GPUUsage>* edges,
         size_t num_nodes,
         bool is_directed);
+    /**
+     * END METHODS FOR REBUILD
+     */
 
     HOST void rebuild(const IEdgeData<GPUUsage>* edges, const INodeMapping<GPUUsage>* mapping, bool is_directed) override;
 

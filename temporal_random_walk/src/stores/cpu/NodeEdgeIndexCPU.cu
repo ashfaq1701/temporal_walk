@@ -17,6 +17,9 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::clear_host() {
    this->inbound_timestamp_group_indices.clear();
 }
 
+/**
+ * START METHODS FOR REBUILD
+*/
 template<GPUUsageMode GPUUsage>
 HOST void NodeEdgeIndexCPU<GPUUsage>::populate_dense_ids_host(
         const IEdgeData<GPUUsage>* edges,
@@ -210,6 +213,9 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::compute_node_timestamp_indices_host(
         }
     }
 }
+/**
+ * END METHODS FOR REBUILD
+*/
 
 template<GPUUsageMode GPUUsage>
 HOST void NodeEdgeIndexCPU<GPUUsage>::rebuild(
