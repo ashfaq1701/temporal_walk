@@ -40,11 +40,14 @@ public:
     */
     virtual HOST void clear_host() {}
 
+    /**
+     * START METHODS FOR REBUILD
+     */
     virtual HOST void populate_dense_ids_host(
         const IEdgeData<GPUUsage>* edges,
         const INodeMapping<GPUUsage>* mapping,
         IntVector& dense_sources,
-        IntVector& dense_targets) {};
+        IntVector& dense_targets) {}
 
     virtual HOST void allocate_node_edge_offsets(size_t num_nodes, bool is_directed) {};
 
@@ -53,7 +56,7 @@ public:
         IntVector& dense_sources,
         IntVector& dense_targets,
         size_t num_nodes,
-        bool is_directed) {};
+        bool is_directed) {}
 
     virtual HOST void allocate_node_edge_indices(bool is_directed) {};
 
@@ -63,19 +66,22 @@ public:
         IntVector& dense_targets,
         SizeVector& outbound_running_index,
         SizeVector& inbound_running_index,
-        bool is_directed) {};
+        bool is_directed) {}
 
     virtual HOST void compute_node_timestamp_offsets_host(
         const IEdgeData<GPUUsage>* edges,
         size_t num_nodes,
-        bool is_directed) {};
+        bool is_directed) {}
 
     virtual HOST void allocate_node_timestamp_indices(bool is_directed) {};
 
     virtual HOST void compute_node_timestamp_indices_host(
         const IEdgeData<GPUUsage>* edges,
         size_t num_nodes,
-        bool is_directed) {};
+        bool is_directed) {}
+    /**
+     * END METHODS FOR REBUILD
+     */
 
     virtual HOST void rebuild(const IEdgeData<GPUUsage>* edges, const INodeMapping<GPUUsage>* mapping, bool is_directed) {}
 
