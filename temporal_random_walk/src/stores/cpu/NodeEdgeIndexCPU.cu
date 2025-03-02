@@ -256,13 +256,7 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::rebuild(
     allocate_node_edge_offsets(num_nodes, is_directed);
     compute_node_edge_offsets_host(edges, dense_sources, dense_targets, num_nodes, is_directed);
 
-   allocate_node_edge_indices(is_directed);
-
-   typename INodeEdgeIndex<GPUUsage>::SizeVector outbound_running_index(num_nodes);
-   typename INodeEdgeIndex<GPUUsage>::SizeVector inbound_running_index;
-   if (is_directed) {
-       inbound_running_index.resize(num_nodes);
-   }
+    allocate_node_edge_indices(is_directed);
 
     size_t outbound_edge_indices_len = is_directed ? num_edges : num_edges * 2;
     typename INodeEdgeIndex<GPUUsage>::EdgeWithEndpointTypeVector outbound_edge_indices_buffer(outbound_edge_indices_len);
