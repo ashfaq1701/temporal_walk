@@ -21,38 +21,37 @@ public:
         const IEdgeData<GPUUsage>* edges,
         const INodeMapping<GPUUsage>* mapping,
         typename INodeEdgeIndex<GPUUsage>::IntVector& dense_sources,
-        typename INodeEdgeIndex<GPUUsage>::IntVector& dense_targets);
+        typename INodeEdgeIndex<GPUUsage>::IntVector& dense_targets) override;
 
-    HOST void allocate_node_edge_offsets(size_t num_nodes, bool is_directed);
+    HOST void allocate_node_edge_offsets(size_t num_nodes, bool is_directed) override;
 
     HOST void compute_node_edge_offsets_host(
         const IEdgeData<GPUUsage>* edges,
         typename INodeEdgeIndex<GPUUsage>::IntVector& dense_sources,
         typename INodeEdgeIndex<GPUUsage>::IntVector& dense_targets,
         size_t num_nodes,
-        bool is_directed);
+        bool is_directed) override;
 
-    HOST void allocate_node_edge_indices(bool is_directed);
+    HOST void allocate_node_edge_indices(bool is_directed) override;
 
     HOST void compute_node_edge_indices_host(
         const IEdgeData<GPUUsage>* edges,
         typename INodeEdgeIndex<GPUUsage>::IntVector& dense_sources,
         typename INodeEdgeIndex<GPUUsage>::IntVector& dense_targets,
-        typename INodeEdgeIndex<GPUUsage>::SizeVector& outbound_running_index,
-        typename INodeEdgeIndex<GPUUsage>::SizeVector& inbound_running_index,
-        bool is_directed);
+        typename INodeEdgeIndex<GPUUsage>::EdgeWithEndpointTypeVector& outbound_edge_indices_buffer,
+        bool is_directed) override;
 
     HOST void compute_node_timestamp_offsets_host(
         const IEdgeData<GPUUsage>* edges,
         size_t num_nodes,
-        bool is_directed);
+        bool is_directed) override;
 
-    HOST void allocate_node_timestamp_indices(bool is_directed);
+    HOST void allocate_node_timestamp_indices(bool is_directed) override;
 
     HOST void compute_node_timestamp_indices_host(
         const IEdgeData<GPUUsage>* edges,
         size_t num_nodes,
-        bool is_directed);
+        bool is_directed) override;
     /**
      * END METHODS FOR REBUILD
      */

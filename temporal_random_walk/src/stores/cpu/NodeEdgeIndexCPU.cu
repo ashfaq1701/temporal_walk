@@ -91,25 +91,48 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::compute_node_edge_indices_host(
     const IEdgeData<GPUUsage>* edges,
     typename INodeEdgeIndex<GPUUsage>::IntVector& dense_sources,
     typename INodeEdgeIndex<GPUUsage>::IntVector& dense_targets,
-    typename INodeEdgeIndex<GPUUsage>::SizeVector& outbound_running_index,
-    typename INodeEdgeIndex<GPUUsage>::SizeVector& inbound_running_index,
+    typename INodeEdgeIndex<GPUUsage>::EdgeWithEndpointTypeVector& outbound_edge_indices_buffer,
     bool is_directed)
 {
     auto edges_size = edges->size_host();
-    for (size_t i = 0; i < edges->size_host(); ++i) {
-        int src_idx = dense_sources[i];
-        int tgt_idx = dense_targets[i];
 
-        const size_t out_pos = this->outbound_offsets[src_idx] + outbound_running_index[src_idx]++;
-        this->outbound_indices[out_pos] = i;
+    for (size_t i = 0; i < edges_size; i++)
+    {
+        size_t outbound_index = is_directed ? i : i * 2;
+        outbound_edge_indices_buffer[outbound_index] = EdgeWithEndpointType{i, true};
 
-        if (is_directed) {
-            const size_t in_pos = this->inbound_offsets[tgt_idx] + inbound_running_index[tgt_idx]++;
-            this->inbound_indices[in_pos] = i;
-        } else {
-            const size_t out_pos2 = this->outbound_offsets[tgt_idx] + outbound_running_index[tgt_idx]++;
-            this->outbound_indices[out_pos2] = i;
+        if (is_directed)
+        {
+            this->inbound_indices[i] = i;
         }
+        else
+        {
+            outbound_edge_indices_buffer[outbound_index + 1] = EdgeWithEndpointType{i, false};
+        }
+    }
+
+    auto buffer_size = is_directed ? edges_size : edges_size * 2;
+
+    std::stable_sort(outbound_edge_indices_buffer.begin(),
+                     outbound_edge_indices_buffer.begin() + buffer_size,
+        [&dense_sources, &dense_targets](const EdgeWithEndpointType& a, const EdgeWithEndpointType& b) {
+            const int node_a = a.is_source ? dense_sources[a.edge_id] : dense_targets[a.edge_id];
+            const int node_b = b.is_source ? dense_sources[b.edge_id] : dense_targets[b.edge_id];
+            return node_a < node_b;
+        });
+
+    if (is_directed)
+    {
+        std::stable_sort(this->inbound_indices.begin(),
+                         this->inbound_indices.begin() + edges_size,
+            [&dense_targets](size_t a, size_t b) {
+                return dense_targets[a] < dense_targets[b];
+            });
+    }
+
+    for (size_t i = 0; i < buffer_size; i++)
+    {
+        this->outbound_indices[i] = outbound_edge_indices_buffer[i].edge_id;
     }
 }
 
@@ -241,7 +264,10 @@ HOST void NodeEdgeIndexCPU<GPUUsage>::rebuild(
        inbound_running_index.resize(num_nodes);
    }
 
-    compute_node_edge_indices_host(edges, dense_sources, dense_targets, outbound_running_index, inbound_running_index, is_directed);
+    size_t outbound_edge_indices_len = is_directed ? num_edges : num_edges * 2;
+    typename INodeEdgeIndex<GPUUsage>::EdgeWithEndpointTypeVector outbound_edge_indices_buffer(outbound_edge_indices_len);
+
+    compute_node_edge_indices_host(edges, dense_sources, dense_targets, outbound_edge_indices_buffer, is_directed);
 
     compute_node_timestamp_offsets_host(edges, num_nodes, is_directed);
 

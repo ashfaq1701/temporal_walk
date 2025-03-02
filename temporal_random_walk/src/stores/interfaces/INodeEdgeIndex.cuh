@@ -16,6 +16,7 @@ public:
     using IntVector = typename SelectVectorType<int, GPUUsage>::type;
     using SizeVector = typename SelectVectorType<size_t, GPUUsage>::type;
     using DoubleVector = typename SelectVectorType<double, GPUUsage>::type;
+    using EdgeWithEndpointTypeVector = typename SelectVectorType<EdgeWithEndpointType, GPUUsage>::type;
 
     // Base CSR format for edges
     SizeVector outbound_offsets{}; // Size: num_nodes + 1
@@ -64,8 +65,7 @@ public:
         const IEdgeData<GPUUsage>* edges,
         IntVector& dense_sources,
         IntVector& dense_targets,
-        SizeVector& outbound_running_index,
-        SizeVector& inbound_running_index,
+        EdgeWithEndpointTypeVector& outbound_edge_indices_buffer,
         bool is_directed) {}
 
     virtual HOST void compute_node_timestamp_offsets_host(

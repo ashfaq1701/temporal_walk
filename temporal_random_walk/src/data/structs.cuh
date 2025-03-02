@@ -85,6 +85,26 @@ struct NodeWithTime {
     }
 };
 
+struct EdgeWithEndpointType {
+    size_t edge_id;
+    bool is_source;
+
+    HOST DEVICE EdgeWithEndpointType(): edge_id(-1), is_source(true) {}
+
+    HOST DEVICE EdgeWithEndpointType(size_t edge_id, bool is_source): edge_id(edge_id), is_source(is_source) {}
+
+    HOST DEVICE EdgeWithEndpointType& operator=(const EdgeWithEndpointType& other)
+    {
+        if (this != &other)
+        {
+            edge_id = other.edge_id;
+            is_source = other.is_source;
+        }
+
+        return *this;
+    }
+};
+
 template<GPUUsageMode GPUUsage>
 struct WalkSet
 {
