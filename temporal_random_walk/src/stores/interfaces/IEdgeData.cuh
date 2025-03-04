@@ -61,8 +61,6 @@ public:
     /**
     * DEVICE METHODS
     */
-    virtual DEVICE void reserve_device(size_t size) {}
-    virtual DEVICE void clear_device() {}
     [[nodiscard]] virtual DEVICE size_t size_device() const { return 0; }
     [[nodiscard]] virtual DEVICE bool empty_device() const { return true; }
     virtual HOST void resize_device(size_t new_size) {}
