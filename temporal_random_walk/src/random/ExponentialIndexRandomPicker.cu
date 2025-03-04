@@ -43,7 +43,7 @@ HOST int ExponentialIndexRandomPicker<GPUUsage>::pick_random_host(const int star
 
 #ifdef HAS_CUDA
 template<GPUUsageMode GPUUsage>
-DEVICE int ExponentialIndexRandomPicker<GPUUsage>::pick_random_device(const int start, const int end, const bool prioritize_end) {
+DEVICE int ExponentialIndexRandomPicker<GPUUsage>::pick_random_device(const int start, const int end, const bool prioritize_end, curandState* rand_state) {
     if (start >= end) {
         return -1;
     }
@@ -51,7 +51,7 @@ DEVICE int ExponentialIndexRandomPicker<GPUUsage>::pick_random_device(const int 
     const int len_seq = end - start;
 
     // Generate uniform random number between 0 and 1
-    const double u = generate_random_value_device(0.0, 1.0);
+    const double u = generate_random_value_device(0.0, 1.0, rand_state);
 
     double k;
     if (len_seq < 710) {

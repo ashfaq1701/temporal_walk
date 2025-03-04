@@ -107,6 +107,3 @@ HOST typename INodeMapping<GPUUsage>::IntVector NodeMappingCPU<GPUUsage>::get_al
 }
 
 template class NodeMappingCPU<GPUUsageMode::ON_CPU>;
-#ifdef HAS_CUDA
-template class NodeMappingCPU<GPUUsageMode::ON_GPU>;
-#endif

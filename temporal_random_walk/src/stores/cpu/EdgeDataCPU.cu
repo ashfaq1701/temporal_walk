@@ -189,6 +189,3 @@ HOST size_t EdgeDataCPU<GPUUsage>::find_group_before_timestamp_host(int64_t time
 }
 
 template class EdgeDataCPU<GPUUsageMode::ON_CPU>;
-#ifdef HAS_CUDA
-template class EdgeDataCPU<GPUUsageMode::ON_GPU>;
-#endif

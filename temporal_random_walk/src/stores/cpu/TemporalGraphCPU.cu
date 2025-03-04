@@ -538,16 +538,13 @@ HOST Edge TemporalGraphCPU<GPUUsage>::get_node_edge_at_host(
 }
 
 template<GPUUsageMode GPUUsage>
-HOST typename ITemporalGraph<GPUUsage>::IntVector TemporalGraphCPU<GPUUsage>::get_node_ids_host() const {
+HOST typename ITemporalGraph<GPUUsage>::IntVector TemporalGraphCPU<GPUUsage>::get_node_ids() const {
     return this->node_mapping->get_active_node_ids_host();
 }
 
 template<GPUUsageMode GPUUsage>
-HOST typename ITemporalGraph<GPUUsage>::EdgeVector TemporalGraphCPU<GPUUsage>::get_edges_host() {
+HOST typename ITemporalGraph<GPUUsage>::EdgeVector TemporalGraphCPU<GPUUsage>::get_edges() {
     return this->edges->get_edges_host();
 }
 
 template class TemporalGraphCPU<GPUUsageMode::ON_CPU>;
-#ifdef HAS_CUDA
-template class TemporalGraphCPU<GPUUsageMode::ON_GPU>;
-#endif

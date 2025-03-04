@@ -467,6 +467,3 @@ template<GPUUsageMode GPUUsage>
 }
 
 template class NodeEdgeIndexCPU<GPUUsageMode::ON_CPU>;
-#ifdef HAS_CUDA
-template class NodeEdgeIndexCPU<GPUUsageMode::ON_GPU>;
-#endif

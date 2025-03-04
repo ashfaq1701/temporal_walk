@@ -5,13 +5,17 @@
 #include "../cuda_common/macros.cuh"
 #include "IndexBasedRandomPicker.h"
 
+#ifdef HAS_CUDA
+#include <curand_kernel.h>
+#endif
+
 template<GPUUsageMode GPUUsage>
 class UniformRandomPicker final : public IndexBasedRandomPicker<GPUUsage> {
 public:
     HOST int pick_random_host(int start, int end, bool prioritize_end) override;
 
     #ifdef HAS_CUDA
-    DEVICE int pick_random_device(int start, int end, bool prioritize_end) override;
+    DEVICE int pick_random_device(int start, int end, bool prioritize_end, curandState* rand_state) override;
     #endif
 };
 

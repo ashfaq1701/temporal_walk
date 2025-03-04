@@ -44,7 +44,7 @@ HOST int LinearRandomPicker<GPUUsage>::pick_random_host(const int start, const i
 
 #ifdef HAS_CUDA
 template<GPUUsageMode GPUUsage>
-DEVICE int LinearRandomPicker<GPUUsage>::pick_random_device(const int start, const int end, const bool prioritize_end) {
+DEVICE int LinearRandomPicker<GPUUsage>::pick_random_device(const int start, const int end, const bool prioritize_end, curandState* rand_state) {
     if (start >= end) {
         return -1;
     }
@@ -59,7 +59,7 @@ DEVICE int LinearRandomPicker<GPUUsage>::pick_random_device(const int start, con
                                    (static_cast<long double>(len_seq) + 1.0L) / 2.0L;
 
     // Generate random value in [0, total_weight)
-    const long double random_value = generate_random_value_device(0.0L, total_weight);
+    const long double random_value = generate_random_value_device(0.0L, total_weight, rand_state);
 
     // For both cases, we solve quadratic equation i² + i - 2r = 0
     // where r is our random value (or transformed random value)

@@ -14,12 +14,12 @@ int UniformRandomPicker<GPUUsage>::pick_random_host(const int start, const int e
 
 #ifdef HAS_CUDA
 template<GPUUsageMode GPUUsage>
-int UniformRandomPicker<GPUUsage>::pick_random_device(const int start, const int end, const bool prioritize_end) {
+int UniformRandomPicker<GPUUsage>::pick_random_device(const int start, const int end, const bool prioritize_end, curandState* rand_state) {
     if (start >= end) {
         return -1;
     }
 
-    return generate_random_int_device(start, end - 1);
+    return generate_random_int_device(start, end - 1, rand_state);
 }
 #endif
 

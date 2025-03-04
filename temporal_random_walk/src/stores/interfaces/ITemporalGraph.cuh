@@ -84,8 +84,8 @@ public:
     [[nodiscard]] virtual HOST size_t get_total_edges_host() const { return 0; }
     [[nodiscard]] virtual HOST size_t get_node_count_host() const { return 0; }
     [[nodiscard]] virtual HOST int64_t get_latest_timestamp_host() { return latest_timestamp; }
-    [[nodiscard]] virtual HOST IntVector get_node_ids_host() const { return IntVector(); }
-    [[nodiscard]] virtual HOST EdgeVector get_edges_host() { return EdgeVector(); }
+    [[nodiscard]] virtual HOST IntVector get_node_ids() const { return IntVector(); }
+    [[nodiscard]] virtual HOST EdgeVector get_edges() { return EdgeVector(); }
 
     /**
     * DEVICE METHODS
@@ -111,8 +111,6 @@ public:
     [[nodiscard]] virtual DEVICE size_t get_total_edges_device() const { return 0; }
     [[nodiscard]] virtual DEVICE size_t get_node_count_device() const { return 0; }
     [[nodiscard]] virtual DEVICE int64_t get_latest_timestamp_device() const { return latest_timestamp; }
-    [[nodiscard]] virtual DEVICE IntVector get_node_ids_device() const { return IntVector(); }
-    [[nodiscard]] virtual DEVICE EdgeVector get_edges_device() { return EdgeVector(); }
 };
 
 #endif //I_TEMPORALGRAPH_H

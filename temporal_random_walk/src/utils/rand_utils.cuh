@@ -48,21 +48,21 @@ DEVICE T generate_random_value_device(T start, T end, curandState* state) {
     return start + (end - start) * curand_uniform(state);
 }
 
-__device__ int generate_random_int_device(int start, int end, curandState* state) {
+DEVICE inline int generate_random_int_device(int start, int end, curandState* state) {
     return start + (curand(state) % (end - start + 1));
 }
 
-__device__ int generate_random_number_bounded_by_device(int max_bound, curandState* state) {
+DEVICE inline int generate_random_number_bounded_by_device(int max_bound, curandState* state) {
     return curand(state) % max_bound;
 }
 
-__device__ bool generate_random_boolean_device(curandState* state) {
+DEVICE inline bool generate_random_boolean_device(curandState* state) {
     return curand_uniform(state) > 0.5f;
 }
 
 template <typename T>
-__global__ void shuffle_kernel(T* vec, int size, curandState* states) {
-    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+__global__ void shuffle_kernel(T* vec, const int size, curandState* states) {
+    const int idx = threadIdx.x + blockIdx.x * blockDim.x;
     if (idx >= size) return;
 
     // Fisher-Yates shuffle (Parallelized)
@@ -77,9 +77,10 @@ __global__ void shuffle_kernel(T* vec, int size, curandState* states) {
 }
 
 template <typename T>
-void shuffle_vector(CommonVector<T, ON_GPU>& vec) {
+void shuffle_vector(SelectVectorType<T, ON_GPU>& vec) {
     int size = vec.size();
-    shuffle_kernel<<<CudaRandomStates::num_blocks, CudaRandomStates::num_threads>>>(vec.data, size, CudaRandomStates::get_states());
+    shuffle_kernel<<<CudaRandomStates::get_grid_dim(), CudaRandomStates::get_block_dim()>>>(
+        thrust::raw_pointer_cast(vec.data()), size, CudaRandomStates::get_states());
 }
 
 #endif

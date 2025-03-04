@@ -18,7 +18,7 @@ public:
         #ifdef HAS_CUDA
         if (GPUUsage == GPUUsageMode::ON_GPU)
         {
-            return this->pick_random_devicecumulative_weights, group_start, group_end);
+            return this->pick_random_device(cumulative_weights, group_start, group_end);
         }
         else
         #endif

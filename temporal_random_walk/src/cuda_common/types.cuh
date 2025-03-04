@@ -5,7 +5,7 @@
 
 #include <vector>
 #ifdef HAS_CUDA
-#include <cuda/std/vector>
+#include <thrust/device_vector.h>
 #endif
 
 enum class VectorStorageType {
@@ -31,7 +31,7 @@ struct SelectVectorType<T, GPUUsage, std::enable_if_t<GPUUsage == GPUUsageMode::
 // Specialization for GPU mode (Device memory)
 template <typename T, GPUUsageMode GPUUsage>
 struct SelectVectorType<T, GPUUsage, std::enable_if_t<GPUUsage == GPUUsageMode::ON_GPU>> {
-    using type = cuda::std::vector<T>;
+    using type = thrust::device_vector<T>;
 
     static constexpr VectorStorageType get_vector_storage_type() {
         return VectorStorageType::DEVICE_VECTOR;

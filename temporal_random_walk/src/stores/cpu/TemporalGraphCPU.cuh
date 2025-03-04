@@ -48,8 +48,8 @@ public:
     [[nodiscard]] HOST size_t get_total_edges_host() const override { return this->edges->size_host(); }
     [[nodiscard]] HOST size_t get_node_count_host() const override { return this->node_mapping->active_size_host(); }
     [[nodiscard]] HOST int64_t get_latest_timestamp_host() override { return this->latest_timestamp; }
-    [[nodiscard]] typename ITemporalGraph<GPUUsage>::IntVector get_node_ids_host() const override;
-    [[nodiscard]] typename ITemporalGraph<GPUUsage>::EdgeVector get_edges_host() override;
+    [[nodiscard]] typename ITemporalGraph<GPUUsage>::IntVector get_node_ids() const override;
+    [[nodiscard]] typename ITemporalGraph<GPUUsage>::EdgeVector get_edges() override;
 };
 
 #endif //TEMPORALGRAPH_CPU_H

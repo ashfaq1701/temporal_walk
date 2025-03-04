@@ -1,47 +1,10 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <random>
 #include <algorithm>
 #include <map>
 #include "../data/structs.cuh"
 #include "../cuda_common/types.cuh"
-
-template <typename T>
-size_t count_keys_less_than(const std::map<int64_t, T>& inputMap, int64_t key) {
-    auto it = inputMap.lower_bound(key);
-    return std::distance(inputMap.begin(), it);
-}
-
-template <typename T>
-size_t count_keys_greater_than(const std::map<int64_t, T>& inputMap, int64_t key) {
-    auto it = inputMap.upper_bound(key);
-    return std::distance(it, inputMap.end());
-}
-
-template <typename T, typename V, typename Comp>
-size_t count_elements_less_than(const std::vector<T>& vec, const V& value, Comp comp) {
-    auto it = std::lower_bound(vec.begin(), vec.end(), value, comp);
-    return std::distance(vec.begin(), it);
-}
-
-template <typename T, typename V, typename Comp>
-size_t count_elements_greater_than(const std::vector<T>& vec, const V& value, Comp comp) {
-    auto it = std::upper_bound(vec.begin(), vec.end(), value, comp);
-    return std::distance(it, vec.end());
-}
-
-template <typename K, typename V>
-void delete_items_less_than_key(std::map<K, V>& map_obj, const K& key) {
-    const auto it = map_obj.lower_bound(key);
-    map_obj.erase(map_obj.begin(), it);
-}
-
-template<typename T, typename V, typename Comp>
-void delete_items_less_than(std::vector<T>& vec, const V& value, Comp comp) {
-    auto it = std::lower_bound(vec.begin(), vec.end(), value, comp);
-    vec.erase(vec.begin(), it);
-}
 
 template<GPUUsageMode GPUUsage>
 typename SelectVectorType<int, GPUUsage>::type repeat_elements(
