@@ -6,9 +6,15 @@
 
 template<GPUUsageMode GPUUsage>
 class NodeEdgeIndexCUDA : public INodeEdgeIndex<GPUUsage> {
-#ifdef HAS_CUDA
+public:
+    #ifdef HAS_CUDA
 
-#endif
+    HOST void compute_temporal_weights(
+        const IEdgeData<GPUUsage>* edges,
+        double timescale_bound,
+        size_t num_nodes) override;
+
+    #endif
 };
 
 #endif //NODEEDGEINDEXCUDA_H

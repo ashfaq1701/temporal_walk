@@ -43,7 +43,7 @@ public:
     virtual HOST void add_edges(int* src, int* tgt, int64_t* ts, size_t size);
     virtual HOST void push_back(int src, int tgt, int64_t ts);
 
-    virtual EdgeVector get_edges();
+    virtual HOST EdgeVector get_edges();
 
     // Group management
     virtual HOST void update_timestamp_groups() {}  // Call after sorting

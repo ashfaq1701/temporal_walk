@@ -64,7 +64,7 @@ HOST typename IEdgeData<GPUUsage>::EdgeVector IEdgeData<GPUUsage>::get_edges() {
 }
 
 template<GPUUsageMode GPUUsage>
-void IEdgeData<GPUUsage>::update_temporal_weights(const double timescale_bound) {
+HOST void IEdgeData<GPUUsage>::update_temporal_weights(const double timescale_bound) {
     if (this->timestamps.empty()) {
         this->forward_cumulative_weights_exponential.clear();
         this->backward_cumulative_weights_exponential.clear();

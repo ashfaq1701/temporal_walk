@@ -1,9 +1,8 @@
 #include "EdgeDataCPU.cuh"
 #include <algorithm>
-#include <iostream>
 
 template<GPUUsageMode GPUUsage>
-void EdgeDataCPU<GPUUsage>::update_timestamp_groups() {
+HOST void EdgeDataCPU<GPUUsage>::update_timestamp_groups() {
     if (this->timestamps.empty()) {
         this->timestamp_group_offsets.clear();
         this->unique_timestamps.clear();

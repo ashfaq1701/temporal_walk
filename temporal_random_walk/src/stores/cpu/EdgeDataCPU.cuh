@@ -12,7 +12,7 @@ class EdgeDataCPU : public IEdgeData<GPUUsage> {
 
 public:
     // Group management
-    void update_timestamp_groups() override;  // Call after sorting
+    HOST void update_timestamp_groups() override;  // Call after sorting
 
     HOST void compute_temporal_weights(double timescale_bound) override;
 
