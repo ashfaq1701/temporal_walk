@@ -9,11 +9,7 @@ class EdgeDataWeightTest : public ::testing::Test {
     using DoubleVector = typename SelectVectorType<double, T::value>::type;
 
 protected:
-    using EdgeDataType = std::conditional_t<
-        T::value == GPUUsageMode::ON_CPU,
-        EdgeData<T::value>,
-        EdgeDataCUDA<T::value>
-    >;
+    using EdgeDataType = EdgeData<T::value>;
 
     static void verify_cumulative_weights(const DoubleVector& weights) {
         ASSERT_FALSE(weights.empty());

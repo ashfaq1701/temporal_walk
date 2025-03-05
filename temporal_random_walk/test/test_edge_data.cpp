@@ -5,12 +5,7 @@
 template<typename T>
 class EdgeDataTest : public ::testing::Test {
 protected:
-    using EdgeDataType = std::conditional_t<
-        T::value == GPUUsageMode::ON_CPU,
-        EdgeData<T::value>,
-        EdgeDataCUDA<T::value>
-    >;
-
+    using EdgeDataType = EdgeData<T::value>;
     EdgeDataType edges;
 
    void verify_edge(const size_t index, const int expected_src, const int expected_tgt, const int64_t expected_ts) const {

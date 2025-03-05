@@ -206,11 +206,20 @@ template <GPUUsageMode GPUUsage>
 std::vector<std::tuple<int, int, int64_t>> TemporalRandomWalk<GPUUsage>::get_edges() const
 {
     auto edges = temporal_random_walk->get_edges();
+    std::vector<std::tuple<int, int, int64_t>> result;
+    result.reserve(edges.size());
 
-    std::vector<std::tuple<int, int, int64_t>> result(edges.size());
-    for (auto edge : edges)
-    {
-        result.push_back({edge.u, edge.i, edge.ts});
+    if constexpr (GPUUsage == GPUUsageMode::ON_CPU) {
+        for (const auto& edge : edges) {
+            result.push_back({edge.u, edge.i, edge.ts});
+        }
+    } else {
+        std::vector<Edge> host_edges(edges.size());
+        thrust::copy(edges.begin(), edges.end(), host_edges.begin());
+
+        for (const auto& edge : host_edges) {
+            result.push_back({edge.u, edge.i, edge.ts});
+        }
     }
 
     return result;

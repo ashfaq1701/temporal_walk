@@ -16,7 +16,7 @@ public:
     }
 
     #ifdef HAS_CUDA
-    [[nodiscard]] DEVICE int pick_random_device(int start, int end, bool prioritize_end) override {
+    [[nodiscard]] DEVICE int pick_random_device(int start, int end, bool prioritize_end, curandState* rand_state) override {
         return start;
     }
     #endif
@@ -35,7 +35,7 @@ public:
     }
 
     #ifdef HAS_CUDA
-    [[nodiscard]] DEVICE int pick_random_device(int start, int end, bool prioritize_end) override {
+    [[nodiscard]] DEVICE int pick_random_device(int start, int end, bool prioritize_end, curandState* rand_state) override {
         return end - 1;
     }
     #endif

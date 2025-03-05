@@ -11,14 +11,6 @@ protected:
     template <typename U>
     using VectorType = typename SelectVectorType<U, T::value>::type;
 
-    WeightBasedRandomPickerTest() {
-        if constexpr (T::value == GPUUsageMode::ON_GPU) {
-            #ifdef HAS_CUDA
-            CUDARandomStates::initialize();
-            #endif
-        }
-    }
-
     WeightBasedRandomPicker<T::value> picker;
 
     // Helper to verify sampling is within correct range
