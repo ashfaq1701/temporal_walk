@@ -187,20 +187,20 @@ struct DividedVector {
         const int remainder = total_size % n;
 
         // Reserve space for group offsets (n+1 offsets for n groups)
-        group_offsets.reserve(n + 1);
+        group_offsets.resize(n + 1);
 
         // Calculate and store group offsets
         size_t current_offset = 0;
-        group_offsets.push_back(current_offset);
+        group_offsets[0] = current_offset;
 
         for (int i = 0; i < n; i++) {
             const int group_size = base_size + (i < remainder ? 1 : 0);
             current_offset += group_size;
-            group_offsets.push_back(current_offset);
+            group_offsets[i + 1] = current_offset;
         }
 
         // Allocate space for all elements
-        elements.reserve(total_size);
+        elements.resize(total_size);
 
         // Populate the elements array
         for (int i = 0; i < n; i++) {
@@ -208,7 +208,7 @@ struct DividedVector {
             const size_t end_idx = group_offsets[i + 1];
 
             for (size_t j = start_idx; j < end_idx; ++j) {
-                elements.push_back(IndexValuePair<int, T>(j, input[j]));
+                elements[j] = IndexValuePair<int, T>(j, input[j]);
             }
         }
     }
