@@ -86,3 +86,8 @@ template<GPUUsageMode GPUUsage>
 HOST size_t IEdgeData<GPUUsage>::get_timestamp_group_count() const {
     return this->unique_timestamps.size();
 }
+
+template class IEdgeData<GPUUsageMode::ON_CPU>;
+#ifdef HAS_CUDA
+template class IEdgeData<GPUUsageMode::ON_GPU>;
+#endif

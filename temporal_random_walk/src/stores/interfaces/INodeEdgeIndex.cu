@@ -137,3 +137,8 @@ template<GPUUsageMode GPUUsage>
     const bool directed) const {
     return (directed && !forward) ? this->inbound_timestamp_group_offsets : this->outbound_timestamp_group_offsets;
 }
+
+template class INodeEdgeIndex<GPUUsageMode::ON_CPU>;
+#ifdef HAS_CUDA
+template class INodeEdgeIndex<GPUUsageMode::ON_GPU>;
+#endif

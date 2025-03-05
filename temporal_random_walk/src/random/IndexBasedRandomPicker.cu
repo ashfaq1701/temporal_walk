@@ -1,5 +1,6 @@
 #include "IndexBasedRandomPicker.cuh"
 
+#ifdef HAS_CUDA
 template<GPUUsageMode GPUUsage>
 __global__ void pick_random_kernel(
     IndexBasedRandomPicker<GPUUsage>* random_picker,
@@ -12,6 +13,7 @@ __global__ void pick_random_kernel(
     *picked_value = random_picker->pick_random_device(start, end, prioritize_end, &localState);
     rand_states[tid] = localState;  // Store back the updated state
 }
+#endif
 
 template<GPUUsageMode GPUUsage>
 int IndexBasedRandomPicker<GPUUsage>::pick_random(const int start, const int end, const bool prioritize_end)
@@ -42,3 +44,8 @@ int IndexBasedRandomPicker<GPUUsage>::pick_random(const int start, const int end
         return this->pick_random_host(start, end, prioritize_end);
     }
 }
+
+template class IndexBasedRandomPicker<GPUUsageMode::ON_CPU>;
+#ifdef HAS_CUDA
+template class IndexBasedRandomPicker<GPUUsageMode::ON_GPU>;
+#endif

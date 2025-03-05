@@ -29,6 +29,7 @@ public:
     }
 };
 
+#ifdef HAS_CUDA
 template<GPUUsageMode GPUUsage>
 __global__ void pick_random_kernel(
     IndexBasedRandomPicker<GPUUsage>* random_picker,
@@ -36,5 +37,6 @@ __global__ void pick_random_kernel(
     int end,
     bool prioritize_end,
     int* picked_value, curandState* rand_states);
+#endif
 
 #endif //INDEXBASEDRANDOMPICKER_H

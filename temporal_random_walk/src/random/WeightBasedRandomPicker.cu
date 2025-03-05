@@ -5,6 +5,7 @@
 #include "cuda/std/__algorithm_"
 #endif
 
+#ifdef HAS_CUDA
 template<GPUUsageMode GPUUsage>
 __global__ void pick_random_kernel(
     WeightBasedRandomPicker<GPUUsage>* random_picker,
@@ -24,6 +25,7 @@ __global__ void pick_random_kernel(
         &localState);
     rand_states[tid] = localState;
 }
+#endif
 
 template<GPUUsageMode GPUUsage>
 int WeightBasedRandomPicker<GPUUsage>::pick_random_host(

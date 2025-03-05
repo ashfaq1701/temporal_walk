@@ -63,3 +63,9 @@ template<GPUUsageMode GPUUsage>
 HOST typename INodeMapping<GPUUsage>::IntVector INodeMapping<GPUUsage>::get_all_sparse_ids() const {
     return this->dense_to_sparse;
 }
+
+template class INodeMapping<GPUUsageMode::ON_CPU>;
+#ifdef HAS_CUDA
+template class INodeMapping<GPUUsageMode::ON_GPU>;
+#endif
+

@@ -30,3 +30,8 @@ template<GPUUsageMode GPUUsage>
 HOST int64_t ITemporalGraph<GPUUsage>::get_latest_timestamp() {
     return this->latest_timestamp;
 }
+
+template class ITemporalGraph<GPUUsageMode::ON_CPU>;
+#ifdef HAS_CUDA
+template class ITemporalGraph<GPUUsageMode::ON_GPU>;
+#endif
