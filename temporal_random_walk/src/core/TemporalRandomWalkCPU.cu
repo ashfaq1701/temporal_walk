@@ -255,22 +255,22 @@ HOST void TemporalRandomWalkCPU<GPUUsage>::add_multiple_edges(const typename ITe
 
 template<GPUUsageMode GPUUsage>
 HOST size_t TemporalRandomWalkCPU<GPUUsage>::get_node_count() const {
-    return this->temporal_graph->get_node_count_host();
+    return this->temporal_graph->get_node_count();
 }
 
 template<GPUUsageMode GPUUsage>
 HOST size_t TemporalRandomWalkCPU<GPUUsage>::get_edge_count() const {
-    return this->temporal_graph->get_total_edges_host();
+    return this->temporal_graph->get_total_edges();
 }
 
 template<GPUUsageMode GPUUsage>
 HOST typename ITemporalRandomWalk<GPUUsage>::IntVector TemporalRandomWalkCPU<GPUUsage>::get_node_ids() const {
-    return this->temporal_graph->get_node_ids_host();
+    return this->temporal_graph->get_node_ids();
 }
 
 template<GPUUsageMode GPUUsage>
 HOST typename ITemporalRandomWalk<GPUUsage>::EdgeVector TemporalRandomWalkCPU<GPUUsage>::get_edges() const {
-    return this->temporal_graph->get_edges_host();
+    return this->temporal_graph->get_edges();
 }
 
 template<GPUUsageMode GPUUsage>

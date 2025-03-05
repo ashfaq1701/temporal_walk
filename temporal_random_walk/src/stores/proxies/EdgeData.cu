@@ -9,106 +9,53 @@ EdgeData<GPUUsage>::EdgeData(IEdgeData<GPUUsage>* edge_data): edge_data(edge_dat
 template<GPUUsageMode GPUUsage>
 void EdgeData<GPUUsage>::reserve(size_t size)
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        edge_data->reserve_host(size);
-    } else
-    {
-        edge_data->reserve_device(size);
-    }
+    edge_data->reserve(size);
 }
 
 template <GPUUsageMode GPUUsage>
 void EdgeData<GPUUsage>::clear()
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        edge_data->clear_host();
-    } else
-    {
-        edge_data->clear_device();
-    }
+    edge_data->clear();
 }
 
 template <GPUUsageMode GPUUsage>
 size_t EdgeData<GPUUsage>::size() const
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        return edge_data->size_host();
-    } else
-    {
-        return edge_data->size_device();
-    }
+    return edge_data->size();
 }
 
 template <GPUUsageMode GPUUsage>
 bool EdgeData<GPUUsage>::empty() const
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        return edge_data->empty_host();
-    } else
-    {
-        return edge_data->empty_device();
-    }
+    return edge_data->empty();
 }
 
 template <GPUUsageMode GPUUsage>
 void EdgeData<GPUUsage>::resize(size_t new_size)
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        edge_data->resize_host(new_size);
-    } else
-    {
-        edge_data->resize_device(new_size);
-    }
+    edge_data->resize(new_size);
 }
 
 template <GPUUsageMode GPUUsage>
 void EdgeData<GPUUsage>::add_edges(int* src, int* tgt, int64_t* ts, size_t size)
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        edge_data->add_edges_host(src, tgt, ts, size);
-    } else
-    {
-        edge_data->add_edges_device(src, tgt, ts, size);
-    }
+    edge_data->add_edges(src, tgt, ts, size);
 }
 
 template <GPUUsageMode GPUUsage>
 void EdgeData<GPUUsage>::push_back(int src, int tgt, int64_t ts)
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        edge_data->push_back_host(src, tgt, ts);
-    } else
-    {
-        edge_data->push_back_device(src, tgt, ts);
-    }
+    edge_data->push_back(src, tgt, ts);
 }
 
 template <GPUUsageMode GPUUsage>
 std::vector<Edge> EdgeData<GPUUsage>::get_edges()
 {
     std::vector<Edge> results;
-
-    if (GPUUsage == GPUUsageMode::ON_CPU)
+    auto edges = edge_data->get_edges();
+    for (auto edge : edges)
     {
-        auto edges = edge_data->get_edges_host();
-        for (auto edge : edges)
-        {
-            results.push_back(edge);
-        }
-    } else
-    {
-        auto edges = edge_data->get_edges_device();
-        for (auto edge : edges)
-        {
-            results.push_back(edge);
-        }
+        results.push_back(edge);
     }
 
     return results;
@@ -129,51 +76,26 @@ void EdgeData<GPUUsage>::update_temporal_weights(double timescale_bound)
 template <GPUUsageMode GPUUsage>
 std::pair<size_t, size_t> EdgeData<GPUUsage>::get_timestamp_group_range(size_t group_idx)
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        auto group_range = edge_data->get_timestamp_group_range_host(group_idx);
-        return {group_range.from, group_range.to};
-    } else
-    {
-        auto group_range = edge_data->get_timestamp_group_range_device(group_idx);
-        return {group_range.from, group_range.to};
-    }
+    auto group_range = edge_data->get_timestamp_group_range(group_idx);
+    return {group_range.from, group_range.to};
 }
 
 template <GPUUsageMode GPUUsage>
 size_t EdgeData<GPUUsage>::get_timestamp_group_count() const
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        return edge_data->get_timestamp_group_count_host();
-    } else
-    {
-        return edge_data->get_timestamp_group_count_device();
-    }
+    return edge_data->get_timestamp_group_count();
 }
 
 template <GPUUsageMode GPUUsage>
 size_t EdgeData<GPUUsage>::find_group_after_timestamp(int64_t timestamp) const
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        return edge_data->find_group_after_timestamp_host(timestamp);
-    } else
-    {
-        return edge_data->find_group_after_timestamp_device(timestamp);
-    }
+    return edge_data->find_group_after_timestamp(timestamp);
 }
 
 template <GPUUsageMode GPUUsage>
 size_t EdgeData<GPUUsage>::find_group_before_timestamp(int64_t timestamp) const
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        return edge_data->find_group_before_timestamp_host(timestamp);
-    } else
-    {
-        return edge_data->find_group_before_timestamp_device(timestamp);
-    }
+    return edge_data->find_group_before_timestamp(timestamp);
 }
 
 template class EdgeData<GPUUsageMode::ON_CPU>;

@@ -9,14 +9,7 @@ NodeEdgeIndex<GPUUsage>::NodeEdgeIndex(INodeEdgeIndex<GPUUsage>* node_edge_index
 template<GPUUsageMode GPUUsage>
 void NodeEdgeIndex<GPUUsage>::clear()
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        node_edge_index->clear_host();
-    }
-    else
-    {
-        node_edge_index->clear_device();
-    }
+    node_edge_index->clear();
 }
 
 template<GPUUsageMode GPUUsage>
@@ -28,44 +21,21 @@ void NodeEdgeIndex<GPUUsage>::rebuild(const IEdgeData<GPUUsage>* edges, const IN
 template<GPUUsageMode GPUUsage>
 std::pair<size_t, size_t> NodeEdgeIndex<GPUUsage>::get_edge_range(int dense_node_id, bool forward, bool is_directed) const
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        auto range = node_edge_index->get_edge_range_host(dense_node_id, forward, is_directed);
-        return {range.from, range.to};
-    }
-    else
-    {
-        auto range = node_edge_index->get_edge_range_device(dense_node_id, forward, is_directed);
-        return {range.from, range.to};
-    }
+    auto range = node_edge_index->get_edge_range(dense_node_id, forward, is_directed);
+    return {range.from, range.to};
 }
 
 template<GPUUsageMode GPUUsage>
 std::pair<size_t, size_t> NodeEdgeIndex<GPUUsage>::get_timestamp_group_range(int dense_node_id, size_t group_idx, bool forward, bool is_directed) const
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        auto range = node_edge_index->get_timestamp_group_range_host(dense_node_id, group_idx, forward, is_directed);
-        return {range.from, range.to};
-    }
-    else
-    {
-        auto range = node_edge_index->get_timestamp_group_range_device(dense_node_id, group_idx, forward, is_directed);
-        return {range.from, range.to};
-    }
+    auto range = node_edge_index->get_timestamp_group_range(dense_node_id, group_idx, forward, is_directed);
+    return {range.from, range.to};
 }
 
 template<GPUUsageMode GPUUsage>
 size_t NodeEdgeIndex<GPUUsage>::get_timestamp_group_count(int dense_node_id, bool forward, bool directed) const
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        return node_edge_index->get_timestamp_group_count_host(dense_node_id, forward, directed);
-    }
-    else
-    {
-        return node_edge_index->get_timestamp_group_count_device(dense_node_id, forward, directed);
-    }
+    return node_edge_index->get_timestamp_group_count(dense_node_id, forward, directed);
 }
 
 template<GPUUsageMode GPUUsage>

@@ -25,26 +25,18 @@ public:
     * HOST METHODS
     */
     virtual HOST void update(const IEdgeData<GPUUsage>* edges, size_t start_idx, size_t end_idx) {}
-    [[nodiscard]] virtual HOST int to_dense_host(int sparse_id) const { return -1; }
-    [[nodiscard]] virtual HOST int to_sparse_host(int dense_idx) const { return -1; }
-    [[nodiscard]] virtual HOST size_t size_host() const { return 0; }
-    [[nodiscard]] virtual HOST size_t active_size_host() const { return 0; }
+    [[nodiscard]] virtual HOST int to_dense(int sparse_id) const;
+    [[nodiscard]] virtual HOST int to_sparse(int dense_idx) const;
+    [[nodiscard]] virtual HOST size_t size() const;
+    [[nodiscard]] virtual HOST size_t active_size() const;
 
     // Helper methods
-    [[nodiscard]] virtual HOST IntVector get_active_node_ids_host() const { return IntVector(); }
-    virtual HOST void clear_host() {}
-    virtual HOST void reserve_host(size_t size) {}
-    virtual HOST void mark_node_deleted_host(int sparse_id) {}
-    [[nodiscard]] virtual HOST bool has_node_host(int sparse_id) const { return false; }
-    [[nodiscard]] virtual HOST IntVector get_all_sparse_ids_host() const { return IntVector(); }
-
-    /**
-    * DEVICE METHODS
-    */
-    [[nodiscard]] virtual DEVICE int to_dense_device(int sparse_id) const { return -1; }
-    [[nodiscard]] virtual DEVICE int to_sparse_device(int dense_idx) const { return -1; }
-    [[nodiscard]] virtual DEVICE size_t size_device() const { return 0; }
-    [[nodiscard]] virtual DEVICE size_t active_size_device() const { return 0; }
+    [[nodiscard]] virtual HOST IntVector get_active_node_ids() const;
+    virtual HOST void clear();
+    virtual HOST void reserve(size_t size);
+    virtual HOST void mark_node_deleted(int sparse_id);
+    [[nodiscard]] virtual HOST bool has_node(int sparse_id) const;
+    [[nodiscard]] virtual HOST IntVector get_all_sparse_ids() const;
 };
 
 #endif //I_NODEMAPPING_H

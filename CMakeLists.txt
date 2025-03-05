@@ -35,10 +35,16 @@ endif()
 set(SRC_FILES
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/cuda_common/CudaRandomStates.cu
 
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/random/IndexBasedRandomPicker.cu
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/random/WeightBasedRandomPicker.cu
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/random/ExponentialIndexRandomPicker.cu
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/random/LinearRandomPicker.cu
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/random/UniformRandomPicker.cu
+
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/interfaces/IEdgeData.cu
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/interfaces/INodeEdgeIndex.cu
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/interfaces/INodeMapping.cu
+        ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/interfaces/ITemporalGraph.cu
 
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/cpu/EdgeDataCPU.cu
         ${CMAKE_SOURCE_DIR}/temporal_random_walk/src/stores/cpu/NodeEdgeIndexCPU.cu

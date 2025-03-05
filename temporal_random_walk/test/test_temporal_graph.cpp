@@ -1,7 +1,7 @@
 #include "../src/stores/cuda/TemporalGraphCUDA.cuh"
 #include <gtest/gtest.h>
 #include "../src/stores/proxies/TemporalGraph.cuh"
-#include "../src/random/IndexBasedRandomPicker.h"
+#include "../src/random/IndexBasedRandomPicker.cuh"
 
 // Test-specific picker that always selects first element
 template<GPUUsageMode GPUUsage>

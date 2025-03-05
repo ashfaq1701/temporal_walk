@@ -41,139 +41,65 @@ void TemporalGraph<GPUUsage>::delete_old_edges()
 template<GPUUsageMode GPUUsage>
 size_t TemporalGraph<GPUUsage>::count_timestamps_less_than(int64_t timestamp) const
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        return temporal_graph->count_timestamps_less_than_host(timestamp);
-    }
-    else
-    {
-        return temporal_graph->count_timestamps_less_than_device(timestamp);
-    }
+    return temporal_graph->count_timestamps_less_than(timestamp);
 }
 
 template<GPUUsageMode GPUUsage>
 size_t TemporalGraph<GPUUsage>::count_timestamps_greater_than(int64_t timestamp) const
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        return temporal_graph->count_timestamps_greater_than_host(timestamp);
-    }
-    else
-    {
-        return temporal_graph->count_timestamps_greater_than_device(timestamp);
-    }
+    return temporal_graph->count_timestamps_greater_than(timestamp);
 }
 
 template<GPUUsageMode GPUUsage>
 size_t TemporalGraph<GPUUsage>::count_node_timestamps_less_than(int node_id, int64_t timestamp) const
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        return temporal_graph->count_node_timestamps_less_than_host(node_id, timestamp);
-    }
-    else
-    {
-        return temporal_graph->count_node_timestamps_less_than_device(node_id, timestamp);
-    }
+    return temporal_graph->count_node_timestamps_less_than(node_id, timestamp);
 }
 
 template<GPUUsageMode GPUUsage>
 size_t TemporalGraph<GPUUsage>::count_node_timestamps_greater_than(int node_id, int64_t timestamp) const
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        return temporal_graph->count_node_timestamps_greater_than_host(node_id, timestamp);
-    }
-    else
-    {
-        return temporal_graph->count_node_timestamps_greater_than_device(node_id, timestamp);
-    }
+    return temporal_graph->count_node_timestamps_greater_than(node_id, timestamp);
 }
 
 template<GPUUsageMode GPUUsage>
 Edge TemporalGraph<GPUUsage>::get_edge_at(RandomPicker<GPUUsage>* picker, int64_t timestamp, bool forward) const
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        return temporal_graph->get_edge_at_host(picker, timestamp, forward);
-    }
-    else
-    {
-        return temporal_graph->get_edge_at_device(picker, timestamp, forward);
-    }
+    return temporal_graph->get_edge_at_host(picker, timestamp, forward);
 }
 
 template<GPUUsageMode GPUUsage>
 Edge TemporalGraph<GPUUsage>::get_node_edge_at(int node_id, RandomPicker<GPUUsage>* picker, int64_t timestamp, bool forward) const
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        return temporal_graph->get_node_edge_at_host(node_id, picker, timestamp, forward);
-    }
-    else
-    {
-        return temporal_graph->get_node_edge_at_device(node_id, picker, timestamp, forward);
-    }
+    return temporal_graph->get_node_edge_at_host(node_id, picker, timestamp, forward);
 }
 
 template<GPUUsageMode GPUUsage>
 size_t TemporalGraph<GPUUsage>::get_total_edges() const
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        return temporal_graph->get_total_edges_host();
-    }
-    else
-    {
-        return temporal_graph->get_total_edges_device();
-    }
+    return temporal_graph->get_total_edges();
 }
 
 template<GPUUsageMode GPUUsage>
 size_t TemporalGraph<GPUUsage>::get_node_count() const
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        return temporal_graph->get_node_count_host();
-    }
-    else
-    {
-        return temporal_graph->get_node_count_device();
-    }
+    return temporal_graph->get_node_count();
 }
 
 template<GPUUsageMode GPUUsage>
 int64_t TemporalGraph<GPUUsage>::get_latest_timestamp()
 {
-    if (GPUUsage == GPUUsageMode::ON_CPU)
-    {
-        return temporal_graph->get_latest_timestamp_host();
-    }
-    else
-    {
-        return temporal_graph->get_latest_timestamp_device();
-    }
+    return temporal_graph->get_latest_timestamp();
 }
 
 template<GPUUsageMode GPUUsage>
 std::vector<int> TemporalGraph<GPUUsage>::get_node_ids() const
 {
     std::vector<int> result;
-    if (GPUUsage == GPUUsageMode::ON_CPU)
+    auto node_ids = temporal_graph->get_node_ids();
+    for (int i = 0; i < node_ids.size(); i++)
     {
-        auto node_ids = temporal_graph->get_node_ids_host();
-        for (int i = 0; i < node_ids.size(); i++)
-        {
-            result.push_back(node_ids[i]);
-        }
-    }
-    else
-    {
-        auto node_ids = temporal_graph->get_node_ids_device();
-        for (int i = 0; i < node_ids.size(); i++)
-        {
-            result.push_back(node_ids[i]);
-        }
+        result.push_back(node_ids[i]);
     }
     return result;
 }
@@ -182,21 +108,10 @@ template<GPUUsageMode GPUUsage>
 std::vector<Edge> TemporalGraph<GPUUsage>::get_edges()
 {
     std::vector<Edge> result;
-    if (GPUUsage == GPUUsageMode::ON_CPU)
+    auto edges = temporal_graph->get_edges();
+    for (int i = 0; i < edges.size(); i++)
     {
-        auto edges = temporal_graph->get_edges_host();
-        for (int i = 0; i < edges.size(); i++)
-        {
-            result.push_back(edges[i]);
-        }
-    }
-    else
-    {
-        auto edges = temporal_graph->get_edges_device();
-        for (int i = 0; i < edges.size(); i++)
-        {
-            result.push_back(edges[i]);
-        }
+        result.push_back(edges[i]);
     }
     return result;
 }

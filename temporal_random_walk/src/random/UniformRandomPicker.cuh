@@ -3,7 +3,7 @@
 
 #include "../data/enums.h"
 #include "../cuda_common/macros.cuh"
-#include "IndexBasedRandomPicker.h"
+#include "IndexBasedRandomPicker.cuh"
 
 #ifdef HAS_CUDA
 #include <curand_kernel.h>

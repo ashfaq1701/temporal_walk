@@ -2,27 +2,6 @@
 #include <algorithm>
 
 template<GPUUsageMode GPUUsage>
-HOST void NodeMappingCPU<GPUUsage>::clear_host() {
-    this->sparse_to_dense.clear();
-    this->dense_to_sparse.clear();
-    this->is_deleted.clear();
-}
-
-template<GPUUsageMode GPUUsage>
-HOST void NodeMappingCPU<GPUUsage>::reserve_host(const size_t size) {
-    this->sparse_to_dense.reserve(size);
-    this->dense_to_sparse.reserve(size);
-    this->is_deleted.reserve(size);
-}
-
-template<GPUUsageMode GPUUsage>
-HOST void NodeMappingCPU<GPUUsage>::mark_node_deleted_host(const int sparse_id) {
-    if (sparse_id < this->is_deleted.size()) {
-        this->is_deleted[sparse_id] = true;
-    }
-}
-
-template<GPUUsageMode GPUUsage>
 HOST void NodeMappingCPU<GPUUsage>::update(const IEdgeData<GPUUsage>* edges, const size_t start_idx, const size_t end_idx) {
     // First pass: find max node ID
     int max_node_id = 0;
@@ -61,49 +40,6 @@ HOST void NodeMappingCPU<GPUUsage>::update(const IEdgeData<GPUUsage>* edges, con
             this->dense_to_sparse.push_back(node);
         }
     }
-}
-
-template<GPUUsageMode GPUUsage>
-HOST int NodeMappingCPU<GPUUsage>::to_dense_host(const int sparse_id) const {
-    return sparse_id < this->sparse_to_dense.size() ? this->sparse_to_dense[sparse_id] : -1;
-}
-
-template<GPUUsageMode GPUUsage>
-HOST int NodeMappingCPU<GPUUsage>::to_sparse_host(const int dense_idx) const {
-    return dense_idx < this->dense_to_sparse.size() ? this->dense_to_sparse[dense_idx] : -1;
-}
-
-template<GPUUsageMode GPUUsage>
-HOST size_t NodeMappingCPU<GPUUsage>::size_host() const {
-    return this->dense_to_sparse.size();
-}
-
-template<GPUUsageMode GPUUsage>
-HOST size_t NodeMappingCPU<GPUUsage>::active_size_host() const {
-    return std::count(this->is_deleted.begin(), this->is_deleted.end(), false);
-}
-
-template<GPUUsageMode GPUUsage>
-HOST typename INodeMapping<GPUUsage>::IntVector NodeMappingCPU<GPUUsage>::get_active_node_ids_host() const {
-    typename INodeMapping<GPUUsage>::IntVector active_ids;
-    active_ids.reserve(this->dense_to_sparse.size());
-    for (int sparse_id : this->dense_to_sparse) {
-        if (!this->is_deleted[sparse_id]) {
-            active_ids.push_back(sparse_id);
-        }
-    }
-
-    return active_ids;
-}
-
-template<GPUUsageMode GPUUsage>
-HOST bool NodeMappingCPU<GPUUsage>::has_node_host(int sparse_id) const {
-    return sparse_id < this->sparse_to_dense.size() && this->sparse_to_dense[sparse_id] != -1;
-}
-
-template<GPUUsageMode GPUUsage>
-HOST typename INodeMapping<GPUUsage>::IntVector NodeMappingCPU<GPUUsage>::get_all_sparse_ids_host() const {
-    return this->dense_to_sparse;
 }
 
 template class NodeMappingCPU<GPUUsageMode::ON_CPU>;

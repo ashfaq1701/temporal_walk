@@ -60,15 +60,15 @@ public:
     // Edge addition
     virtual HOST void add_multiple_edges(const EdgeVector& new_edges) {}
 
-    virtual HOST void update_temporal_weights() {}
+    virtual HOST void update_temporal_weights();
 
     virtual HOST void delete_old_edges() {}
 
     // Timestamp group counting
-    [[nodiscard]] virtual HOST size_t count_timestamps_less_than_host(int64_t timestamp) const { return 0; }
-    [[nodiscard]] virtual HOST size_t count_timestamps_greater_than_host(int64_t timestamp) const { return 0; }
-    [[nodiscard]] virtual HOST size_t count_node_timestamps_less_than_host(int node_id, int64_t timestamp) const { return 0; }
-    [[nodiscard]] virtual HOST size_t count_node_timestamps_greater_than_host(int node_id, int64_t timestamp) const { return 0; }
+    [[nodiscard]] virtual HOST size_t count_timestamps_less_than(int64_t timestamp) const { return 0; }
+    [[nodiscard]] virtual HOST size_t count_timestamps_greater_than(int64_t timestamp) const { return 0; }
+    [[nodiscard]] virtual HOST size_t count_node_timestamps_less_than(int node_id, int64_t timestamp) const { return 0; }
+    [[nodiscard]] virtual HOST size_t count_node_timestamps_greater_than(int node_id, int64_t timestamp) const { return 0; }
 
     // Edge selection
     [[nodiscard]] virtual HOST Edge get_edge_at_host(
@@ -81,36 +81,11 @@ public:
                                                                  bool forward = true) const { return Edge{-1, -1, -1}; }
 
     // Utility methods
-    [[nodiscard]] virtual HOST size_t get_total_edges_host() const { return 0; }
-    [[nodiscard]] virtual HOST size_t get_node_count_host() const { return 0; }
-    [[nodiscard]] virtual HOST int64_t get_latest_timestamp_host() { return latest_timestamp; }
-    [[nodiscard]] virtual HOST IntVector get_node_ids() const { return IntVector(); }
-    [[nodiscard]] virtual HOST EdgeVector get_edges() { return EdgeVector(); }
-
-    /**
-    * DEVICE METHODS
-    */
-
-    // Timestamp group counting
-    [[nodiscard]] virtual DEVICE size_t count_timestamps_less_than_device(int64_t timestamp) const { return 0; }
-    [[nodiscard]] virtual DEVICE size_t count_timestamps_greater_than_device(int64_t timestamp) const { return 0; }
-    [[nodiscard]] virtual DEVICE size_t count_node_timestamps_less_than_device(int node_id, int64_t timestamp) const { return 0; }
-    [[nodiscard]] virtual DEVICE size_t count_node_timestamps_greater_than_device(int node_id, int64_t timestamp) const { return 0; }
-
-    // Edge selection
-    [[nodiscard]] virtual DEVICE Edge get_edge_at_device(
-        RandomPicker<GPUUsage>* picker, int64_t timestamp = -1,
-        bool forward = true) const { return Edge{ -1, -1, -1 }; }
-
-    [[nodiscard]] virtual DEVICE Edge get_node_edge_at_device(int node_id,
-                                                                 RandomPicker<GPUUsage>* picker,
-                                                                 int64_t timestamp = -1,
-                                                                 bool forward = true) const { return Edge{-1, -1, -1}; }
-
-    // Utility methods
-    [[nodiscard]] virtual DEVICE size_t get_total_edges_device() const { return 0; }
-    [[nodiscard]] virtual DEVICE size_t get_node_count_device() const { return 0; }
-    [[nodiscard]] virtual DEVICE int64_t get_latest_timestamp_device() const { return latest_timestamp; }
+    [[nodiscard]] virtual HOST size_t get_total_edges() const;
+    [[nodiscard]] virtual HOST size_t get_node_count() const;
+    [[nodiscard]] virtual HOST int64_t get_latest_timestamp();
+    [[nodiscard]] virtual HOST IntVector get_node_ids() const;
+    [[nodiscard]] virtual HOST EdgeVector get_edges();
 };
 
 #endif //I_TEMPORALGRAPH_H
